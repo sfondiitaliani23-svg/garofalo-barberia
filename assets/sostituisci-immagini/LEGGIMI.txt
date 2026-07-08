@@ -1,0 +1,64 @@
+GAROFALO BARBERIA — CARTELLA IMMAGINI DA SOSTITUIRE
+====================================================
+
+Sostituisci un file mantenendo LO STESSO NOME e la stessa cartella.
+Il sito legge direttamente da qui: non serve rinominare nulla nel codice.
+
+STRUTTURA
+---------
+
+brand/
+  barberia_garofalo.png → Copia opzionale del logo
+
+icone/
+  barberia_garofalo.png → Logo del sito (navbar — usa SOLO questo file)
+  whatsapp.png          → Icona WhatsApp (bottone flottante e link)
+  favicon.ico           → Generato automaticamente (browser)
+  favicon-16.png        → Generato automaticamente
+  favicon-32.png        → Generato automaticamente (scheda browser)
+  favicon-192.png       → Generato automaticamente
+  apple-touch-icon.png  → Generato automaticamente (salva su iPhone)
+
+homepage/  (ordine come in Home, dall'alto verso il basso)
+  1.jpg                 → Hero — sfondo grande in cima alla Home
+                        (puoi caricare come 1-new.jpg e poi eseguire scripts/applica-immagini.py)
+  2.jpg                 → Sezione "Esperienza di qualità" (foto a sinistra)
+  3.jpg                 → Sezione "Chi siamo"
+  4-1.jpg               → Profumo Mood Velvet (sfondo fuoco/nero)
+  4-2.jpg               → Profumo Fancy (luna e deserto)
+  4-3.jpg               → Profumo Mood Imperious (cactus e sabbia)
+  4-4.jpg               → Profumo Aroma (legno bruciato/fumo)
+
+team/
+  michele-garofalo.jpg  → Foto Michele (pagina Chi siamo)
+  luca-rossi.jpg        → Foto Luca (pagina Chi siamo)
+
+galleria/
+  01-taglio-uomo.jpg           → Galleria, categoria Uomo
+  02-taglio-classico.jpg       → Galleria, categoria Uomo
+  03-barba-taglio.jpg          → Galleria, categoria Uomo
+  04-styling-uomo.jpg          → Galleria, categoria Uomo
+  05-taglio-ragazzo.jpg        → Galleria, categoria Ragazzo
+  06-acconciatura-ragazzo.jpg  → Galleria, categoria Ragazzo
+  07-taglio-bimbo.jpg          → Galleria, categoria Bimbo
+  08-dettaglio-bimbo.jpg       → Galleria, categoria Bimbo
+  09-finishing-taglio.jpg      → Galleria, categoria Uomo
+  10-interno-salone.jpg        → Galleria, categoria Uomo
+  11-dettaglio-barba.jpg       → Galleria, categoria Uomo
+  12-taglio-giovane.jpg        → Galleria, categoria Ragazzo
+
+APPLICARE LE MODIFICHE
+----------------------
+Dopo aver sostituito i file, esegui dalla cartella del sito:
+
+  python scripts/applica-immagini.py
+
+Lo script rinomina 1-new.jpg → 1.jpg (e gli altri), ottimizza le foto per il web
+e rigenera le favicon da barberia_garofalo.png.
+
+CONSIGLI
+--------
+- Formato consigliato: JPG per foto, PNG per logo e WhatsApp (sfondo trasparente).
+- Logo navbar: sostituisci barberia_garofalo.png in icone/ (il sito lo usa così com'è).
+- 1.jpg (hero): orizzontale, minimo 1920×1080 per schermi grandi.
+- Dopo la sostituzione: ricarica il sito con Ctrl+F5.

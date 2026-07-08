@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="assets/sostituisci-immagini/icone/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/sostituisci-immagini/icone/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/sostituisci-immagini/icone/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/sostituisci-immagini/icone/apple-touch-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prenota Online | Garofalo Barberia Foggia</title>
+  <meta name="description" content="Prenota il tuo taglio a Garofalo Barberia Foggia. Scegli servizio, barbiere e orario. Conferma via WhatsApp.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{gold:'#cd9a4f',cream:'#fcf8f1',dark:'#0d0d0d'}}}}</script>
+  <link rel="stylesheet" href="css/custom.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="site-nav">
+      <a href="index.html"><img src="assets/sostituisci-immagini/icone/barberia_garofalo.png" alt="Barberia Garofalo" class="site-logo"></a>
+      <ul class="site-nav-menu hidden lg:flex">
+        <li><a href="servizi.html" class="site-nav-link">Servizi</a></li>
+        <li><a href="galleria.html" class="site-nav-link">Galleria</a></li>
+        <li><a href="chi-siamo.html" class="site-nav-link">Chi siamo</a></li>
+        <li><a href="contatti.html" class="site-nav-link">Contatti</a></li>
+      </ul>
+      <a href="prenota.html" class="btn-primary hidden sm:inline-flex"><span>Prenota</span><svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <button id="menu-toggle" class="site-nav-toggle lg:hidden" aria-label="Menu"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </nav>
+    <div id="mobile-menu" class="mobile-menu hidden lg:hidden">
+      <a href="index.html">Home</a><a href="servizi.html">Servizi</a><a href="prenota.html" class="active">Prenota</a>
+      <a href="galleria.html">Galleria</a><a href="chi-siamo.html">Chi siamo</a><a href="contatti.html">Contatti</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container-lux reveal">
+        <h1 class="hero-heading">Prenota il tuo appuntamento</h1>
+        <p class="hero-sub max-w-xl mx-auto">Scegli servizio, barbiere e orario. Conferma finale via WhatsApp.</p>
+      </div>
+    </section>
+
+    <section class="section section-cream pb-24">
+      <div class="container-lux max-w-3xl">
+        <div id="booking-steps" class="flex items-center justify-center gap-2 sm:gap-4 mb-10 text-sm flex-wrap font-ui reveal">
+          <div class="booking-step-indicator flex items-center gap-2" data-step="1">
+            <span class="step-dot w-8 h-8 rounded-full bg-gold text-black font-bold flex items-center justify-center text-sm">1</span>
+            <span class="step-label text-gold hidden sm:inline">Servizio</span>
+          </div>
+          <div class="w-6 sm:w-8 h-px bg-black/20"></div>
+          <div class="booking-step-indicator flex items-center gap-2" data-step="2">
+            <span class="step-dot w-8 h-8 rounded-full bg-cream text-black/50 font-bold flex items-center justify-center text-sm">2</span>
+            <span class="step-label hidden sm:inline">Barbiere</span>
+          </div>
+          <div class="w-6 sm:w-8 h-px bg-black/20"></div>
+          <div class="booking-step-indicator flex items-center gap-2" data-step="3">
+            <span class="step-dot w-8 h-8 rounded-full bg-cream text-black/50 font-bold flex items-center justify-center text-sm">3</span>
+            <span class="step-label hidden sm:inline">Data & orario</span>
+          </div>
+          <div class="w-6 sm:w-8 h-px bg-black/20"></div>
+          <div class="booking-step-indicator flex items-center gap-2" data-step="4">
+            <span class="step-dot w-8 h-8 rounded-full bg-cream text-black/50 font-bold flex items-center justify-center text-sm">4</span>
+            <span class="step-label hidden sm:inline">Conferma</span>
+          </div>
+        </div>
+
+        <form id="booking-form" class="form-card reveal mb-8">
+          <div class="form-card-header">
+            <h2 class="heading-display" style="font-size:1.5rem">Prenotazione online</h2>
+            <p class="font-ui text-sm mt-1" style="color:var(--muted)">Tutto integrato nel sito — conferma finale via WhatsApp</p>
+          </div>
+          <div class="form-card-body space-y-6">
+            <div class="booking-panel" data-panel="1">
+              <h3 class="font-ui font-semibold text-gold mb-4">Quale servizio ti serve?</h3>
+              <div id="service-options" class="grid sm:grid-cols-2 gap-3"></div>
+            </div>
+            <div class="booking-panel hidden" data-panel="2">
+              <h3 class="font-ui font-semibold text-gold mb-4">Con chi vuoi prenotare?</h3>
+              <div id="barber-options" class="grid sm:grid-cols-2 gap-3"></div>
+            </div>
+            <div class="booking-panel hidden" data-panel="3">
+              <h3 class="font-ui font-semibold text-gold mb-4">Quando vuoi venire?</h3>
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="booking-date" class="block text-sm font-ui mb-2">Data</label>
+                  <input type="date" id="booking-date" name="date" required class="form-input">
+                </div>
+                <div>
+                  <label for="booking-time" class="block text-sm font-ui mb-2">Orario</label>
+                  <select id="booking-time" name="time" required class="form-input">
+                    <option value="">Scegli un orario</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="booking-panel hidden" data-panel="4">
+              <h3 class="font-ui font-semibold text-gold mb-4">I tuoi dati</h3>
+              <div class="space-y-4">
+                <div>
+                  <label for="booking-name" class="block text-sm font-ui mb-2">Nome e cognome *</label>
+                  <input type="text" id="booking-name" name="name" required placeholder="Mario Rossi" class="form-input">
+                </div>
+                <div>
+                  <label for="booking-phone" class="block text-sm font-ui mb-2">Telefono *</label>
+                  <input type="tel" id="booking-phone" name="phone" required placeholder="320 188 6277" class="form-input">
+                </div>
+                <div>
+                  <label for="booking-notes" class="block text-sm font-ui mb-2">Note (opzionale)</label>
+                  <textarea id="booking-notes" name="notes" rows="3" placeholder="Es. primo taglio bimbo 4 anni" class="form-input resize-none"></textarea>
+                </div>
+              </div>
+              <div id="booking-summary" class="mt-6 p-4 info-box text-sm font-ui hidden"></div>
+            </div>
+          </div>
+          <div class="form-card-body pt-0 flex flex-col sm:flex-row gap-3 justify-between border-t border-black/10">
+            <button type="button" id="booking-prev" class="btn-outline hidden">Indietro</button>
+            <button type="button" id="booking-next" class="btn-primary sm:ml-auto">Avanti</button>
+            <button type="submit" id="booking-submit" class="btn-primary hidden sm:ml-auto">Conferma su WhatsApp</button>
+          </div>
+        </form>
+
+        <div class="info-box reveal mb-6 font-ui text-sm">
+          <strong class="text-gold">Prenoti per un bambino?</strong>
+          <p class="mt-2">Nel campo note indica l'età. Esempio: "Primo taglio, bimbo 4 anni, un po' timido".</p>
+        </div>
+
+        <div class="form-card reveal p-6 font-ui text-sm" style="color:var(--muted)">
+          <strong class="text-black">Policy di cancellazione</strong>
+          <p class="mt-2 leading-relaxed">Disdici con almeno <strong>3 ore di anticipo</strong> via WhatsApp o telefono.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container-lux"><p class="footer-copy">© 2026 Garofalo Barberia</p></div></footer>
+
+  <nav class="bottom-nav lg:hidden" aria-label="Navigazione mobile">
+    <a href="index.html" class="bottom-nav-item" data-page="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Home</a>
+    <a href="servizi.html" class="bottom-nav-item" data-page="servizi.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h12l-1 14H7L6 3zM9 7h6"/></svg>Servizi</a>
+    <a href="prenota.html" class="bottom-nav-item active" data-page="prenota.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Prenota</a>
+    <a href="contatti.html" class="bottom-nav-item" data-page="contatti.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Contatti</a>
+  </nav>
+
+  <a id="whatsapp-float" href="#" class="whatsapp-float" aria-label="WhatsApp" target="_blank" rel="noopener"><img src="assets/sostituisci-immagini/icone/whatsapp.png" alt="WhatsApp" class="whatsapp-float-icon" width="58" height="58"></a>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

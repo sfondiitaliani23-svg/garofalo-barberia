@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="assets/sostituisci-immagini/icone/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/sostituisci-immagini/icone/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/sostituisci-immagini/icone/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/sostituisci-immagini/icone/apple-touch-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Servizi e Prezzi | Garofalo Barberia Foggia</title>
+  <meta name="description" content="Listino prezzi Garofalo Barberia Foggia: taglio, baby, barba e styling. Prezzi chiari e trasparenti.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{gold:'#cd9a4f',cream:'#fcf8f1',dark:'#0d0d0d'}}}}</script>
+  <link rel="stylesheet" href="css/custom.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="site-nav">
+      <a href="index.html"><img src="assets/sostituisci-immagini/icone/barberia_garofalo.png" alt="Barberia Garofalo" class="site-logo"></a>
+      <ul class="site-nav-menu hidden lg:flex">
+        <li><a href="servizi.html" class="site-nav-link active">Servizi</a></li>
+        <li><a href="galleria.html" class="site-nav-link">Galleria</a></li>
+        <li><a href="chi-siamo.html" class="site-nav-link">Chi siamo</a></li>
+        <li><a href="contatti.html" class="site-nav-link">Contatti</a></li>
+      </ul>
+      <a href="prenota.html" class="btn-primary hidden sm:inline-flex"><span>Prenota</span><svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <button id="menu-toggle" class="site-nav-toggle lg:hidden" aria-label="Menu"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </nav>
+    <div id="mobile-menu" class="mobile-menu hidden lg:hidden">
+      <a href="index.html">Home</a><a href="servizi.html" class="active">Servizi</a><a href="prenota.html">Prenota</a>
+      <a href="galleria.html">Galleria</a><a href="chi-siamo.html">Chi siamo</a><a href="contatti.html">Contatti</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container-lux reveal">
+        <div class="eyebrow justify-center"><div class="eyebrow-line"></div><span class="eyebrow-text">Listino</span><div class="eyebrow-line"></div></div>
+        <h1 class="hero-heading">Servizi & Prezzi</h1>
+        <p class="hero-sub max-w-xl mx-auto">Prezzi chiari, niente sorprese. Scegli il servizio e prenota in un click.</p>
+      </div>
+    </section>
+
+    <section class="section section-white">
+      <div class="container-lux max-w-3xl">
+        <div id="taglio" class="mb-14 scroll-mt-32 reveal">
+          <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Taglio</span></div>
+          <div class="price-list" style="max-width:100%">
+            <div class="price-row"><div><strong class="font-ui">Taglio e shampoo</strong><br><span class="text-sm" style="color:var(--muted)">30 min</span></div><span>€17</span></div>
+          </div>
+        </div>
+
+        <div id="baby" class="mb-14 scroll-mt-32 reveal">
+          <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Baby</span></div>
+          <div class="info-box mb-6 font-ui text-sm leading-relaxed">Sappiamo che portare un bambino dal barbiere può essere un'avventura. Qui prendiamo tutto il tempo necessario: niente fretta, niente pressione. Se è la prima volta, scrivilo nelle note quando prenoti.</div>
+          <div class="price-list" style="max-width:100%">
+            <div class="price-row"><div><strong class="font-ui">Taglio baby</strong><br><span class="text-sm" style="color:var(--muted)">25 min</span></div><span>€13</span></div>
+          </div>
+        </div>
+
+        <div id="barba" class="mb-14 scroll-mt-32 reveal">
+          <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Barba</span></div>
+          <div class="price-list" style="max-width:100%">
+            <div class="price-row"><div><strong class="font-ui">Barba rasata / lama</strong><br><span class="text-sm" style="color:var(--muted)">15 min</span></div><span>€6</span></div>
+            <div class="price-row"><div><strong class="font-ui">Barba modellata a forbici</strong><br><span class="text-sm" style="color:var(--muted)">20 min</span></div><span>€8</span></div>
+            <div class="price-row"><div><strong class="font-ui">Barba con panno caldo</strong><br><span class="text-sm" style="color:var(--muted)">25 min</span></div><span>€10</span></div>
+          </div>
+        </div>
+
+        <div id="styling" class="scroll-mt-32 reveal">
+          <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Styling</span></div>
+          <div class="price-list" style="max-width:100%">
+            <div class="price-row"><div><strong class="font-ui">Shampoo e acconciatura</strong><br><span class="text-sm" style="color:var(--muted)">15 min</span></div><span>€8</span></div>
+          </div>
+          <div class="text-center mt-10"><a href="prenota.html" class="btn-primary">Prenota ora</a></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container-lux"><p class="footer-copy">© 2026 Garofalo Barberia · <a href="contatti.html">Contatti</a></p></div>
+  </footer>
+
+  <nav class="bottom-nav lg:hidden" aria-label="Navigazione mobile">
+    <a href="index.html" class="bottom-nav-item" data-page="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Home</a>
+    <a href="servizi.html" class="bottom-nav-item active" data-page="servizi.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h12l-1 14H7L6 3zM9 7h6"/></svg>Servizi</a>
+    <a href="prenota.html" class="bottom-nav-item" data-page="prenota.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Prenota</a>
+    <a href="contatti.html" class="bottom-nav-item" data-page="contatti.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Contatti</a>
+  </nav>
+
+  <a id="whatsapp-float" href="#" class="whatsapp-float" aria-label="WhatsApp" target="_blank" rel="noopener"><img src="assets/sostituisci-immagini/icone/whatsapp.png" alt="WhatsApp" class="whatsapp-float-icon" width="58" height="58"></a>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

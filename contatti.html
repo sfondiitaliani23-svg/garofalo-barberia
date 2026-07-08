@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="assets/sostituisci-immagini/icone/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/sostituisci-immagini/icone/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/sostituisci-immagini/icone/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/sostituisci-immagini/icone/apple-touch-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contatti | Garofalo Barberia Foggia</title>
+  <meta name="description" content="Indirizzo, mappa, orari, telefono e WhatsApp di Garofalo Barberia a Foggia.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{gold:'#cd9a4f',cream:'#fcf8f1',dark:'#0d0d0d'}}}}</script>
+  <link rel="stylesheet" href="css/custom.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="site-nav">
+      <a href="index.html"><img src="assets/sostituisci-immagini/icone/barberia_garofalo.png" alt="Barberia Garofalo" class="site-logo"></a>
+      <ul class="site-nav-menu hidden lg:flex">
+        <li><a href="servizi.html" class="site-nav-link">Servizi</a></li>
+        <li><a href="galleria.html" class="site-nav-link">Galleria</a></li>
+        <li><a href="chi-siamo.html" class="site-nav-link">Chi siamo</a></li>
+        <li><a href="contatti.html" class="site-nav-link active">Contatti</a></li>
+      </ul>
+      <a href="prenota.html" class="btn-primary hidden sm:inline-flex"><span>Prenota</span><svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <button id="menu-toggle" class="site-nav-toggle lg:hidden" aria-label="Menu"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </nav>
+    <div id="mobile-menu" class="mobile-menu hidden lg:hidden">
+      <a href="index.html">Home</a><a href="servizi.html">Servizi</a><a href="prenota.html">Prenota</a>
+      <a href="galleria.html">Galleria</a><a href="chi-siamo.html">Chi siamo</a><a href="contatti.html" class="active">Contatti</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container-lux reveal">
+        <h1 class="hero-heading">Dove siamo</h1>
+        <p class="hero-sub max-w-xl mx-auto">Vieni in salone o contattaci per telefono e WhatsApp.</p>
+      </div>
+    </section>
+
+    <section class="section section-white pb-24">
+      <div class="container-lux">
+        <div class="split-section reveal">
+          <div class="space-y-4">
+            <div class="form-card p-6">
+              <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Indirizzo</span></div>
+              <p class="font-ui font-semibold">Viale Ignazio d'Addedda, 236</p>
+              <p class="font-ui text-sm" style="color:var(--muted)">71122 Foggia (FG)</p>
+              <a href="https://maps.google.com/?q=Viale+Ignazio+d'Addedda,+236,+71122+Foggia+FG" target="_blank" rel="noopener" class="font-ui text-sm text-gold mt-3 inline-block">Apri in Google Maps →</a>
+            </div>
+            <div class="form-card p-6">
+              <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Orari</span></div>
+              <div class="price-list" style="max-width:100%">
+                <div class="price-row"><span class="font-ui">Lunedì – Venerdì</span><span>09:00 – 19:30</span></div>
+                <div class="price-row"><span class="font-ui">Sabato</span><span>09:00 – 18:00</span></div>
+                <div class="price-row"><span class="font-ui">Domenica</span><span style="color:var(--muted)">Chiuso</span></div>
+              </div>
+            </div>
+            <div class="form-card p-6">
+              <div class="eyebrow"><div class="eyebrow-line"></div><span class="eyebrow-text">Contatti</span></div>
+              <ul class="space-y-3 font-ui">
+                <li><a href="tel:+393201886277" class="hover:text-gold">320 188 6277</a></li>
+                <li><a href="#" id="contact-whatsapp" class="inline-flex items-center gap-2 hover:text-gold"><img src="assets/sostituisci-immagini/icone/whatsapp.png" alt="" class="whatsapp-icon-inline" width="22" height="22" aria-hidden="true">WhatsApp</a></li>
+                <li><a href="mailto:luigigarofalo1996@gmail.com" class="hover:text-gold">luigigarofalo1996@gmail.com</a></li>
+                <li><a href="https://www.instagram.com/garofalobarberia" target="_blank" rel="noopener" class="hover:text-gold">@garofalobarberia</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="map-embed min-h-[400px]">
+            <iframe src="https://www.google.com/maps?q=Viale+Ignazio+d'Addedda,+236,+71122+Foggia+FG&hl=it&z=16&output=embed" width="100%" height="100%" style="border:0;min-height:400px" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mappa Garofalo Barberia"></iframe>
+          </div>
+        </div>
+
+        <div class="form-card mt-12 reveal max-w-2xl mx-auto">
+          <div class="form-card-header">
+            <h2 class="heading-display" style="font-size:1.75rem">Scrivici un messaggio</h2>
+            <p class="font-ui text-sm mt-1" style="color:var(--muted)">Ti rispondiamo via WhatsApp</p>
+          </div>
+          <form id="contact-form" class="form-card-body space-y-4">
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label for="name" class="block text-sm font-ui mb-1">Nome</label>
+                <input type="text" id="name" name="name" required class="form-input" placeholder="Il tuo nome">
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-ui mb-1">Email</label>
+                <input type="email" id="email" name="email" class="form-input" placeholder="tua@email.com">
+              </div>
+            </div>
+            <div>
+              <label for="phone" class="block text-sm font-ui mb-1">Telefono</label>
+              <input type="tel" id="phone" name="phone" class="form-input" placeholder="320 188 6277">
+            </div>
+            <div>
+              <label for="message" class="block text-sm font-ui mb-1">Messaggio</label>
+              <textarea id="message" name="message" rows="4" required class="form-input resize-none" placeholder="Come possiamo aiutarti?"></textarea>
+            </div>
+            <button type="submit" class="btn-primary w-full sm:w-auto">Invia via WhatsApp</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container-lux"><p class="footer-copy">© 2026 Garofalo Barberia · Foggia</p></div></footer>
+
+  <nav class="bottom-nav lg:hidden" aria-label="Navigazione mobile">
+    <a href="index.html" class="bottom-nav-item" data-page="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Home</a>
+    <a href="servizi.html" class="bottom-nav-item" data-page="servizi.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h12l-1 14H7L6 3zM9 7h6"/></svg>Servizi</a>
+    <a href="prenota.html" class="bottom-nav-item" data-page="prenota.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Prenota</a>
+    <a href="contatti.html" class="bottom-nav-item active" data-page="contatti.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Contatti</a>
+  </nav>
+
+  <a id="whatsapp-float" href="#" class="whatsapp-float" aria-label="WhatsApp" target="_blank" rel="noopener"><img src="assets/sostituisci-immagini/icone/whatsapp.png" alt="WhatsApp" class="whatsapp-float-icon" width="58" height="58"></a>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

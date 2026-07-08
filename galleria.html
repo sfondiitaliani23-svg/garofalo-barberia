@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="assets/sostituisci-immagini/icone/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/sostituisci-immagini/icone/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/sostituisci-immagini/icone/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/sostituisci-immagini/icone/apple-touch-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galleria | Garofalo Barberia Foggia</title>
+  <meta name="description" content="Galleria Garofalo Barberia: foto reali di tagli uomo, ragazzo e bimbo a Foggia.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,700&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{gold:'#cd9a4f',cream:'#fcf8f1',dark:'#0d0d0d'}}}}</script>
+  <link rel="stylesheet" href="css/custom.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="site-nav">
+      <a href="index.html"><img src="assets/sostituisci-immagini/icone/barberia_garofalo.png" alt="Barberia Garofalo" class="site-logo"></a>
+      <ul class="site-nav-menu hidden lg:flex">
+        <li><a href="servizi.html" class="site-nav-link">Servizi</a></li>
+        <li><a href="galleria.html" class="site-nav-link active">Galleria</a></li>
+        <li><a href="chi-siamo.html" class="site-nav-link">Chi siamo</a></li>
+        <li><a href="contatti.html" class="site-nav-link">Contatti</a></li>
+      </ul>
+      <a href="prenota.html" class="btn-primary hidden sm:inline-flex"><span>Prenota</span><svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <button id="menu-toggle" class="site-nav-toggle lg:hidden" aria-label="Menu"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </nav>
+    <div id="mobile-menu" class="mobile-menu hidden lg:hidden">
+      <a href="index.html">Home</a><a href="servizi.html">Servizi</a><a href="prenota.html">Prenota</a>
+      <a href="galleria.html" class="active">Galleria</a><a href="chi-siamo.html">Chi siamo</a><a href="contatti.html">Contatti</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container-lux reveal">
+        <h1 class="hero-heading">Galleria</h1>
+        <p class="hero-sub max-w-xl mx-auto">Il nostro lavoro reale — tagli per uomo, ragazzo e bimbo.</p>
+      </div>
+    </section>
+
+    <section class="section section-white pb-24">
+      <div class="container-lux">
+        <div class="flex flex-wrap gap-3 mb-8 reveal sticky top-20 bg-white py-3 z-20">
+          <button class="filter-btn active" data-filter="tutti">Tutti</button>
+          <button class="filter-btn" data-filter="uomo">Uomo</button>
+          <button class="filter-btn" data-filter="ragazzo">Ragazzo</button>
+          <button class="filter-btn" data-filter="bimbo">Bimbo</button>
+        </div>
+
+        <p class="font-ui text-sm mb-6 reveal" style="color:var(--muted)">Nota privacy: le foto con bambini mostrano solo dettagli del taglio — mai il volto in primo piano.</p>
+
+        <div class="gallery-grid reveal" id="gallery-grid">
+          <div class="gallery-item" data-category="uomo"><img src="assets/sostituisci-immagini/galleria/01-taglio-uomo.jpg" alt="Taglio uomo" loading="lazy"></div>
+          <div class="gallery-item" data-category="uomo"><img src="assets/sostituisci-immagini/galleria/02-taglio-classico.jpg" alt="Taglio classico" loading="lazy"></div>
+          <div class="gallery-item" data-category="uomo"><img src="assets/sostituisci-immagini/galleria/03-barba-taglio.jpg" alt="Barba e taglio" loading="lazy"></div>
+          <div class="gallery-item" data-category="uomo"><img src="assets/sostituisci-immagini/galleria/04-styling-uomo.jpg" alt="Styling uomo" loading="lazy"></div>
+          <div class="gallery-item" data-category="ragazzo"><img src="assets/sostituisci-immagini/galleria/05-taglio-ragazzo.jpg" alt="Taglio ragazzo" loading="lazy"></div>
+          <div class="gallery-item" data-category="ragazzo"><img src="assets/sostituisci-immagini/galleria/06-acconciatura-ragazzo.jpg" alt="Acconciatura ragazzo" loading="lazy"></div>
+          <div class="gallery-item" data-category="bimbo"><img src="assets/sostituisci-immagini/galleria/07-taglio-bimbo.jpg" alt="Dettaglio taglio bimbo" loading="lazy"></div>
+          <div class="gallery-item" data-category="bimbo"><img src="assets/sostituisci-immagini/galleria/08-dettaglio-bimbo.jpg" alt="Taglio bimbo" loading="lazy"></div>
+          <div class="gallery-item" data-category="uomo"><img src="assets/sostituisci-immagini/galleria/09-finishing-taglio.jpg" alt="Finishing taglio" loading="lazy"></div>
+          <div class="gallery-item" data-category="uomo"><img src="assets/sostituisci-immagini/galleria/10-interno-salone.jpg" alt="Interno salone" loading="lazy"></div>
+          <div class="gallery-item" data-category="uomo"><img src="assets/sostituisci-immagini/galleria/11-dettaglio-barba.jpg" alt="Dettaglio barba" loading="lazy"></div>
+          <div class="gallery-item" data-category="ragazzo"><img src="assets/sostituisci-immagini/galleria/12-taglio-giovane.jpg" alt="Taglio giovane" loading="lazy"></div>
+        </div>
+
+        <div class="text-center mt-12 reveal">
+          <a href="prenota.html" class="btn-primary">Prenota il tuo taglio</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container-lux"><p class="footer-copy">© 2026 Garofalo Barberia</p></div></footer>
+
+  <nav class="bottom-nav lg:hidden" aria-label="Navigazione mobile">
+    <a href="index.html" class="bottom-nav-item" data-page="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Home</a>
+    <a href="servizi.html" class="bottom-nav-item" data-page="servizi.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3h12l-1 14H7L6 3zM9 7h6"/></svg>Servizi</a>
+    <a href="prenota.html" class="bottom-nav-item" data-page="prenota.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Prenota</a>
+    <a href="contatti.html" class="bottom-nav-item" data-page="contatti.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Contatti</a>
+  </nav>
+
+  <a id="whatsapp-float" href="#" class="whatsapp-float" aria-label="WhatsApp" target="_blank" rel="noopener"><img src="assets/sostituisci-immagini/icone/whatsapp.png" alt="WhatsApp" class="whatsapp-float-icon" width="58" height="58"></a>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
