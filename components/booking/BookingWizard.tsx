@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,17 @@ interface BookingWizardProps {
 
 const STEPS = ['Servizio', 'Barbiere & Orario', 'Conferma'];
 
+interface BookingConfirmation {
+  serviceName: string;
+  barberName: string;
+  date: string;
+  time: string;
+  customerName: string;
+  priceCents: number;
+}
+
 export function BookingWizard({ services, barbers, defaultName = '', defaultPhone = '' }: BookingWizardProps) {
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [barberId, setBarberId] = useState<string | null>(null);
@@ -38,6 +49,7 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
   const [pending, startTransition] = useTransition();
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingDates, setLoadingDates] = useState(false);
+  const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null);
 
   const selectedService = services.find((s) => s.id === serviceId);
 
@@ -107,13 +119,45 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
         return;
       }
 
-      if ('fallback' in result && result.fallback) {
-        toast.success('Apri WhatsApp per confermare la prenotazione');
-      } else {
-        toast.success('Prenotazione confermata!');
-      }
-      if (result.whatsappUrl) window.open(result.whatsappUrl, '_blank');
+      setConfirmation({
+        serviceName: result.serviceName ?? selectedService!.name,
+        barberName: result.barberName ?? (barberId ? barbers.find((b) => b.id === barberId)?.name ?? 'Barbiere' : 'Primo disponibile'),
+        date: date!,
+        time: time!,
+        customerName: name,
+        priceCents: result.priceCents ?? selectedService!.price_cents,
+      });
     });
+  };
+
+  useEffect(() => {
+    if (!confirmation) return;
+    const timer = setTimeout(() => router.push('/'), 5000);
+    return () => clearTimeout(timer);
+  }, [confirmation, router]);
+
+  if (confirmation) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-gold">Prenotazione confermata</CardTitle>
+            <p className="text-sm text-white/50">Riceverai conferma al numero indicato. A breve torni alla home.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 text-sm space-y-2">
+              <p><strong>Servizio:</strong> {confirmation.serviceName} ({formatPrice(confirmation.priceCents)})</p>
+              <p><strong>Data:</strong> {format(parseISO(confirmation.date), "EEEE d MMMM yyyy", { locale: it })} alle {confirmation.time}</p>
+              <p><strong>Barbiere:</strong> {confirmation.barberName}</p>
+              <p><strong>Nome:</strong> {confirmation.customerName}</p>
+            </div>
+            <Button className="w-full" onClick={() => router.push('/')}>
+              Torna alla home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

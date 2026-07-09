@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { resolveBarberForSlot } from '@/lib/actions/availability';
-import { sendAdminBookingEmail, getWhatsAppBookingUrl } from '@/lib/utils/notifications';
+import { sendAdminBookingEmail } from '@/lib/utils/notifications';
 
 export interface CreateAppointmentInput {
   serviceId: string;
@@ -18,43 +18,12 @@ export interface CreateAppointmentInput {
   notes?: string;
 }
 
-async function resolveFallbackService(serviceId: string) {
-  const { FALLBACK_SERVICES } = await import('@/lib/data/fallback');
-  return FALLBACK_SERVICES.find((s) => s.id === serviceId) ?? null;
-}
-
-async function resolveFallbackBarber(barberId: string | null) {
-  const { FALLBACK_BARBERS } = await import('@/lib/data/fallback');
-  if (barberId) return FALLBACK_BARBERS.find((b) => b.id === barberId) ?? null;
-  return FALLBACK_BARBERS[0] ?? null;
-}
-
 export async function createAppointment(input: CreateAppointmentInput) {
   const supabase = await createServiceClient();
   const profile = await getProfile();
 
   if (!supabase) {
-    const service = await resolveFallbackService(input.serviceId);
-    if (!service) return { ok: false, error: 'Servizio non trovato' };
-
-    const barber = await resolveFallbackBarber(input.barberId);
-    if (!barber) return { ok: false, error: 'Nessun barbiere disponibile' };
-
-    const startsAt = parseISO(`${input.date}T${input.time}:00`);
-
-    return {
-      ok: true,
-      fallback: true,
-      whatsappUrl: getWhatsAppBookingUrl({
-        serviceName: service.name,
-        priceCents: service.price_cents,
-        barberName: barber.name,
-        startsAt,
-        customerName: input.customerName,
-        customerPhone: input.customerPhone,
-        notes: input.notes,
-      }),
-    };
+    return { ok: false, error: 'Prenotazione online temporaneamente non disponibile. Riprova tra poco.' };
   }
 
   const { data: service, error: serviceError } = await supabase
@@ -123,7 +92,10 @@ export async function createAppointment(input: CreateAppointmentInput) {
   return {
     ok: true,
     appointmentId: appointment.id,
-    whatsappUrl: getWhatsAppBookingUrl(notificationData),
+    serviceName: service.name,
+    barberName: barber?.name ?? 'Barbiere',
+    startsAt: startsAt.toISOString(),
+    priceCents: service.price_cents,
   };
 }
 
