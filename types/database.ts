@@ -110,6 +110,9 @@ export interface SiteContent {
   title: string | null;
   body: string | null;
   is_active: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
+  updated_at: string;
 }
 
 export interface Product {

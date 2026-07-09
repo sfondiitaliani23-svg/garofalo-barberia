@@ -851,3 +851,107 @@ export async function adjustProductStock(productId: string, delta: number) {
 
   return setProductStock(productId, product.stock_quantity + delta);
 }
+
+export interface AdminSiteContentInput {
+  id?: string;
+  key: string;
+  title: string;
+  body: string;
+  isActive: boolean;
+  startsAt?: string | null;
+  endsAt?: string | null;
+}
+
+function revalidateContentPaths() {
+  revalidatePath('/admin/contenuti');
+  revalidatePath('/', 'layout');
+}
+
+export async function getAdminSiteContent() {
+  await requireAdmin();
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase.from('site_content').select('*').order('key');
+  return data ?? [];
+}
+
+export async function saveAdminSiteContent(input: AdminSiteContentInput) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false as const, error: 'Database non configurato' };
+
+  const key = input.key.trim().toLowerCase().replace(/\s+/g, '_');
+  const title = input.title.trim();
+  const body = input.body.trim();
+
+  if (!key || !/^[a-z][a-z0-9_]*$/.test(key)) {
+    return { ok: false as const, error: 'Chiave non valida (usa lettere, numeri e underscore)' };
+  }
+  if (!title) return { ok: false as const, error: 'Inserisci un titolo' };
+  if (!body) return { ok: false as const, error: 'Inserisci il testo del messaggio' };
+
+  const payload = {
+    key,
+    title,
+    body,
+    is_active: input.isActive,
+    starts_at: input.startsAt || null,
+    ends_at: input.endsAt || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.id) {
+    const { data, error } = await supabase
+      .from('site_content')
+      .update(payload)
+      .eq('id', input.id)
+      .select('*')
+      .single();
+    if (error) {
+      if (error.code === '23505') return { ok: false as const, error: 'Chiave già in uso' };
+      return { ok: false as const, error: 'Errore durante la modifica' };
+    }
+    revalidateContentPaths();
+    return { ok: true as const, content: data };
+  }
+
+  const { data, error } = await supabase.from('site_content').insert(payload).select('*').single();
+  if (error) {
+    if (error.code === '23505') return { ok: false as const, error: 'Chiave già in uso' };
+    return { ok: false as const, error: 'Errore durante la creazione' };
+  }
+
+  revalidateContentPaths();
+  return { ok: true as const, content: data };
+}
+
+export async function toggleSiteContentActive(contentId: string, isActive: boolean) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false as const, error: 'Database non configurato' };
+
+  const { data, error } = await supabase
+    .from('site_content')
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq('id', contentId)
+    .select('*')
+    .single();
+
+  if (error || !data) return { ok: false as const, error: 'Errore aggiornamento stato' };
+
+  revalidateContentPaths();
+  return { ok: true as const, content: data };
+}
+
+export async function deleteAdminSiteContent(contentId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false as const, error: 'Database non configurato' };
+
+  const { error } = await supabase.from('site_content').delete().eq('id', contentId);
+  if (error) return { ok: false as const, error: 'Impossibile eliminare il contenuto' };
+
+  revalidateContentPaths();
+  return { ok: true as const };
+}
