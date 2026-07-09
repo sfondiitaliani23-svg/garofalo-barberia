@@ -7,7 +7,7 @@ import { it } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
-import { CalendarMonthJump } from '@/components/admin/CalendarMonthJump';
+
 import {
   buildWeekGrid,
   generateCalendarTimeSlots,
@@ -108,10 +108,6 @@ export function WeeklyBookingCalendar({
           <Plus size={16} />
           Nuova prenotazione
         </Button>
-      </div>
-
-      <div className="mt-4">
-        <CalendarMonthJump currentWeekStart={weekStart} />
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
