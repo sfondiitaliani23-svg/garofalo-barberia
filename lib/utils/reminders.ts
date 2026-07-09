@@ -154,7 +154,16 @@ export async function sendCustomerWhatsAppReminder(phone: string, body: string) 
   const normalized = normalizeItalianPhone(phone);
   if (!normalized) return { ok: false, reason: 'invalid_phone' as const };
 
-  const providers = [sendMetaWhatsApp, sendTwilioWhatsApp, sendGreenApiWhatsApp];
+  const providerOrder = (process.env.WHATSAPP_PROVIDER ?? 'green').toLowerCase();
+  const providerMap: Record<string, typeof sendGreenApiWhatsApp> = {
+    green: sendGreenApiWhatsApp,
+    meta: sendMetaWhatsApp,
+    twilio: sendTwilioWhatsApp,
+  };
+  const preferred = providerMap[providerOrder];
+  const providers = preferred
+    ? [preferred, ...Object.values(providerMap).filter((fn) => fn !== preferred)]
+    : [sendGreenApiWhatsApp, sendMetaWhatsApp, sendTwilioWhatsApp];
   let lastReason: 'not_configured' | 'send_failed' = 'not_configured';
 
   for (const provider of providers) {
