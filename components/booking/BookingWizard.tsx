@@ -22,6 +22,7 @@ interface BookingWizardProps {
   barbers: Barber[];
   defaultName?: string;
   defaultPhone?: string;
+  defaultEmail?: string;
 }
 
 const STEPS = ['Servizio', 'Barbiere & Orario', 'Conferma'];
@@ -35,7 +36,13 @@ interface BookingConfirmation {
   priceCents: number;
 }
 
-export function BookingWizard({ services, barbers, defaultName = '', defaultPhone = '' }: BookingWizardProps) {
+export function BookingWizard({
+  services,
+  barbers,
+  defaultName = '',
+  defaultPhone = '',
+  defaultEmail = '',
+}: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [serviceId, setServiceId] = useState<string | null>(null);
@@ -46,6 +53,7 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
   const [dates, setDates] = useState<string[]>([]);
   const [name, setName] = useState(defaultName);
   const [phone, setPhone] = useState(defaultPhone);
+  const [email, setEmail] = useState(defaultEmail);
   const [notes, setNotes] = useState('');
   const [pending, startTransition] = useTransition();
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -108,6 +116,7 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
         time,
         customerName: name,
         customerPhone: phone,
+        customerEmail: email,
         notes,
       });
 
@@ -143,7 +152,9 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
         <Card>
           <CardHeader>
             <CardTitle className="text-gold">Prenotazione confermata</CardTitle>
-            <p className="text-sm text-white/50">Riceverai conferma al numero indicato. A breve torni alla home.</p>
+            <p className="text-sm text-white/50">
+              Ti invieremo un promemoria 6 ore prima via WhatsApp ed email (se indicata). A breve torni alla home.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 text-sm space-y-2">
@@ -295,6 +306,20 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
               <div>
                 <Label htmlFor="phone">Telefono *</Label>
                 <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="320 188 6277" className="mt-1" />
+                <p className="mt-1 text-xs text-white/45">Per il promemoria WhatsApp 6 ore prima dell&apos;appuntamento</p>
+              </div>
+              <div>
+                <Label htmlFor="email">Email (opzionale)</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="tua@email.com"
+                  autoComplete="email"
+                  className="mt-1"
+                />
+                <p className="mt-1 text-xs text-white/45">Per ricevere anche il promemoria via email</p>
               </div>
               <div>
                 <Label htmlFor="notes">Note (opzionale)</Label>

@@ -196,6 +196,8 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
       customer_name: input.customerName.trim(),
       customer_phone: input.customerPhone?.trim() ?? '',
       notes: input.notes?.trim() || null,
+      reminder_email_sent_at: null,
+      reminder_whatsapp_sent_at: null,
     })
     .eq('id', appointmentId);
 

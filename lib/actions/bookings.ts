@@ -16,6 +16,7 @@ export interface CreateAppointmentInput {
   time: string;
   customerName: string;
   customerPhone: string;
+  customerEmail?: string;
   notes?: string;
 }
 
@@ -52,6 +53,11 @@ export async function createAppointment(input: CreateAppointmentInput) {
     .eq('id', barberId)
     .single();
 
+  const customerEmail =
+    input.customerEmail?.trim() ||
+    profile?.email?.trim() ||
+    null;
+
   const { data: appointment, error } = await supabase
     .from('appointments')
     .insert({
@@ -63,6 +69,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
       status: 'confirmed',
       customer_name: input.customerName.trim(),
       customer_phone: input.customerPhone.trim(),
+      customer_email: customerEmail,
       notes: input.notes?.trim() || null,
     })
     .select('id')
@@ -174,6 +181,8 @@ export async function rescheduleAppointment(appointmentId: string, date: string,
     .update({
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
+      reminder_email_sent_at: null,
+      reminder_whatsapp_sent_at: null,
     })
     .eq('id', appointmentId);
 

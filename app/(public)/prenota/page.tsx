@@ -24,6 +24,7 @@ export default async function PrenotaPage() {
           barbers={barbers}
           defaultName={profile?.full_name ?? ''}
           defaultPhone={profile?.phone ?? ''}
+          defaultEmail={profile?.email ?? ''}
         />
       </div>
     </section>

@@ -56,7 +56,10 @@ export interface Appointment {
   status: AppointmentStatus;
   customer_name: string;
   customer_phone: string;
+  customer_email: string | null;
   notes: string | null;
+  reminder_email_sent_at: string | null;
+  reminder_whatsapp_sent_at: string | null;
   created_at: string;
   barber?: Barber;
   service?: Service;
