@@ -457,13 +457,21 @@
   width: 100%;
   max-width: min(1100px, 92vw);
   margin: 0 auto;
-  padding: 0.5rem 0 1.5rem;
+  padding: 0;
+}
+
+.section-chi-siamo {
+  padding-bottom: 2.5rem;
 }
 
 .section-divider-chi-siamo {
-  background: #0d0d0d;
-  padding-top: 0.25rem;
-  padding-bottom: 2rem;
+  background: transparent;
+  padding: 1.25rem 1.5rem 0;
+  margin: 0 auto;
+}
+
+.section-chi-siamo + .photo-strip-section {
+  padding-top: 0.5rem;
 }
 
 .animated-divider-svg {

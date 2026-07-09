@@ -71,9 +71,8 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        <AnimatedDivider variant="wide" className="section-divider-chi-siamo" />
       </section>
-
-      <AnimatedDivider variant="wide" className="section-divider-chi-siamo" />
 
       <section className="section photo-strip-section" aria-label="Galleria servizi barberia">
         <div className="photo-strip">
