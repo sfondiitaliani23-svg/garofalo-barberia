@@ -13,6 +13,7 @@ npm-debug.log
 
 # Build/Deploy
 .vercel
+.tools/
 .next
 dist/
 build/
