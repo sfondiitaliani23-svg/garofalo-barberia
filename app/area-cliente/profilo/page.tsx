@@ -10,7 +10,7 @@ export default async function CustomerProfiloPage() {
   const profile = await getProfile();
 
   return (
-    <div className="max-w-lg">
+    <div>
       <h1 className="font-display text-3xl uppercase">Profilo</h1>
       <p className="mt-1 text-white/50">I tuoi dati e preferenze</p>
       <form action={updateProfile} className="mt-8 space-y-4">

@@ -28,7 +28,7 @@ export default async function ModificaAppuntamentoPage({
   const time = format(parseISO(apt.starts_at), 'HH:mm');
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div>
       <Link href="/area-cliente/storico" className="mb-6 inline-block text-sm text-white/50 hover:text-gold">
         ← Torna allo storico
       </Link>
