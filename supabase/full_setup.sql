@@ -119,19 +119,35 @@ ALTER TABLE appointments ADD CONSTRAINT appointments_no_overlap
   ) WHERE (status = 'confirmed');
 
 -- Trigger: crea profilo al signup
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  resolved_role public.user_role := 'customer';
+  meta_role TEXT;
 BEGIN
-  INSERT INTO profiles (id, email, full_name, role)
+  meta_role := NEW.raw_user_meta_data->>'role';
+  IF meta_role IN ('customer', 'admin') THEN
+    resolved_role := meta_role::public.user_role;
+  END IF;
+
+  INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'customer')
-  );
+    NULLIF(TRIM(COALESCE(NEW.raw_user_meta_data->>'full_name', '')), ''),
+    resolved_role
+  )
+  ON CONFLICT (id) DO UPDATE
+    SET email = EXCLUDED.email,
+        full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name);
+
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
