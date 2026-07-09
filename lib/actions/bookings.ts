@@ -8,6 +8,7 @@ import { getProfile } from '@/lib/auth';
 import { resolveBarberForSlot } from '@/lib/actions/availability';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
 import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appointments';
+import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 
 export interface CreateAppointmentInput {
   serviceId: string;
@@ -18,6 +19,7 @@ export interface CreateAppointmentInput {
   customerPhone: string;
   customerEmail?: string;
   notes?: string;
+  promotionCode?: string;
 }
 
 export async function createAppointment(input: CreateAppointmentInput) {
@@ -58,6 +60,17 @@ export async function createAppointment(input: CreateAppointmentInput) {
     profile?.email?.trim() ||
     null;
 
+  const promotionResult = await resolvePromotionForBooking(
+    input.serviceId,
+    input.promotionCode
+  );
+
+  if (!promotionResult.ok) {
+    return { ok: false, error: promotionResult.error };
+  }
+
+  const { promotion, discountCents, finalCents } = promotionResult;
+
   const { data: appointment, error } = await supabase
     .from('appointments')
     .insert({
@@ -71,6 +84,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
       customer_phone: input.customerPhone.trim(),
       customer_email: customerEmail,
       notes: input.notes?.trim() || null,
+      promotion_id: promotion?.id ?? null,
+      discount_cents: discountCents,
     })
     .select('id')
     .single();
@@ -84,7 +99,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
 
   const notificationData = {
     serviceName: service.name,
-    priceCents: service.price_cents,
+    priceCents: finalCents,
     barberName: barber?.name ?? 'Barbiere',
     startsAt,
     customerName: input.customerName,
@@ -103,7 +118,10 @@ export async function createAppointment(input: CreateAppointmentInput) {
     serviceName: service.name,
     barberName: barber?.name ?? 'Barbiere',
     startsAt: startsAt.toISOString(),
-    priceCents: service.price_cents,
+    priceCents: finalCents,
+    originalPriceCents: service.price_cents,
+    discountCents,
+    promotionTitle: promotion?.title ?? null,
   };
 }
 

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { ServicesAccordion } from '@/components/servizi/ServicesAccordion';
+import { ActivePromotions } from '@/components/servizi/ActivePromotions';
 import { getServices } from '@/lib/actions/bookings';
+import { getActivePromotions } from '@/lib/actions/promotions';
 import { CATEGORY_META, CATEGORY_ORDER } from '@/lib/data/services';
 import type { Service, ServiceCategory } from '@/types/database';
 import '../public-pages.css';
@@ -24,7 +26,7 @@ function groupServices(services: Service[]) {
 }
 
 export default async function ServiziPage() {
-  const services = await getServices();
+  const [services, promotions] = await Promise.all([getServices(), getActivePromotions()]);
   const groups = groupServices(services);
 
   return (
@@ -45,6 +47,7 @@ export default async function ServiziPage() {
 
       <section className="section section-white pb-24">
         <div className="container-lux max-w-2xl">
+          <ActivePromotions promotions={promotions} />
           <ServicesAccordion groups={groups} />
 
           <div className="mt-12 text-center">

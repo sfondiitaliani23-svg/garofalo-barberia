@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createAppointment } from '@/lib/actions/bookings';
 import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability';
+import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';
 import { formatPrice, formatDuration, formatBarberRole } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
 import { format, parseISO } from 'date-fns';
@@ -27,6 +28,13 @@ interface BookingWizardProps {
 
 const STEPS = ['Servizio', 'Barbiere & Orario', 'Conferma'];
 
+interface AppliedPromotion {
+  title: string;
+  discountCents: number;
+  finalCents: number;
+  code?: string;
+}
+
 interface BookingConfirmation {
   serviceName: string;
   barberName: string;
@@ -34,6 +42,9 @@ interface BookingConfirmation {
   time: string;
   customerName: string;
   priceCents: number;
+  originalPriceCents: number;
+  discountCents: number;
+  promotionTitle?: string | null;
 }
 
 export function BookingWizard({
@@ -55,6 +66,10 @@ export function BookingWizard({
   const [phone, setPhone] = useState(defaultPhone);
   const [email, setEmail] = useState(defaultEmail);
   const [notes, setNotes] = useState('');
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromotion, setAppliedPromotion] = useState<AppliedPromotion | null>(null);
+  const [promoSource, setPromoSource] = useState<'auto' | 'code' | null>(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
   const [pending, startTransition] = useTransition();
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingDates, setLoadingDates] = useState(false);
@@ -92,8 +107,72 @@ export function BookingWizard({
     if (step === 2 && date && selectedService) loadSlots();
   }, [step, date, selectedService, barberId, loadSlots]);
 
+  const loadAutoPromotion = useCallback(async () => {
+    if (!serviceId) return;
+    const result = await resolvePromotionForBooking(serviceId);
+    if (!result.ok) return;
+
+    if (result.promotion && result.discountCents > 0) {
+      setAppliedPromotion({
+        title: result.promotion.title,
+        discountCents: result.discountCents,
+        finalCents: result.finalCents,
+      });
+      setPromoSource('auto');
+    } else {
+      setAppliedPromotion(null);
+      setPromoSource(null);
+    }
+  }, [serviceId]);
+
+  useEffect(() => {
+    if (step === 3 && serviceId && promoSource !== 'code') {
+      loadAutoPromotion();
+    }
+  }, [step, serviceId, promoSource, loadAutoPromotion]);
+
+  async function handleApplyPromoCode() {
+    if (!serviceId || !promoCode.trim()) {
+      toast.error('Inserisci un codice promozionale');
+      return;
+    }
+
+    setValidatingPromo(true);
+    const result = await validatePromotionCode(promoCode, serviceId);
+    setValidatingPromo(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+
+    if (!result.promotion || result.discountCents <= 0) {
+      toast.error('Codice valido ma nessuno sconto applicabile');
+      return;
+    }
+
+    setAppliedPromotion({
+      title: result.promotion.title,
+      discountCents: result.discountCents,
+      finalCents: result.finalCents,
+      code: result.promotion.code ?? promoCode.trim().toUpperCase(),
+    });
+    setPromoSource('code');
+    toast.success('Codice applicato');
+  }
+
+  function handleRemovePromoCode() {
+    setPromoCode('');
+    setPromoSource(null);
+    setAppliedPromotion(null);
+    if (serviceId) loadAutoPromotion();
+  }
+
   function selectService(id: string) {
     setServiceId(id);
+    setPromoCode('');
+    setAppliedPromotion(null);
+    setPromoSource(null);
     setStep(2);
   }
 
@@ -118,6 +197,7 @@ export function BookingWizard({
         customerPhone: phone,
         customerEmail: email,
         notes,
+        promotionCode: promoSource === 'code' ? promoCode : undefined,
       });
 
       if (!result.ok) {
@@ -136,6 +216,9 @@ export function BookingWizard({
         time: time!,
         customerName: name,
         priceCents: result.priceCents ?? selectedService!.price_cents,
+        originalPriceCents: result.originalPriceCents ?? selectedService!.price_cents,
+        discountCents: result.discountCents ?? 0,
+        promotionTitle: result.promotionTitle,
       });
     });
   };
@@ -158,7 +241,15 @@ export function BookingWizard({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 text-sm space-y-2">
-              <p><strong>Servizio:</strong> {confirmation.serviceName} ({formatPrice(confirmation.priceCents)})</p>
+              <p><strong>Servizio:</strong> {confirmation.serviceName}</p>
+              {confirmation.discountCents > 0 ? (
+                <>
+                  <p><strong>Prezzo:</strong> <span className="line-through text-white/40">{formatPrice(confirmation.originalPriceCents)}</span> {formatPrice(confirmation.priceCents)}</p>
+                  <p><strong>Sconto:</strong> -{formatPrice(confirmation.discountCents)}{confirmation.promotionTitle ? ` (${confirmation.promotionTitle})` : ''}</p>
+                </>
+              ) : (
+                <p><strong>Prezzo:</strong> {formatPrice(confirmation.priceCents)}</p>
+              )}
               <p><strong>Data:</strong> {format(parseISO(confirmation.date), "EEEE d MMMM yyyy", { locale: it })} alle {confirmation.time}</p>
               <p><strong>Barbiere:</strong> {confirmation.barberName}</p>
               <p><strong>Nome:</strong> {confirmation.customerName}</p>
@@ -295,9 +386,46 @@ export function BookingWizard({
           {step === 3 && selectedService && date && time && (
             <div className="space-y-4">
               <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-sm space-y-1">
-                <p><strong>Servizio:</strong> {selectedService.name} ({formatPrice(selectedService.price_cents)})</p>
+                <p><strong>Servizio:</strong> {selectedService.name}</p>
+                {appliedPromotion && appliedPromotion.discountCents > 0 ? (
+                  <>
+                    <p>
+                      <strong>Prezzo:</strong>{' '}
+                      <span className="line-through text-white/40">{formatPrice(selectedService.price_cents)}</span>{' '}
+                      <span className="text-gold">{formatPrice(appliedPromotion.finalCents)}</span>
+                    </p>
+                    <p className="text-emerald-400/90">
+                      Sconto {formatPrice(appliedPromotion.discountCents)} — {appliedPromotion.title}
+                      {appliedPromotion.code ? ` (${appliedPromotion.code})` : ''}
+                    </p>
+                  </>
+                ) : (
+                  <p><strong>Prezzo:</strong> {formatPrice(selectedService.price_cents)}</p>
+                )}
                 <p><strong>Data:</strong> {format(parseISO(date), "EEEE d MMMM yyyy", { locale: it })} alle {time}</p>
                 <p><strong>Barbiere:</strong> {barberId ? barbers.find((b) => b.id === barberId)?.name : 'Primo disponibile'}</p>
+              </div>
+              <div>
+                <Label htmlFor="promo-code">Codice promozionale (opzionale)</Label>
+                <div className="mt-1 flex gap-2">
+                  <Input
+                    id="promo-code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="Es. PRIMAVERA20"
+                    className="font-mono uppercase"
+                    disabled={promoSource === 'code'}
+                  />
+                  {promoSource === 'code' ? (
+                    <Button type="button" variant="outline" onClick={handleRemovePromoCode}>
+                      Rimuovi
+                    </Button>
+                  ) : (
+                    <Button type="button" variant="outline" onClick={handleApplyPromoCode} disabled={validatingPromo}>
+                      {validatingPromo ? '...' : 'Applica'}
+                    </Button>
+                  )}
+                </div>
               </div>
               <div>
                 <Label htmlFor="name">Nome e cognome *</Label>
