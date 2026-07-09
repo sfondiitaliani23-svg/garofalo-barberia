@@ -11,6 +11,7 @@ import { rescheduleAppointment } from '@/lib/actions/bookings';
 import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability';
 import { formatPrice } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
 
 interface RescheduleFormProps {
   appointmentId: string;
@@ -108,28 +109,12 @@ export function RescheduleForm({
 
         <div>
           <h3 className="mb-3 text-sm font-semibold text-gold">Nuovo giorno</h3>
-          {loadingDates ? (
-            <p className="text-sm text-white/50">Caricamento giorni...</p>
-          ) : (
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {dates.map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => { setDate(d); setTime(null); }}
-                  className={cn(
-                    'flex-shrink-0 rounded-lg border px-4 py-3 text-center transition',
-                    date === d ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
-                  )}
-                >
-                  <span className="block text-xs uppercase text-white/50">
-                    {format(parseISO(d), 'EEE', { locale: it })}
-                  </span>
-                  <span className="block font-semibold">{format(parseISO(d), 'd MMM', { locale: it })}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <MonthDatePicker
+            dates={dates}
+            selectedDate={date}
+            loading={loadingDates}
+            onSelectDate={(d) => { setDate(d); setTime(null); }}
+          />
         </div>
 
         <div>

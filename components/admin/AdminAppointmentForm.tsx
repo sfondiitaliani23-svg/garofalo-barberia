@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
 import type { CalendarAppointment } from '@/lib/utils/week-calendar';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { getBookingMonthOptions } from '@/lib/utils/booking-months';
 
 interface AdminAppointmentFormProps {
   barbers: Barber[];
@@ -216,6 +217,24 @@ export function AdminAppointmentForm({
             </select>
           </div>
           <div>
+            <Label htmlFor="admin-month">Mese</Label>
+            <select
+              id="admin-month"
+              value={date.slice(0, 7)}
+              onChange={(e) => {
+                const [year, month] = e.target.value.split('-').map(Number);
+                const firstDay = format(new Date(year, month - 1, 1), 'yyyy-MM-dd');
+                setDate(firstDay);
+                setTime('');
+              }}
+              className="mt-1 flex h-11 w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 text-sm text-white"
+            >
+              {getBookingMonthOptions().map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
             <Label htmlFor="admin-date">Data *</Label>
             <Input
               id="admin-date"
@@ -223,7 +242,7 @@ export function AdminAppointmentForm({
               value={date}
               min={format(new Date(), 'yyyy-MM-dd')}
               max={SITE_CONFIG.bookingEndDate}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => { setDate(e.target.value); setTime(''); }}
               className="mt-1"
             />
           </div>
