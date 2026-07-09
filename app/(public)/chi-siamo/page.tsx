@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { TeamStudioSection } from '@/components/chi-siamo/TeamStudioSection';
 import { getBarbers } from '@/lib/actions/bookings';
+import { formatBarberRole } from '@/lib/utils';
 import './chi-siamo.css';
 
 export const metadata = { title: 'Chi siamo' };
@@ -31,7 +32,7 @@ export default async function ChiSiamoPage() {
   const teamMembers = orderedBarbers.map((barber) => ({
     id: barber.id,
     name: barber.name,
-    role: barber.role,
+    role: formatBarberRole(barber.role),
     imageUrl: barber.image_url ?? '/assets/sostituisci-immagini/team/luigi-garofalo.png',
     isOwner: barber.name === 'Luigi Garofalo',
   }));

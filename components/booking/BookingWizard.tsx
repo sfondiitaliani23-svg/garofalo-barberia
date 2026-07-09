@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createAppointment } from '@/lib/actions/bookings';
-import { getAvailableSlots } from '@/lib/actions/availability';
-import { formatPrice, formatDuration } from '@/lib/utils';
+import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability';
+import { formatPrice, formatDuration, formatBarberRole } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -37,24 +37,22 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
   const [notes, setNotes] = useState('');
   const [pending, startTransition] = useTransition();
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [loadingDates, setLoadingDates] = useState(false);
 
   const selectedService = services.find((s) => s.id === serviceId);
 
   const loadDates = useCallback(async () => {
     if (!selectedService) return;
-    const result: string[] = [];
-    const today = new Date();
-    for (let i = 1; i <= 30; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() + i);
-      if (d.getDay() === 0 || d.getDay() === 1) continue;
-      const ds = format(d, 'yyyy-MM-dd');
-      const { slots: s } = await getAvailableSlots(barberId, ds, selectedService.duration_minutes);
-      if (s.length > 0) result.push(ds);
-    }
+    setLoadingDates(true);
+    const result = await getAvailableDates(selectedService.duration_minutes, barberId);
     setDates(result);
-    if (result.length && !date) setDate(result[0]);
-  }, [selectedService, barberId, date]);
+    setDate((current) => {
+      if (result.length === 0) return null;
+      if (current && result.includes(current)) return current;
+      return result[0];
+    });
+    setLoadingDates(false);
+  }, [selectedService, barberId]);
 
   const loadSlots = useCallback(async () => {
     if (!selectedService || !date) return;
@@ -180,7 +178,7 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
                     >
                       <div>
                         <p className="font-medium">{b.name}</p>
-                        <p className="text-sm text-gold">{b.role}</p>
+                        <p className="text-sm text-gold">{formatBarberRole(b.role)}</p>
                       </div>
                       {b.image_url && (
                         <Image src={b.image_url} alt={b.name} width={60} height={78} className="h-[68px] w-[52px] rounded object-cover object-top" />
@@ -203,6 +201,11 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
 
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-gold">Scegli il giorno</h3>
+                {loadingDates ? (
+                  <p className="text-sm text-white/50">Caricamento giorni disponibili...</p>
+                ) : dates.length === 0 ? (
+                  <p className="text-sm text-white/50">Nessun giorno disponibile al momento.</p>
+                ) : (
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {dates.map((d) => (
                     <button
@@ -221,6 +224,7 @@ export function BookingWizard({ services, barbers, defaultName = '', defaultPhon
                     </button>
                   ))}
                 </div>
+                )}
               </div>
 
               <div>

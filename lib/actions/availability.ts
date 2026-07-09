@@ -38,36 +38,53 @@ export async function getAvailableSlots(
 
     if (barberIds.length === 0) return getFallbackSlots(dateStr, durationMinutes);
 
-    const allSlotsSet = new Set<string>();
+    const dayStart = startOfDay(date).toISOString();
+    const dayEnd = addDays(startOfDay(date), 1).toISOString();
 
-    for (const bid of barberIds) {
-      const { data: availability } = await supabase
+    const [availabilityRes, appointmentsRes, timeOffRes] = await Promise.all([
+      supabase
         .from('barber_availability')
         .select('*')
-        .eq('barber_id', bid)
+        .in('barber_id', barberIds)
         .eq('day_of_week', dayOfWeek)
-        .eq('is_available', true)
-        .single();
-
-      if (!availability) continue;
-
-      const dayStart = startOfDay(date).toISOString();
-      const dayEnd = addDays(startOfDay(date), 1).toISOString();
-
-      const { data: appointments } = await supabase
+        .eq('is_available', true),
+      supabase
         .from('appointments')
-        .select('starts_at, ends_at')
-        .eq('barber_id', bid)
+        .select('barber_id, starts_at, ends_at')
+        .in('barber_id', barberIds)
         .eq('status', 'confirmed')
         .gte('starts_at', dayStart)
-        .lt('starts_at', dayEnd);
-
-      const { data: timeOff } = await supabase
+        .lt('starts_at', dayEnd),
+      supabase
         .from('barber_time_off')
-        .select('start_at, end_at')
-        .or(`barber_id.eq.${bid},barber_id.is.null`)
+        .select('barber_id, start_at, end_at')
         .lte('start_at', dayEnd)
-        .gte('end_at', dayStart);
+        .gte('end_at', dayStart),
+    ]);
+
+    const availabilityByBarber = new Map(
+      (availabilityRes.data ?? []).map((row) => [row.barber_id, row])
+    );
+
+    const appointmentsByBarber = new Map<string, { starts_at: string; ends_at: string }[]>();
+    for (const apt of appointmentsRes.data ?? []) {
+      const list = appointmentsByBarber.get(apt.barber_id) ?? [];
+      list.push({ starts_at: apt.starts_at, ends_at: apt.ends_at });
+      appointmentsByBarber.set(apt.barber_id, list);
+    }
+
+    const allSlotsSet = new Set<string>();
+    const minAdvance = new Date();
+    minAdvance.setHours(minAdvance.getHours() + 2);
+
+    for (const bid of barberIds) {
+      const availability = availabilityByBarber.get(bid);
+      if (!availability) continue;
+
+      const appointments = appointmentsByBarber.get(bid) ?? [];
+      const timeOff = (timeOffRes.data ?? []).filter(
+        (row) => row.barber_id === bid || row.barber_id === null
+      );
 
       const slots = generateSlots(
         date,
@@ -77,10 +94,7 @@ export async function getAvailableSlots(
         SITE_CONFIG.slotIntervalMinutes
       );
 
-      const available = filterAvailableSlots(slots, appointments ?? [], timeOff ?? []);
-
-      const minAdvance = new Date();
-      minAdvance.setHours(minAdvance.getHours() + 2);
+      const available = filterAvailableSlots(slots, appointments, timeOff);
 
       for (const slot of available) {
         if (slot.startsAt > minAdvance) {
@@ -113,25 +127,36 @@ export async function resolveBarberForSlot(
     .eq('is_active', true)
     .order('sort_order');
 
-  for (const barber of barbers ?? []) {
-    const { slots } = await getAvailableSlots(barber.id, dateStr, durationMinutes);
-    if (slots.includes(timeStr)) return barber.id;
-  }
-  return null;
+  const checks = await Promise.all(
+    (barbers ?? []).map(async (barber) => {
+      const { slots } = await getAvailableSlots(barber.id, dateStr, durationMinutes);
+      return slots.includes(timeStr) ? barber.id : null;
+    })
+  );
+
+  return checks.find((id) => id !== null) ?? null;
 }
 
-export async function getAvailableDates(durationMinutes: number): Promise<string[]> {
-  const dates: string[] = [];
+export async function getAvailableDates(
+  durationMinutes: number,
+  barberId: string | null = null
+): Promise<string[]> {
   const today = new Date();
+  const candidates: string[] = [];
 
   for (let i = 1; i <= SITE_CONFIG.bookingHorizonDays; i++) {
     const d = addDays(today, i);
     const day = d.getDay();
     if (day === 0 || day === 1) continue;
-    const dateStr = format(d, 'yyyy-MM-dd');
-    const { slots } = await getAvailableSlots(null, dateStr, durationMinutes);
-    if (slots.length > 0) dates.push(dateStr);
+    candidates.push(format(d, 'yyyy-MM-dd'));
   }
 
-  return dates;
+  const results = await Promise.all(
+    candidates.map(async (dateStr) => {
+      const { slots } = await getAvailableSlots(barberId, dateStr, durationMinutes);
+      return slots.length > 0 ? dateStr : null;
+    })
+  );
+
+  return results.filter((d): d is string => d !== null);
 }

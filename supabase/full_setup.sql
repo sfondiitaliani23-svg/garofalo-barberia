@@ -247,7 +247,7 @@ CREATE POLICY "analytics_admin_read_views" ON page_views
 
 -- Seed barbieri
 INSERT INTO barbers (name, role, image_url, sort_order) VALUES
-  ('Luigi Garofalo', 'Titolare Â· Barbiere professionista', '/assets/sostituisci-immagini/team/luigi-garofalo.png', 1),
+  ('Luigi Garofalo', 'Titolare · Barbiere professionista', '/assets/sostituisci-immagini/team/luigi-garofalo.png', 1),
   ('Vittorio Morlino', 'Barbiere professionista', '/assets/sostituisci-immagini/team/vittorio-morlino.png', 2),
   ('Francesco Costantino', 'Barbiere professionista', '/assets/sostituisci-immagini/team/francesco-costantino.png', 3);
 

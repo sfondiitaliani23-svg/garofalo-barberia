@@ -12,3 +12,14 @@ export function formatPrice(cents: number): string {
 export function formatDuration(minutes: number): string {
   return `${minutes} min`;
 }
+
+/** Corregge testi ruolo barbiere corrotti da encoding (es. "Titolare A." → "Titolare · ..."). */
+export function formatBarberRole(role: string): string {
+  return role
+    .replace(/Â·/g, '·')
+    .replace(/Ã¨/g, 'è')
+    .replace(/Titolare\s*A\.?\s*/i, 'Titolare · ')
+    .replace(/\s*·\s*/g, ' · ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
