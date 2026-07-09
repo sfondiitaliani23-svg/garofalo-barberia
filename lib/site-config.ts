@@ -19,7 +19,7 @@ export const SITE_CONFIG = {
   gmailComposeUrl: `https://mail.google.com/mail/?view=cm&fs=1&to=${EMAIL}`,
   cancellationMinutes: 30,
   slotIntervalMinutes: 30,
-  bookingHorizonDays: 30,
+  bookingEndDate: '2026-12-31',
   services: [
     'Taglio e shampoo',
     'Taglio baby',

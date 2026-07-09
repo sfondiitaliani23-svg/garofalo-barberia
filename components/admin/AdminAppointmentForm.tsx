@@ -19,6 +19,7 @@ import { formatPrice } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
 import type { CalendarAppointment } from '@/lib/utils/week-calendar';
+import { SITE_CONFIG } from '@/lib/site-config';
 
 interface AdminAppointmentFormProps {
   barbers: Barber[];
@@ -220,6 +221,8 @@ export function AdminAppointmentForm({
               id="admin-date"
               type="date"
               value={date}
+              min={format(new Date(), 'yyyy-MM-dd')}
+              max={SITE_CONFIG.bookingEndDate}
               onChange={(e) => setDate(e.target.value)}
               className="mt-1"
             />

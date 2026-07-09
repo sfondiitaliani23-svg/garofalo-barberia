@@ -1,6 +1,6 @@
 'use server';
 
-import { addDays, format, parseISO, startOfDay } from 'date-fns';
+import { addDays, endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { SITE_CONFIG } from '@/lib/site-config';
@@ -140,27 +140,41 @@ export async function resolveBarberForSlot(
   return checks.find((id) => id !== null) ?? null;
 }
 
+function getBookingCandidateDates(): string[] {
+  const bookingEnd = endOfDay(parseISO(SITE_CONFIG.bookingEndDate));
+  const candidates: string[] = [];
+  let cursor = addDays(new Date(), 1);
+
+  while (cursor <= bookingEnd) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 1) {
+      candidates.push(format(cursor, 'yyyy-MM-dd'));
+    }
+    cursor = addDays(cursor, 1);
+  }
+
+  return candidates;
+}
+
 export async function getAvailableDates(
   durationMinutes: number,
   barberId: string | null = null,
   excludeAppointmentId?: string | null
 ): Promise<string[]> {
-  const today = new Date();
-  const candidates: string[] = [];
+  const candidates = getBookingCandidateDates();
+  const results: (string | null)[] = [];
+  const batchSize = 21;
 
-  for (let i = 1; i <= SITE_CONFIG.bookingHorizonDays; i++) {
-    const d = addDays(today, i);
-    const day = d.getDay();
-    if (day === 0 || day === 1) continue;
-    candidates.push(format(d, 'yyyy-MM-dd'));
+  for (let i = 0; i < candidates.length; i += batchSize) {
+    const batch = candidates.slice(i, i + batchSize);
+    const batchResults = await Promise.all(
+      batch.map(async (dateStr) => {
+        const { slots } = await getAvailableSlots(barberId, dateStr, durationMinutes, excludeAppointmentId);
+        return slots.length > 0 ? dateStr : null;
+      })
+    );
+    results.push(...batchResults);
   }
-
-  const results = await Promise.all(
-    candidates.map(async (dateStr) => {
-      const { slots } = await getAvailableSlots(barberId, dateStr, durationMinutes, excludeAppointmentId);
-      return slots.length > 0 ? dateStr : null;
-    })
-  );
 
   return results.filter((d): d is string => d !== null);
 }
