@@ -6,7 +6,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-const GENDERS = ['male', 'female', 'other', 'unknown'] as const;
+const GENDERS = ['male', 'female', 'child', 'other', 'unknown'] as const;
 const AGE_RANGES = [
   'under_18',
   '18_24',
@@ -37,7 +37,7 @@ function emptyStats(): AnalyticsStats {
     configured: false,
     dailyVisits: 0,
     liveVisitors: 0,
-    genderBreakdown: { male: 0, female: 0, other: 0, unknown: 0 },
+    genderBreakdown: { male: 0, female: 0, child: 0, other: 0, unknown: 0 },
     ageBreakdown: {
       under_18: 0,
       '18_24': 0,
@@ -97,7 +97,7 @@ export async function trackHeartbeat(sessionId: string) {
 
 export async function saveDemographics(
   sessionId: string,
-  gender: 'male' | 'female' | 'other',
+  gender: 'male' | 'female' | 'child' | 'other',
   ageRange: AgeRange
 ) {
   const supabase = await createServiceClient();
@@ -155,6 +155,7 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   const genderBreakdown: Record<Gender, number> = {
     male: 0,
     female: 0,
+    child: 0,
     other: 0,
     unknown: 0,
   };

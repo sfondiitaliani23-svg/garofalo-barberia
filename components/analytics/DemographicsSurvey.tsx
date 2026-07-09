@@ -11,7 +11,7 @@ import {
 
 export function DemographicsSurvey() {
   const [open, setOpen] = useState(false);
-  const [gender, setGender] = useState<'male' | 'female' | null>(null);
+  const [gender, setGender] = useState<'male' | 'female' | 'child' | null>(null);
   const [ageRange, setAgeRange] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -65,6 +65,7 @@ export function DemographicsSurvey() {
             [
               { value: 'male', label: 'Uomo' },
               { value: 'female', label: 'Donna' },
+              { value: 'child', label: 'Bimbo' },
             ] as const
           ).map(({ value, label }) => (
             <button

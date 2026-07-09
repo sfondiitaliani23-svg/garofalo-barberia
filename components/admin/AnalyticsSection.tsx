@@ -41,6 +41,7 @@ export function AnalyticsSection({
   const genderTotal =
     stats.genderBreakdown.male +
     stats.genderBreakdown.female +
+    stats.genderBreakdown.child +
     stats.genderBreakdown.other;
   const knownGender = genderTotal;
 
@@ -62,7 +63,7 @@ export function AnalyticsSection({
         )}
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-white/60">Visite oggi</CardTitle>
@@ -99,14 +100,23 @@ export function AnalyticsSection({
             <p className="mt-1 text-xs text-white/40">Risposte sondaggio</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-white/60">Bimbi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gold">{stats.genderBreakdown.child}</p>
+            <p className="mt-1 text-xs text-white/40">Risposte sondaggio</p>
+          </CardContent>
+        </Card>
       </div>
 
       {showBreakdown && (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <div className="rounded-lg border border-white/10 bg-[#111] p-6">
-            <h3 className="text-sm font-medium text-white/70">Genere (uomo/donna)</h3>
+            <h3 className="text-sm font-medium text-white/70">Genere (uomo/donna/bimbi)</h3>
             <div className="mt-4 space-y-3">
-              {(['male', 'female'] as const).map((key) => (
+              {(['male', 'female', 'child'] as const).map((key) => (
                 <BreakdownBar
                   key={key}
                   label={GENDER_LABELS[key]}
