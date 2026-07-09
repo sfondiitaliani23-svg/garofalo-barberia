@@ -265,26 +265,107 @@ export async function cancelAppointmentAction(formData: FormData) {
   await adminCancelAppointment(id);
 }
 
-export async function upsertService(formData: FormData) {
+export interface AdminServiceInput {
+  id?: string;
+  name: string;
+  category: string;
+  priceEuros: number;
+  durationMinutes: number;
+  description?: string;
+  isActive?: boolean;
+}
+
+const SERVICE_CATEGORIES = ['taglio', 'barba', 'styling', 'baby'] as const;
+
+export async function getAdminServices() {
   await requireAdmin();
   const supabase = await createClient();
-  if (!supabase) return { ok: false };
+  if (!supabase) return [];
 
-  const id = formData.get('id') as string | null;
+  const { data } = await supabase
+    .from('services')
+    .select('*')
+    .order('sort_order');
+
+  return data ?? [];
+}
+
+export async function saveAdminService(input: AdminServiceInput) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const name = input.name.trim();
+  if (!name) return { ok: false, error: 'Inserisci il nome del servizio' };
+  if (!SERVICE_CATEGORIES.includes(input.category as (typeof SERVICE_CATEGORIES)[number])) {
+    return { ok: false, error: 'Categoria non valida' };
+  }
+  if (input.priceEuros <= 0) return { ok: false, error: 'Inserisci un prezzo valido' };
+  if (input.durationMinutes <= 0) return { ok: false, error: 'Inserisci una durata valida' };
+
   const payload = {
-    name: formData.get('name') as string,
-    category: formData.get('category') as string,
-    price_cents: Math.round(parseFloat(formData.get('price') as string) * 100),
-    duration_minutes: parseInt(formData.get('duration') as string, 10),
-    is_active: formData.get('is_active') === 'true',
+    name,
+    category: input.category,
+    price_cents: Math.round(input.priceEuros * 100),
+    duration_minutes: input.durationMinutes,
+    description: input.description?.trim() || null,
+    is_active: input.isActive ?? true,
   };
 
-  if (id) {
-    await supabase.from('services').update(payload).eq('id', id);
+  if (input.id) {
+    const { error } = await supabase.from('services').update(payload).eq('id', input.id);
+    if (error) return { ok: false, error: 'Errore durante la modifica' };
   } else {
-    await supabase.from('services').insert(payload);
+    const { data: last } = await supabase
+      .from('services')
+      .select('sort_order')
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const { error } = await supabase.from('services').insert({
+      ...payload,
+      sort_order: (last?.sort_order ?? 0) + 1,
+    });
+    if (error) return { ok: false, error: 'Errore durante la creazione' };
   }
 
   revalidatePath('/admin/servizi');
+  revalidatePath('/prenota');
+  revalidatePath('/servizi');
   return { ok: true };
+}
+
+export async function deleteAdminService(serviceId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const { count } = await supabase
+    .from('appointments')
+    .select('*', { count: 'exact', head: true })
+    .eq('service_id', serviceId)
+    .in('status', ['confirmed']);
+
+  if ((count ?? 0) > 0) {
+    const { error } = await supabase
+      .from('services')
+      .update({ is_active: false })
+      .eq('id', serviceId);
+
+    if (error) return { ok: false, error: 'Errore durante la disattivazione' };
+
+    revalidatePath('/admin/servizi');
+    revalidatePath('/prenota');
+    revalidatePath('/servizi');
+    return { ok: true, deactivated: true };
+  }
+
+  const { error } = await supabase.from('services').delete().eq('id', serviceId);
+  if (error) return { ok: false, error: 'Impossibile eliminare il servizio' };
+
+  revalidatePath('/admin/servizi');
+  revalidatePath('/prenota');
+  revalidatePath('/servizi');
+  return { ok: true, deactivated: false };
 }
