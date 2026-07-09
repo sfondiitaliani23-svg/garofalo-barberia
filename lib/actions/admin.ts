@@ -585,3 +585,124 @@ export async function deleteAdminTimeOff(timeOffId: string) {
   revalidateTeamPaths();
   return { ok: true };
 }
+
+export interface AdminPromotionInput {
+  id?: string;
+  title: string;
+  description?: string;
+  code?: string;
+  discountType: 'percent' | 'fixed';
+  discountValue: number;
+  serviceId?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  isActive?: boolean;
+}
+
+function revalidatePromotionPaths() {
+  revalidatePath('/admin/promozioni');
+  revalidatePath('/servizi');
+  revalidatePath('/prenota');
+}
+
+export async function getAdminPromotions() {
+  await requireAdmin();
+  const supabase = await createClient();
+  if (!supabase) return { promotions: [], services: [] };
+
+  const [{ data: promotions }, { data: services }] = await Promise.all([
+    supabase
+      .from('promotions')
+      .select('*, service:services(id, name)')
+      .order('created_at', { ascending: false }),
+    supabase.from('services').select('id, name').eq('is_active', true).order('sort_order'),
+  ]);
+
+  return { promotions: promotions ?? [], services: services ?? [] };
+}
+
+export async function saveAdminPromotion(input: AdminPromotionInput) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const title = input.title.trim();
+  if (!title) return { ok: false, error: 'Inserisci il titolo della promozione' };
+
+  if (input.discountType === 'percent') {
+    if (input.discountValue < 1 || input.discountValue > 100) {
+      return { ok: false, error: 'La percentuale deve essere tra 1 e 100' };
+    }
+  } else if (input.discountValue <= 0) {
+    return { ok: false, error: 'Inserisci un importo sconto valido' };
+  }
+
+  const code = input.code?.trim().toUpperCase() || null;
+  if (code && !/^[A-Z0-9_-]{3,20}$/.test(code)) {
+    return { ok: false, error: 'Il codice deve avere 3-20 caratteri (lettere, numeri, - o _)' };
+  }
+
+  if (input.startsAt && input.endsAt && new Date(input.startsAt) >= new Date(input.endsAt)) {
+    return { ok: false, error: 'La data di fine deve essere successiva all\'inizio' };
+  }
+
+  const payload = {
+    title,
+    description: input.description?.trim() || null,
+    code,
+    discount_type: input.discountType,
+    discount_value: input.discountType === 'fixed'
+      ? Math.round(input.discountValue)
+      : Math.round(input.discountValue),
+    service_id: input.serviceId || null,
+    starts_at: input.startsAt || null,
+    ends_at: input.endsAt || null,
+    is_active: input.isActive ?? true,
+  };
+
+  if (input.id) {
+    const { error } = await supabase.from('promotions').update(payload).eq('id', input.id);
+    if (error) {
+      if (error.code === '23505') return { ok: false, error: 'Codice promozionale già in uso' };
+      return { ok: false, error: 'Errore durante la modifica' };
+    }
+  } else {
+    const { error } = await supabase.from('promotions').insert(payload);
+    if (error) {
+      if (error.code === '23505') return { ok: false, error: 'Codice promozionale già in uso' };
+      return { ok: false, error: 'Errore durante la creazione' };
+    }
+  }
+
+  revalidatePromotionPaths();
+  return { ok: true };
+}
+
+export async function deleteAdminPromotion(promotionId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const { count } = await supabase
+    .from('appointments')
+    .select('*', { count: 'exact', head: true })
+    .eq('promotion_id', promotionId);
+
+  if ((count ?? 0) > 0) {
+    const { error } = await supabase
+      .from('promotions')
+      .update({ is_active: false })
+      .eq('id', promotionId);
+
+    if (error) return { ok: false, error: 'Errore durante la disattivazione' };
+
+    revalidatePromotionPaths();
+    return { ok: true, deactivated: true };
+  }
+
+  const { error } = await supabase.from('promotions').delete().eq('id', promotionId);
+  if (error) return { ok: false, error: 'Impossibile eliminare la promozione' };
+
+  revalidatePromotionPaths();
+  return { ok: true, deactivated: false };
+}

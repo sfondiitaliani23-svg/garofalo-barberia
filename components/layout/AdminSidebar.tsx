@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/actions/auth';
-import { LayoutDashboard, Calendar, Users, Scissors, UserCog, FileText, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Calendar, Users, Scissors, UserCog, FileText, BarChart3, Tag } from 'lucide-react';
 
 const links = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/prenotazioni', label: 'Prenotazioni', icon: Calendar },
   { href: '/admin/clienti', label: 'Clienti', icon: Users },
   { href: '/admin/servizi', label: 'Servizi', icon: Scissors },
+  { href: '/admin/promozioni', label: 'Promozioni', icon: Tag },
   { href: '/admin/staff', label: 'Gestione team', icon: UserCog },
   { href: '/admin/contenuti', label: 'Contenuti', icon: FileText },
   { href: '/admin/report', label: 'Report', icon: BarChart3 },

@@ -2,6 +2,7 @@ export type UserRole = 'customer' | 'admin';
 export type AppointmentStatus = 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 export type PhotoType = 'before' | 'after';
 export type ServiceCategory = 'taglio' | 'barba' | 'styling' | 'baby';
+export type DiscountType = 'percent' | 'fixed';
 
 export interface Profile {
   id: string;
@@ -70,6 +71,8 @@ export interface Appointment {
   notes: string | null;
   reminder_email_sent_at: string | null;
   reminder_whatsapp_sent_at: string | null;
+  promotion_id: string | null;
+  discount_cents: number;
   created_at: string;
   barber?: Barber;
   service?: Service;
@@ -83,6 +86,21 @@ export interface AppointmentPhoto {
   storage_path: string;
   caption: string | null;
   created_at: string;
+}
+
+export interface Promotion {
+  id: string;
+  title: string;
+  description: string | null;
+  code: string | null;
+  discount_type: DiscountType;
+  discount_value: number;
+  service_id: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  created_at: string;
+  service?: Service | null;
 }
 
 export interface SiteContent {
