@@ -1,0 +1,19 @@
+name: Promemoria appuntamenti
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invia promemoria 6 ore prima
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://garofalo-barberia.vercel.app' }}
+        run: |
+          curl -fsS \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${SITE_URL}/api/cron/appointment-reminders"
