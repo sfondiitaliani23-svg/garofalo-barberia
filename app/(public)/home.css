@@ -722,16 +722,24 @@
 }
 
 /* â”€â”€ Perfume flip cards â”€â”€ */
+.section-profumi-mood {
+  position: relative;
+}
+
 .perfume-card-flip {
+  position: relative;
+  z-index: 1;
   perspective: 1100px;
   aspect-ratio: 4/5;
   cursor: pointer;
   outline: none;
   filter: drop-shadow(0 14px 32px rgba(13, 13, 13, 0.22)) drop-shadow(0 4px 12px rgba(13, 13, 13, 0.12));
-  transition: filter 0.45s ease;
+  transition:
+    transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1),
+    filter 0.45s ease,
+    opacity 0.45s ease;
 }
 
-.perfume-card-flip:hover,
 .perfume-card-flip.is-flipped,
 .perfume-card-flip:focus-visible {
   filter: drop-shadow(0 20px 44px rgba(13, 13, 13, 0.3)) drop-shadow(0 8px 18px rgba(13, 13, 13, 0.16));
@@ -823,6 +831,45 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .section-profumi-mood::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.52);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.45s ease, visibility 0.45s ease;
+    pointer-events: none;
+    z-index: 40;
+  }
+
+  .section-profumi-mood:has(.perfume-card-flip:hover)::before,
+  .section-profumi-mood:has(.perfume-card-flip:focus-visible)::before {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .perfumes-grid {
+    position: relative;
+    z-index: 1;
+  }
+
+  .perfume-card-flip:hover,
+  .perfume-card-flip:focus-visible {
+    z-index: 50;
+    transform: scale(1.14);
+    filter: drop-shadow(0 28px 52px rgba(0, 0, 0, 0.5)) drop-shadow(0 10px 24px rgba(0, 0, 0, 0.28));
+  }
+
+  .section-profumi-mood:has(.perfume-card-flip:hover) .perfume-card-flip:not(:hover),
+  .section-profumi-mood:has(.perfume-card-flip:focus-visible) .perfume-card-flip:not(:focus-visible) {
+    transform: scale(0.94);
+    opacity: 0.45;
+    filter: blur(3px) brightness(0.65);
+  }
+
   .perfume-card-flip:hover .perfume-card-inner,
   .perfume-card-flip:focus-visible .perfume-card-inner {
     transform: rotateY(180deg);
@@ -834,8 +881,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .perfume-card-inner {
+  .perfume-card-inner,
+  .perfume-card-flip,
+  .section-profumi-mood::before {
     transition: none;
+  }
+
+  .perfume-card-flip:hover,
+  .perfume-card-flip:focus-visible {
+    transform: none;
   }
 }
 
