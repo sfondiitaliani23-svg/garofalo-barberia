@@ -3,8 +3,9 @@ import Image from 'next/image';
 import { BtnArrow } from '@/components/home/BtnArrow';
 import { AnimatedDivider } from '@/components/home/AnimatedDivider';
 import { HomeClientEffects } from '@/components/home/HomeClientEffects';
+import { PerfumeCardsGrid } from '@/components/home/PerfumeCardsGrid';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
-import { PERFUMES, PHOTO_STRIP, PRICE_LIST, REVIEWS } from '@/lib/data/homepage';
+import { PHOTO_STRIP, PRICE_LIST, REVIEWS } from '@/lib/data/homepage';
 import './home.css';
 
 export default function HomePage() {
@@ -122,32 +123,7 @@ export default function HomePage() {
             <AnimatedDivider />
             <p className="section-lead mx-auto text-center">Scopri la collezione di fragranze che stiamo portando in barberia.</p>
           </div>
-          <div className="services-grid perfumes-grid">
-            {PERFUMES.map((perfume) => (
-              <div key={perfume.name} className="perfume-card-flip" tabIndex={0}>
-                <div className="perfume-card-inner">
-                  <div className="perfume-card-front service-card-luxury">
-                    <Image src={perfume.image} alt={perfume.name} width={400} height={500} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div className="service-card-body">
-                      <h3>{perfume.name}</h3>
-                      <span>Scopri di più</span>
-                    </div>
-                  </div>
-                  <div className="perfume-card-back">
-                    <h3>{perfume.name}</h3>
-                    <p className="perfume-card-lead">{perfume.lead}</p>
-                    <p>{perfume.body}</p>
-                    {perfume.notes.map((note) => (
-                      <p key={note.label} className="perfume-card-notes">
-                        <strong>{note.label}:</strong> {note.value}
-                      </p>
-                    ))}
-                    {perfume.footer && <p className="perfume-card-footer">{perfume.footer}</p>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <PerfumeCardsGrid />
           <div className="text-center mt-10">
             <Link href="/contatti" className="btn-outline">Vieni a scoprirli in negozio</Link>
           </div>
