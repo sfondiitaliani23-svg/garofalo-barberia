@@ -22,8 +22,14 @@ icone/
 homepage/  (ordine come in Home, dall'alto verso il basso)
   1.jpg                 → Hero — sfondo grande in cima alla Home
                         (puoi caricare come 1-new.jpg e poi eseguire scripts/applica-immagini.py)
-  2.jpg                 → Sezione "Esperienza di qualità" (foto a sinistra)
+  2.jpg                 → Esperienza di qualità + cornice prezzi (foto a sinistra)
   3.jpg                 → Sezione "Chi siamo"
+  newbanner-1.png       → Foto 1 griglia 2×2 (tra Chi siamo e Esperienza)
+  newbanner-2.png       → Foto 2 griglia 2×2
+  newbanner-3.png       → Foto 3 griglia 2×2
+  newbanner-4.png       → Foto 4 griglia 2×2
+                        Formato: 4:5 (es. 1000×1250 px, min 800×1000)
+                        Bordo oro su ogni foto al passaggio del cursore
   4-1.jpg               → Profumo Mood Velvet (sfondo fuoco/nero)
   4-2.jpg               → Profumo Fancy (luna e deserto)
   4-3.jpg               → Profumo Mood Imperious (cactus e sabbia)

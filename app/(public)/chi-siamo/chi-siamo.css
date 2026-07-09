@@ -1,0 +1,338 @@
+.page-chi-siamo {
+  --gold: #cd9a4f;
+  --gold-light: #ffb949;
+  --gold-dark: #c88c23;
+  --black: #000000;
+  --white: #ffffff;
+  --muted: rgba(255, 255, 255, 0.6);
+  --font-barber-header: 'Rye', Georgia, serif;
+}
+
+.page-chi-siamo .section {
+  padding: 5rem 0;
+}
+
+.page-chi-siamo .section-white,
+.page-chi-siamo .section-cream {
+  background: var(--black);
+  color: var(--white);
+}
+
+.page-chi-siamo .section-lead {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.page-chi-siamo .page-hero {
+  padding: 8rem 0 4rem;
+  background: var(--black);
+  color: var(--white);
+  text-align: center;
+}
+
+.page-chi-siamo .hero-heading {
+  font-family: var(--font-barber-header);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.page-chi-siamo .heading-display,
+.page-chi-siamo .team-studio-title {
+  font-family: var(--font-barber-header);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.page-chi-siamo .team-studio-title {
+  text-transform: none;
+  letter-spacing: 0.02em;
+}
+
+.page-chi-siamo .heading-display {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.05;
+  margin: 0 0 1.25rem;
+}
+
+.page-chi-siamo .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.page-chi-siamo .eyebrow-line {
+  width: 25px;
+  height: 3px;
+  background: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.page-chi-siamo .eyebrow-text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.page-chi-siamo .heading-center {
+  text-align: center;
+}
+
+.page-chi-siamo .diamond-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.5rem auto 2.5rem;
+  max-width: 200px;
+}
+
+.page-chi-siamo .diamond-line {
+  flex: 1;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.5;
+}
+
+.page-chi-siamo .diamond-block {
+  width: 8px;
+  height: 8px;
+  background: var(--gold);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+
+.page-chi-siamo .team-card-lux {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 1.75rem;
+}
+
+.page-chi-siamo .team-studio-section {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+
+.page-chi-siamo .team-studio-header {
+  text-align: center;
+  margin-bottom: 3.5rem;
+}
+
+.page-chi-siamo .team-studio-title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 1;
+  margin: 0 0 1.5rem;
+  color: var(--white);
+}
+
+.page-chi-siamo .team-studio-divider {
+  max-width: 320px;
+  margin: 0 auto 1.75rem;
+}
+
+.page-chi-siamo .team-studio-subtitle {
+  font-family: 'Montserrat', sans-serif;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.page-chi-siamo .team-studio-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem 2.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 700px) {
+  .page-chi-siamo .team-studio-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem 2.5rem;
+  }
+
+  .page-chi-siamo .team-studio-card--owner {
+    grid-column: 1 / -1;
+    max-width: 380px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+@media (min-width: 1050px) {
+  .page-chi-siamo .team-studio-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .page-chi-siamo .team-studio-card--owner {
+    grid-column: auto;
+    max-width: none;
+    margin: 0;
+  }
+}
+
+.page-chi-siamo .team-studio-grid:hover .team-studio-card:not(:hover):not(:focus-within):not(.is-active) {
+  opacity: 0.45;
+}
+
+.page-chi-siamo .team-studio-card {
+  text-align: center;
+  transition: opacity 0.45s ease;
+}
+
+.page-chi-siamo .team-studio-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.page-chi-siamo .team-studio-photo-wrap {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 0 0.35rem;
+}
+
+.page-chi-siamo .team-studio-photo-wrap::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 72%;
+  transform: scaleY(0);
+  transform-origin: bottom center;
+  background: linear-gradient(
+    to top,
+    var(--gold-dark) 0%,
+    var(--gold) 22%,
+    rgba(255, 185, 73, 0.72) 48%,
+    rgba(255, 185, 73, 0.28) 72%,
+    transparent 100%
+  );
+  transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page-chi-siamo .team-studio-card:hover .team-studio-photo-wrap::before,
+.page-chi-siamo .team-studio-card:focus-within .team-studio-photo-wrap::before,
+.page-chi-siamo .team-studio-card.is-active .team-studio-photo-wrap::before {
+  transform: scaleY(1);
+}
+
+.page-chi-siamo .team-studio-photo-bg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 62%;
+  transform: scaleY(0.94);
+  transform-origin: bottom center;
+  background: linear-gradient(
+    to top,
+    var(--black) 0%,
+    rgba(0, 0, 0, 0.92) 28%,
+    rgba(0, 0, 0, 0.45) 58%,
+    transparent 100%
+  );
+  transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1), height 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.page-chi-siamo .team-studio-card:hover .team-studio-photo-bg,
+.page-chi-siamo .team-studio-card:focus-within .team-studio-photo-bg,
+.page-chi-siamo .team-studio-card.is-active .team-studio-photo-bg {
+  height: 72%;
+  transform: scaleY(1);
+}
+
+.page-chi-siamo .team-studio-photo {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.page-chi-siamo .team-studio-photo img {
+  transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-chi-siamo .team-studio-card:hover .team-studio-photo img,
+.page-chi-siamo .team-studio-card:focus-within .team-studio-photo img,
+.page-chi-siamo .team-studio-card.is-active .team-studio-photo img {
+  transform: scale(1.04) translateY(-6px);
+}
+
+.page-chi-siamo .team-studio-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 0.35rem;
+  color: var(--white);
+  transition: color 0.35s ease;
+}
+
+.page-chi-siamo .team-studio-card:hover .team-studio-name,
+.page-chi-siamo .team-studio-card:focus-within .team-studio-name,
+.page-chi-siamo .team-studio-card.is-active .team-studio-name {
+  color: var(--gold-light);
+}
+
+.page-chi-siamo .team-studio-role {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--gold-light);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.page-chi-siamo .team-studio-book-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.75rem;
+  min-width: 9.5rem;
+  padding: 0 2rem;
+  margin-top: 1.25rem;
+  background: var(--gold);
+  color: var(--black);
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 100px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background 0.2s;
+}
+
+.page-chi-siamo .team-studio-card:hover .team-studio-book-btn,
+.page-chi-siamo .team-studio-card:focus-within .team-studio-book-btn,
+.page-chi-siamo .team-studio-card.is-active .team-studio-book-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-chi-siamo .team-studio-book-btn:hover {
+  background: var(--gold-light);
+}

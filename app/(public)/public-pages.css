@@ -1,0 +1,241 @@
+.public-page {
+  --gold: #cd9a4f;
+  --gold-light: #ffb949;
+  --black: #000000;
+  --white: #ffffff;
+  --muted: rgba(255, 255, 255, 0.6);
+  --font-barber-header: 'Rye', Georgia, serif;
+}
+
+.public-page .section {
+  padding: 5rem 0;
+}
+
+.public-page .section-white {
+  background: var(--black);
+  color: var(--white);
+}
+
+.public-page .page-hero {
+  padding: 8rem 0 4rem;
+  background: var(--black);
+  color: var(--white);
+  text-align: center;
+}
+
+.public-page .hero-heading {
+  font-family: var(--font-barber-header);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 1rem;
+}
+
+.public-page .hero-sub {
+  font-family: var(--font-barber-header);
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 auto;
+}
+
+.public-page .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.public-page .eyebrow.justify-center {
+  justify-content: center;
+}
+
+.public-page .eyebrow-line {
+  width: 25px;
+  height: 3px;
+  background: var(--gold-light);
+  flex-shrink: 0;
+}
+
+.public-page .eyebrow-text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.public-page .heading-display {
+  font-family: var(--font-barber-header);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.public-page .section-lead {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+.public-page .split-section {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+}
+
+.public-page .split-section--align-top {
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .public-page .split-section {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+}
+
+.public-page .form-card {
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+  color: var(--white);
+}
+
+.public-page .form-card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.public-page .form-card-body {
+  padding: 1.5rem;
+}
+
+.public-page .form-input {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  color: var(--white);
+}
+
+.public-page .form-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.public-page .form-input:focus {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+.public-page .price-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.public-page .price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.public-page .price-row:last-child {
+  border-bottom: none;
+}
+
+.public-page .info-box {
+  background: rgba(205, 154, 79, 0.08);
+  border: 1px solid rgba(205, 154, 79, 0.2);
+  border-radius: 4px;
+  padding: 1.25rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.public-page .map-embed {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  min-height: 400px;
+}
+
+.public-page .contact-message-card {
+  width: 100%;
+}
+
+.public-page .filter-btn {
+  padding: 0.55rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 100px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.public-page .filter-btn:hover,
+.public-page .filter-btn.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--black);
+}
+
+.public-page .gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .public-page .gallery-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+.public-page .gallery-item {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #111;
+}
+
+.public-page .gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.public-page .gallery-item:hover img {
+  transform: scale(1.04);
+}
+
+.public-page .gallery-filters-bar {
+  background: var(--black);
+}
+
+.public-page .whatsapp-icon-inline {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
