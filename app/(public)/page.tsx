@@ -1,20 +1,11 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { BtnArrow } from '@/components/home/BtnArrow';
+import { AnimatedDivider } from '@/components/home/AnimatedDivider';
 import { HomeClientEffects } from '@/components/home/HomeClientEffects';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
 import { PERFUMES, PHOTO_STRIP, PRICE_LIST, REVIEWS } from '@/lib/data/homepage';
 import './home.css';
-
-function DiamondDivider() {
-  return (
-    <div className="diamond-divider">
-      <div className="diamond-line" />
-      <div className="diamond-block" />
-      <div className="diamond-line" />
-    </div>
-  );
-}
 
 export default function HomePage() {
   return (
@@ -45,7 +36,7 @@ export default function HomePage() {
         <div className="container-lux">
           <div className="heading-center">
             <h2 className="heading-display">Chi siamo</h2>
-            <DiamondDivider />
+            <AnimatedDivider />
           </div>
           <div className="split-section split-reverse">
             <div className="split-image">
@@ -81,6 +72,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <AnimatedDivider variant="wide" className="section-divider-chi-siamo" />
 
       <section className="section photo-strip-section" aria-label="Galleria servizi barberia">
         <div className="photo-strip">
@@ -127,7 +120,7 @@ export default function HomePage() {
         <div className="container-lux">
           <div className="heading-center mb-10">
             <h2 className="heading-display">Profumi Mood</h2>
-            <DiamondDivider />
+            <AnimatedDivider />
             <p className="section-lead mx-auto text-center">Scopri la collezione di fragranze che stiamo portando in barberia.</p>
           </div>
           <div className="services-grid perfumes-grid">
@@ -216,7 +209,7 @@ export default function HomePage() {
         <div className="container-lux">
           <div className="heading-center mb-10">
             <h2 className="heading-display">Cosa dicono di noi</h2>
-            <DiamondDivider />
+            <AnimatedDivider />
           </div>
           <div className="reviews-grid">
             {REVIEWS.map((review) => (
@@ -253,7 +246,7 @@ export default function HomePage() {
             />
             <span className="newsletter-script">Ascolta!</span>
           </div>
-          <DiamondDivider />
+          <AnimatedDivider />
           <h2 className="newsletter-heading">
             Iscriviti alla nostra lista email per offerte e novità in anteprima
           </h2>
