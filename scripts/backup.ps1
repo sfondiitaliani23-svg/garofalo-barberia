@@ -51,11 +51,11 @@ try {
         if ($status) {
             Write-Host "Attenzione: ci sono modifiche non committate."
         }
-        git push origin $branch 2>&1 | ForEach-Object { Write-Host $_ }
+        git push origin $branch 2>&1 | ForEach-Object { Write-Host $_.ToString() }
         if ($LASTEXITCODE -eq 0) {
             Write-Host "GitHub sincronizzato (branch $branch)"
         } else {
-            Write-Warning "Push GitHub non riuscito — backup locale disponibile."
+            Write-Warning "Push GitHub non riuscito - backup locale disponibile."
         }
     }
 } finally {
