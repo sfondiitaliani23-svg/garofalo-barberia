@@ -44,7 +44,8 @@ export function AdminAppointmentForm({
   onSaved,
 }: AdminAppointmentFormProps) {
   const isEdit = Boolean(appointment);
-  const [barberId, setBarberId] = useState(appointment?.barber_id ?? defaultBarberId);
+  const barberId = defaultBarberId;
+  const selectedBarber = barbers.find((b) => b.id === barberId);
   const [serviceId, setServiceId] = useState(appointment?.service_id ?? services[0]?.id ?? '');
   const [date, setDate] = useState(
     appointment
@@ -204,17 +205,10 @@ export function AdminAppointmentForm({
             </select>
           </div>
           <div>
-            <Label htmlFor="admin-barber">Barbiere *</Label>
-            <select
-              id="admin-barber"
-              value={barberId}
-              onChange={(e) => setBarberId(e.target.value)}
-              className="mt-1 flex h-11 w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 text-sm text-white"
-            >
-              {barbers.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
+            <Label>Barbiere</Label>
+            <p className="mt-1 rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2.5 text-sm text-white">
+              {selectedBarber?.name ?? '—'}
+            </p>
           </div>
           <div>
             <Label htmlFor="admin-month">Mese</Label>
