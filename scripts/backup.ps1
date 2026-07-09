@@ -51,7 +51,8 @@ try {
         if ($status) {
             Write-Host "Attenzione: ci sono modifiche non committate."
         }
-        git push origin $branch 2>&1 | ForEach-Object { Write-Host $_.ToString() }
+        $pushOutput = cmd /c "git push origin $branch 2>&1"
+        $pushOutput | ForEach-Object { Write-Host $_ }
         if ($LASTEXITCODE -eq 0) {
             Write-Host "GitHub sincronizzato (branch $branch)"
         } else {
