@@ -14,7 +14,7 @@ export function GalleryGrid() {
 
   return (
     <>
-      <div className="gallery-filters-bar sticky top-20 z-20 mb-8 flex flex-wrap gap-3 py-3">
+      <div className="gallery-filters-bar mb-8 flex flex-wrap items-center gap-3">
         {GALLERY_FILTERS.map((filter) => (
           <button
             key={filter.id}
