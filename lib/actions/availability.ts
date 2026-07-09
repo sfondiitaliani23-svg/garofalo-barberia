@@ -11,7 +11,8 @@ export async function getAvailableSlots(
   barberId: string | null,
   dateStr: string,
   durationMinutes: number,
-  excludeAppointmentId?: string | null
+  excludeAppointmentId?: string | null,
+  forAdmin = false
 ): Promise<{ slots: string[]; error?: string }> {
   if (!isSupabaseConfigured()) {
     return getFallbackSlots(dateStr, durationMinutes);
@@ -77,7 +78,7 @@ export async function getAvailableSlots(
 
     const allSlotsSet = new Set<string>();
     const minAdvance = new Date();
-    minAdvance.setHours(minAdvance.getHours() + 2);
+    if (!forAdmin) minAdvance.setHours(minAdvance.getHours() + 2);
 
     for (const bid of barberIds) {
       const availability = availabilityByBarber.get(bid);
@@ -99,7 +100,7 @@ export async function getAvailableSlots(
       const available = filterAvailableSlots(slots, appointments, timeOff);
 
       for (const slot of available) {
-        if (slot.startsAt > minAdvance) {
+        if (forAdmin || slot.startsAt > minAdvance) {
           allSlotsSet.add(slot.time);
         }
       }
