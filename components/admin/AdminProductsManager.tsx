@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Package, Minus, AlertTriangle } from 'lucide-react';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import {
   saveAdminProduct,
   deleteAdminProduct,
-  adjustProductStock,
+  setProductStock,
 } from '@/lib/actions/admin';
 import { formatPrice } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -30,15 +30,58 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   other: 'Altro',
 };
 
+const STOCK_SYNC_DELAY_MS = 280;
+
 interface AdminProductsManagerProps {
   products: Product[];
 }
 
+function buildProductFromForm(
+  form: {
+    name: string;
+    brand: string;
+    category: ProductCategory;
+    sku: string;
+    stock: string;
+    minStock: string;
+    price: string;
+    imageUrl: string;
+    description: string;
+  },
+  id: string,
+  sortOrder: number
+): Product {
+  const stockQty = parseInt(form.stock, 10);
+  const minStockQty = parseInt(form.minStock, 10);
+  const priceEuros = form.price ? parseFloat(form.price.replace(',', '.')) : null;
+  const now = new Date().toISOString();
+
+  return {
+    id,
+    name: form.name.trim(),
+    brand: form.brand.trim() || null,
+    category: form.category,
+    sku: form.sku.trim().toUpperCase() || null,
+    stock_quantity: stockQty,
+    min_stock_level: minStockQty,
+    price_cents:
+      priceEuros != null && priceEuros > 0 ? Math.round(priceEuros * 100) : null,
+    image_url: form.imageUrl.trim() || null,
+    description: form.description.trim() || null,
+    is_active: true,
+    sort_order: sortOrder,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
 export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [items, setItems] = useState(products);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState<ProductCategory>('perfume');
@@ -49,7 +92,20 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
 
-  const lowStockProducts = products.filter(
+  const stockTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const pendingStock = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    setItems(products);
+  }, [products]);
+
+  useEffect(() => {
+    return () => {
+      stockTimers.current.forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
+  const lowStockProducts = items.filter(
     (p) => p.is_active && p.stock_quantity <= p.min_stock_level
   );
 
@@ -81,6 +137,10 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
     setModalOpen(true);
   }
 
+  function getFormState() {
+    return { name, brand, category, sku, stock, minStock, price, imageUrl, description };
+  }
+
   function handleSave() {
     const stockQty = parseInt(stock, 10);
     const minStockQty = parseInt(minStock, 10);
@@ -103,29 +163,50 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
       return;
     }
 
-    startTransition(async () => {
-      const result = await saveAdminProduct({
-        id: editing?.id,
-        name,
-        brand,
-        category,
-        sku,
-        stockQuantity: stockQty,
-        minStockLevel: minStockQty,
-        priceEuros,
-        imageUrl,
-        description,
-        isActive: true,
-      });
+    const isEditing = !!editing;
+    const tempId = editing?.id ?? `temp-${Date.now()}`;
+    const sortOrder = editing?.sort_order ?? items.length + 1;
+    const optimistic = buildProductFromForm(getFormState(), tempId, sortOrder);
+    const previousItems = items;
 
+    setItems((prev) =>
+      isEditing
+        ? prev.map((p) => (p.id === editing.id ? optimistic : p))
+        : [...prev, optimistic]
+    );
+    setModalOpen(false);
+    setSaving(true);
+
+    void saveAdminProduct({
+      id: editing?.id,
+      name,
+      brand,
+      category,
+      sku,
+      stockQuantity: stockQty,
+      minStockLevel: minStockQty,
+      priceEuros,
+      imageUrl,
+      description,
+      isActive: true,
+      sortOrder,
+    }).then((result) => {
+      setSaving(false);
       if (!result.ok) {
+        setItems(previousItems);
         toast.error(result.error);
         return;
       }
 
-      toast.success(editing ? 'Prodotto modificato' : 'Prodotto creato');
-      setModalOpen(false);
-      router.refresh();
+      if (result.product) {
+        setItems((prev) =>
+          isEditing
+            ? prev.map((p) => (p.id === editing.id ? result.product! : p))
+            : prev.map((p) => (p.id === tempId ? result.product! : p))
+        );
+      }
+
+      toast.success(isEditing ? 'Prodotto modificato' : 'Prodotto creato');
     });
   }
 
@@ -133,30 +214,70 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
     const confirmed = window.confirm(`Eliminare "${product.name}" dall'inventario?`);
     if (!confirmed) return;
 
-    startTransition(async () => {
-      const result = await deleteAdminProduct(product.id);
+    const previousItems = items;
+    setItems((prev) => prev.filter((p) => p.id !== product.id));
+    setDeletingId(product.id);
+
+    void deleteAdminProduct(product.id).then((result) => {
+      setDeletingId(null);
       if (!result.ok) {
+        setItems(previousItems);
         toast.error(result.error);
         return;
       }
       toast.success('Prodotto eliminato');
-      router.refresh();
+    });
+  }
+
+  function syncStock(productId: string) {
+    const targetQty = pendingStock.current.get(productId);
+    if (targetQty === undefined) return;
+    pendingStock.current.delete(productId);
+
+    void setProductStock(productId, targetQty).then((result) => {
+      if (!result.ok) {
+        toast.error(result.error);
+        router.refresh();
+        return;
+      }
+
+      if (result.stockQuantity !== targetQty) {
+        setItems((prev) =>
+          prev.map((p) =>
+            p.id === productId ? { ...p, stock_quantity: result.stockQuantity! } : p
+          )
+        );
+      }
     });
   }
 
   function handleStockAdjust(product: Product, delta: number) {
-    startTransition(async () => {
-      const result = await adjustProductStock(product.id, delta);
-      if (!result.ok) {
-        toast.error(result.error);
-        return;
-      }
-      router.refresh();
-    });
+    if (product.id.startsWith('temp-')) return;
+
+    let nextQty = product.stock_quantity;
+    setItems((prev) =>
+      prev.map((p) => {
+        if (p.id !== product.id) return p;
+        nextQty = Math.max(0, p.stock_quantity + delta);
+        pendingStock.current.set(p.id, nextQty);
+        return { ...p, stock_quantity: nextQty };
+      })
+    );
+
+    const existing = stockTimers.current.get(product.id);
+    if (existing) clearTimeout(existing);
+
+    stockTimers.current.set(
+      product.id,
+      setTimeout(() => {
+        stockTimers.current.delete(product.id);
+        syncStock(product.id);
+      }, STOCK_SYNC_DELAY_MS)
+    );
   }
 
-  const activeProducts = products.filter((p) => p.is_active);
-  const inactiveProducts = products.filter((p) => !p.is_active);
+  const activeProducts = items.filter((p) => p.is_active);
+  const inactiveProducts = items.filter((p) => !p.is_active);
 
   return (
     <div>
@@ -185,7 +306,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
           <ProductRow
             key={p.id}
             product={p}
-            pending={pending}
+            rowBusy={deletingId === p.id}
             onEdit={() => openEdit(p)}
             onDelete={() => handleDelete(p)}
             onAdjustStock={handleStockAdjust}
@@ -206,7 +327,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
               <ProductRow
                 key={p.id}
                 product={p}
-                pending={pending}
+                rowBusy={deletingId === p.id}
                 onEdit={() => openEdit(p)}
                 onDelete={() => handleDelete(p)}
                 onAdjustStock={handleStockAdjust}
@@ -293,7 +414,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={pending}
+                disabled={saving}
                 className={cn(
                   'inline-flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition disabled:opacity-50',
                   editing
@@ -302,7 +423,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                 )}
               >
                 <Pencil size={16} />
-                {pending ? 'Salvataggio...' : editing ? 'Salva modifiche' : 'Crea prodotto'}
+                {editing ? 'Salva modifiche' : 'Crea prodotto'}
               </button>
             </div>
           </div>
@@ -314,20 +435,21 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
 
 function ProductRow({
   product,
-  pending,
+  rowBusy,
   onEdit,
   onDelete,
   onAdjustStock,
   inactive = false,
 }: {
   product: Product;
-  pending: boolean;
+  rowBusy: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onAdjustStock: (product: Product, delta: number) => void;
   inactive?: boolean;
 }) {
   const isLowStock = product.is_active && product.stock_quantity <= product.min_stock_level;
+  const isTemp = product.id.startsWith('temp-');
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#111] px-4 py-3">
@@ -340,6 +462,7 @@ function ProductRow({
             {product.name}
             {product.brand && <span className="ml-2 text-xs text-white/40">{product.brand}</span>}
             {inactive && <span className="ml-2 text-xs text-white/40">(disattivato)</span>}
+            {isTemp && <span className="ml-2 text-xs text-gold/70">(salvataggio...)</span>}
           </p>
           <p className="text-xs text-white/40">
             {CATEGORY_LABELS[product.category]}
@@ -356,14 +479,14 @@ function ProductRow({
           <button
             type="button"
             onClick={() => onAdjustStock(product, -1)}
-            disabled={pending || product.stock_quantity <= 0}
+            disabled={isTemp || product.stock_quantity <= 0}
             className="rounded-lg border border-white/15 bg-[#1a1a1a] p-1.5 text-white/60 hover:text-white disabled:opacity-40"
           >
             <Minus size={14} />
           </button>
           <span
             className={cn(
-              'min-w-[2.5rem] text-center text-lg font-bold',
+              'min-w-[2.5rem] text-center text-lg font-bold transition-transform duration-150',
               isLowStock ? 'text-orange-300' : 'text-gold'
             )}
           >
@@ -372,7 +495,7 @@ function ProductRow({
           <button
             type="button"
             onClick={() => onAdjustStock(product, 1)}
-            disabled={pending}
+            disabled={isTemp}
             className="rounded-lg border border-white/15 bg-[#1a1a1a] p-1.5 text-white/60 hover:text-white disabled:opacity-40"
           >
             <Plus size={14} />
@@ -386,7 +509,7 @@ function ProductRow({
         <button
           type="button"
           onClick={onEdit}
-          disabled={pending}
+          disabled={rowBusy || isTemp}
           className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-500/60 bg-yellow-500/15 px-3 py-1.5 text-xs font-semibold text-yellow-300 transition hover:bg-yellow-500/25 disabled:opacity-50"
         >
           <Pencil size={14} />
@@ -395,7 +518,7 @@ function ProductRow({
         <button
           type="button"
           onClick={onDelete}
-          disabled={pending}
+          disabled={rowBusy || isTemp}
           className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/60 bg-red-500/15 px-3 py-1.5 text-xs font-semibold text-red-300 transition hover:bg-red-500/25 disabled:opacity-50"
         >
           <Trash2 size={14} />
