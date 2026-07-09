@@ -3,6 +3,7 @@ export type AppointmentStatus = 'confirmed' | 'completed' | 'cancelled' | 'no_sh
 export type PhotoType = 'before' | 'after';
 export type ServiceCategory = 'taglio' | 'barba' | 'styling' | 'baby';
 export type DiscountType = 'percent' | 'fixed';
+export type ProductCategory = 'perfume' | 'cosmetic' | 'accessory' | 'other';
 
 export interface Profile {
   id: string;
@@ -109,4 +110,21 @@ export interface SiteContent {
   title: string | null;
   body: string | null;
   is_active: boolean;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  brand: string | null;
+  category: ProductCategory;
+  sku: string | null;
+  stock_quantity: number;
+  min_stock_level: number;
+  price_cents: number | null;
+  image_url: string | null;
+  description: string | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }

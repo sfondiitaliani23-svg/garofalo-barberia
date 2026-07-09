@@ -706,3 +706,134 @@ export async function deleteAdminPromotion(promotionId: string) {
   revalidatePromotionPaths();
   return { ok: true, deactivated: false };
 }
+
+export interface AdminProductInput {
+  id?: string;
+  name: string;
+  brand?: string;
+  category: string;
+  sku?: string;
+  stockQuantity: number;
+  minStockLevel: number;
+  priceEuros?: number | null;
+  imageUrl?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+const PRODUCT_CATEGORIES = ['perfume', 'cosmetic', 'accessory', 'other'] as const;
+
+function revalidateInventoryPaths() {
+  revalidatePath('/admin/inventario');
+}
+
+export async function getAdminProducts() {
+  await requireAdmin();
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from('products')
+    .select('*')
+    .order('sort_order');
+
+  return data ?? [];
+}
+
+export async function saveAdminProduct(input: AdminProductInput) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const name = input.name.trim();
+  if (!name) return { ok: false, error: 'Inserisci il nome del prodotto' };
+  if (!PRODUCT_CATEGORIES.includes(input.category as (typeof PRODUCT_CATEGORIES)[number])) {
+    return { ok: false, error: 'Categoria non valida' };
+  }
+  if (input.stockQuantity < 0) return { ok: false, error: 'La quantità non può essere negativa' };
+  if (input.minStockLevel < 0) return { ok: false, error: 'La soglia minima non può essere negativa' };
+
+  const sku = input.sku?.trim().toUpperCase() || null;
+  const payload = {
+    name,
+    brand: input.brand?.trim() || null,
+    category: input.category,
+    sku,
+    stock_quantity: Math.round(input.stockQuantity),
+    min_stock_level: Math.round(input.minStockLevel),
+    price_cents:
+      input.priceEuros != null && input.priceEuros > 0
+        ? Math.round(input.priceEuros * 100)
+        : null,
+    image_url: input.imageUrl?.trim() || null,
+    description: input.description?.trim() || null,
+    is_active: input.isActive ?? true,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.id) {
+    const { error } = await supabase.from('products').update(payload).eq('id', input.id);
+    if (error) {
+      if (error.code === '23505') return { ok: false, error: 'SKU già in uso' };
+      return { ok: false, error: 'Errore durante la modifica' };
+    }
+  } else {
+    const { data: last } = await supabase
+      .from('products')
+      .select('sort_order')
+      .order('sort_order', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const { error } = await supabase.from('products').insert({
+      ...payload,
+      sort_order: (last?.sort_order ?? 0) + 1,
+    });
+    if (error) {
+      if (error.code === '23505') return { ok: false, error: 'SKU già in uso' };
+      return { ok: false, error: 'Errore durante la creazione' };
+    }
+  }
+
+  revalidateInventoryPaths();
+  return { ok: true };
+}
+
+export async function deleteAdminProduct(productId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const { error } = await supabase.from('products').delete().eq('id', productId);
+  if (error) return { ok: false, error: 'Impossibile eliminare il prodotto' };
+
+  revalidateInventoryPaths();
+  return { ok: true };
+}
+
+export async function adjustProductStock(productId: string, delta: number) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const { data: product } = await supabase
+    .from('products')
+    .select('stock_quantity')
+    .eq('id', productId)
+    .single();
+
+  if (!product) return { ok: false, error: 'Prodotto non trovato' };
+
+  const newQty = product.stock_quantity + delta;
+  if (newQty < 0) return { ok: false, error: 'Scorte insufficienti' };
+
+  const { error } = await supabase
+    .from('products')
+    .update({ stock_quantity: newQty, updated_at: new Date().toISOString() })
+    .eq('id', productId);
+
+  if (error) return { ok: false, error: 'Errore aggiornamento scorte' };
+
+  revalidateInventoryPaths();
+  return { ok: true, stockQuantity: newQty };
+}
