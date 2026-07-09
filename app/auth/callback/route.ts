@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
   if (!code) {
     return NextResponse.redirect(
-      `${origin}/login?error=${encodeURIComponent('Accesso Google annullato o non completato.')}`
+      `${origin}/login?error=${encodeURIComponent('Accesso annullato o non completato.')}`
     );
   }
 

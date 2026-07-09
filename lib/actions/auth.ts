@@ -65,25 +65,41 @@ export async function signUpWithEmail(formData: FormData) {
   redirect('/area-cliente/dashboard');
 }
 
-export async function signInWithGoogle(formData: FormData) {
-  const supabase = await createClient();
+const OAUTH_LABELS: Record<'google' | 'github', string> = {
+  google: 'Google',
+  github: 'GitHub',
+};
+
+export async function signInWithOAuth(formData: FormData) {
+  const provider = formData.get('provider') as 'google' | 'github';
   const redirectTo = (formData.get('redirect') as string) || '/area-cliente/dashboard';
 
+  if (provider !== 'google' && provider !== 'github') {
+    redirect('/login?error=Provider%20non%20valido');
+  }
+
+  const supabase = await createClient();
   if (!supabase) {
     redirect(
-      `/login?error=${encodeURIComponent('Accesso con Google non disponibile: database non configurato.')}`
+      `/login?error=${encodeURIComponent(`Accesso con ${OAUTH_LABELS[provider]} non disponibile: database non configurato su Vercel.`)}`
     );
   }
 
   const origin = await getSiteOrigin();
   const callbackUrl = `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`;
 
+  const options: {
+    redirectTo: string;
+    queryParams?: Record<string, string>;
+  } = { redirectTo: callbackUrl };
+
+  if (provider === 'google') {
+    options.queryParams = { access_type: 'offline', prompt: 'consent' };
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: callbackUrl,
-      queryParams: { access_type: 'offline', prompt: 'consent' },
-    },
+    provider,
+    options,
   });
 
   if (error) {
@@ -92,11 +108,17 @@ export async function signInWithGoogle(formData: FormData) {
 
   if (!data?.url) {
     redirect(
-      `/login?error=${encodeURIComponent('Impossibile avviare Google. Verifica che il provider Google sia attivo su Supabase.')}`
+      `/login?error=${encodeURIComponent(`Impossibile avviare ${OAUTH_LABELS[provider]}. Abilita il provider in Supabase → Authentication → Providers.`)}`
     );
   }
 
   redirect(data.url);
+}
+
+/** @deprecated Usa signInWithOAuth */
+export async function signInWithGoogle(formData: FormData) {
+  formData.set('provider', 'google');
+  return signInWithOAuth(formData);
 }
 
 export async function signOut() {

@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { signInWithEmail } from '@/lib/actions/auth';
-import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
+import { OAuthLoginButtons } from '@/components/auth/OAuthLoginButtons';
+import { getWhatsAppLink } from '@/lib/site-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,10 +31,16 @@ function LoginFormInner({ authConfigured }: { authConfigured: boolean }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {!authConfigured && !error && (
-          <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-            L&apos;accesso con Google richiede la configurazione del database. Contattaci su WhatsApp se il
-            problema persiste.
-          </p>
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            <p>Google e GitHub richiedono Supabase configurato su Vercel.</p>
+            <p className="mt-2">
+              Nel frattempo puoi{' '}
+              <a href={getWhatsAppLink()} className="text-gold underline" target="_blank" rel="noopener noreferrer">
+                prenotare su WhatsApp
+              </a>
+              .
+            </p>
+          </div>
         )}
         {error && (
           <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
@@ -61,7 +68,7 @@ function LoginFormInner({ authConfigured }: { authConfigured: boolean }) {
             Accedi
           </Button>
         </form>
-        <GoogleLoginButton redirectTo={redirect} />
+        <OAuthLoginButtons redirectTo={redirect} disabled={!authConfigured} />
         <p className="text-center text-sm text-white/50">
           Non hai un account?{' '}
           <Link href="/register" className="text-gold hover:underline">
