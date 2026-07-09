@@ -7,18 +7,23 @@ export interface GalleryImage {
 }
 
 export const GALLERY_IMAGES: GalleryImage[] = [
-  { src: '/assets/sostituisci-immagini/galleria/01-taglio-uomo.jpg', alt: 'Taglio uomo', category: 'uomo' },
-  { src: '/assets/sostituisci-immagini/galleria/02-taglio-classico.jpg', alt: 'Taglio classico', category: 'uomo' },
-  { src: '/assets/sostituisci-immagini/galleria/03-barba-taglio.jpg', alt: 'Barba e taglio', category: 'uomo' },
-  { src: '/assets/sostituisci-immagini/galleria/04-styling-uomo.jpg', alt: 'Styling uomo', category: 'uomo' },
-  { src: '/assets/sostituisci-immagini/galleria/05-taglio-ragazzo.jpg', alt: 'Taglio ragazzo', category: 'ragazzo' },
-  { src: '/assets/sostituisci-immagini/galleria/06-acconciatura-ragazzo.jpg', alt: 'Acconciatura ragazzo', category: 'ragazzo' },
-  { src: '/assets/sostituisci-immagini/galleria/07-taglio-bimbo.jpg', alt: 'Dettaglio taglio bimbo', category: 'bimbo' },
-  { src: '/assets/sostituisci-immagini/galleria/08-dettaglio-bimbo.jpg', alt: 'Taglio bimbo', category: 'bimbo' },
-  { src: '/assets/sostituisci-immagini/galleria/09-finishing-taglio.jpg', alt: 'Finishing taglio', category: 'uomo' },
-  { src: '/assets/sostituisci-immagini/galleria/10-interno-salone.jpg', alt: 'Interno salone', category: 'uomo' },
-  { src: '/assets/sostituisci-immagini/galleria/11-dettaglio-barba.jpg', alt: 'Dettaglio barba', category: 'uomo' },
-  { src: '/assets/sostituisci-immagini/galleria/12-taglio-giovane.jpg', alt: 'Taglio giovane', category: 'ragazzo' },
+  { src: '/assets/gallery/1000313543.jpg', alt: 'Fade posteriore', category: 'uomo' },
+  { src: '/assets/gallery/1000313544.jpg', alt: 'Taglio in corso', category: 'uomo' },
+  { src: '/assets/gallery/1000313545.jpg', alt: 'Taglio uomo frontale', category: 'uomo' },
+  { src: '/assets/gallery/1000313546.jpg', alt: 'Taglio slick back con barba', category: 'uomo' },
+  { src: '/assets/gallery/1000313547.jpg', alt: 'Taglio ragazzo con colpi di sole', category: 'ragazzo' },
+  { src: '/assets/gallery/1000313548.jpg', alt: 'Dettaglio taglio posteriore', category: 'uomo' },
+  { src: '/assets/gallery/1000313549.jpg', alt: 'Skin fade laterale', category: 'uomo' },
+  { src: '/assets/gallery/1000313550.jpg', alt: 'Taglio con riga laterale', category: 'uomo' },
+  { src: '/assets/gallery/1000313551.jpg', alt: 'Taglio corto styling', category: 'uomo' },
+  { src: '/assets/gallery/1000313552.jpg', alt: 'Taglio posteriore', category: 'uomo' },
+  { src: '/assets/gallery/1000313553.jpg', alt: 'Profilo taglio moderno', category: 'uomo' },
+  { src: '/assets/gallery/1000313554.jpg', alt: 'Fade posteriore pulito', category: 'uomo' },
+  { src: '/assets/gallery/1000313555.jpg', alt: 'Profilo taglio scuro', category: 'uomo' },
+  { src: '/assets/gallery/1000313556.png', alt: 'Skin fade dettaglio', category: 'uomo' },
+  { src: '/assets/gallery/1000313557.jpg', alt: 'Cura barba e taglio', category: 'uomo' },
+  { src: '/assets/gallery/1000313558.jpg', alt: 'Taglio laterale', category: 'uomo' },
+  { src: '/assets/gallery/1000313559.jpg', alt: 'Fade posteriore dettaglio', category: 'uomo' },
 ];
 
 export const GALLERY_FILTERS = [
