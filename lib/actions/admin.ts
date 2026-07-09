@@ -132,7 +132,7 @@ export async function createAdminAppointment(input: AdminAppointmentInput) {
       ends_at: endsAt.toISOString(),
       status: 'confirmed',
       customer_name: input.customerName.trim(),
-      customer_phone: input.customerPhone.trim(),
+      customer_phone: input.customerPhone?.trim() ?? '',
       notes: input.notes?.trim() || null,
     })
     .select('id')
@@ -151,7 +151,7 @@ export async function createAdminAppointment(input: AdminAppointmentInput) {
     barberName: barber?.name ?? 'Barbiere',
     startsAt,
     customerName: input.customerName,
-    customerPhone: input.customerPhone,
+    customerPhone: input.customerPhone ?? '',
     notes: input.notes,
   });
 
@@ -194,7 +194,7 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
       starts_at: startsAt.toISOString(),
       ends_at: endsAt.toISOString(),
       customer_name: input.customerName.trim(),
-      customer_phone: input.customerPhone.trim(),
+      customer_phone: input.customerPhone?.trim() ?? '',
       notes: input.notes?.trim() || null,
     })
     .eq('id', appointmentId);
