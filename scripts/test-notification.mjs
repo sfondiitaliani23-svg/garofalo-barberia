@@ -19,7 +19,7 @@ const baseUrl = (process.env.NTFY_URL ?? 'https://ntfy.sh').replace(/\/$/, '');
 const response = await fetch(`${baseUrl}/${topic}`, {
   method: 'POST',
   headers: {
-    Title: 'Test — Nuova prenotazione Garofalo',
+    Title: 'Test - Nuova prenotazione Garofalo',
     Priority: 'urgent',
     Tags: 'calendar,barber',
   },

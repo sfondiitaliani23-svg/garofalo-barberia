@@ -59,7 +59,7 @@ export async function sendAdminBookingPush(data: BookingNotificationData) {
     (data.notes ? `\nNote: ${data.notes}` : '');
 
   const headers: Record<string, string> = {
-    Title: `Nuova prenotazione — ${data.customerName}`,
+    Title: `Nuova prenotazione - ${data.customerName}`,
     Priority: 'urgent',
     Tags: 'calendar,barber',
     Click: adminUrl,
