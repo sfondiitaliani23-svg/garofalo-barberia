@@ -10,7 +10,8 @@ import { getFallbackSlots } from '@/lib/utils/fallback-slots';
 export async function getAvailableSlots(
   barberId: string | null,
   dateStr: string,
-  durationMinutes: number
+  durationMinutes: number,
+  excludeAppointmentId?: string | null
 ): Promise<{ slots: string[]; error?: string }> {
   if (!isSupabaseConfigured()) {
     return getFallbackSlots(dateStr, durationMinutes);
@@ -50,7 +51,7 @@ export async function getAvailableSlots(
         .eq('is_available', true),
       supabase
         .from('appointments')
-        .select('barber_id, starts_at, ends_at')
+        .select('id, barber_id, starts_at, ends_at')
         .in('barber_id', barberIds)
         .eq('status', 'confirmed')
         .gte('starts_at', dayStart)
@@ -68,6 +69,7 @@ export async function getAvailableSlots(
 
     const appointmentsByBarber = new Map<string, { starts_at: string; ends_at: string }[]>();
     for (const apt of appointmentsRes.data ?? []) {
+      if (excludeAppointmentId && apt.id === excludeAppointmentId) continue;
       const list = appointmentsByBarber.get(apt.barber_id) ?? [];
       list.push({ starts_at: apt.starts_at, ends_at: apt.ends_at });
       appointmentsByBarber.set(apt.barber_id, list);
@@ -139,7 +141,8 @@ export async function resolveBarberForSlot(
 
 export async function getAvailableDates(
   durationMinutes: number,
-  barberId: string | null = null
+  barberId: string | null = null,
+  excludeAppointmentId?: string | null
 ): Promise<string[]> {
   const today = new Date();
   const candidates: string[] = [];
@@ -153,7 +156,7 @@ export async function getAvailableDates(
 
   const results = await Promise.all(
     candidates.map(async (dateStr) => {
-      const { slots } = await getAvailableSlots(barberId, dateStr, durationMinutes);
+      const { slots } = await getAvailableSlots(barberId, dateStr, durationMinutes, excludeAppointmentId);
       return slots.length > 0 ? dateStr : null;
     })
   );

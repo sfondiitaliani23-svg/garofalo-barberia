@@ -17,7 +17,7 @@ export const SITE_CONFIG = {
   googleMapsEmbed:
     "https://www.google.com/maps?q=Viale+Ignazio+d'Addedda,+236,+71122+Foggia+FG&hl=it&z=16&output=embed",
   gmailComposeUrl: `https://mail.google.com/mail/?view=cm&fs=1&to=${EMAIL}`,
-  cancellationHours: 3,
+  cancellationMinutes: 30,
   slotIntervalMinutes: 30,
   bookingHorizonDays: 30,
   services: [

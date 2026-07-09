@@ -1,9 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
-import { cancelAppointmentAction } from '@/lib/actions/bookings';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
+import { AppointmentCard } from '@/components/customer/AppointmentCard';
 
 export const metadata = { title: 'I miei appuntamenti' };
 
@@ -25,35 +22,68 @@ export default async function CustomerAppointmentsPage() {
     .eq('customer_id', profile?.id ?? '')
     .order('starts_at', { ascending: false });
 
+  const upcoming = (appointments ?? []).filter(
+    (apt) => apt.status === 'confirmed' && new Date(apt.starts_at) > new Date()
+  );
+  const past = (appointments ?? []).filter(
+    (apt) => !(apt.status === 'confirmed' && new Date(apt.starts_at) > new Date())
+  );
+
   return (
     <div>
       <h1 className="font-display text-3xl uppercase">Appuntamenti</h1>
-      <div className="mt-8 space-y-3">
-        {(appointments ?? []).map((apt) => {
-          const barber = apt.barber as { name: string } | null;
-          const service = apt.service as { name: string } | null;
-          const isFuture = new Date(apt.starts_at) > new Date();
-          const canCancel = apt.status === 'confirmed' && isFuture;
+      <p className="mt-1 text-white/50">
+        Modifica o disdici fino a 30 minuti prima dell&apos;orario
+      </p>
 
-          return (
-            <div key={apt.id} className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-white/10 bg-[#111] p-4">
-              <div>
-                <p className="font-semibold">{service?.name}</p>
-                <p className="text-sm text-white/60">
-                  {format(new Date(apt.starts_at), "d MMMM yyyy 'alle' HH:mm", { locale: it })} — {barber?.name}
-                </p>
-                <p className="text-xs uppercase text-gold">{apt.status}</p>
-              </div>
-              {canCancel && (
-                <form action={cancelAppointmentAction}>
-                  <input type="hidden" name="id" value={apt.id} />
-                  <Button type="submit" variant="outline" size="sm">Disdici</Button>
-                </form>
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {upcoming.length > 0 && (
+        <section className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gold">In programma</h2>
+          <div className="space-y-3">
+            {upcoming.map((apt) => {
+              const barber = apt.barber as { name: string } | null;
+              const service = apt.service as { name: string } | null;
+              return (
+                <AppointmentCard
+                  key={apt.id}
+                  id={apt.id}
+                  startsAt={apt.starts_at}
+                  status={apt.status}
+                  serviceName={service?.name ?? 'Servizio'}
+                  barberName={barber?.name ?? 'Barbiere'}
+                  showActions
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <section className="mt-8">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">Storico</h2>
+        <div className="space-y-3">
+          {past.length === 0 && upcoming.length === 0 ? (
+            <p className="text-white/50">Nessun appuntamento ancora.</p>
+          ) : past.length === 0 ? (
+            <p className="text-white/50">Nessun appuntamento passato.</p>
+          ) : (
+            past.map((apt) => {
+              const barber = apt.barber as { name: string } | null;
+              const service = apt.service as { name: string } | null;
+              return (
+                <AppointmentCard
+                  key={apt.id}
+                  id={apt.id}
+                  startsAt={apt.starts_at}
+                  status={apt.status}
+                  serviceName={service?.name ?? 'Servizio'}
+                  barberName={barber?.name ?? 'Barbiere'}
+                />
+              );
+            })
+          )}
+        </div>
+      </section>
     </div>
   );
 }
