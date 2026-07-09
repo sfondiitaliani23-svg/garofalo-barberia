@@ -1,25 +1,19 @@
-import Image from 'next/image';
-import { getBarbers } from '@/lib/actions/bookings';
+import { AdminTeamManager } from '@/components/admin/AdminTeamManager';
+import { getAdminTeamData } from '@/lib/actions/admin';
 
-export const metadata = { title: 'Staff' };
+export const metadata = { title: 'Gestione team' };
 
 export default async function AdminStaffPage() {
-  const barbers = await getBarbers();
+  const { barbers, availability, timeOff } = await getAdminTeamData();
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Staff</h1>
-      <p className="mt-1 text-white/50">Barbieri e disponibilità settimanale</p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        {barbers.map((b) => (
-          <div key={b.id} className="rounded-lg border border-white/10 bg-[#111] p-4 text-center">
-            {b.image_url && (
-              <Image src={b.image_url} alt={b.name} width={80} height={100} className="mx-auto mb-3 rounded object-cover object-top" />
-            )}
-            <p className="font-medium">{b.name}</p>
-            <p className="text-sm text-gold">{b.role}</p>
-          </div>
-        ))}
+      <h1 className="font-display text-3xl uppercase">Gestione team</h1>
+      <p className="mt-1 text-white/50">
+        Barbieri, orari settimanali e ferie — le modifiche aggiornano subito le prenotazioni online
+      </p>
+      <div className="mt-8">
+        <AdminTeamManager barbers={barbers} availability={availability} timeOff={timeOff} />
       </div>
     </div>
   );

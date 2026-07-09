@@ -371,3 +371,217 @@ export async function deleteAdminService(serviceId: string) {
   revalidatePath('/servizi');
   return { ok: true, deactivated: false };
 }
+
+function revalidateTeamPaths() {
+  revalidatePath('/admin/staff');
+  revalidatePath('/admin/prenotazioni');
+  revalidatePath('/prenota');
+  revalidatePath('/chi-siamo');
+}
+
+export interface AdminBarberInput {
+  id?: string;
+  name: string;
+  role: string;
+  imageUrl?: string;
+  bio?: string;
+  isActive?: boolean;
+}
+
+export interface AdminDayScheduleInput {
+  dayOfWeek: number;
+  isAvailable: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+export interface AdminTimeOffInput {
+  barberId: string | null;
+  startDate: string;
+  endDate: string;
+  reason?: string;
+}
+
+const DEFAULT_WEEKLY_SCHEDULE: AdminDayScheduleInput[] = [
+  { dayOfWeek: 2, isAvailable: true, startTime: '09:00', endTime: '19:30' },
+  { dayOfWeek: 3, isAvailable: true, startTime: '09:00', endTime: '19:30' },
+  { dayOfWeek: 4, isAvailable: true, startTime: '09:00', endTime: '19:30' },
+  { dayOfWeek: 5, isAvailable: true, startTime: '09:00', endTime: '19:30' },
+  { dayOfWeek: 6, isAvailable: true, startTime: '09:00', endTime: '18:00' },
+];
+
+export async function getAdminTeamData() {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) {
+    return { barbers: [], availability: [], timeOff: [] };
+  }
+
+  const [barbersRes, availabilityRes, timeOffRes] = await Promise.all([
+    supabase.from('barbers').select('*').order('sort_order'),
+    supabase.from('barber_availability').select('*'),
+    supabase
+      .from('barber_time_off')
+      .select('*, barber:barbers(name)')
+      .order('start_at', { ascending: false }),
+  ]);
+
+  return {
+    barbers: barbersRes.data ?? [],
+    availability: availabilityRes.data ?? [],
+    timeOff: timeOffRes.data ?? [],
+  };
+}
+
+export async function saveAdminBarber(input: AdminBarberInput) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const name = input.name.trim();
+  const role = input.role.trim();
+  if (!name) return { ok: false, error: 'Inserisci il nome del barbiere' };
+  if (!role) return { ok: false, error: 'Inserisci il ruolo' };
+
+  const payload = {
+    name,
+    role,
+    image_url: input.imageUrl?.trim() || null,
+    bio: input.bio?.trim() || null,
+    is_active: input.isActive ?? true,
+  };
+
+  if (input.id) {
+    const { error } = await supabase.from('barbers').update(payload).eq('id', input.id);
+    if (error) return { ok: false, error: 'Errore durante la modifica' };
+    revalidateTeamPaths();
+    return { ok: true, barberId: input.id };
+  }
+
+  const { data: last } = await supabase
+    .from('barbers')
+    .select('sort_order')
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const { data: created, error } = await supabase
+    .from('barbers')
+    .insert({ ...payload, sort_order: (last?.sort_order ?? 0) + 1 })
+    .select('id')
+    .single();
+
+  if (error || !created) return { ok: false, error: 'Errore durante la creazione' };
+
+  const scheduleRows = DEFAULT_WEEKLY_SCHEDULE.map((day) => ({
+    barber_id: created.id,
+    day_of_week: day.dayOfWeek,
+    start_time: day.startTime,
+    end_time: day.endTime,
+    is_available: day.isAvailable,
+  }));
+
+  await supabase.from('barber_availability').insert(scheduleRows);
+
+  revalidateTeamPaths();
+  return { ok: true, barberId: created.id };
+}
+
+export async function deleteAdminBarber(barberId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const { count } = await supabase
+    .from('appointments')
+    .select('*', { count: 'exact', head: true })
+    .eq('barber_id', barberId)
+    .eq('status', 'confirmed');
+
+  if ((count ?? 0) > 0) {
+    const { error } = await supabase.from('barbers').update({ is_active: false }).eq('id', barberId);
+    if (error) return { ok: false, error: 'Errore durante la disattivazione' };
+    revalidateTeamPaths();
+    return { ok: true, deactivated: true };
+  }
+
+  const { error } = await supabase.from('barbers').delete().eq('id', barberId);
+  if (error) return { ok: false, error: 'Impossibile eliminare il barbiere' };
+
+  revalidateTeamPaths();
+  return { ok: true, deactivated: false };
+}
+
+export async function saveAdminBarberSchedule(barberId: string, days: AdminDayScheduleInput[]) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  for (const day of days) {
+    if (day.dayOfWeek === 0 || day.dayOfWeek === 1) continue;
+
+    const startTime = day.startTime.slice(0, 5);
+    const endTime = day.endTime.slice(0, 5);
+
+    if (day.isAvailable && startTime >= endTime) {
+      return { ok: false, error: 'Orario di fine deve essere dopo l\'inizio' };
+    }
+
+    const { error } = await supabase.from('barber_availability').upsert(
+      {
+        barber_id: barberId,
+        day_of_week: day.dayOfWeek,
+        start_time: startTime,
+        end_time: endTime,
+        is_available: day.isAvailable,
+      },
+      { onConflict: 'barber_id,day_of_week' }
+    );
+
+    if (error) return { ok: false, error: 'Errore durante il salvataggio orari' };
+  }
+
+  revalidateTeamPaths();
+  return { ok: true };
+}
+
+export async function saveAdminTimeOff(input: AdminTimeOffInput) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  if (!input.startDate || !input.endDate) {
+    return { ok: false, error: 'Inserisci data inizio e fine' };
+  }
+
+  const startsAt = parseISO(`${input.startDate}T00:00:00`);
+  const endsAt = parseISO(`${input.endDate}T23:59:59`);
+
+  if (endsAt < startsAt) {
+    return { ok: false, error: 'La data di fine deve essere dopo l\'inizio' };
+  }
+
+  const { error } = await supabase.from('barber_time_off').insert({
+    barber_id: input.barberId || null,
+    start_at: startsAt.toISOString(),
+    end_at: endsAt.toISOString(),
+    reason: input.reason?.trim() || null,
+  });
+
+  if (error) return { ok: false, error: 'Errore durante il salvataggio ferie' };
+
+  revalidateTeamPaths();
+  return { ok: true };
+}
+
+export async function deleteAdminTimeOff(timeOffId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const { error } = await supabase.from('barber_time_off').delete().eq('id', timeOffId);
+  if (error) return { ok: false, error: 'Errore durante l\'eliminazione' };
+
+  revalidateTeamPaths();
+  return { ok: true };
+}

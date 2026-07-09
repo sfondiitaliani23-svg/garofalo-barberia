@@ -46,6 +46,16 @@ export interface BarberAvailability {
   is_available: boolean;
 }
 
+export interface BarberTimeOff {
+  id: string;
+  barber_id: string | null;
+  start_at: string;
+  end_at: string;
+  reason: string | null;
+  created_at: string;
+  barber?: { name: string } | null;
+}
+
 export interface Appointment {
   id: string;
   customer_id: string | null;

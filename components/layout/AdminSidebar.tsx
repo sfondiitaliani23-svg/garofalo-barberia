@@ -11,7 +11,7 @@ const links = [
   { href: '/admin/prenotazioni', label: 'Prenotazioni', icon: Calendar },
   { href: '/admin/clienti', label: 'Clienti', icon: Users },
   { href: '/admin/servizi', label: 'Servizi', icon: Scissors },
-  { href: '/admin/staff', label: 'Staff', icon: UserCog },
+  { href: '/admin/staff', label: 'Gestione team', icon: UserCog },
   { href: '/admin/contenuti', label: 'Contenuti', icon: FileText },
   { href: '/admin/report', label: 'Report', icon: BarChart3 },
 ];
