@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { getWhatsAppLink } from '@/lib/site-config';
 
 export function WhatsAppFloat() {
@@ -10,12 +9,14 @@ export function WhatsAppFloat() {
       target="_blank"
       rel="noopener noreferrer"
     >
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src="/assets/sostituisci-immagini/icone/whatsapp.png"
-        alt="WhatsApp"
+        alt=""
         width={58}
         height={58}
         className="whatsapp-float-icon"
+        decoding="async"
       />
     </a>
   );

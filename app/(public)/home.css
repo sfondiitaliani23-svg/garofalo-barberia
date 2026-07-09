@@ -219,6 +219,7 @@
 .photo-strip-item {
   position: relative;
   aspect-ratio: 4 / 5;
+  min-width: 0;
   overflow: hidden;
   background: var(--black);
   border: 3px solid var(--black);
@@ -230,6 +231,8 @@
 }
 
 .photo-strip-item img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;

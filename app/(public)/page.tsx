@@ -86,7 +86,8 @@ export default function HomePage() {
         <div className="photo-strip">
           {PHOTO_STRIP.map((photo) => (
             <div key={photo.src} className="photo-strip-item" tabIndex={0}>
-              <Image src={photo.src} alt={photo.alt} width={500} height={625} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo.src} alt={photo.alt} loading="eager" decoding="async" />
             </div>
           ))}
         </div>
