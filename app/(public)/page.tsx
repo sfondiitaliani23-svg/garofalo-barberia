@@ -202,7 +202,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="btn-outline"
             >
-              Recensioni su Google
+              Lascia una recensione
             </a>
           </div>
         </div>
