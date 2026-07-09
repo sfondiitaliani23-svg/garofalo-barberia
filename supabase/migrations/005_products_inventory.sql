@@ -34,6 +34,6 @@ CREATE POLICY "products_admin" ON products FOR ALL USING (is_admin());
 -- Seed profumi Mood dalla homepage
 INSERT INTO products (name, brand, category, sku, stock_quantity, min_stock_level, image_url, description, sort_order) VALUES
   ('Mood Velvet', 'Mood', 'perfume', 'MOOD-VELVET', 8, 2, '/assets/sostituisci-immagini/homepage/4-1.jpg', 'Eau De Parfum orientale floreale — brioso e sensuale.', 1),
-  ('Fancy', 'Mood', 'perfume', 'MOOD-FANCY', 6, 2, '/assets/sostituisci-immagini/homepage/4-2.jpg', 'Fruttata e agrumata, rigogliosa e brillante.', 2),
+  ('Mood Fancy', 'Mood', 'perfume', 'MOOD-FANCY', 6, 2, '/assets/sostituisci-immagini/homepage/4-2.jpg', 'Fruttata e agrumata, rigogliosa e brillante.', 2),
   ('Mood Imperious', 'Mood', 'perfume', 'MOOD-IMPERIOUS', 5, 2, '/assets/sostituisci-immagini/homepage/4-3.jpg', 'Fruttato e legnoso, vibrante e intrepido.', 3),
-  ('Aroma', 'Mood', 'perfume', 'MOOD-AROMA', 7, 2, '/assets/sostituisci-immagini/homepage/4-4.jpg', 'Floreale e orientale, accattivante e intenso.', 4);
+  ('Mood Aroma', 'Mood', 'perfume', 'MOOD-AROMA', 7, 2, '/assets/sostituisci-immagini/homepage/4-4.jpg', 'Floreale e orientale, accattivante e intenso.', 4);

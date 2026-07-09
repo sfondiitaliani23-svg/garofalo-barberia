@@ -28,9 +28,9 @@ export const PERFUMES = [
     footer: 'Profumo Mood Velvet',
   },
   {
-    name: 'Fancy',
+    name: 'Mood Fancy',
     image: '/assets/sostituisci-immagini/homepage/4-2.jpg',
-    lead: 'Fruttata e Agrumata, quindi rigogliosa, brillante e soave, soprattutto esuberante.',
+    lead: 'Mood Fancy è fruttata e agrumata: rigogliosa, brillante e soave, soprattutto esuberante.',
     body: 'Con le sue note di testa agrumate all\'arancia, al bergamotto e ai limoni di Sicilia, con il suo cuore pieno di Frutti del Mediterraneo, con il suo fondo al musk, alla vaniglia e all\'ambra.',
     notes: [],
     footer: null,
@@ -44,9 +44,9 @@ export const PERFUMES = [
     footer: null,
   },
   {
-    name: 'Aroma',
+    name: 'Mood Aroma',
     image: '/assets/sostituisci-immagini/homepage/4-4.jpg',
-    lead: 'Floreale e orientale, quindi accattivante, dolce e dinamico, soprattutto intenso.',
+    lead: 'Mood Aroma è floreale e orientale: accattivante, dolce e dinamico, soprattutto intenso.',
     body: 'Con i suoi accordi al caffè e note floreali, con il suo cuore legnoso e floreale, con il suo fondo di ambra e accordi gourmand.',
     notes: [],
     footer: null,
