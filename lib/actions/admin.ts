@@ -4,7 +4,7 @@ import { addDays, addMinutes, parseISO, startOfWeek } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { sendAdminBookingEmail } from '@/lib/utils/notifications';
+import { notifyAdminNewBooking } from '@/lib/utils/notifications';
 
 export interface AdminAppointmentInput {
   serviceId: string;
@@ -145,7 +145,7 @@ export async function createAdminAppointment(input: AdminAppointmentInput) {
     return { ok: false, error: 'Errore durante la prenotazione. Riprova.' };
   }
 
-  await sendAdminBookingEmail({
+  await notifyAdminNewBooking({
     serviceName: service.name,
     priceCents: service.price_cents,
     barberName: barber?.name ?? 'Barbiere',

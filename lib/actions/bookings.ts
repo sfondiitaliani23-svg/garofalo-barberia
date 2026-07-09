@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { resolveBarberForSlot } from '@/lib/actions/availability';
-import { sendAdminBookingEmail } from '@/lib/utils/notifications';
+import { notifyAdminNewBooking } from '@/lib/utils/notifications';
 import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appointments';
 
 export interface CreateAppointmentInput {
@@ -85,7 +85,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
     notes: input.notes,
   };
 
-  await sendAdminBookingEmail(notificationData);
+  await notifyAdminNewBooking(notificationData);
 
   revalidatePath('/admin/prenotazioni');
   revalidatePath('/area-cliente/appuntamenti');
