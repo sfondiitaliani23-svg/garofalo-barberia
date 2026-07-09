@@ -12,7 +12,7 @@ export interface AdminAppointmentInput {
   date: string;
   time: string;
   customerName: string;
-  customerPhone: string;
+  customerPhone?: string;
   notes?: string;
 }
 

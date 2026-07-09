@@ -100,8 +100,8 @@ export function AdminAppointmentForm({
   }
 
   function handleSave() {
-    if (!customerName.trim() || !customerPhone.trim() || !serviceId || !time) {
-      toast.error('Compila tutti i campi obbligatori');
+    if (!customerName.trim() || !serviceId || !time) {
+      toast.error('Compila nome, servizio e orario');
       return;
     }
 
@@ -178,12 +178,12 @@ export function AdminAppointmentForm({
             />
           </div>
           <div>
-            <Label htmlFor="admin-phone">Telefono *</Label>
+            <Label htmlFor="admin-phone">Telefono (opzionale)</Label>
             <Input
               id="admin-phone"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
-              placeholder="320 123 4567"
+              placeholder="Se non disponibile, lascia vuoto"
               className="mt-1"
             />
           </div>

@@ -185,7 +185,9 @@ export function WeeklyBookingCalendar({
                             <span className="text-xs font-bold text-gold">{time}</span>
                             <span className="truncate text-xs font-semibold text-white">{apt.customer_name}</span>
                             <span className="truncate text-[10px] text-white/50">{service?.name}</span>
-                            <span className="truncate text-[10px] text-white/40">{apt.customer_phone}</span>
+                            {apt.customer_phone && (
+                              <span className="truncate text-[10px] text-white/40">{apt.customer_phone}</span>
+                            )}
                           </button>
                         </td>
                       );
