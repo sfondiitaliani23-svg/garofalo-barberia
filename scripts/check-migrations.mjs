@@ -52,6 +52,30 @@ const promotionId = await columnStatus('appointments', 'promotion_id');
 const products = await tableStatus('products');
 const promotions = await tableStatus('promotions');
 
+async function childGenderStatus() {
+  const testId = '00000000-0000-4000-8000-000000000099';
+  const { error: insertError } = await supabase.from('visitor_sessions').insert({
+    id: testId,
+    gender: 'child',
+    age_range: 'under_18',
+  });
+  if (insertError) {
+    if (insertError.message?.includes('invalid input value for enum visitor_gender')) return 'missing';
+    return `error:${insertError.code}`;
+  }
+  await supabase.from('visitor_sessions').delete().eq('id', testId);
+  return 'ok';
+}
+
+const childGender = await childGenderStatus();
+
 console.log(`003 appointment_reminders : ${remindersEmail === 'ok' ? 'OK' : 'DA ESEGUIRE'}`);
 console.log(`004 promotions            : ${promotions === 'ok' && promotionId === 'ok' ? 'OK' : 'DA ESEGUIRE'}`);
 console.log(`005 products_inventory    : ${products === 'ok' ? 'OK' : 'DA ESEGUIRE'}`);
+console.log(`006 analytics_child       : ${childGender === 'ok' ? 'OK' : 'DA ESEGUIRE'}`);
+
+if (childGender !== 'ok') {
+  console.log('\nPer la 006 esegui in Supabase SQL Editor:');
+  console.log("ALTER TYPE visitor_gender ADD VALUE IF NOT EXISTS 'child';");
+  process.exitCode = 1;
+}

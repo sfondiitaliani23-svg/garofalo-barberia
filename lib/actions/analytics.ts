@@ -112,18 +112,20 @@ export async function saveDemographics(
     .maybeSingle();
 
   if (existing) {
-    await supabase
+    const { error } = await supabase
       .from('visitor_sessions')
       .update({ gender, age_range: ageRange, last_seen_at: now })
       .eq('id', sessionId);
+    if (error) return { ok: false, error: error.message };
   } else {
-    await supabase.from('visitor_sessions').insert({
+    const { error } = await supabase.from('visitor_sessions').insert({
       id: sessionId,
       gender,
       age_range: ageRange,
       first_seen_at: now,
       last_seen_at: now,
     });
+    if (error) return { ok: false, error: error.message };
   }
 
   return { ok: true };

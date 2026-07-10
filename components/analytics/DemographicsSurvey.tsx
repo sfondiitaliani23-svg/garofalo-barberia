@@ -14,6 +14,7 @@ export function DemographicsSurvey() {
   const [gender, setGender] = useState<'male' | 'female' | 'child' | null>(null);
   const [ageRange, setAgeRange] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasCompletedDemographics()) return;
@@ -30,17 +31,23 @@ export function DemographicsSurvey() {
   const submit = async () => {
     if (!gender || !ageRange) return;
     setSubmitting(true);
+    setError(null);
 
     const sessionId = getOrCreateSessionId();
-    await saveDemographics(
+    const result = await saveDemographics(
       sessionId,
       gender,
       ageRange as (typeof AGE_OPTIONS)[number]['value']
     );
 
+    setSubmitting(false);
+    if (!result.ok) {
+      setError('Impossibile salvare la risposta. Riprova tra poco.');
+      return;
+    }
+
     markDemographicsCompleted();
     setOpen(false);
-    setSubmitting(false);
   };
 
   if (!open) return null;
@@ -103,6 +110,10 @@ export function DemographicsSurvey() {
           ))}
         </div>
       </div>
+
+      {error && (
+        <p className="mt-4 text-xs text-red-300">{error}</p>
+      )}
 
       <div className="mt-5 flex gap-2">
         <button

@@ -211,7 +211,7 @@ CREATE POLICY "content_public_read" ON site_content FOR SELECT USING (is_active 
 CREATE POLICY "content_admin" ON site_content FOR ALL USING (is_admin());
 
 -- Analytics visitatori
-CREATE TYPE visitor_gender AS ENUM ('male', 'female', 'other', 'unknown');
+CREATE TYPE visitor_gender AS ENUM ('male', 'female', 'child', 'other', 'unknown');
 CREATE TYPE visitor_age_range AS ENUM (
   'under_18', '18_24', '25_34', '35_44', '45_54', '55_plus', 'unknown'
 );

@@ -11,6 +11,7 @@
     "backup": "powershell -ExecutionPolicy Bypass -File scripts/backup.ps1",
     "db:check": "node scripts/check-migrations.mjs",
     "db:migrate": "node scripts/run-pending-migrations.mjs",
+    "db:migrate:006": "node scripts/run-migration-006.mjs",
     "whatsapp:test": "node scripts/test-whatsapp.mjs"
   },
   "dependencies": {
