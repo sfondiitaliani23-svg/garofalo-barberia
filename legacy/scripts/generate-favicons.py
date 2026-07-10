@@ -3,8 +3,12 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "assets" / "sostituisci-immagini" / "icone" / "barberia_garofalo.png"
-OUT = ROOT / "assets" / "sostituisci-immagini" / "icone"
+SRC = ROOT / "assets" / "sostituisci-immagini" / "icone" / "favicon" / "barberia_garofalo-gold - Copia.png"
+OUT_DIRS = [
+    ROOT / "assets" / "sostituisci-immagini" / "icone",
+    ROOT / "public" / "assets" / "sostituisci-immagini" / "icone",
+]
+APP_DIR = ROOT / "app"
 
 
 def make_square_icon(size: int, padding_ratio: float = 0.08) -> Image.Image:
@@ -29,12 +33,22 @@ def main() -> None:
         "apple-touch-icon.png": 180,
     }
 
-    icons = []
+    icons = {}
     for name, size in sizes.items():
         icon = make_square_icon(size)
-        icon.save(OUT / name, format="PNG", optimize=True)
-        icons.append(icon)
+        icons[name] = icon
+        for out in OUT_DIRS:
+            icon.save(out / name, format="PNG", optimize=True)
         print("saved", name)
+
+    ico_sizes = [make_square_icon(s) for s in (16, 32, 48)]
+    for path in [OUT_DIRS[0] / "favicon.ico", OUT_DIRS[1] / "favicon.ico", APP_DIR / "favicon.ico"]:
+        ico_sizes[0].save(path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
+        print("saved", path)
+
+    icons["favicon-192.png"].save(APP_DIR / "icon.png", format="PNG", optimize=True)
+    print("saved", APP_DIR / "icon.png")
+
 
 if __name__ == "__main__":
     main()
