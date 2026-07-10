@@ -31,8 +31,6 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   other: 'Altro',
 };
 
-const STOCK_SYNC_DELAY_MS = 280;
-
 interface AdminProductsManagerProps {
   products: Product[];
 }
@@ -94,18 +92,17 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const [description, setDescription] = useState('');
   const [pendingStockCount, setPendingStockCount] = useState(0);
 
-  const stockTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const pendingStock = useRef<Map<string, number>>(new Map());
+  const originalStock = useRef<Map<string, number>>(
+    new Map(products.map((product) => [product.id, product.stock_quantity]))
+  );
 
   useEffect(() => {
     setItems(products);
+    originalStock.current = new Map(products.map((product) => [product.id, product.stock_quantity]));
+    pendingStock.current.clear();
+    setPendingStockCount(0);
   }, [products]);
-
-  useEffect(() => {
-    return () => {
-      stockTimers.current.forEach((timer) => clearTimeout(timer));
-    };
-  }, []);
 
   const lowStockProducts = items.filter(
     (p) => p.is_active && p.stock_quantity <= p.min_stock_level
@@ -231,27 +228,14 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
     });
   }
 
-  function syncStock(productId: string) {
-    const targetQty = pendingStock.current.get(productId);
-    if (targetQty === undefined) return;
-    pendingStock.current.delete(productId);
+  function updatePendingStock(productId: string, nextQty: number) {
+    const baseline = originalStock.current.get(productId);
+    if (baseline === nextQty) {
+      pendingStock.current.delete(productId);
+    } else {
+      pendingStock.current.set(productId, nextQty);
+    }
     setPendingStockCount(pendingStock.current.size);
-
-    void setProductStock(productId, targetQty).then((result) => {
-      if (!result.ok) {
-        toast.error(result.error);
-        router.refresh();
-        return;
-      }
-
-      if (result.stockQuantity !== targetQty) {
-        setItems((prev) =>
-          prev.map((p) =>
-            p.id === productId ? { ...p, stock_quantity: result.stockQuantity! } : p
-          )
-        );
-      }
-    });
   }
 
   function handleStockAdjust(product: Product, delta: number) {
@@ -262,38 +246,56 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
       prev.map((p) => {
         if (p.id !== product.id) return p;
         nextQty = Math.max(0, p.stock_quantity + delta);
-        pendingStock.current.set(p.id, nextQty);
         return { ...p, stock_quantity: nextQty };
       })
     );
-    setPendingStockCount(pendingStock.current.size);
-
-    const existing = stockTimers.current.get(product.id);
-    if (existing) clearTimeout(existing);
-
-    stockTimers.current.set(
-      product.id,
-      setTimeout(() => {
-        stockTimers.current.delete(product.id);
-        syncStock(product.id);
-      }, STOCK_SYNC_DELAY_MS)
-    );
+    updatePendingStock(product.id, nextQty);
   }
 
-  const flushPendingStock = useCallback(() => {
-    const productIds = Array.from(pendingStock.current.keys());
-    stockTimers.current.forEach((timer) => clearTimeout(timer));
-    stockTimers.current.clear();
-    productIds.forEach((productId) => syncStock(productId));
+  const flushPendingStock = useCallback(async () => {
+    const entries = Array.from(pendingStock.current.entries());
+    if (entries.length === 0) return;
+
+    setSaving(true);
+
+    const results = await Promise.all(
+      entries.map(async ([productId, targetQty]) => ({
+        productId,
+        targetQty,
+        result: await setProductStock(productId, targetQty),
+      }))
+    );
+
+    const failed = results.find(({ result }) => !result.ok);
+    if (failed) {
+      setSaving(false);
+      toast.error(failed.result.error ?? 'Errore durante il salvataggio delle scorte');
+      router.refresh();
+      return;
+    }
+
+    for (const { productId, targetQty, result } of results) {
+      pendingStock.current.delete(productId);
+      const savedQty = result.stockQuantity ?? targetQty;
+      originalStock.current.set(productId, savedQty);
+      if (savedQty !== targetQty) {
+        setItems((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, stock_quantity: savedQty } : p))
+        );
+      }
+    }
+
+    setPendingStockCount(0);
+    setSaving(false);
     toast.success('Scorte aggiornate');
-  }, []);
+  }, [router]);
 
   const handleSaveAll = useCallback(() => {
     if (modalOpen) {
       handleSave();
       return;
     }
-    flushPendingStock();
+    void flushPendingStock();
   }, [flushPendingStock, handleSave, modalOpen]);
 
   useAdminSaveRegistration(
