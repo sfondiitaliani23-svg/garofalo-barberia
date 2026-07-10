@@ -9,18 +9,26 @@ OUT_DIRS = [
     ROOT / "public" / "assets" / "sostituisci-immagini" / "icone",
 ]
 APP_DIR = ROOT / "app"
-DARK = (13, 13, 13, 255)
+TRANSPARENT = (0, 0, 0, 0)
 
 
-def strip_near_black(img: Image.Image, threshold: int = 35) -> Image.Image:
+def strip_to_white_logo(img: Image.Image, black_threshold: int = 40) -> Image.Image:
+    """Rimuove lo sfondo nero e converte il logo in bianco con alpha dal luminance."""
     img = img.convert("RGBA")
     px = img.load()
     width, height = img.size
     for y in range(height):
         for x in range(width):
             r, g, b, a = px[x, y]
-            if r <= threshold and g <= threshold and b <= threshold:
-                px[x, y] = (0, 0, 0, 0)
+            if a == 0:
+                px[x, y] = TRANSPARENT
+                continue
+            lum = max(r, g, b)
+            if lum <= black_threshold:
+                px[x, y] = TRANSPARENT
+            else:
+                alpha = min(255, int(lum * 1.15))
+                px[x, y] = (255, 255, 255, alpha)
     return img
 
 
@@ -32,23 +40,38 @@ def load_logo() -> Image.Image:
             (max(1, int(logo.width * ratio)), max(1, int(logo.height * ratio))),
             Image.Resampling.LANCZOS,
         )
-    logo = strip_near_black(logo)
+    logo = strip_to_white_logo(logo)
     bbox = logo.getbbox()
     if not bbox:
         raise RuntimeError(f"No visible pixels in {SRC}")
     return logo.crop(bbox)
 
 
-def make_icon(size: int, padding_ratio: float = 0.08, background: tuple[int, int, int, int] = DARK) -> Image.Image:
+def force_white(img: Image.Image) -> Image.Image:
+    """Dopo il resize LANCZOS i bordi diventano grigi: forza bianco puro."""
+    img = img.convert("RGBA")
+    px = img.load()
+    width, height = img.size
+    for y in range(height):
+        for x in range(width):
+            r, g, b, a = px[x, y]
+            if a > 8:
+                px[x, y] = (255, 255, 255, a)
+            else:
+                px[x, y] = TRANSPARENT
+    return img
+
+
+def make_icon(size: int, padding_ratio: float = 0.06) -> Image.Image:
     logo = load_logo()
-    canvas = Image.new("RGBA", (size, size), background)
+    canvas = Image.new("RGBA", (size, size), TRANSPARENT)
     max_side = int(size * (1 - padding_ratio * 2))
     scaled = logo.copy()
     scaled.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
     x = (size - scaled.width) // 2
     y = (size - scaled.height) // 2
     canvas.paste(scaled, (x, y), scaled)
-    return canvas
+    return force_white(canvas)
 
 
 def main() -> None:
@@ -68,8 +91,9 @@ def main() -> None:
             icon.save(out / name, format="PNG", optimize=True)
         print("saved", name)
 
+    ico_images = [make_icon(s) for s in (16, 32, 48)]
     for path in [OUT_DIRS[0] / "favicon.ico", OUT_DIRS[1] / "favicon.ico", APP_DIR / "favicon.ico"]:
-        make_icon(16).save(path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
+        ico_images[0].save(path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
         print("saved", path)
 
     icons["favicon-192.png"].save(APP_DIR / "icon.png", format="PNG", optimize=True)
