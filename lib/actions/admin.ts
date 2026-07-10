@@ -761,10 +761,6 @@ export interface AdminProductInput {
 
 const PRODUCT_CATEGORIES = ['perfume', 'cosmetic', 'accessory', 'other'] as const;
 
-function revalidateInventoryPaths() {
-  revalidatePath('/admin/inventario');
-}
-
 export async function getAdminProducts() {
   await requireAdmin();
   const supabase = await createClient();
@@ -820,7 +816,6 @@ export async function saveAdminProduct(input: AdminProductInput) {
       if (error.code === '23505') return { ok: false, error: 'SKU già in uso' };
       return { ok: false, error: 'Errore durante la modifica' };
     }
-    revalidateInventoryPaths();
     return { ok: true, product: data };
   }
 
@@ -837,7 +832,6 @@ export async function saveAdminProduct(input: AdminProductInput) {
     return { ok: false, error: 'Errore durante la creazione' };
   }
 
-  revalidateInventoryPaths();
   return { ok: true, product: data };
 }
 
@@ -849,28 +843,60 @@ export async function deleteAdminProduct(productId: string) {
   const { error } = await supabase.from('products').delete().eq('id', productId);
   if (error) return { ok: false, error: 'Impossibile eliminare il prodotto' };
 
-  revalidateInventoryPaths();
   return { ok: true };
 }
 
-export async function setProductStock(productId: string, quantity: number) {
+export async function setProductsStockBatch(
+  updates: { productId: string; quantity: number }[]
+) {
   await requireAdmin();
   const supabase = await createServiceClient();
-  if (!supabase) return { ok: false, error: 'Database non configurato' };
+  if (!supabase) return { ok: false as const, error: 'Database non configurato' };
+  if (updates.length === 0) return { ok: true as const, results: [] };
 
-  if (quantity < 0) return { ok: false, error: 'Scorte insufficienti' };
+  const now = new Date().toISOString();
+  const results = await Promise.all(
+    updates.map(async ({ productId, quantity }) => {
+      if (quantity < 0) {
+        return { ok: false as const, productId, error: 'Scorte insufficienti' };
+      }
 
-  const { data, error } = await supabase
-    .from('products')
-    .update({ stock_quantity: quantity, updated_at: new Date().toISOString() })
-    .eq('id', productId)
-    .select('stock_quantity')
-    .single();
+      const { data, error } = await supabase
+        .from('products')
+        .update({ stock_quantity: quantity, updated_at: now })
+        .eq('id', productId)
+        .select('stock_quantity')
+        .single();
 
-  if (error || !data) return { ok: false, error: 'Errore aggiornamento scorte' };
+      if (error || !data) {
+        return { ok: false as const, productId, error: 'Errore aggiornamento scorte' };
+      }
 
-  revalidateInventoryPaths();
-  return { ok: true, stockQuantity: data.stock_quantity };
+      return {
+        ok: true as const,
+        productId,
+        stockQuantity: data.stock_quantity as number,
+      };
+    })
+  );
+
+  const failed = results.find((result) => !result.ok);
+  if (failed && !failed.ok) {
+    return { ok: false as const, error: failed.error };
+  }
+
+  return {
+    ok: true as const,
+    results: results
+      .filter((result): result is Extract<typeof result, { ok: true }> => result.ok)
+      .map(({ productId, stockQuantity }) => ({ productId, stockQuantity })),
+  };
+}
+
+export async function setProductStock(productId: string, quantity: number) {
+  const result = await setProductsStockBatch([{ productId, quantity }]);
+  if (!result.ok) return result;
+  return { ok: true, stockQuantity: result.results[0]?.stockQuantity };
 }
 
 export async function adjustProductStock(productId: string, delta: number) {

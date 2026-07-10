@@ -1,7 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { memo, useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Package, Minus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,7 @@ import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import {
   saveAdminProduct,
   deleteAdminProduct,
-  setProductStock,
+  setProductsStockBatch,
 } from '@/lib/actions/admin';
 import { formatPrice } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -75,12 +74,11 @@ function buildProductFromForm(
 }
 
 export function AdminProductsManager({ products }: AdminProductsManagerProps) {
-  const router = useRouter();
   const [items, setItems] = useState(products);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
-  const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
   const [name, setName] = useState('');
   const [brand, setBrand] = useState('');
   const [category, setCategory] = useState<ProductCategory>('perfume');
@@ -96,12 +94,12 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const originalStock = useRef<Map<string, number>>(
     new Map(products.map((product) => [product.id, product.stock_quantity]))
   );
+  const hasLocalEdits = useRef(false);
 
   useEffect(() => {
+    if (hasLocalEdits.current) return;
     setItems(products);
     originalStock.current = new Map(products.map((product) => [product.id, product.stock_quantity]));
-    pendingStock.current.clear();
-    setPendingStockCount(0);
   }, [products]);
 
   const lowStockProducts = items.filter(
@@ -168,36 +166,39 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
     const optimistic = buildProductFromForm(getFormState(), tempId, sortOrder);
     const previousItems = items;
 
+    hasLocalEdits.current = true;
     setItems((prev) =>
       isEditing
         ? prev.map((p) => (p.id === editing.id ? optimistic : p))
         : [...prev, optimistic]
     );
     setModalOpen(false);
-    setSaving(true);
 
-    void saveAdminProduct({
-      id: editing?.id,
-      name,
-      brand,
-      category,
-      sku,
-      stockQuantity: stockQty,
-      minStockLevel: minStockQty,
-      priceEuros,
-      imageUrl,
-      description,
-      isActive: true,
-      sortOrder,
-    }).then((result) => {
-      setSaving(false);
+    startTransition(async () => {
+      const result = await saveAdminProduct({
+        id: editing?.id,
+        name,
+        brand,
+        category,
+        sku,
+        stockQuantity: stockQty,
+        minStockLevel: minStockQty,
+        priceEuros,
+        imageUrl,
+        description,
+        isActive: true,
+        sortOrder,
+      });
+
       if (!result.ok) {
+        hasLocalEdits.current = pendingStock.current.size > 0;
         setItems(previousItems);
         toast.error(result.error);
         return;
       }
 
       if (result.product) {
+        originalStock.current.set(result.product.id, result.product.stock_quantity);
         setItems((prev) =>
           isEditing
             ? prev.map((p) => (p.id === editing.id ? result.product! : p))
@@ -205,104 +206,117 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
         );
       }
 
+      hasLocalEdits.current = pendingStock.current.size > 0;
       toast.success(isEditing ? 'Prodotto modificato' : 'Prodotto creato');
     });
-  }, [brand, category, description, editing, imageUrl, items, minStock, name, price, sku, stock]);
+  }, [brand, category, description, editing, imageUrl, items, minStock, name, price, sku, startTransition, stock]);
 
   function handleDelete(product: Product) {
     const confirmed = window.confirm(`Eliminare "${product.name}" dall'inventario?`);
     if (!confirmed) return;
 
     const previousItems = items;
+    hasLocalEdits.current = true;
     setItems((prev) => prev.filter((p) => p.id !== product.id));
     setDeletingId(product.id);
 
-    void deleteAdminProduct(product.id).then((result) => {
+    startTransition(async () => {
+      const result = await deleteAdminProduct(product.id);
       setDeletingId(null);
       if (!result.ok) {
+        hasLocalEdits.current = pendingStock.current.size > 0;
         setItems(previousItems);
         toast.error(result.error);
         return;
       }
+
+      originalStock.current.delete(product.id);
+      pendingStock.current.delete(product.id);
+      setPendingStockCount(pendingStock.current.size);
+      hasLocalEdits.current = pendingStock.current.size > 0;
       toast.success('Prodotto eliminato');
     });
   }
 
-  function updatePendingStock(productId: string, nextQty: number) {
+  const updatePendingStock = useCallback((productId: string, nextQty: number) => {
     const baseline = originalStock.current.get(productId);
     if (baseline === nextQty) {
       pendingStock.current.delete(productId);
     } else {
       pendingStock.current.set(productId, nextQty);
     }
+    hasLocalEdits.current = pendingStock.current.size > 0 || modalOpen;
     setPendingStockCount(pendingStock.current.size);
-  }
+  }, [modalOpen]);
 
-  function handleStockAdjust(product: Product, delta: number) {
-    if (product.id.startsWith('temp-')) return;
+  const handleStockAdjust = useCallback((productId: string, delta: number) => {
+    if (productId.startsWith('temp-')) return;
 
-    let nextQty = product.stock_quantity;
+    let nextQty = 0;
     setItems((prev) =>
       prev.map((p) => {
-        if (p.id !== product.id) return p;
+        if (p.id !== productId) return p;
         nextQty = Math.max(0, p.stock_quantity + delta);
         return { ...p, stock_quantity: nextQty };
       })
     );
-    updatePendingStock(product.id, nextQty);
-  }
+    updatePendingStock(productId, nextQty);
+  }, [updatePendingStock]);
 
-  const flushPendingStock = useCallback(async () => {
+  const flushPendingStock = useCallback(() => {
     const entries = Array.from(pendingStock.current.entries());
     if (entries.length === 0) return;
 
-    setSaving(true);
+    const previousItems = items;
+    const previousPending = new Map(pendingStock.current);
+    const previousOriginal = new Map(originalStock.current);
 
-    const results = await Promise.all(
-      entries.map(async ([productId, targetQty]) => ({
-        productId,
-        targetQty,
-        result: await setProductStock(productId, targetQty),
-      }))
-    );
+    startTransition(async () => {
+      const result = await setProductsStockBatch(
+        entries.map(([productId, quantity]) => ({ productId, quantity }))
+      );
 
-    const failed = results.find(({ result }) => !result.ok);
-    if (failed) {
-      setSaving(false);
-      toast.error(failed.result.error ?? 'Errore durante il salvataggio delle scorte');
-      router.refresh();
-      return;
-    }
-
-    for (const { productId, targetQty, result } of results) {
-      pendingStock.current.delete(productId);
-      const savedQty = result.stockQuantity ?? targetQty;
-      originalStock.current.set(productId, savedQty);
-      if (savedQty !== targetQty) {
-        setItems((prev) =>
-          prev.map((p) => (p.id === productId ? { ...p, stock_quantity: savedQty } : p))
-        );
+      if (!result.ok) {
+        hasLocalEdits.current = true;
+        setItems(previousItems);
+        pendingStock.current = previousPending;
+        originalStock.current = previousOriginal;
+        setPendingStockCount(pendingStock.current.size);
+        toast.error(result.error ?? 'Errore durante il salvataggio delle scorte');
+        return;
       }
-    }
 
-    setPendingStockCount(0);
-    setSaving(false);
-    toast.success('Scorte aggiornate');
-  }, [router]);
+      for (const { productId, stockQuantity } of result.results) {
+        pendingStock.current.delete(productId);
+        originalStock.current.set(productId, stockQuantity);
+      }
+
+      setItems((prev) =>
+        prev.map((product) => {
+          const saved = result.results.find((entry) => entry.productId === product.id);
+          return saved ? { ...product, stock_quantity: saved.stockQuantity } : product;
+        })
+      );
+
+      setPendingStockCount(0);
+      hasLocalEdits.current = false;
+      toast.success('Scorte aggiornate');
+    });
+  }, [items, startTransition]);
 
   const handleSaveAll = useCallback(() => {
     if (modalOpen) {
       handleSave();
       return;
     }
-    void flushPendingStock();
+    flushPendingStock();
   }, [flushPendingStock, handleSave, modalOpen]);
 
   useAdminSaveRegistration(
     modalOpen || pendingStockCount > 0
       ? {
           isDirty: true,
-          isSaving: saving,
+          isSaving: pending,
           save: handleSaveAll,
         }
       : null
@@ -446,7 +460,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={pending}
                 className={cn(
                   'inline-flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition disabled:opacity-50',
                   editing
@@ -455,7 +469,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                 )}
               >
                 <Pencil size={16} />
-                {editing ? 'Salva modifiche' : 'Crea prodotto'}
+                {pending ? 'Salvataggio...' : editing ? 'Salva modifiche' : 'Crea prodotto'}
               </button>
             </div>
           </div>
@@ -465,7 +479,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   );
 }
 
-function ProductRow({
+const ProductRow = memo(function ProductRow({
   product,
   rowBusy,
   onEdit,
@@ -477,7 +491,7 @@ function ProductRow({
   rowBusy: boolean;
   onEdit: () => void;
   onDelete: () => void;
-  onAdjustStock: (product: Product, delta: number) => void;
+  onAdjustStock: (productId: string, delta: number) => void;
   inactive?: boolean;
 }) {
   const isLowStock = product.is_active && product.stock_quantity <= product.min_stock_level;
@@ -510,7 +524,7 @@ function ProductRow({
         <div className="flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => onAdjustStock(product, -1)}
+            onClick={() => onAdjustStock(product.id, -1)}
             disabled={isTemp || product.stock_quantity <= 0}
             className="rounded-lg border border-white/15 bg-[#1a1a1a] p-1.5 text-white/60 hover:text-white disabled:opacity-40"
           >
@@ -518,7 +532,7 @@ function ProductRow({
           </button>
           <span
             className={cn(
-              'min-w-[2.5rem] text-center text-lg font-bold transition-transform duration-150',
+              'min-w-[2.5rem] text-center text-lg font-bold',
               isLowStock ? 'text-orange-300' : 'text-gold'
             )}
           >
@@ -526,7 +540,7 @@ function ProductRow({
           </span>
           <button
             type="button"
-            onClick={() => onAdjustStock(product, 1)}
+            onClick={() => onAdjustStock(product.id, 1)}
             disabled={isTemp}
             className="rounded-lg border border-white/15 bg-[#1a1a1a] p-1.5 text-white/60 hover:text-white disabled:opacity-40"
           >
@@ -559,4 +573,4 @@ function ProductRow({
       </div>
     </div>
   );
-}
+});
