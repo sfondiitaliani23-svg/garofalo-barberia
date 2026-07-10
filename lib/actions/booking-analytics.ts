@@ -87,26 +87,26 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
   const supabase = await createServiceClient();
   if (!supabase) return emptyAnalytics();
 
-  const { data: appointments } = await supabase
-    .from('appointments')
-    .select(`
-      id,
-      customer_id,
-      customer_name,
-      customer_phone,
-      status,
-      starts_at,
-      discount_cents,
-      service_id,
-      barber_id,
-      service:services(id, name, price_cents),
-      barber:barbers(id, name)
-    `);
+  const [{ data: appointments }, { data: allServices }] = await Promise.all([
+    supabase
+      .from('appointments')
+      .select(`
+        id,
+        customer_id,
+        customer_name,
+        customer_phone,
+        status,
+        starts_at,
+        discount_cents,
+        service_id,
+        barber_id,
+        service:services(id, name, price_cents),
+        barber:barbers(id, name)
+      `),
+    supabase.from('services').select('id, name, price_cents').eq('is_active', true),
+  ]);
 
   const rows = appointments ?? [];
-  if (rows.length === 0) {
-    return { ...emptyAnalytics(), configured: true };
-  }
 
   let activeBookings = 0;
   let cancelledBookings = 0;
@@ -130,7 +130,7 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
     monthMap.set(monthKey, (monthMap.get(monthKey) ?? 0) + 1);
 
     const service = unwrapRelation(apt.service as { id: string; name: string; price_cents: number } | { id: string; name: string; price_cents: number }[] | null);
-    if (service) {
+    if (service && status !== 'cancelled') {
       const existing = serviceMap.get(service.id) ?? {
         id: service.id,
         name: service.name,
@@ -147,7 +147,7 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
       serviceMap.set(service.id, existing);
     }
 
-    if (status === 'confirmed' || status === 'completed') {
+    if (status !== 'cancelled') {
       const key = customerKey(apt.customer_id, apt.customer_name, apt.customer_phone);
       const existing = customerMap.get(key) ?? {
         key,
@@ -172,8 +172,22 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
     }
   }
 
-  const topServices = [...serviceMap.values()].sort((a, b) => b.count - a.count).slice(0, 5);
-  const topCustomers = [...customerMap.values()].sort((a, b) => b.count - a.count).slice(0, 5);
+  const topServices = (allServices ?? [])
+    .map((service) => {
+      const ranked = serviceMap.get(service.id);
+      return {
+        id: service.id,
+        name: service.name,
+        count: ranked?.count ?? 0,
+        revenueCents: ranked?.revenueCents ?? 0,
+      };
+    })
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'it'))
+    .slice(0, 5);
+
+  const topCustomers = [...customerMap.values()]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'it'))
+    .slice(0, 5);
   const topBarbers = [...barberMap.values()].sort((a, b) => b.count - a.count).slice(0, 5);
 
   const bookingsByMonth = [...monthMap.entries()]

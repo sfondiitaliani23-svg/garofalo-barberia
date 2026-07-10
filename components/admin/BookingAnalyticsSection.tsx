@@ -3,41 +3,59 @@ import { formatPrice } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Crown, Scissors, TrendingUp, Users } from 'lucide-react';
 
+const TOP_RANK_LIMIT = 5;
+
 function RankingBar({
+  rank,
   label,
   value,
-  total,
+  maxValue,
+  shareTotal,
   detail,
 }: {
+  rank: number;
   label: string;
   value: number;
-  total: number;
+  maxValue: number;
+  shareTotal: number;
   detail?: string;
 }) {
-  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  const sharePct = shareTotal > 0 ? Math.round((value / shareTotal) * 100) : 0;
+  const barPct = maxValue > 0 ? Math.round((value / maxValue) * 100) : 0;
 
   return (
     <div>
-      <div className="mb-1 flex justify-between gap-2 text-sm">
-        <span className="text-white/80">{label}</span>
+      <div className="mb-1 flex items-start justify-between gap-2 text-sm">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gold/15 text-xs font-bold text-gold">
+            {rank}
+          </span>
+          <span className="truncate text-white/80">{label}</span>
+        </div>
         <span className="shrink-0 text-white/50">
-          {value} ({pct}%)
+          {value} ({sharePct}%)
         </span>
       </div>
-      {detail && <p className="mb-1 text-xs text-white/40">{detail}</p>}
-      <div className="h-2 overflow-hidden rounded-full bg-white/10">
-        <div
-          className="h-full rounded-full bg-gold transition-all"
-          style={{ width: `${Math.max(pct, value > 0 ? 4 : 0)}%` }}
-        />
+      <div className="pl-8">
+        {detail && <p className="mb-1 text-xs text-white/40">{detail}</p>}
+        <div className="h-2 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-gold transition-all"
+            style={{ width: `${Math.max(barPct, value > 0 ? 4 : 0)}%` }}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
 export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) {
-  const maxServiceCount = stats.topServices[0]?.count ?? 1;
-  const maxCustomerCount = stats.topCustomers[0]?.count ?? 1;
+  const topServices = stats.topServices.slice(0, TOP_RANK_LIMIT);
+  const topCustomers = stats.topCustomers.slice(0, TOP_RANK_LIMIT);
+  const totalServiceBookings = topServices.reduce((sum, service) => sum + service.count, 0);
+  const totalCustomerVisits = topCustomers.reduce((sum, customer) => sum + customer.count, 0);
+  const maxServiceCount = Math.max(...topServices.map((service) => service.count), 1);
+  const maxCustomerCount = Math.max(...topCustomers.map((customer) => customer.count), 1);
   const maxMonthCount = Math.max(...stats.bookingsByMonth.map((m) => m.count), 1);
 
   return (
@@ -115,21 +133,23 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
         <div className="rounded-lg border border-white/10 bg-[#111] p-6">
           <div className="flex items-center gap-2">
             <Scissors size={16} className="text-gold" />
-            <h3 className="text-sm font-medium text-white/70">Servizi più richiesti</h3>
+            <h3 className="text-sm font-medium text-white/70">Top 5 servizi più richiesti</h3>
           </div>
           <div className="mt-4 space-y-4">
-            {stats.topServices.length > 0 ? (
-              stats.topServices.map((service) => (
+            {topServices.length > 0 ? (
+              topServices.map((service, index) => (
                 <RankingBar
                   key={service.id}
+                  rank={index + 1}
                   label={service.name}
                   value={service.count}
-                  total={maxServiceCount}
+                  maxValue={maxServiceCount}
+                  shareTotal={totalServiceBookings}
                   detail={`Incasso stimato ${formatPrice(service.revenueCents)}`}
                 />
               ))
             ) : (
-              <p className="text-xs text-white/40">Nessuna prenotazione registrata.</p>
+              <p className="text-xs text-white/40">Nessun servizio attivo nel listino.</p>
             )}
           </div>
         </div>
@@ -137,21 +157,23 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
         <div className="rounded-lg border border-white/10 bg-[#111] p-6">
           <div className="flex items-center gap-2">
             <Users size={16} className="text-gold" />
-            <h3 className="text-sm font-medium text-white/70">Clienti più fedeli</h3>
+            <h3 className="text-sm font-medium text-white/70">Top 5 clienti più fedeli</h3>
           </div>
           <div className="mt-4 space-y-4">
-            {stats.topCustomers.length > 0 ? (
-              stats.topCustomers.map((customer) => (
+            {topCustomers.length > 0 ? (
+              topCustomers.map((customer, index) => (
                 <RankingBar
                   key={customer.key}
+                  rank={index + 1}
                   label={customer.name}
                   value={customer.count}
-                  total={maxCustomerCount}
-                  detail={customer.phone}
+                  maxValue={maxCustomerCount}
+                  shareTotal={totalCustomerVisits}
+                  detail={`${customer.count} ${customer.count === 1 ? 'visita' : 'visite'} · ${customer.phone}`}
                 />
               ))
             ) : (
-              <p className="text-xs text-white/40">Nessun cliente con visite ripetute.</p>
+              <p className="text-xs text-white/40">Nessuna prenotazione cliente registrata.</p>
             )}
           </div>
         </div>
