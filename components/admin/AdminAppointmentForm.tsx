@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -9,19 +10,18 @@ import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
 import {
   createAdminAppointment,
   updateAdminAppointment,
   adminCancelAppointment,
   updateAppointmentStatus,
 } from '@/lib/actions/admin';
-import { getAvailableSlots } from '@/lib/actions/availability';
-import { formatPrice } from '@/lib/utils';
+import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability';
+import { formatPrice, formatDuration } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
 import type { CalendarAppointment } from '@/lib/utils/week-calendar';
-import { SITE_CONFIG } from '@/lib/site-config';
-import { getBookingMonthOptions } from '@/lib/utils/booking-months';
 
 interface AdminAppointmentFormProps {
   barbers: Barber[];
@@ -62,8 +62,30 @@ export function AdminAppointmentForm({
   const [customerPhone, setCustomerPhone] = useState(appointment?.customer_phone ?? '');
   const [notes, setNotes] = useState(appointment?.notes ?? '');
   const [slots, setSlots] = useState<string[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [loadingDates, setLoadingDates] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
 
   const selectedService = services.find((s) => s.id === serviceId);
 
@@ -82,9 +104,34 @@ export function AdminAppointmentForm({
     setLoadingSlots(false);
   }, [barberId, date, selectedService, appointment?.id]);
 
+  const loadDates = useCallback(async () => {
+    if (!selectedService) return;
+    setLoadingDates(true);
+    const dates = await getAvailableDates(
+      selectedService.duration_minutes,
+      barberId,
+      appointment?.id ?? null
+    );
+
+    const extraDates = new Set(dates);
+    if (appointment) {
+      extraDates.add(format(parseISO(appointment.starts_at), 'yyyy-MM-dd'));
+    }
+    if (initialDate) {
+      extraDates.add(initialDate);
+    }
+
+    setAvailableDates(Array.from(extraDates).sort());
+    setLoadingDates(false);
+  }, [appointment, barberId, initialDate, selectedService]);
+
   useEffect(() => {
     void loadSlots();
   }, [loadSlots]);
+
+  useEffect(() => {
+    void loadDates();
+  }, [loadDates]);
 
   useEffect(() => {
     if (!isEdit || !appointment || !date) return;
@@ -176,19 +223,36 @@ export function AdminAppointmentForm({
     });
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/15 bg-[#111] p-6 shadow-2xl">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="font-display text-xl uppercase text-gold">
+  if (!mounted) return null;
+
+  const modal = (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-xl border border-white/15 bg-[#111] shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="admin-appointment-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-6 py-4">
+          <h2 id="admin-appointment-title" className="font-display text-xl uppercase text-gold">
             {isEdit ? 'Modifica prenotazione' : 'Nuova prenotazione'}
           </h2>
-          <button type="button" onClick={onClose} className="text-white/50 hover:text-white">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-white/50 transition hover:bg-white/10 hover:text-white"
+            aria-label="Chiudi"
+          >
             <X size={20} />
           </button>
         </div>
 
-        <div className="space-y-4">
+        <div className="admin-modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div>
             <Label htmlFor="admin-name">Nome cliente *</Label>
             <Input
@@ -210,19 +274,28 @@ export function AdminAppointmentForm({
             />
           </div>
           <div>
-            <Label htmlFor="admin-service">Servizio *</Label>
-            <select
-              id="admin-service"
-              value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
-              className="mt-1 flex h-11 w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 text-sm text-white"
-            >
+            <Label>Servizio *</Label>
+            <div className="admin-modal-scroll mt-2 grid max-h-44 gap-2 overflow-y-auto sm:grid-cols-2">
               {services.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name} — {formatPrice(s.price_cents)} ({s.duration_minutes} min)
-                </option>
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setServiceId(s.id);
+                    setTime('');
+                  }}
+                  className={cn(
+                    'rounded-lg border p-3 text-left transition hover:border-gold/50',
+                    serviceId === s.id ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
+                  )}
+                >
+                  <p className="text-sm font-medium">{s.name}</p>
+                  <p className="text-xs text-gold">
+                    {formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}
+                  </p>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
           <div>
             <Label>Barbiere</Label>
@@ -231,34 +304,18 @@ export function AdminAppointmentForm({
             </p>
           </div>
           <div>
-            <Label htmlFor="admin-month">Mese</Label>
-            <select
-              id="admin-month"
-              value={date.slice(0, 7)}
-              onChange={(e) => {
-                const [year, month] = e.target.value.split('-').map(Number);
-                const firstDay = format(new Date(year, month - 1, 1), 'yyyy-MM-dd');
-                setDate(firstDay);
-                setTime('');
-              }}
-              className="mt-1 flex h-11 w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 text-sm text-white"
-            >
-              {getBookingMonthOptions().map((m) => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <Label htmlFor="admin-date">Data *</Label>
-            <Input
-              id="admin-date"
-              type="date"
-              value={date}
-              min={format(new Date(), 'yyyy-MM-dd')}
-              max={SITE_CONFIG.bookingEndDate}
-              onChange={(e) => { setDate(e.target.value); setTime(''); }}
-              className="mt-1"
-            />
+            <Label>Data *</Label>
+            <div className="mt-2">
+              <MonthDatePicker
+                dates={availableDates}
+                selectedDate={date}
+                onSelectDate={(nextDate) => {
+                  setDate(nextDate);
+                  setTime('');
+                }}
+                loading={loadingDates}
+              />
+            </div>
           </div>
           <div>
             <Label>Orario *</Label>
@@ -295,47 +352,51 @@ export function AdminAppointmentForm({
               className="mt-1 flex w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2 text-sm text-white"
             />
           </div>
-        </div>
 
-        <div className="mt-6 flex flex-wrap gap-2 border-t border-white/10 pt-4">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={pending}
-            className={cn(
-              'inline-flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition disabled:opacity-50',
-              isEdit
-                ? 'border border-yellow-500/60 bg-yellow-500/15 text-yellow-300 hover:bg-yellow-500/25'
-                : 'bg-gold text-black hover:bg-gold-light'
-            )}
-          >
-            <Pencil size={16} />
-            {pending ? 'Salvataggio...' : isEdit ? 'Modifica prenotazione' : 'Crea prenotazione'}
-          </button>
-          {isEdit && (
-            <>
-              <button
-                type="button"
-                onClick={handleCancel}
-                disabled={pending}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-red-500/60 bg-red-500/15 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/25 disabled:opacity-50"
-              >
-                <XCircle size={16} />
-                Disdici prenotazione
-              </button>
-              <Button type="button" variant="outline" onClick={handleComplete} disabled={pending} className="w-full">
-                Segna completato
-              </Button>
-            </>
+          {isEdit && appointment && (
+            <p className="text-center text-xs text-white/40">
+              Attuale: {format(parseISO(appointment.starts_at), "EEEE d MMMM 'alle' HH:mm", { locale: it })}
+            </p>
           )}
         </div>
 
-        {isEdit && appointment && (
-          <p className="mt-3 text-center text-xs text-white/40">
-            Attuale: {format(parseISO(appointment.starts_at), "EEEE d MMMM 'alle' HH:mm", { locale: it })}
-          </p>
-        )}
+        <div className="shrink-0 border-t border-white/10 px-6 py-4">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={pending}
+              className={cn(
+                'inline-flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition disabled:opacity-50',
+                isEdit
+                  ? 'border border-yellow-500/60 bg-yellow-500/15 text-yellow-300 hover:bg-yellow-500/25'
+                  : 'bg-gold text-black hover:bg-gold-light'
+              )}
+            >
+              <Pencil size={16} />
+              {pending ? 'Salvataggio...' : isEdit ? 'Modifica prenotazione' : 'Crea prenotazione'}
+            </button>
+            {isEdit && (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  disabled={pending}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-red-500/60 bg-red-500/15 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/25 disabled:opacity-50"
+                >
+                  <XCircle size={16} />
+                  Disdici prenotazione
+                </button>
+                <Button type="button" variant="outline" onClick={handleComplete} disabled={pending} className="w-full">
+                  Segna completato
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
