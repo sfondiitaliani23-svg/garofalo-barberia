@@ -31,6 +31,7 @@ export interface AdminAppointmentInput {
 
 function revalidateAppointmentPaths() {
   revalidatePath('/admin/prenotazioni');
+  revalidatePath('/admin/prenotazioni/storico');
   revalidatePath('/area-cliente/appuntamenti');
   revalidatePath('/area-cliente/storico');
   revalidatePath('/area-cliente/dashboard');
@@ -118,6 +119,22 @@ export async function getAdminWeekAppointments(weekStartDate: string, barberId?:
   const weekStart = startOfWeek(parseISO(weekStartDate), { weekStartsOn: 1 });
   const weekEnd = addDays(weekStart, 7);
   return getAdminAppointments(weekStart.toISOString(), weekEnd.toISOString(), barberId);
+}
+
+export async function getUpcomingAdminAppointments(limit = 200) {
+  await requireAdmin();
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from('appointments')
+    .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
+    .eq('status', 'confirmed')
+    .gte('starts_at', new Date().toISOString())
+    .order('starts_at', { ascending: true })
+    .limit(limit);
+
+  return data ?? [];
 }
 
 export async function createAdminAppointment(input: AdminAppointmentInput) {

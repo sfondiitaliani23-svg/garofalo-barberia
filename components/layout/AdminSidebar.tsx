@@ -8,6 +8,7 @@ import { signOut } from '@/lib/actions/auth';
 import {
   LayoutDashboard,
   Calendar,
+  ClipboardList,
   Users,
   Scissors,
   UserCog,
@@ -19,7 +20,8 @@ import {
 
 const links = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/prenotazioni', label: 'Prenotazioni', icon: Calendar },
+  { href: '/admin/prenotazioni', label: 'Prenotazioni', icon: Calendar, exact: true },
+  { href: '/admin/prenotazioni/storico', label: 'Storico Prenotazioni', icon: ClipboardList },
   { href: '/admin/clienti', label: 'Clienti', icon: Users },
   { href: '/admin/servizi', label: 'Servizi', icon: Scissors },
   { href: '/admin/promozioni', label: 'Promozioni', icon: Tag },
@@ -38,19 +40,25 @@ export const AdminSidebar = memo(function AdminSidebar() {
         Admin Garofalo
       </Link>
       <nav className="flex-1 space-y-1">
-        {links.map(({ href, label, icon: Icon }) => (
+        {links.map(({ href, label, icon: Icon, exact }) => {
+          const isActive = exact
+            ? pathname === href
+            : pathname === href || pathname.startsWith(`${href}/`);
+
+          return (
           <Link
             key={href}
             href={href}
             className={cn(
               'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition',
-              pathname === href ? 'bg-gold/15 text-gold' : 'text-white/60 hover:bg-white/5 hover:text-white'
+              isActive ? 'bg-gold/15 text-gold' : 'text-white/60 hover:bg-white/5 hover:text-white'
             )}
           >
             <Icon size={16} />
             {label}
           </Link>
-        ))}
+          );
+        })}
       </nav>
       <form action={signOut}>
         <button type="submit" className="mt-4 w-full rounded-lg px-3 py-2 text-left text-sm text-white/50 hover:bg-white/5">
