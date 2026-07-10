@@ -89,8 +89,13 @@ export async function sendAdminBookingPush(data: BookingNotificationData) {
   }
 }
 
+function getBookingNotificationEmail(): string | undefined {
+  return process.env.BOOKING_NOTIFICATION_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim();
+}
+
 export async function sendAdminBookingEmail(data: BookingNotificationData) {
-  if (!resend || !process.env.ADMIN_EMAIL) return { ok: false, reason: 'not_configured' };
+  const notificationEmail = getBookingNotificationEmail();
+  if (!resend || !notificationEmail) return { ok: false, reason: 'not_configured' };
 
   const { dateStr, timeStr, price, phone } = formatBookingDetails(data);
   const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni`;
@@ -107,7 +112,7 @@ export async function sendAdminBookingEmail(data: BookingNotificationData) {
   try {
     const { error } = await resend.emails.send(
       buildTransactionalEmail({
-        to: process.env.ADMIN_EMAIL,
+        to: notificationEmail,
         subject,
         text,
         html: renderAdminBookingEmailHtml({
