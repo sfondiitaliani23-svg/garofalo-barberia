@@ -1,14 +1,16 @@
 'use server';
 
-import { addMinutes, parseISO } from 'date-fns';
+import { addMinutes } from 'date-fns';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { getProfile } from '@/lib/auth';
+import { getProfile, getSession } from '@/lib/auth';
+import { ensureProfileForAuthUser } from '@/lib/auth/ensure-profile';
 import { getAvailableSlots, resolveBarberForSlot } from '@/lib/actions/availability';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
 import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appointments';
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
+import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
 
 export interface CreateAppointmentInput {
   serviceId: string;
@@ -23,121 +25,148 @@ export interface CreateAppointmentInput {
 }
 
 export async function createAppointment(input: CreateAppointmentInput) {
-  const supabase = await createServiceClient();
-  const profile = await getProfile();
+  try {
+    const supabase = await createServiceClient();
+    if (!supabase) {
+      return { ok: false, error: 'Prenotazione online temporaneamente non disponibile. Riprova tra poco.' };
+    }
 
-  if (!supabase) {
-    return { ok: false, error: 'Prenotazione online temporaneamente non disponibile. Riprova tra poco.' };
-  }
+    const customerName = input.customerName?.trim();
+    const customerPhone = input.customerPhone?.trim();
+    if (!customerName || !customerPhone) {
+      return { ok: false, error: 'Compila nome e telefono per confermare la prenotazione.' };
+    }
 
-  const { data: service, error: serviceError } = await supabase
-    .from('services')
-    .select('*')
-    .eq('id', input.serviceId)
-    .single();
+    if (!input.serviceId || !input.date || !input.time) {
+      return { ok: false, error: 'Seleziona servizio, data e orario prima di confermare.' };
+    }
 
-  if (serviceError || !service) {
-    return { ok: false, error: 'Servizio non trovato' };
-  }
+    const sessionUser = await getSession();
+    if (sessionUser) {
+      await ensureProfileForAuthUser(sessionUser);
+    }
 
-  let barberId = input.barberId;
-  if (!barberId) {
-    barberId = await resolveBarberForSlot(input.date, input.time, service.duration_minutes);
-    if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario' };
-  } else {
-    const { slots, error } = await getAvailableSlots(
-      barberId,
-      input.date,
-      service.duration_minutes
+    const profile = await getProfile();
+
+    const { data: service, error: serviceError } = await supabase
+      .from('services')
+      .select('*')
+      .eq('id', input.serviceId)
+      .single();
+
+    if (serviceError || !service) {
+      return { ok: false, error: 'Servizio non trovato' };
+    }
+
+    let barberId = input.barberId;
+    if (!barberId) {
+      barberId = await resolveBarberForSlot(input.date, input.time, service.duration_minutes);
+      if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario' };
+    } else {
+      const { slots, error } = await getAvailableSlots(
+        barberId,
+        input.date,
+        service.duration_minutes
+      );
+
+      if (!slots.includes(input.time)) {
+        return {
+          ok: false,
+          error:
+            error ??
+            'Il barbiere selezionato non è disponibile in questo orario (ferie o assenza). Scegli un altro orario.',
+        };
+      }
+    }
+
+    const startsAt = parseBookingDateTime(input.date, input.time);
+    const endsAt = addMinutes(startsAt, service.duration_minutes);
+
+    const { data: barber } = await supabase
+      .from('barbers')
+      .select('name')
+      .eq('id', barberId)
+      .single();
+
+    const customerEmail =
+      input.customerEmail?.trim() ||
+      profile?.email?.trim() ||
+      sessionUser?.email?.trim() ||
+      null;
+
+    const promotionResult = await resolvePromotionForBooking(
+      input.serviceId,
+      input.promotionCode
     );
 
-    if (!slots.includes(input.time)) {
-      return {
-        ok: false,
-        error:
-          error ??
-          'Il barbiere selezionato non è disponibile in questo orario (ferie o assenza).',
-      };
+    if (!promotionResult.ok) {
+      return { ok: false, error: promotionResult.error };
     }
-  }
 
-  const startsAt = parseISO(`${input.date}T${input.time}:00`);
-  const endsAt = addMinutes(startsAt, service.duration_minutes);
+    const { promotion, discountCents, finalCents } = promotionResult;
 
-  const { data: barber } = await supabase
-    .from('barbers')
-    .select('name')
-    .eq('id', barberId)
-    .single();
+    const { data: appointment, error } = await supabase
+      .from('appointments')
+      .insert({
+        customer_id: sessionUser?.id ?? profile?.id ?? null,
+        barber_id: barberId,
+        service_id: input.serviceId,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        status: 'confirmed',
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: customerEmail,
+        notes: input.notes?.trim() || null,
+        promotion_id: promotion?.id ?? null,
+        discount_cents: discountCents,
+      })
+      .select('id')
+      .single();
 
-  const customerEmail =
-    input.customerEmail?.trim() ||
-    profile?.email?.trim() ||
-    null;
-
-  const promotionResult = await resolvePromotionForBooking(
-    input.serviceId,
-    input.promotionCode
-  );
-
-  if (!promotionResult.ok) {
-    return { ok: false, error: promotionResult.error };
-  }
-
-  const { promotion, discountCents, finalCents } = promotionResult;
-
-  const { data: appointment, error } = await supabase
-    .from('appointments')
-    .insert({
-      customer_id: profile?.id ?? null,
-      barber_id: barberId,
-      service_id: input.serviceId,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      status: 'confirmed',
-      customer_name: input.customerName.trim(),
-      customer_phone: input.customerPhone.trim(),
-      customer_email: customerEmail,
-      notes: input.notes?.trim() || null,
-      promotion_id: promotion?.id ?? null,
-      discount_cents: discountCents,
-    })
-    .select('id')
-    .single();
-
-  if (error) {
-    if (error.code === '23P01') {
-      return { ok: false, error: 'Questo orario è appena stato prenotato. Scegline un altro.' };
+    if (error) {
+      console.error('createAppointment insert failed:', error);
+      if (error.code === '23P01') {
+        return { ok: false, error: 'Questo orario è appena stato prenotato. Scegline un altro.' };
+      }
+      return { ok: false, error: 'Errore durante la prenotazione. Riprova tra poco.' };
     }
-    return { ok: false, error: 'Errore durante la prenotazione. Riprova.' };
+
+    try {
+      await notifyAdminNewBooking({
+        serviceName: service.name,
+        priceCents: finalCents,
+        barberName: barber?.name ?? 'Barbiere',
+        startsAt,
+        customerName,
+        customerPhone,
+        notes: input.notes,
+      });
+    } catch (notifyError) {
+      console.error('createAppointment notification failed:', notifyError);
+    }
+
+    revalidatePath('/admin/prenotazioni');
+    revalidatePath('/area-cliente/appuntamenti');
+
+    return {
+      ok: true,
+      appointmentId: appointment.id,
+      serviceName: service.name,
+      barberName: barber?.name ?? 'Barbiere',
+      startsAt: startsAt.toISOString(),
+      priceCents: finalCents,
+      originalPriceCents: service.price_cents,
+      discountCents,
+      promotionTitle: promotion?.title ?? null,
+    };
+  } catch (error) {
+    console.error('createAppointment failed:', error);
+    return {
+      ok: false,
+      error: 'Errore imprevisto durante la conferma. Ricarica la pagina e riprova.',
+    };
   }
-
-  const notificationData = {
-    serviceName: service.name,
-    priceCents: finalCents,
-    barberName: barber?.name ?? 'Barbiere',
-    startsAt,
-    customerName: input.customerName,
-    customerPhone: input.customerPhone,
-    notes: input.notes,
-  };
-
-  await notifyAdminNewBooking(notificationData);
-
-  revalidatePath('/admin/prenotazioni');
-  revalidatePath('/area-cliente/appuntamenti');
-
-  return {
-    ok: true,
-    appointmentId: appointment.id,
-    serviceName: service.name,
-    barberName: barber?.name ?? 'Barbiere',
-    startsAt: startsAt.toISOString(),
-    priceCents: finalCents,
-    originalPriceCents: service.price_cents,
-    discountCents,
-    promotionTitle: promotion?.title ?? null,
-  };
 }
 
 export async function cancelAppointment(appointmentId: string) {
@@ -202,7 +231,7 @@ export async function rescheduleAppointment(appointmentId: string, date: string,
   const service = apt.service as { duration_minutes: number } | null;
   if (!service) return { ok: false, error: 'Servizio non trovato' };
 
-  const startsAt = parseISO(`${date}T${time}:00`);
+  const startsAt = parseBookingDateTime(date, time);
   const endsAt = addMinutes(startsAt, service.duration_minutes);
 
   if (startsAt <= new Date()) {

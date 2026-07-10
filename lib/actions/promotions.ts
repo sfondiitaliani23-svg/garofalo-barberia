@@ -69,11 +69,20 @@ export async function resolvePromotionForBooking(
     return { ok: true, promotion: promo, discountCents, finalCents };
   }
 
-  const { data: promos } = await supabase
+  const { data: promos, error: promosError } = await supabase
     .from('promotions')
     .select('*')
     .eq('is_active', true)
     .is('code', null);
+
+  if (promosError) {
+    return {
+      ok: true,
+      promotion: null,
+      discountCents: 0,
+      finalCents: service.price_cents,
+    };
+  }
 
   const applicable = (promos ?? []).filter(
     (p) => isPromotionActive(p) && promotionAppliesToService(p, serviceId)

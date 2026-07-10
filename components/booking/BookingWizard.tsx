@@ -223,38 +223,44 @@ export function BookingWizard({
     }
 
     startTransition(async () => {
-      const result = await createAppointment({
-        serviceId,
-        barberId,
-        date,
-        time,
-        customerName: name,
-        customerPhone: phone,
-        customerEmail: email,
-        notes,
-        promotionCode: promoSource === 'code' ? promoCode : undefined,
-      });
+      try {
+        const result = await createAppointment({
+          serviceId,
+          barberId,
+          date,
+          time,
+          customerName: name,
+          customerPhone: phone,
+          customerEmail: email,
+          notes,
+          promotionCode: promoSource === 'code' ? promoCode : undefined,
+        });
 
-      if (!result.ok) {
-        toast.error(result.error);
-        if (result.error?.includes('prenotato')) {
-          setStep(2);
-          loadSlots();
+        if (!result?.ok) {
+          toast.error(result?.error ?? 'Impossibile confermare la prenotazione. Riprova.');
+          if (result?.error?.includes('prenotato') || result?.error?.includes('disponibile')) {
+            setStep(2);
+            void loadSlots();
+          }
+          return;
         }
-        return;
-      }
 
-      setConfirmation({
-        serviceName: result.serviceName ?? selectedService!.name,
-        barberName: result.barberName ?? (barberId ? barbers.find((b) => b.id === barberId)?.name ?? 'Barbiere' : 'Primo disponibile'),
-        date: date!,
-        time: time!,
-        customerName: name,
-        priceCents: result.priceCents ?? selectedService!.price_cents,
-        originalPriceCents: result.originalPriceCents ?? selectedService!.price_cents,
-        discountCents: result.discountCents ?? 0,
-        promotionTitle: result.promotionTitle,
-      });
+        setConfirmation({
+          serviceName: result.serviceName ?? selectedService?.name ?? 'Servizio',
+          barberName:
+            result.barberName ??
+            (barberId ? barbers.find((b) => b.id === barberId)?.name ?? 'Barbiere' : 'Primo disponibile'),
+          date: date!,
+          time: time!,
+          customerName: name,
+          priceCents: result.priceCents ?? selectedService?.price_cents ?? 0,
+          originalPriceCents: result.originalPriceCents ?? selectedService?.price_cents ?? 0,
+          discountCents: result.discountCents ?? 0,
+          promotionTitle: result.promotionTitle,
+        });
+      } catch {
+        toast.error('Errore di connessione durante la conferma. Ricarica la pagina e riprova.');
+      }
     });
   };
 

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
+import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import {
   type AdminDayScheduleInput,
   defaultPeriodsForDay,
@@ -132,7 +133,7 @@ export async function createAdminAppointment(input: AdminAppointmentInput) {
 
   if (serviceError || !service) return { ok: false, error: 'Servizio non trovato' };
 
-  const startsAt = parseISO(`${input.date}T${input.time}:00`);
+  const startsAt = parseBookingDateTime(input.date, input.time);
   const endsAt = addMinutes(startsAt, service.duration_minutes);
 
   const { data: barber } = await supabase
@@ -164,15 +165,19 @@ export async function createAdminAppointment(input: AdminAppointmentInput) {
     return { ok: false, error: 'Errore durante la prenotazione. Riprova.' };
   }
 
-  await notifyAdminNewBooking({
-    serviceName: service.name,
-    priceCents: service.price_cents,
-    barberName: barber?.name ?? 'Barbiere',
-    startsAt,
-    customerName: input.customerName,
-    customerPhone: input.customerPhone ?? '',
-    notes: input.notes,
-  });
+  try {
+    await notifyAdminNewBooking({
+      serviceName: service.name,
+      priceCents: service.price_cents,
+      barberName: barber?.name ?? 'Barbiere',
+      startsAt,
+      customerName: input.customerName,
+      customerPhone: input.customerPhone ?? '',
+      notes: input.notes,
+    });
+  } catch (notifyError) {
+    console.error('createAdminAppointment notification failed:', notifyError);
+  }
 
   revalidateAppointmentPaths();
   return { ok: true, appointmentId: appointment.id };
@@ -202,7 +207,7 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
 
   if (!service) return { ok: false, error: 'Servizio non trovato' };
 
-  const startsAt = parseISO(`${input.date}T${input.time}:00`);
+  const startsAt = parseBookingDateTime(input.date, input.time);
   const endsAt = addMinutes(startsAt, service.duration_minutes);
 
   const { error } = await supabase
