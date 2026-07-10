@@ -14,8 +14,14 @@ const navLinks = [
   { href: '/contatti', label: 'Contatti' },
 ];
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  isLoggedIn?: boolean;
+  userLabel?: string | null;
+}
+
+export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
   const [open, setOpen] = useState(false);
+  const accountLabel = userLabel ? `Ciao, ${userLabel}` : 'Area cliente';
 
   return (
     <header className="sticky top-0 z-[100] border-b border-white/10 bg-black/95 backdrop-blur">
@@ -37,9 +43,19 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link href="/login" prefetch className="text-sm text-white/70 transition hover:text-gold-light">
-            Accedi
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/area-cliente/dashboard"
+              prefetch
+              className="text-sm text-gold transition hover:text-gold-light"
+            >
+              {accountLabel}
+            </Link>
+          ) : (
+            <Link href="/login" prefetch className="text-sm text-white/70 transition hover:text-gold-light">
+              Accedi
+            </Link>
+          )}
           <Link href="/prenota" className="btn-primary text-xs">Prenota</Link>
         </nav>
 
@@ -61,7 +77,19 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link href="/login" className="block py-2 text-white/80" onClick={() => setOpen(false)}>Accedi</Link>
+          {isLoggedIn ? (
+            <Link
+              href="/area-cliente/dashboard"
+              className="block py-2 text-gold"
+              onClick={() => setOpen(false)}
+            >
+              {accountLabel}
+            </Link>
+          ) : (
+            <Link href="/login" className="block py-2 text-white/80" onClick={() => setOpen(false)}>
+              Accedi
+            </Link>
+          )}
           <Link href="/prenota" className="btn-primary mt-3 w-full text-center" onClick={() => setOpen(false)}>Prenota</Link>
         </div>
       )}

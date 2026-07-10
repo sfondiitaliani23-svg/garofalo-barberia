@@ -27,8 +27,17 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // Aggiorna il token di sessione su ogni richiesta (anche pagine pubbliche come /prenota)
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
+
+  const needsRoleCheck =
+    pathname.startsWith('/area-cliente') ||
+    (pathname.startsWith('/admin') && pathname !== '/admin/login');
+
+  if (!needsRoleCheck) {
+    return supabaseResponse;
+  }
 
   let role: string | null = null;
   if (user) {
@@ -71,5 +80,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/area-cliente/:path*', '/admin/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+  ],
 };

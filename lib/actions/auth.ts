@@ -147,6 +147,8 @@ export async function updateProfile(formData: FormData) {
 
   if (error) redirect(`/area-cliente/profilo?error=${encodeURIComponent(error.message)}`);
 
+  revalidatePath('/', 'layout');
   revalidatePath('/area-cliente/profilo');
+  revalidatePath('/prenota');
   redirect('/area-cliente/profilo?saved=1');
 }
