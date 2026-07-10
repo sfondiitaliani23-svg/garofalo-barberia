@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ContactForm } from '@/components/contatti/ContactForm';
+import { InstagramFeed } from '@/components/contatti/InstagramFeed';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
 import '../public-pages.css';
 
@@ -119,35 +120,7 @@ export default function ContattiPage() {
                 />
               </div>
 
-              <div className="form-card contatti-instagram-card p-6">
-                <div className="eyebrow">
-                  <div className="eyebrow-line" />
-                  <span className="eyebrow-text">Instagram</span>
-                </div>
-                <div className="contatti-instagram-body">
-                  <div className="contatti-instagram-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="2" y="2" width="20" height="20" rx="5" />
-                      <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
-                      <path d="M17.5 6.5h.01" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="contatti-instagram-handle">{SITE_CONFIG.instagramHandle}</p>
-                    <p className="contatti-instagram-text">
-                      Seguici per tagli, barba e novità dal salone.
-                    </p>
-                  </div>
-                </div>
-                <a
-                  href={SITE_CONFIG.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary contatti-instagram-btn"
-                >
-                  Segui
-                </a>
-              </div>
+              <InstagramFeed />
             </div>
           </div>
 

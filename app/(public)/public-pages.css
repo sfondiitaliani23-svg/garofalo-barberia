@@ -230,6 +230,57 @@
   text-align: center;
 }
 
+.public-page .contatti-instagram-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .public-page .contatti-instagram-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.public-page .contatti-instagram-post {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.public-page .contatti-instagram-post:hover {
+  border-color: rgba(201, 169, 98, 0.5);
+  transform: scale(1.02);
+}
+
+.public-page .contatti-instagram-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  pointer-events: none;
+}
+
+.public-page .contatti-instagram-embed {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #fff;
+}
+
+.public-page .contatti-instagram-embed-frame {
+  display: block;
+  width: 100%;
+  min-height: 480px;
+  border: 0;
+}
+
 .public-page .contact-message-card {
   width: 100%;
 }
