@@ -12,8 +12,8 @@ APP_DIR = ROOT / "app"
 TRANSPARENT = (0, 0, 0, 0)
 
 
-def strip_to_white_logo(img: Image.Image, black_threshold: int = 40) -> Image.Image:
-    """Rimuove lo sfondo nero e converte il logo in bianco con alpha dal luminance."""
+def strip_to_white_logo(img: Image.Image, black_threshold: int = 28) -> Image.Image:
+    """Rimuove lo sfondo nero e converte il logo in bianco ad alta opacità."""
     img = img.convert("RGBA")
     px = img.load()
     width, height = img.size
@@ -27,7 +27,8 @@ def strip_to_white_logo(img: Image.Image, black_threshold: int = 40) -> Image.Im
             if lum <= black_threshold:
                 px[x, y] = TRANSPARENT
             else:
-                alpha = min(255, int(lum * 1.15))
+                strength = (lum - black_threshold) / max(1, 255 - black_threshold)
+                alpha = min(255, int(210 + strength * 45))
                 px[x, y] = (255, 255, 255, alpha)
     return img
 
@@ -47,18 +48,21 @@ def load_logo() -> Image.Image:
     return logo.crop(bbox)
 
 
-def force_white(img: Image.Image) -> Image.Image:
-    """Dopo il resize LANCZOS i bordi diventano grigi: forza bianco puro."""
+def maximize_white(img: Image.Image) -> Image.Image:
+    """Bianco puro #FFFFFF con opacità massima su ogni pixel visibile."""
     img = img.convert("RGBA")
     px = img.load()
     width, height = img.size
     for y in range(height):
         for x in range(width):
             r, g, b, a = px[x, y]
-            if a > 8:
-                px[x, y] = (255, 255, 255, a)
-            else:
+            if a < 8:
                 px[x, y] = TRANSPARENT
+            elif a >= 120:
+                px[x, y] = (255, 255, 255, 255)
+            else:
+                alpha = min(255, int(a * 2.4 + 140))
+                px[x, y] = (255, 255, 255, alpha)
     return img
 
 
@@ -71,7 +75,7 @@ def make_icon(size: int, padding_ratio: float = 0.06) -> Image.Image:
     x = (size - scaled.width) // 2
     y = (size - scaled.height) // 2
     canvas.paste(scaled, (x, y), scaled)
-    return force_white(canvas)
+    return maximize_white(canvas)
 
 
 def main() -> None:
