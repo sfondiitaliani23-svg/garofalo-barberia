@@ -119,20 +119,33 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
-      <p className="footer-copy container-lux border-t border-white/10 text-center text-xs text-white/40">
-        © 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.{' '}
-        <span className="text-white/35">|</span> Sito creato interamente da Eliseo Miraglia (
-        <span className="text-white/50">IG.</span>{' '}
-        <a
-          href="https://www.instagram.com/eliseomiraglia"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-white/50 transition hover:text-gold-light"
-        >
-          @eliseomiraglia
-        </a>
-        )
-      </p>
+      <div className="footer-copy container-lux flex flex-col items-center gap-2 border-t border-white/10 text-center text-xs leading-relaxed text-white/40">
+        <p>© 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.</p>
+        <p>
+          Sito creato interamente da Eliseo Miraglia (IG.{' '}
+          <a
+            href="https://www.instagram.com/eliseomiraglia"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/55 transition hover:text-gold-light"
+          >
+            @eliseomiraglia
+          </a>
+          )
+        </p>
+        <p>
+          Reparto grafico curato da Eliseo Miraglia (IG.{' '}
+          <a
+            href="https://www.instagram.com/elisee_graphic"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white/55 transition hover:text-gold-light"
+          >
+            @elisee_graphic
+          </a>
+          )
+        </p>
+      </div>
     </footer>
   );
 }
