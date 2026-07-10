@@ -57,6 +57,12 @@ for (const key of KEYS) {
     continue;
   }
 
+  spawnSync('npx', ['vercel', 'env', 'rm', key, 'production', '--yes'], {
+    encoding: 'utf8',
+    stdio: 'inherit',
+    shell: true,
+  });
+
   const result = spawnSync(
     'npx',
     ['vercel', 'env', 'add', key, 'production', '--yes'],
@@ -72,7 +78,7 @@ for (const key of KEYS) {
     console.log(`✅ ${key}`);
     ok++;
   } else {
-    console.error(`❌ ${key} — errore (forse già esiste, usa vercel env rm)`);
+    console.error(`❌ ${key} — errore durante l'aggiornamento`);
   }
 }
 
