@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import { ContactForm } from '@/components/contatti/ContactForm';
 import { InstagramFeed } from '@/components/contatti/InstagramFeed';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
@@ -126,12 +125,6 @@ export default function ContattiPage() {
 
           <div className="mt-12">
             <ContactForm />
-          </div>
-
-          <div className="mt-10 text-center">
-            <Link href="/prenota" className="btn-primary">
-              Prenota ora
-            </Link>
           </div>
         </div>
       </section>
