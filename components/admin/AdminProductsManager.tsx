@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Package, Minus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -88,13 +88,27 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
-  const [pendingStockCount, setPendingStockCount] = useState(0);
+  const [stockRevision, setStockRevision] = useState(0);
 
-  const pendingStock = useRef<Map<string, number>>(new Map());
   const originalStock = useRef<Map<string, number>>(
     new Map(products.map((product) => [product.id, product.stock_quantity]))
   );
   const hasLocalEdits = useRef(false);
+
+  const stockChanges = useMemo(
+    () =>
+      items
+        .filter((product) => {
+          if (product.id.startsWith('temp-')) return false;
+          if (!originalStock.current.has(product.id)) return false;
+          return product.stock_quantity !== originalStock.current.get(product.id);
+        })
+        .map((product) => ({
+          productId: product.id,
+          quantity: product.stock_quantity,
+        })),
+    [items, stockRevision]
+  );
 
   useEffect(() => {
     if (hasLocalEdits.current) return;
@@ -191,7 +205,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
       });
 
       if (!result.ok) {
-        hasLocalEdits.current = pendingStock.current.size > 0;
+        hasLocalEdits.current = true;
         setItems(previousItems);
         toast.error(result.error);
         return;
@@ -206,10 +220,10 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
         );
       }
 
-      hasLocalEdits.current = pendingStock.current.size > 0;
+      hasLocalEdits.current = stockChanges.length > 0;
       toast.success(isEditing ? 'Prodotto modificato' : 'Prodotto creato');
     });
-  }, [brand, category, description, editing, imageUrl, items, minStock, name, price, sku, startTransition, stock]);
+  }, [brand, category, description, editing, imageUrl, items, minStock, name, price, sku, startTransition, stock, stockChanges.length]);
 
   function handleDelete(product: Product) {
     const confirmed = window.confirm(`Eliminare "${product.name}" dall'inventario?`);
@@ -224,70 +238,51 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
       const result = await deleteAdminProduct(product.id);
       setDeletingId(null);
       if (!result.ok) {
-        hasLocalEdits.current = pendingStock.current.size > 0;
+        hasLocalEdits.current = true;
         setItems(previousItems);
         toast.error(result.error);
         return;
       }
 
       originalStock.current.delete(product.id);
-      pendingStock.current.delete(product.id);
-      setPendingStockCount(pendingStock.current.size);
-      hasLocalEdits.current = pendingStock.current.size > 0;
+      hasLocalEdits.current = stockChanges.length > 0;
       toast.success('Prodotto eliminato');
     });
   }
 
-  const updatePendingStock = useCallback((productId: string, nextQty: number) => {
-    const baseline = originalStock.current.get(productId);
-    if (baseline === nextQty) {
-      pendingStock.current.delete(productId);
-    } else {
-      pendingStock.current.set(productId, nextQty);
-    }
-    hasLocalEdits.current = pendingStock.current.size > 0 || modalOpen;
-    setPendingStockCount(pendingStock.current.size);
-  }, [modalOpen]);
-
   const handleStockAdjust = useCallback((productId: string, delta: number) => {
     if (productId.startsWith('temp-')) return;
 
-    let nextQty = 0;
+    hasLocalEdits.current = true;
     setItems((prev) =>
       prev.map((p) => {
         if (p.id !== productId) return p;
-        nextQty = Math.max(0, p.stock_quantity + delta);
-        return { ...p, stock_quantity: nextQty };
+        return { ...p, stock_quantity: Math.max(0, p.stock_quantity + delta) };
       })
     );
-    updatePendingStock(productId, nextQty);
-  }, [updatePendingStock]);
+    setStockRevision((value) => value + 1);
+  }, []);
 
   const flushPendingStock = useCallback(() => {
-    const entries = Array.from(pendingStock.current.entries());
-    if (entries.length === 0) return;
+    if (stockChanges.length === 0) return;
 
     const previousItems = items;
-    const previousPending = new Map(pendingStock.current);
     const previousOriginal = new Map(originalStock.current);
+    const entries = stockChanges;
 
     startTransition(async () => {
-      const result = await setProductsStockBatch(
-        entries.map(([productId, quantity]) => ({ productId, quantity }))
-      );
+      const result = await setProductsStockBatch(entries);
 
       if (!result.ok) {
         hasLocalEdits.current = true;
         setItems(previousItems);
-        pendingStock.current = previousPending;
         originalStock.current = previousOriginal;
-        setPendingStockCount(pendingStock.current.size);
+        setStockRevision((value) => value + 1);
         toast.error(result.error ?? 'Errore durante il salvataggio delle scorte');
         return;
       }
 
       for (const { productId, stockQuantity } of result.results) {
-        pendingStock.current.delete(productId);
         originalStock.current.set(productId, stockQuantity);
       }
 
@@ -298,11 +293,11 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
         })
       );
 
-      setPendingStockCount(0);
       hasLocalEdits.current = false;
+      setStockRevision((value) => value + 1);
       toast.success('Scorte aggiornate');
     });
-  }, [items, startTransition]);
+  }, [items, startTransition, stockChanges]);
 
   const handleSaveAll = useCallback(() => {
     if (modalOpen) {
@@ -313,7 +308,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   }, [flushPendingStock, handleSave, modalOpen]);
 
   useAdminSaveRegistration(
-    modalOpen || pendingStockCount > 0
+    modalOpen || stockChanges.length > 0
       ? {
           isDirty: true,
           isSaving: pending,
