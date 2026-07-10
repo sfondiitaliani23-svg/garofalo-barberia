@@ -1,11 +1,6 @@
 import { parseISO } from 'date-fns';
 import { generateSlots } from '@/lib/utils/slots';
-
-const DEFAULT_SLOTS = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '12:00', '12:30', '14:00', '14:30', '15:00', '15:30',
-  '16:00', '16:30', '17:00', '17:30', '18:00', '18:30',
-];
+import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
 
 export function getFallbackSlots(
   dateStr: string,
@@ -18,11 +13,14 @@ export function getFallbackSlots(
     return { slots: [], error: 'Chiuso in questo giorno' };
   }
 
-  const endTime = dayOfWeek === 6 ? '18:00' : '19:30';
-  const generated = generateSlots(date, '09:00', endTime, durationMinutes, 30);
-  const slots = generated.length > 0
-    ? generated.map((s) => s.time)
-    : DEFAULT_SLOTS.filter((t) => t <= endTime);
+  const periods = getShopPeriodsForDay(dayOfWeek);
+  const slots = Array.from(
+    new Set(
+      periods.flatMap((period) =>
+        generateSlots(date, period.startTime, period.endTime, durationMinutes, 30).map((slot) => slot.time)
+      )
+    )
+  ).sort();
 
   const minAdvance = new Date();
   minAdvance.setHours(minAdvance.getHours() + 2);

@@ -13,6 +13,7 @@ import {
 } from '@/lib/utils/barber-absence';
 import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
+import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
 
 export type BarberBookingStatus = {
   barberId: string;
@@ -26,7 +27,64 @@ type AvailabilityRow = {
   start_time: string;
   end_time: string;
   is_available: boolean;
+  period?: string | null;
 };
+
+function isLegacyContinuousSchedule(dayAvailability: AvailabilityRow[]): boolean {
+  const morning = dayAvailability.find((row) => row.period === 'morning');
+  const afternoon = dayAvailability.find((row) => row.period === 'afternoon');
+
+  if (afternoon?.is_available) return false;
+
+  const primary =
+    morning ??
+    dayAvailability.find((row) => !row.period) ??
+    (dayAvailability.length === 1 ? dayAvailability[0] : undefined);
+
+  if (!primary?.is_available) return false;
+
+  return primary.end_time.slice(0, 5) > '13:00';
+}
+
+function resolveAvailabilityPeriods(
+  dayOfWeek: number,
+  dayAvailability: AvailabilityRow[]
+): { start: string; end: string }[] {
+  if (!dayAvailability.some((row) => row.is_available)) return [];
+
+  if (isLegacyContinuousSchedule(dayAvailability)) {
+    return getShopPeriodsForDay(dayOfWeek).map((period) => ({
+      start: period.startTime,
+      end: period.endTime,
+    }));
+  }
+
+  const morning = dayAvailability.find((row) => row.period === 'morning');
+  const afternoon = dayAvailability.find((row) => row.period === 'afternoon');
+  const hasPeriodRows = Boolean(morning || afternoon);
+
+  if (hasPeriodRows) {
+    const periods: { start: string; end: string }[] = [];
+    if (morning?.is_available) {
+      periods.push({
+        start: morning.start_time.slice(0, 5),
+        end: morning.end_time.slice(0, 5),
+      });
+    }
+    if (afternoon?.is_available) {
+      periods.push({
+        start: afternoon.start_time.slice(0, 5),
+        end: afternoon.end_time.slice(0, 5),
+      });
+    }
+    return periods;
+  }
+
+  return getShopPeriodsForDay(dayOfWeek).map((period) => ({
+    start: period.startTime,
+    end: period.endTime,
+  }));
+}
 
 type BookingContext = {
   barberIds: string[];
@@ -158,11 +216,13 @@ function computeSlotsFromContext(
     );
     const timeOff = filterTimeOffForBarber(context.timeOff, bid);
 
-    for (const availability of dayAvailability) {
+    const periods = resolveAvailabilityPeriods(dayOfWeek, dayAvailability);
+
+    for (const period of periods) {
       const slots = generateSlots(
         date,
-        availability.start_time.slice(0, 5),
-        availability.end_time.slice(0, 5),
+        period.start,
+        period.end,
         durationMinutes,
         SITE_CONFIG.slotIntervalMinutes
       );

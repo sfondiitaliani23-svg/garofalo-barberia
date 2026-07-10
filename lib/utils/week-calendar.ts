@@ -1,5 +1,6 @@
 import { addDays, format, parseISO, startOfWeek } from 'date-fns';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { getDayClosingTime as getClosingForDay, isSlotWithinShopHours } from '@/lib/utils/shop-hours';
 
 export const WORKING_DAY_OFFSETS = [1, 2, 3, 4, 5]; // Mar–Sab dalla settimana che inizia lunedì
 
@@ -47,14 +48,11 @@ export function generateCalendarTimeSlots(): string[] {
 }
 
 export function getDayClosingTime(day: Date): string {
-  return day.getDay() === 6 ? '18:00' : '19:30';
+  return getClosingForDay(day.getDay());
 }
 
 export function isSlotWithinHours(day: Date, time: string): boolean {
-  const closing = getDayClosingTime(day);
-  if (time < '09:00' || time > closing) return false;
-  if (time >= '13:00' && time < '14:00') return false;
-  return true;
+  return isSlotWithinShopHours(day, time);
 }
 
 export function dateKey(day: Date): string {

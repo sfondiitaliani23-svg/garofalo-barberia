@@ -262,16 +262,21 @@ INSERT INTO services (name, category, price_cents, duration_minutes, sort_order)
 
 -- DisponibilitÃ : Mar-Sab per tutti i barbieri
 -- 0=Dom, 1=Lun chiuso, 2=Mar, 3=Mer, 4=Gio, 5=Ven, 6=Sab
-INSERT INTO barber_availability (barber_id, day_of_week, start_time, end_time)
-SELECT b.id, d.day, d.start_t::time, d.end_t::time
+INSERT INTO barber_availability (barber_id, day_of_week, start_time, end_time, period)
+SELECT b.id, d.day, d.start_t::time, d.end_t::time, d.period
 FROM barbers b
 CROSS JOIN (VALUES
-  (2, '09:00', '19:30'),
-  (3, '09:00', '19:30'),
-  (4, '09:00', '19:30'),
-  (5, '09:00', '19:30'),
-  (6, '09:00', '18:00')
-) AS d(day, start_t, end_t);
+  (2, '09:00', '13:00', 'morning'),
+  (2, '14:00', '19:30', 'afternoon'),
+  (3, '09:00', '13:00', 'morning'),
+  (3, '14:00', '19:30', 'afternoon'),
+  (4, '09:00', '13:00', 'morning'),
+  (4, '14:00', '19:30', 'afternoon'),
+  (5, '09:00', '13:00', 'morning'),
+  (5, '14:00', '19:30', 'afternoon'),
+  (6, '09:00', '13:00', 'morning'),
+  (6, '14:00', '18:00', 'afternoon')
+) AS d(day, start_t, end_t, period);
 
 INSERT INTO site_content (key, title, body, is_active) VALUES
   ('closure_banner', 'Chiusura', 'La barberia Ã¨ chiusa la domenica e il lunedÃ¬.', FALSE);
