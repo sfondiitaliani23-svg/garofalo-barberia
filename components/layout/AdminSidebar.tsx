@@ -11,7 +11,6 @@ import {
   Users,
   Scissors,
   UserCog,
-  FileText,
   BarChart3,
   Tag,
   TrendingUp,
@@ -27,7 +26,6 @@ const links = [
   { href: '/admin/inventario', label: 'Inventario', icon: Package },
   { href: '/admin/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/admin/staff', label: 'Gestione team', icon: UserCog },
-  { href: '/admin/contenuti', label: 'Contenuti', icon: FileText },
   { href: '/admin/report', label: 'Report', icon: BarChart3 },
 ];
 
