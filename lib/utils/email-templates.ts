@@ -1,5 +1,7 @@
 import { SITE_CONFIG } from '@/lib/site-config';
 
+export const EMAIL_LOGO_CID = 'garofalo-logo';
+
 const GOLD = '#cd9a4f';
 const GOLD_LIGHT = '#ffb949';
 const GOLD_DARK = '#c88c23';
@@ -13,8 +15,8 @@ function siteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://barberiagarofalo.it';
 }
 
-function logoUrl() {
-  return `${siteUrl()}/assets/sostituisci-immagini/icone/barberia_garofalo-gold.png`;
+function logoSrc() {
+  return `cid:${EMAIL_LOGO_CID}`;
 }
 
 export function escapeHtml(value: string) {
@@ -108,7 +110,7 @@ export function renderEmailTemplate(options: EmailTemplateOptions) {
           </tr>
           <tr>
             <td style="padding:28px 0 18px;text-align:center;">
-              <img src="${logoUrl()}" width="72" height="72" alt="${escapeHtml(SITE_CONFIG.name)}" style="display:block;margin:0 auto 14px;border:0;" />
+              <img src="${logoSrc()}" width="96" height="96" alt="${escapeHtml(SITE_CONFIG.name)}" style="display:block;margin:0 auto 16px;border:0;border-radius:50%;" />
               <div style="font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.1;color:${GOLD_LIGHT};letter-spacing:0.03em;">
                 ${escapeHtml(SITE_CONFIG.name)}
               </div>
