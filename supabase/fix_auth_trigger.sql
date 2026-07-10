@@ -20,7 +20,17 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
-    NULLIF(TRIM(COALESCE(NEW.raw_user_meta_data->>'full_name', '')), ''),
+    NULLIF(
+      TRIM(
+        COALESCE(
+          NULLIF(NEW.raw_user_meta_data->>'full_name', ''),
+          NULLIF(NEW.raw_user_meta_data->>'name', ''),
+          NULLIF(NEW.raw_user_meta_data->>'given_name', ''),
+          ''
+        )
+      ),
+      ''
+    ),
     resolved_role
   )
   ON CONFLICT (id) DO UPDATE

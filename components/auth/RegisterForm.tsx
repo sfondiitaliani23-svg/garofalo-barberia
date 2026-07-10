@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { safeDecodeURIComponent } from '@/lib/utils/site-origin';
 
 function RegisterFormInner() {
   const searchParams = useSearchParams();
@@ -16,7 +17,7 @@ function RegisterFormInner() {
 
   useEffect(() => {
     if (error) {
-      toast.error(decodeURIComponent(error));
+      toast.error(safeDecodeURIComponent(error));
     }
   }, [error]);
 
@@ -29,7 +30,7 @@ function RegisterFormInner() {
       <CardContent>
         {error && (
           <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-            {decodeURIComponent(error)}
+            {safeDecodeURIComponent(error)}
           </p>
         )}
         <form action={signUpWithEmail} className="space-y-4">

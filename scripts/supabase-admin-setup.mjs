@@ -8,9 +8,11 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_REF = 'uautnlmnpxgbajtucuko';
-const SITE_URL = 'https://garofalo-barberia.vercel.app';
+const SITE_URL = 'https://barberiagarofalo.it';
 const REDIRECT_URLS = [
   `${SITE_URL}/auth/callback`,
+  'https://garofalo-barberia.vercel.app/auth/callback',
+  'https://www.barberiagarofalo.it/auth/callback',
   'http://localhost:3000/auth/callback',
 ];
 

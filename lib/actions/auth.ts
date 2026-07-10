@@ -4,17 +4,11 @@ import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { resolveSiteOriginFromHeaders } from '@/lib/utils/site-origin';
 
 async function getSiteOrigin() {
-  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (envUrl) return envUrl.replace(/\/$/, '');
-
   const headersList = await headers();
-  const host = headersList.get('x-forwarded-host') ?? headersList.get('host');
-  const protocol = headersList.get('x-forwarded-proto') ?? 'https';
-  if (host) return `${protocol}://${host}`;
-
-  return 'https://garofalo-barberia.vercel.app';
+  return resolveSiteOriginFromHeaders((name) => headersList.get(name));
 }
 
 export async function signInWithEmail(formData: FormData) {

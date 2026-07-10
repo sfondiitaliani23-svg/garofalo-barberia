@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { safeDecodeURIComponent } from '@/lib/utils/site-origin';
 
 function AdminLoginFormInner() {
   const router = useRouter();
@@ -15,7 +16,7 @@ function AdminLoginFormInner() {
 
   useEffect(() => {
     const urlError = searchParams.get('error');
-    if (urlError) setError(decodeURIComponent(urlError));
+    if (urlError) setError(safeDecodeURIComponent(urlError));
   }, [searchParams]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
