@@ -53,6 +53,19 @@ def main() -> None:
     square_icon(180).save(APP_DIR / "apple-icon.png", format="PNG", optimize=True)
     print("saved", APP_DIR / "icon.png")
 
+    logo = Image.open(SRC).convert("RGBA")
+    bbox = logo.getbbox()
+    if bbox:
+        logo = logo.crop(bbox)
+        target_width = 240
+        ratio = target_width / logo.width
+        target_height = max(1, int(logo.height * ratio))
+        logo = logo.resize((target_width, target_height), Image.Resampling.LANCZOS)
+        for out in OUT_DIRS:
+            logo.save(out / "email-logo.png", format="PNG", optimize=True)
+        logo.save(ROOT / "public" / "assets" / "sostituisci-immagini" / "icone" / "email-logo.png", format="PNG", optimize=True)
+        print("saved email-logo.png")
+
 
 if __name__ == "__main__":
     main()

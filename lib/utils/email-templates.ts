@@ -110,7 +110,7 @@ export function renderEmailTemplate(options: EmailTemplateOptions) {
           </tr>
           <tr>
             <td style="padding:28px 0 18px;text-align:center;">
-              <img src="${logoSrc()}" width="96" height="96" alt="${escapeHtml(SITE_CONFIG.name)}" style="display:block;margin:0 auto 16px;border:0;border-radius:50%;" />
+              <img src="${logoSrc()}" width="200" height="133" alt="${escapeHtml(SITE_CONFIG.name)}" style="display:block;margin:0 auto 18px;border:0;max-width:200px;height:auto;" />
               <div style="font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.1;color:${GOLD_LIGHT};letter-spacing:0.03em;">
                 ${escapeHtml(SITE_CONFIG.name)}
               </div>

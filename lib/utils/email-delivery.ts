@@ -15,11 +15,14 @@ export function isResendSandboxFrom(from = getResendFromAddress()) {
   return from.includes('@resend.dev');
 }
 
+const EMAIL_LOGO_PATHS = [
+  'assets/sostituisci-immagini/icone/favicon/barberia_garofalo-no-white.png',
+  'public/assets/sostituisci-immagini/icone/email-logo.png',
+  'assets/sostituisci-immagini/icone/email-logo.png',
+] as const;
+
 function readEmailLogoBuffer() {
-  const candidates = [
-    join(process.cwd(), 'public/assets/sostituisci-immagini/icone/email-logo.png'),
-    join(process.cwd(), 'assets/sostituisci-immagini/icone/email-logo.png'),
-  ];
+  const candidates = EMAIL_LOGO_PATHS.map((segment) => join(process.cwd(), segment));
 
   for (const filePath of candidates) {
     try {
