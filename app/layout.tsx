@@ -10,8 +10,13 @@ export const metadata: Metadata = {
   },
   description: SITE_CONFIG.tagline,
   icons: {
-    icon: [{ url: '/icon.png', type: 'image/png' }],
-    apple: '/apple-icon.png',
+    icon: [
+      { url: '/icon.png?v=4', type: 'image/png', sizes: '192x192' },
+      { url: '/assets/sostituisci-immagini/icone/favicon-32.png?v=4', type: 'image/png', sizes: '32x32' },
+      { url: '/assets/sostituisci-immagini/icone/favicon-16.png?v=4', type: 'image/png', sizes: '16x16' },
+    ],
+    apple: '/apple-icon.png?v=4',
+    shortcut: '/assets/sostituisci-immagini/icone/favicon-32.png?v=4',
   },
 };
 

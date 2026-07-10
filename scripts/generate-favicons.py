@@ -10,33 +10,27 @@ OUT_DIRS = [
 ]
 APP_DIR = ROOT / "app"
 TRANSPARENT = (0, 0, 0, 0)
+WHITE = (255, 255, 255, 255)
 
 
-def strip_to_white_logo(img: Image.Image, black_threshold: int = 28) -> Image.Image:
-    """Rimuove lo sfondo nero e converte il logo in bianco ad alta opacità."""
+def strip_to_white_logo(img: Image.Image, black_threshold: int = 32) -> Image.Image:
     img = img.convert("RGBA")
     px = img.load()
     width, height = img.size
     for y in range(height):
         for x in range(width):
             r, g, b, a = px[x, y]
-            if a == 0:
-                px[x, y] = TRANSPARENT
-                continue
-            lum = max(r, g, b)
-            if lum <= black_threshold:
+            if a == 0 or max(r, g, b) <= black_threshold:
                 px[x, y] = TRANSPARENT
             else:
-                strength = (lum - black_threshold) / max(1, 255 - black_threshold)
-                alpha = min(255, int(210 + strength * 45))
-                px[x, y] = (255, 255, 255, alpha)
+                px[x, y] = WHITE
     return img
 
 
 def load_logo() -> Image.Image:
     logo = Image.open(SRC).convert("RGBA")
-    if max(logo.size) > 512:
-        ratio = 512 / max(logo.size)
+    if max(logo.size) > 768:
+        ratio = 768 / max(logo.size)
         logo = logo.resize(
             (max(1, int(logo.width * ratio)), max(1, int(logo.height * ratio))),
             Image.Resampling.LANCZOS,
@@ -48,34 +42,30 @@ def load_logo() -> Image.Image:
     return logo.crop(bbox)
 
 
-def maximize_white(img: Image.Image) -> Image.Image:
-    """Bianco puro #FFFFFF con opacità massima su ogni pixel visibile."""
+def solid_white(img: Image.Image) -> Image.Image:
     img = img.convert("RGBA")
     px = img.load()
     width, height = img.size
     for y in range(height):
         for x in range(width):
-            r, g, b, a = px[x, y]
-            if a < 8:
-                px[x, y] = TRANSPARENT
-            elif a >= 120:
-                px[x, y] = (255, 255, 255, 255)
+            if px[x, y][3] > 20:
+                px[x, y] = WHITE
             else:
-                alpha = min(255, int(a * 2.4 + 140))
-                px[x, y] = (255, 255, 255, alpha)
+                px[x, y] = TRANSPARENT
     return img
 
 
-def make_icon(size: int, padding_ratio: float = 0.06) -> Image.Image:
+def make_icon(size: int, padding_ratio: float = 0.02) -> Image.Image:
     logo = load_logo()
     canvas = Image.new("RGBA", (size, size), TRANSPARENT)
     max_side = int(size * (1 - padding_ratio * 2))
     scaled = logo.copy()
     scaled.thumbnail((max_side, max_side), Image.Resampling.LANCZOS)
+    scaled = solid_white(scaled)
     x = (size - scaled.width) // 2
     y = (size - scaled.height) // 2
     canvas.paste(scaled, (x, y), scaled)
-    return maximize_white(canvas)
+    return solid_white(canvas)
 
 
 def main() -> None:
@@ -95,9 +85,11 @@ def main() -> None:
             icon.save(out / name, format="PNG", optimize=True)
         print("saved", name)
 
-    ico_images = [make_icon(s) for s in (16, 32, 48)]
+    ico_16 = make_icon(16)
+    ico_32 = make_icon(32)
+    ico_48 = make_icon(48)
     for path in [OUT_DIRS[0] / "favicon.ico", OUT_DIRS[1] / "favicon.ico", APP_DIR / "favicon.ico"]:
-        ico_images[0].save(path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
+        ico_16.save(path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
         print("saved", path)
 
     icons["favicon-192.png"].save(APP_DIR / "icon.png", format="PNG", optimize=True)
@@ -108,7 +100,7 @@ def main() -> None:
     target_width = 240
     ratio = target_width / logo.width
     target_height = max(1, int(logo.height * ratio))
-    email_logo = logo.resize((target_width, target_height), Image.Resampling.LANCZOS)
+    email_logo = solid_white(logo.resize((target_width, target_height), Image.Resampling.LANCZOS))
     for out in OUT_DIRS:
         email_logo.save(out / "email-logo.png", format="PNG", optimize=True)
     print("saved email-logo.png")
