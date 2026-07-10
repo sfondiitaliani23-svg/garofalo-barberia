@@ -1,7 +1,9 @@
 import { addMinutes } from 'date-fns';
-import { formatShopTime, parseBookingDateTime } from '@/lib/utils/booking-datetime';
-import { it } from 'date-fns/locale';
-import { format } from 'date-fns';
+import {
+  formatShopDateLong,
+  formatShopTime,
+  parseBookingDateTime,
+} from '@/lib/utils/booking-datetime';
 
 export interface TimeSlot {
   time: string;
@@ -72,5 +74,5 @@ export function filterAvailableSlots(
 }
 
 export function formatItalianDate(date: Date): string {
-  return format(date, "EEEE d MMMM yyyy", { locale: it });
+  return formatShopDateLong(date);
 }

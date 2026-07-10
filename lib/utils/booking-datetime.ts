@@ -18,10 +18,12 @@ export function getShopDayBounds(dateStr: string): { dayStart: Date; dayEnd: Dat
   return { dayStart, dayEnd: addDays(dayStart, 1) };
 }
 
+const SHOP_TIMEZONE = 'Europe/Rome';
+
 /** Formatta un istante come orario HH:mm del salone (Europe/Rome). */
-export function formatShopTime(date: Date, dateStr: string): string {
+export function formatShopTimeFromDate(date: Date): string {
   const parts = new Intl.DateTimeFormat('it-IT', {
-    timeZone: 'Europe/Rome',
+    timeZone: SHOP_TIMEZONE,
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
@@ -30,6 +32,29 @@ export function formatShopTime(date: Date, dateStr: string): string {
   const hour = parts.find((part) => part.type === 'hour')?.value ?? '00';
   const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
   return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+}
+
+/** Formatta un istante come orario HH:mm del salone (Europe/Rome). */
+export function formatShopTime(date: Date, _dateStr?: string): string {
+  return formatShopTimeFromDate(date);
+}
+
+/** Data estesa in italiano nel fuso del salone (es. martedì 14 luglio 2026). */
+export function formatShopDateLong(date: Date): string {
+  return new Intl.DateTimeFormat('it-IT', {
+    timeZone: SHOP_TIMEZONE,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
+export function formatShopBookingDateTime(date: Date): { dateStr: string; timeStr: string } {
+  return {
+    dateStr: formatShopDateLong(date),
+    timeStr: formatShopTimeFromDate(date),
+  };
 }
 
 /** Interpreta data e ora come orario di salone (Europe/Rome). */

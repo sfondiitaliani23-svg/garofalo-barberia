@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
 import { renderAdminBookingEmailHtml } from '@/lib/utils/email-templates';
-import { formatItalianDate } from '@/lib/utils/slots';
+import { formatShopBookingDateTime } from '@/lib/utils/booking-datetime';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -17,8 +17,7 @@ export interface BookingNotificationData {
 }
 
 function formatBookingDetails(data: BookingNotificationData) {
-  const dateStr = formatItalianDate(data.startsAt);
-  const timeStr = data.startsAt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const { dateStr, timeStr } = formatShopBookingDateTime(data.startsAt);
   const price = `€${(data.priceCents / 100).toFixed(0)}`;
   const phone = data.customerPhone?.trim() || 'Non indicato';
 

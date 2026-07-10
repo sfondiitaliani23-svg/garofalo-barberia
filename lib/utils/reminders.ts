@@ -4,7 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
 import { renderCustomerReminderEmailHtml } from '@/lib/utils/email-templates';
-import { formatItalianDate } from '@/lib/utils/slots';
+import { formatShopBookingDateTime } from '@/lib/utils/booking-datetime';
 import { normalizeItalianPhone } from '@/lib/utils/phone';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -34,8 +34,7 @@ export interface ReminderPayload {
 }
 
 function buildReminderMessage(data: ReminderPayload) {
-  const dateStr = formatItalianDate(data.startsAt);
-  const timeStr = data.startsAt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const { dateStr, timeStr } = formatShopBookingDateTime(data.startsAt);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app';
 
   return (
@@ -180,8 +179,7 @@ export async function sendCustomerWhatsAppReminder(phone: string, body: string) 
 export async function sendCustomerEmailReminder(email: string, data: ReminderPayload) {
   if (!resend) return { ok: false, reason: 'not_configured' as const };
 
-  const dateStr = formatItalianDate(data.startsAt);
-  const timeStr = data.startsAt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const { dateStr, timeStr } = formatShopBookingDateTime(data.startsAt);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app';
   const message = buildReminderMessage(data);
   const subject = `Promemoria appuntamento — oggi alle ${timeStr} | Garofalo Barberia`;
