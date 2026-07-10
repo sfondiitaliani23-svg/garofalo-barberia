@@ -39,10 +39,13 @@ export interface Service {
   sort_order: number;
 }
 
+export type BarberAvailabilityPeriod = 'morning' | 'afternoon';
+
 export interface BarberAvailability {
   id: string;
   barber_id: string;
   day_of_week: number;
+  period?: BarberAvailabilityPeriod;
   start_time: string;
   end_time: string;
   is_available: boolean;

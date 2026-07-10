@@ -6,10 +6,17 @@ import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
 import {
+  type AdminDayScheduleInput,
+  defaultPeriodsForDay,
+  scheduleToAvailabilityRows,
+} from '@/lib/utils/barber-schedule';
+import {
   detectScheduleChanges,
   notifyCustomersBarberScheduleChanges,
   notifyCustomersSalonClosure,
 } from '@/lib/utils/schedule-notifications';
+
+export type { AdminDayScheduleInput };
 
 export interface AdminAppointmentInput {
   serviceId: string;
@@ -393,13 +400,6 @@ export interface AdminBarberInput {
   isActive?: boolean;
 }
 
-export interface AdminDayScheduleInput {
-  dayOfWeek: number;
-  isAvailable: boolean;
-  startTime: string;
-  endTime: string;
-}
-
 export interface AdminTimeOffInput {
   barberId: string | null;
   startDate: string;
@@ -407,13 +407,9 @@ export interface AdminTimeOffInput {
   reason?: string;
 }
 
-const DEFAULT_WEEKLY_SCHEDULE: AdminDayScheduleInput[] = [
-  { dayOfWeek: 2, isAvailable: true, startTime: '09:00', endTime: '19:30' },
-  { dayOfWeek: 3, isAvailable: true, startTime: '09:00', endTime: '19:30' },
-  { dayOfWeek: 4, isAvailable: true, startTime: '09:00', endTime: '19:30' },
-  { dayOfWeek: 5, isAvailable: true, startTime: '09:00', endTime: '19:30' },
-  { dayOfWeek: 6, isAvailable: true, startTime: '09:00', endTime: '18:00' },
-];
+const DEFAULT_WEEKLY_SCHEDULE: AdminDayScheduleInput[] = [2, 3, 4, 5, 6].map((dayOfWeek) =>
+  defaultPeriodsForDay(dayOfWeek)
+);
 
 export async function getAdminTeamData() {
   await requireAdmin();
@@ -478,14 +474,7 @@ export async function saveAdminBarber(input: AdminBarberInput) {
 
   if (error || !created) return { ok: false, error: 'Errore durante la creazione' };
 
-  const scheduleRows = DEFAULT_WEEKLY_SCHEDULE.map((day) => ({
-    barber_id: created.id,
-    day_of_week: day.dayOfWeek,
-    start_time: day.startTime,
-    end_time: day.endTime,
-    is_available: day.isAvailable,
-  }));
-
+  const scheduleRows = scheduleToAvailabilityRows(created.id, DEFAULT_WEEKLY_SCHEDULE);
   await supabase.from('barber_availability').insert(scheduleRows);
 
   revalidateTeamPaths();
@@ -523,7 +512,10 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
   if (!supabase) return { ok: false, error: 'Database non configurato' };
 
   const [{ data: oldAvailability }, { data: barber }] = await Promise.all([
-    supabase.from('barber_availability').select('day_of_week, is_available, start_time, end_time').eq('barber_id', barberId),
+    supabase
+      .from('barber_availability')
+      .select('day_of_week, period, is_available, start_time, end_time')
+      .eq('barber_id', barberId),
     supabase.from('barbers').select('name').eq('id', barberId).single(),
   ]);
 
@@ -532,26 +524,26 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
   for (const day of days) {
     if (day.dayOfWeek === 0 || day.dayOfWeek === 1) continue;
 
-    const startTime = day.startTime.slice(0, 5);
-    const endTime = day.endTime.slice(0, 5);
+    for (const period of ['morning', 'afternoon'] as const) {
+      const slot = day[period];
+      const startTime = slot.startTime.slice(0, 5);
+      const endTime = slot.endTime.slice(0, 5);
 
-    if (day.isAvailable && startTime >= endTime) {
-      return { ok: false, error: 'Orario di fine deve essere dopo l\'inizio' };
+      if (slot.enabled && startTime >= endTime) {
+        return {
+          ok: false,
+          error: `Orario ${period === 'morning' ? 'mattutino' : 'pomeridiano'} non valido`,
+        };
+      }
     }
-
-    const { error } = await supabase.from('barber_availability').upsert(
-      {
-        barber_id: barberId,
-        day_of_week: day.dayOfWeek,
-        start_time: startTime,
-        end_time: endTime,
-        is_available: day.isAvailable,
-      },
-      { onConflict: 'barber_id,day_of_week' }
-    );
-
-    if (error) return { ok: false, error: 'Errore durante il salvataggio orari' };
   }
+
+  const scheduleRows = scheduleToAvailabilityRows(barberId, days);
+  const { error } = await supabase.from('barber_availability').upsert(scheduleRows, {
+    onConflict: 'barber_id,day_of_week,period',
+  });
+
+  if (error) return { ok: false, error: 'Errore durante il salvataggio orari' };
 
   let emailsSent = 0;
   if (scheduleChanges.length > 0) {

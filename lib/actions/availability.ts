@@ -64,9 +64,12 @@ export async function getAvailableSlots(
         .gte('end_at', dayStart),
     ]);
 
-    const availabilityByBarber = new Map(
-      (availabilityRes.data ?? []).map((row) => [row.barber_id, row])
-    );
+    const availabilityByBarber = new Map<string, typeof availabilityRes.data>();
+    for (const row of availabilityRes.data ?? []) {
+      const list = availabilityByBarber.get(row.barber_id) ?? [];
+      list.push(row);
+      availabilityByBarber.set(row.barber_id, list);
+    }
 
     const appointmentsByBarber = new Map<string, { starts_at: string; ends_at: string }[]>();
     for (const apt of appointmentsRes.data ?? []) {
@@ -81,27 +84,29 @@ export async function getAvailableSlots(
     if (!forAdmin) minAdvance.setHours(minAdvance.getHours() + 2);
 
     for (const bid of barberIds) {
-      const availability = availabilityByBarber.get(bid);
-      if (!availability) continue;
+      const availabilityRows = availabilityByBarber.get(bid);
+      if (!availabilityRows?.length) continue;
 
       const appointments = appointmentsByBarber.get(bid) ?? [];
       const timeOff = (timeOffRes.data ?? []).filter(
         (row) => row.barber_id === bid || row.barber_id === null
       );
 
-      const slots = generateSlots(
-        date,
-        availability.start_time.slice(0, 5),
-        availability.end_time.slice(0, 5),
-        durationMinutes,
-        SITE_CONFIG.slotIntervalMinutes
-      );
+      for (const availability of availabilityRows) {
+        const slots = generateSlots(
+          date,
+          availability.start_time.slice(0, 5),
+          availability.end_time.slice(0, 5),
+          durationMinutes,
+          SITE_CONFIG.slotIntervalMinutes
+        );
 
-      const available = filterAvailableSlots(slots, appointments, timeOff);
+        const available = filterAvailableSlots(slots, appointments, timeOff);
 
-      for (const slot of available) {
-        if (forAdmin || slot.startsAt > minAdvance) {
-          allSlotsSet.add(slot.time);
+        for (const slot of available) {
+          if (forAdmin || slot.startsAt > minAdvance) {
+            allSlotsSet.add(slot.time);
+          }
         }
       }
     }

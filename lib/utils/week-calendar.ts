@@ -52,7 +52,9 @@ export function getDayClosingTime(day: Date): string {
 
 export function isSlotWithinHours(day: Date, time: string): boolean {
   const closing = getDayClosingTime(day);
-  return time <= closing && time >= '09:00';
+  if (time < '09:00' || time > closing) return false;
+  if (time >= '13:00' && time < '14:00') return false;
+  return true;
 }
 
 export function dateKey(day: Date): string {

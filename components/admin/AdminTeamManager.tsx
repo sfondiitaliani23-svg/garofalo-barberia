@@ -19,6 +19,14 @@ import {
   saveAdminTimeOff,
   type AdminDayScheduleInput,
 } from '@/lib/actions/admin';
+import {
+  buildBarberSchedule,
+  defaultPeriodsForDay,
+  isDayOpen,
+  SCHEDULE_PERIOD_LABELS,
+  type AdminPeriodInput,
+  type SchedulePeriod,
+} from '@/lib/utils/barber-schedule';
 import { cn } from '@/lib/utils';
 import type { Barber, BarberAvailability, BarberTimeOff } from '@/types/database';
 
@@ -38,30 +46,6 @@ interface AdminTeamManagerProps {
   timeOff: BarberTimeOff[];
 }
 
-function buildSchedule(barberId: string, availability: BarberAvailability[]): AdminDayScheduleInput[] {
-  return WEEK_DAYS.map((day) => {
-    const row = availability.find(
-      (item) => item.barber_id === barberId && item.day_of_week === day.value
-    );
-
-    if (day.fixedClosed) {
-      return {
-        dayOfWeek: day.value,
-        isAvailable: false,
-        startTime: '09:00',
-        endTime: '18:00',
-      };
-    }
-
-    return {
-      dayOfWeek: day.value,
-      isAvailable: row?.is_available ?? false,
-      startTime: row?.start_time?.slice(0, 5) ?? '09:00',
-      endTime: row?.end_time?.slice(0, 5) ?? '19:30',
-    };
-  });
-}
-
 function resolveBarberName(entry: BarberTimeOff) {
   if (!entry.barber_id) return 'Tutto il salone';
   const barber = entry.barber;
@@ -76,7 +60,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
   const initialBarberId = barbers.find((b) => b.is_active)?.id ?? barbers[0]?.id ?? '';
   const [selectedBarberId, setSelectedBarberId] = useState(initialBarberId);
   const [schedule, setSchedule] = useState<AdminDayScheduleInput[]>(() =>
-    initialBarberId ? buildSchedule(initialBarberId, availability) : []
+    initialBarberId ? buildBarberSchedule(initialBarberId, availability, WEEK_DAYS) : []
   );
 
   const [barberModalOpen, setBarberModalOpen] = useState(false);
@@ -93,7 +77,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
 
   useEffect(() => {
     if (selectedBarberId) {
-      setSchedule(buildSchedule(selectedBarberId, availability));
+      setSchedule(buildBarberSchedule(selectedBarberId, availability, WEEK_DAYS));
     }
   }, [selectedBarberId, availability]);
 
@@ -107,7 +91,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
   }, [timeOff]);
 
   const baselineSchedule = useMemo(
-    () => (selectedBarberId ? buildSchedule(selectedBarberId, availability) : []),
+    () => (selectedBarberId ? buildBarberSchedule(selectedBarberId, availability, WEEK_DAYS) : []),
     [selectedBarberId, availability]
   );
 
@@ -120,7 +104,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
 
   const selectBarber = useCallback((barberId: string) => {
     setSelectedBarberId(barberId);
-    setSchedule(buildSchedule(barberId, availability));
+    setSchedule(buildBarberSchedule(barberId, availability, WEEK_DAYS));
   }, [availability]);
 
   function openCreateBarber() {
@@ -197,9 +181,37 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
     });
   }
 
-  function updateScheduleDay(dayOfWeek: number, patch: Partial<AdminDayScheduleInput>) {
+  function updateSchedulePeriod(
+    dayOfWeek: number,
+    period: SchedulePeriod,
+    patch: Partial<AdminPeriodInput>
+  ) {
     setSchedule((current) =>
-      current.map((day) => (day.dayOfWeek === dayOfWeek ? { ...day, ...patch } : day))
+      current.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? { ...day, [period]: { ...day[period], ...patch } }
+          : day
+      )
+    );
+  }
+
+  function closeEntireDay(dayOfWeek: number) {
+    setSchedule((current) =>
+      current.map((day) =>
+        day.dayOfWeek === dayOfWeek
+          ? {
+              ...day,
+              morning: { ...day.morning, enabled: false },
+              afternoon: { ...day.afternoon, enabled: false },
+            }
+          : day
+      )
+    );
+  }
+
+  function openDefaultDay(dayOfWeek: number) {
+    setSchedule((current) =>
+      current.map((day) => (day.dayOfWeek === dayOfWeek ? defaultPeriodsForDay(dayOfWeek) : day))
     );
   }
 
@@ -359,57 +371,94 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
 
       {selectedBarber && (
         <section className="rounded-xl border border-white/10 bg-[#111] p-5">
-          <div className="mb-5 flex items-center gap-2">
-            <Clock size={18} className="text-gold" />
-            <h2 className="font-display text-xl uppercase text-gold">
-              Orari — {selectedBarber.name}
-            </h2>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Clock size={18} className="text-gold" />
+              <h2 className="font-display text-xl uppercase text-gold">
+                Orari — {selectedBarber.name}
+              </h2>
+            </div>
+            <p className="text-xs text-white/45">
+              Mattina e pomeriggio come sul sito (pausa 13:00–14:00). Puoi aprire solo mezza giornata.
+            </p>
           </div>
 
-          <div className="space-y-2">
-            {WEEK_DAYS.map((day) => {
+          <div className="space-y-3">
+            {WEEK_DAYS.filter((day) => !day.fixedClosed).map((day) => {
               const row = schedule.find((item) => item.dayOfWeek === day.value);
               if (!row) return null;
+              const dayOpen = isDayOpen(row);
 
               return (
                 <div
                   key={day.value}
-                  className={cn(
-                    'grid gap-3 rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-3 sm:grid-cols-[140px_1fr_1fr_auto]',
-                    day.fixedClosed && 'opacity-50'
-                  )}
+                  className="rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-4"
                 >
-                  <p className="self-center font-medium">{day.label}</p>
-                  <div>
-                    <Label className="text-xs text-white/45">Apertura</Label>
-                    <Input
-                      type="time"
-                      value={row.startTime}
-                      disabled={day.fixedClosed || !row.isAvailable || pending}
-                      onChange={(e) => updateScheduleDay(day.value, { startTime: e.target.value })}
-                      className="mt-1"
-                    />
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="font-medium">{day.label}</p>
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => (dayOpen ? closeEntireDay(day.value) : openDefaultDay(day.value))}
+                      className={cn(
+                        'rounded-full border px-3 py-1 text-xs font-semibold transition disabled:opacity-50',
+                        dayOpen
+                          ? 'border-white/15 text-white/60 hover:border-red-500/40 hover:text-red-300'
+                          : 'border-gold/40 bg-gold/10 text-gold hover:bg-gold/20'
+                      )}
+                    >
+                      {dayOpen ? 'Chiudi tutto il giorno' : 'Apri giornata standard'}
+                    </button>
                   </div>
-                  <div>
-                    <Label className="text-xs text-white/45">Chiusura</Label>
-                    <Input
-                      type="time"
-                      value={row.endTime}
-                      disabled={day.fixedClosed || !row.isAvailable || pending}
-                      onChange={(e) => updateScheduleDay(day.value, { endTime: e.target.value })}
-                      className="mt-1"
-                    />
+
+                  <div className="space-y-3">
+                    {(['morning', 'afternoon'] as const).map((period) => {
+                      const slot = row[period];
+                      return (
+                        <div
+                          key={period}
+                          className="grid gap-3 border-t border-white/5 pt-3 sm:grid-cols-[130px_1fr_1fr]"
+                        >
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={slot.enabled}
+                              disabled={pending}
+                              onChange={(e) =>
+                                updateSchedulePeriod(day.value, period, { enabled: e.target.checked })
+                              }
+                              className="accent-gold"
+                            />
+                            <span className="font-medium text-gold">{SCHEDULE_PERIOD_LABELS[period]}</span>
+                          </label>
+                          <div>
+                            <Label className="text-xs text-white/45">Apertura</Label>
+                            <Input
+                              type="time"
+                              value={slot.startTime}
+                              disabled={!slot.enabled || pending}
+                              onChange={(e) =>
+                                updateSchedulePeriod(day.value, period, { startTime: e.target.value })
+                              }
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-white/45">Chiusura</Label>
+                            <Input
+                              type="time"
+                              value={slot.endTime}
+                              disabled={!slot.enabled || pending}
+                              onChange={(e) =>
+                                updateSchedulePeriod(day.value, period, { endTime: e.target.value })
+                              }
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <label className="flex items-center gap-2 self-center text-sm">
-                    <input
-                      type="checkbox"
-                      checked={row.isAvailable && !day.fixedClosed}
-                      disabled={day.fixedClosed || pending}
-                      onChange={(e) => updateScheduleDay(day.value, { isAvailable: e.target.checked })}
-                      className="accent-gold"
-                    />
-                    {day.fixedClosed ? 'Chiuso' : 'Aperto'}
-                  </label>
                 </div>
               );
             })}

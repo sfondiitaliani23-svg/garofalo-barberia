@@ -4,13 +4,8 @@ import { it } from 'date-fns/locale';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
 import { renderScheduleChangeEmailHtml } from '@/lib/utils/email-templates';
+import type { AdminDayScheduleInput } from '@/lib/utils/barber-schedule';
 import type { SupabaseClient } from '@supabase/supabase-js';
-type DayScheduleInput = {
-  dayOfWeek: number;
-  isAvailable: boolean;
-  startTime: string;
-  endTime: string;
-};
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -32,40 +27,82 @@ export type ScheduleChange = {
 
 type OldAvailabilityRow = {
   day_of_week: number;
+  period?: string | null;
   is_available: boolean;
   start_time: string;
   end_time: string;
 };
 
+function formatPeriodLabel(period: 'morning' | 'afternoon') {
+  return period === 'morning' ? 'Mattina' : 'Pomeriggio';
+}
+
+function wasDayOpen(rows: OldAvailabilityRow[], dayOfWeek: number) {
+  return rows.some((row) => row.day_of_week === dayOfWeek && row.is_available);
+}
+
+function isDayOpen(day: AdminDayScheduleInput) {
+  return (
+    (day.morning.enabled && day.morning.startTime < day.morning.endTime) ||
+    (day.afternoon.enabled && day.afternoon.startTime < day.afternoon.endTime)
+  );
+}
+
 export function detectScheduleChanges(
   oldRows: OldAvailabilityRow[],
-  newDays: DayScheduleInput[]
+  newDays: AdminDayScheduleInput[]
 ): ScheduleChange[] {
   const changes: ScheduleChange[] = [];
 
   for (const day of newDays) {
     if (day.dayOfWeek === 0 || day.dayOfWeek === 1) continue;
 
-    const old = oldRows.find((row) => row.day_of_week === day.dayOfWeek);
-    const oldAvailable = old?.is_available ?? false;
-    const oldStart = old?.start_time?.slice(0, 5) ?? '09:00';
-    const oldEnd = old?.end_time?.slice(0, 5) ?? '19:30';
     const dayLabel = DAY_LABELS[day.dayOfWeek] ?? `Giorno ${day.dayOfWeek}`;
+    const oldDayRows = oldRows.filter((row) => row.day_of_week === day.dayOfWeek);
+    const oldOpen = wasDayOpen(oldDayRows, day.dayOfWeek);
+    const newOpen = isDayOpen(day);
 
-    if (oldAvailable && !day.isAvailable) {
-      changes.push({ dayLabel, type: 'closed', detail: 'Chiuso' });
+    if (oldOpen && !newOpen) {
+      changes.push({ dayLabel, type: 'closed', detail: 'Chiuso tutto il giorno' });
       continue;
     }
 
-    if (day.isAvailable && oldAvailable) {
-      const startLater = day.startTime > oldStart;
-      const endEarlier = day.endTime < oldEnd;
-      if (startLater || endEarlier) {
+    for (const period of ['morning', 'afternoon'] as const) {
+      const old = oldDayRows.find((row) => row.period === period);
+      const slot = day[period];
+      const oldEnabled = old?.is_available ?? false;
+      const newEnabled = slot.enabled && slot.startTime < slot.endTime;
+
+      if (oldEnabled && !newEnabled) {
         changes.push({
           dayLabel,
           type: 'half_day',
-          detail: `Orario ridotto: ${day.startTime} – ${day.endTime} (prima: ${oldStart} – ${oldEnd})`,
+          detail: `${formatPeriodLabel(period)} non disponibile`,
         });
+        continue;
+      }
+
+      if (!oldEnabled && newEnabled) {
+        changes.push({
+          dayLabel,
+          type: 'half_day',
+          detail: `${formatPeriodLabel(period)} aggiunta: ${slot.startTime} – ${slot.endTime}`,
+        });
+        continue;
+      }
+
+      if (oldEnabled && newEnabled && old) {
+        const oldStart = old.start_time.slice(0, 5);
+        const oldEnd = old.end_time.slice(0, 5);
+        const startLater = slot.startTime > oldStart;
+        const endEarlier = slot.endTime < oldEnd;
+        if (startLater || endEarlier) {
+          changes.push({
+            dayLabel,
+            type: 'half_day',
+            detail: `${formatPeriodLabel(period)}: ${slot.startTime} – ${slot.endTime} (prima: ${oldStart} – ${oldEnd})`,
+          });
+        }
       }
     }
   }
