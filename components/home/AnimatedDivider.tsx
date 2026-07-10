@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface AnimatedDividerProps {
-  variant?: 'compact' | 'wide';
+  variant?: 'compact' | 'wide' | 'eyebrow';
   className?: string;
 }
 
@@ -27,6 +27,28 @@ export function AnimatedDivider({ variant = 'compact', className }: AnimatedDivi
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  if (variant === 'eyebrow') {
+    return (
+      <div ref={ref} className={cn('animated-divider animated-divider-eyebrow', className)} aria-hidden>
+        <svg viewBox="0 0 88 20" className="animated-divider-svg-eyebrow">
+          <path
+            className="animated-divider-stroke animated-divider-stroke-left"
+            d="M0 10 C14 5, 28 15, 44 10 S68 5, 72 10"
+          />
+          <circle className="animated-divider-dot animated-divider-dot-left" cx="66" cy="10" r="2" />
+          <rect
+            className="animated-divider-gem animated-divider-gem-eyebrow"
+            x="74"
+            y="7"
+            width="10"
+            height="10"
+            transform="rotate(45 79 12)"
+          />
+        </svg>
+      </div>
+    );
+  }
 
   if (variant === 'wide') {
     return (

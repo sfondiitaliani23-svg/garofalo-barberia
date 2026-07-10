@@ -86,6 +86,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      <AnimatedDivider variant="wide" className="section-divider-esperienza" />
+
       <section className="section section-white section-esperienza">
         <div className="container-lux">
           <div className="split-section">
@@ -100,7 +102,7 @@ export default function HomePage() {
             </div>
             <div>
               <div className="eyebrow">
-                <div className="eyebrow-line" />
+                <AnimatedDivider variant="eyebrow" />
                 <span className="eyebrow-text">Premium</span>
               </div>
               <h2 className="heading-display">Esperienza di qualità nella barberia di Foggia.</h2>
