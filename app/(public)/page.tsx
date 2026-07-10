@@ -148,10 +148,6 @@ export default function HomePage() {
               <p className="section-lead mb-8">
                 Il taglio e shampoo parte da <strong>€17</strong>. Prezzi chiari e trasparenti per uomo, ragazzo e bimbo: stessa cura, stesso mestiere, niente sorprese in cassa. Shampoo e consulenza styling inclusi con ogni servizio.
               </p>
-              <Link href="/prenota" className="btn-primary">
-                <span>Prenota ora</span>
-                <BtnArrow />
-              </Link>
             </div>
           </div>
         </div>
