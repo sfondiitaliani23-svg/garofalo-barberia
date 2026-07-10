@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PIL import Image, ImageFilter
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "assets" / "sostituisci-immagini" / "icone" / "favicon" / "barberia_garofalo-no-white.png"
@@ -11,7 +11,8 @@ OUT_DIRS = [
 APP_DIR = ROOT / "app"
 TRANSPARENT = (0, 0, 0, 0)
 WHITE = (255, 255, 255, 255)
-CORE_LUMINANCE = 118
+# Tieni solo il nucleo bianco del logo; sotto questa soglia resta il glow grigio.
+CORE_LUMINANCE = 190
 
 
 def strip_glow_keep_core(img: Image.Image) -> Image.Image:
@@ -29,16 +30,6 @@ def strip_glow_keep_core(img: Image.Image) -> Image.Image:
     return img
 
 
-def clean_edges(img: Image.Image, passes: int = 1) -> Image.Image:
-    """Rimuove pixel isolati del glow residuo con erosione leggera."""
-    alpha = img.split()[3]
-    for _ in range(passes):
-        alpha = alpha.filter(ImageFilter.MinFilter(3))
-    cleaned = Image.new("RGBA", img.size, TRANSPARENT)
-    cleaned.paste(WHITE, mask=alpha)
-    return cleaned
-
-
 def load_logo() -> Image.Image:
     logo = Image.open(SRC).convert("RGBA")
     if max(logo.size) > 768:
@@ -48,7 +39,6 @@ def load_logo() -> Image.Image:
             Image.Resampling.LANCZOS,
         )
     logo = strip_glow_keep_core(logo)
-    logo = clean_edges(logo, passes=1)
     bbox = logo.getbbox()
     if not bbox:
         raise RuntimeError(f"No visible pixels in {SRC}")

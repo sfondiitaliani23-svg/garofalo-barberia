@@ -11,12 +11,12 @@ export const metadata: Metadata = {
   description: SITE_CONFIG.tagline,
   icons: {
     icon: [
-      { url: '/icon.png?v=5', type: 'image/png', sizes: '192x192' },
-      { url: '/assets/sostituisci-immagini/icone/favicon-32.png?v=5', type: 'image/png', sizes: '32x32' },
-      { url: '/assets/sostituisci-immagini/icone/favicon-16.png?v=5', type: 'image/png', sizes: '16x16' },
+      { url: '/icon.png?v=6', type: 'image/png', sizes: '192x192' },
+      { url: '/assets/sostituisci-immagini/icone/favicon-32.png?v=6', type: 'image/png', sizes: '32x32' },
+      { url: '/assets/sostituisci-immagini/icone/favicon-16.png?v=6', type: 'image/png', sizes: '16x16' },
     ],
-    apple: '/apple-icon.png?v=5',
-    shortcut: '/assets/sostituisci-immagini/icone/favicon-32.png?v=5',
+    apple: '/apple-icon.png?v=6',
+    shortcut: '/assets/sostituisci-immagini/icone/favicon-32.png?v=6',
   },
 };
 
