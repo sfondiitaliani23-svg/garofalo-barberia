@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
-import { resolveBarberForSlot } from '@/lib/actions/availability';
+import { getAvailableSlots, resolveBarberForSlot } from '@/lib/actions/availability';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
 import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appointments';
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
@@ -44,6 +44,21 @@ export async function createAppointment(input: CreateAppointmentInput) {
   if (!barberId) {
     barberId = await resolveBarberForSlot(input.date, input.time, service.duration_minutes);
     if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario' };
+  } else {
+    const { slots, error } = await getAvailableSlots(
+      barberId,
+      input.date,
+      service.duration_minutes
+    );
+
+    if (!slots.includes(input.time)) {
+      return {
+        ok: false,
+        error:
+          error ??
+          'Il barbiere selezionato non è disponibile in questo orario (ferie o assenza).',
+      };
+    }
   }
 
   const startsAt = parseISO(`${input.date}T${input.time}:00`);

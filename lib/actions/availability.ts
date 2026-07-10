@@ -4,8 +4,20 @@ import { addDays, endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { SITE_CONFIG } from '@/lib/site-config';
+import {
+  filterTimeOffForBarber,
+  getAbsenceMessage,
+  isDayFullyBlockedByTimeOff,
+  type TimeOffRow,
+} from '@/lib/utils/barber-absence';
 import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
+
+export type BarberBookingStatus = {
+  barberId: string;
+  canBook: boolean;
+  reason?: string;
+};
 
 export async function getAvailableSlots(
   barberId: string | null,
@@ -112,7 +124,34 @@ export async function getAvailableSlots(
     }
 
     const slots = Array.from(allSlotsSet).sort();
-    if (slots.length === 0) return getFallbackSlots(dateStr, durationMinutes);
+    if (slots.length === 0) {
+      if (barberId) {
+        const timeOffRows = (timeOffRes.data ?? []) as TimeOffRow[];
+        const fullyBlocked = isDayFullyBlockedByTimeOff(dayStart, dayEnd, timeOffRows, barberId);
+        const hasSchedule = Boolean(availabilityByBarber.get(barberId)?.length);
+        const absenceBlock = filterTimeOffForBarber(timeOffRows, barberId).find((block) => {
+          const blockStart = new Date(block.start_at);
+          const blockEnd = new Date(block.end_at);
+          const day = parseISO(dateStr);
+          return blockStart <= endOfDay(day) && blockEnd >= startOfDay(day);
+        });
+
+        if (fullyBlocked || !hasSchedule) {
+          return {
+            slots: [],
+            error: `${getAbsenceMessage(absenceBlock?.reason)} in questa data. Scegli un altro barbiere o un altro giorno.`,
+          };
+        }
+
+        return {
+          slots: [],
+          error: 'Nessun orario libero per questo giorno. Scegli un altro giorno.',
+        };
+      }
+
+      return getFallbackSlots(dateStr, durationMinutes);
+    }
+
     return { slots };
   } catch {
     return getFallbackSlots(dateStr, durationMinutes);
@@ -182,4 +221,40 @@ export async function getAvailableDates(
   }
 
   return results.filter((d): d is string => d !== null);
+}
+
+export async function getBarbersBookingAvailability(
+  durationMinutes: number
+): Promise<BarberBookingStatus[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  try {
+    const supabase = await createClient();
+    if (!supabase) return [];
+
+    const { data: barbers } = await supabase
+      .from('barbers')
+      .select('id')
+      .eq('is_active', true)
+      .order('sort_order');
+
+    if (!barbers?.length) return [];
+
+    const statuses = await Promise.all(
+      barbers.map(async (barber) => {
+        const dates = await getAvailableDates(durationMinutes, barber.id);
+        return {
+          barberId: barber.id,
+          canBook: dates.length > 0,
+          reason: dates.length === 0 ? 'In ferie o non disponibile' : undefined,
+        };
+      })
+    );
+
+    return statuses;
+  } catch {
+    return [];
+  }
 }

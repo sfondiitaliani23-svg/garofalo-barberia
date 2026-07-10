@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect, useCallback } from 'react';
+import { useState, useTransition, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -9,7 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createAppointment } from '@/lib/actions/bookings';
-import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability';
+import {
+  getAvailableDates,
+  getAvailableSlots,
+  getBarbersBookingAvailability,
+  type BarberBookingStatus,
+} from '@/lib/actions/availability';
 import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';
 import { formatPrice, formatDuration, formatBarberRole } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
@@ -73,9 +78,31 @@ export function BookingWizard({
   const [pending, startTransition] = useTransition();
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingDates, setLoadingDates] = useState(false);
+  const [barberStatuses, setBarberStatuses] = useState<BarberBookingStatus[]>([]);
+  const [loadingBarberStatuses, setLoadingBarberStatuses] = useState(false);
   const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null);
 
   const selectedService = services.find((s) => s.id === serviceId);
+
+  const barberStatusMap = useMemo(
+    () => new Map(barberStatuses.map((status) => [status.barberId, status])),
+    [barberStatuses]
+  );
+
+  const loadBarberStatuses = useCallback(async () => {
+    if (!selectedService) return;
+    setLoadingBarberStatuses(true);
+    const statuses = await getBarbersBookingAvailability(selectedService.duration_minutes);
+    setBarberStatuses(statuses);
+    setLoadingBarberStatuses(false);
+
+    if (barberId && statuses.some((status) => status.barberId === barberId && !status.canBook)) {
+      setBarberId(null);
+      setDate(null);
+      setTime(null);
+      toast.error('Il barbiere selezionato non è prenotabile in questo periodo (ferie o assenza).');
+    }
+  }, [barberId, selectedService]);
 
   const loadDates = useCallback(async () => {
     if (!selectedService) return;
@@ -100,8 +127,11 @@ export function BookingWizard({
   }, [selectedService, barberId, date]);
 
   useEffect(() => {
-    if (step === 2 && selectedService) loadDates();
-  }, [step, selectedService, barberId, loadDates]);
+    if (step === 2 && selectedService) {
+      loadBarberStatuses();
+      loadDates();
+    }
+  }, [step, selectedService, barberId, loadBarberStatuses, loadDates]);
 
   useEffect(() => {
     if (step === 2 && date && selectedService) loadSlots();
@@ -313,25 +343,50 @@ export function BookingWizard({
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-gold">Con chi vuoi prenotare?</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {barbers.map((b) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => { setBarberId(b.id); setTime(null); }}
-                      className={cn(
-                        'flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition',
-                        barberId === b.id ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
-                      )}
-                    >
-                      <div>
-                        <p className="font-medium">{b.name}</p>
-                        <p className="text-sm text-gold">{formatBarberRole(b.role)}</p>
-                      </div>
-                      {b.image_url && (
-                        <Image src={b.image_url} alt={b.name} width={60} height={78} className="h-[68px] w-[52px] rounded object-cover object-top" />
-                      )}
-                    </button>
-                  ))}
+                  {loadingBarberStatuses && (
+                    <p className="text-sm text-white/50 sm:col-span-2">Verifica disponibilità team...</p>
+                  )}
+                  {barbers.map((b) => {
+                    const status = barberStatusMap.get(b.id);
+                    const unavailable = status ? !status.canBook : false;
+
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        disabled={unavailable}
+                        onClick={() => {
+                          if (unavailable) return;
+                          setBarberId(b.id);
+                          setTime(null);
+                        }}
+                        className={cn(
+                          'flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition',
+                          unavailable && 'cursor-not-allowed opacity-55',
+                          !unavailable && barberId === b.id
+                            ? 'border-gold bg-gold/10'
+                            : 'border-white/15 bg-[#1a1a1a]',
+                          !unavailable && barberId !== b.id && 'hover:border-gold/50'
+                        )}
+                      >
+                        <div>
+                          <p className="font-medium">{b.name}</p>
+                          <p className={cn('text-sm', unavailable ? 'text-white/45' : 'text-gold')}>
+                            {unavailable ? status?.reason ?? 'In ferie o non disponibile' : formatBarberRole(b.role)}
+                          </p>
+                        </div>
+                        {b.image_url && (
+                          <Image
+                            src={b.image_url}
+                            alt={b.name}
+                            width={60}
+                            height={78}
+                            className="h-[68px] w-[52px] rounded object-cover object-top"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                   <button
                     type="button"
                     onClick={() => { setBarberId(null); setTime(null); }}
