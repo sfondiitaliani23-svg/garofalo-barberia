@@ -324,12 +324,12 @@ export function BookingWizard({
         })}
       </div>
 
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden">
+        <CardHeader className="px-4 sm:px-6">
           <CardTitle>Prenotazione online</CardTitle>
           <p className="text-sm text-white/50">Scegli servizio, barbiere e orario — conferma automatica</p>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 px-4 sm:px-6">
           {step === 1 && (
             <div className="grid gap-3 sm:grid-cols-2">
               {services.map((s) => (
@@ -473,7 +473,7 @@ export function BookingWizard({
               </div>
               <div>
                 <Label htmlFor="promo-code">Codice promozionale (opzionale)</Label>
-                <div className="mt-1 flex gap-2">
+                <div className="mt-1 flex flex-col gap-2 sm:flex-row">
                   <Input
                     id="promo-code"
                     value={promoCode}
@@ -483,11 +483,17 @@ export function BookingWizard({
                     disabled={promoSource === 'code'}
                   />
                   {promoSource === 'code' ? (
-                    <Button type="button" variant="outline" onClick={handleRemovePromoCode}>
+                    <Button type="button" variant="outline" onClick={handleRemovePromoCode} className="w-full shrink-0 sm:w-auto">
                       Rimuovi
                     </Button>
                   ) : (
-                    <Button type="button" variant="outline" onClick={handleApplyPromoCode} disabled={validatingPromo}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleApplyPromoCode}
+                      disabled={validatingPromo}
+                      className="w-full shrink-0 sm:w-auto"
+                    >
                       {validatingPromo ? '...' : 'Applica'}
                     </Button>
                   )}
@@ -529,16 +535,32 @@ export function BookingWizard({
             </div>
           )}
 
-          <div className="flex justify-between border-t border-white/10 pt-4">
+          <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
             {step > 1 ? (
-              <Button variant="outline" onClick={() => setStep(step - 1)}>Indietro</Button>
-            ) : <div />}
+              <Button
+                variant="outline"
+                onClick={() => setStep(step - 1)}
+                className="w-full sm:w-auto"
+              >
+                Indietro
+              </Button>
+            ) : (
+              <div className="hidden sm:block" />
+            )}
             {step < 3 ? (
-              <Button disabled={step === 2 && !time} onClick={() => time && setStep(3)} className={step === 2 && !time ? 'opacity-50' : ''}>
+              <Button
+                disabled={step === 2 && !time}
+                onClick={() => time && setStep(3)}
+                className={cn('w-full sm:ml-auto sm:w-auto', step === 2 && !time && 'opacity-50')}
+              >
                 Avanti
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={pending}>
+              <Button
+                onClick={handleSubmit}
+                disabled={pending}
+                className="h-auto min-h-11 w-full whitespace-normal px-4 py-2.5 text-center leading-snug sm:ml-auto sm:h-11 sm:w-auto sm:whitespace-nowrap sm:px-6"
+              >
                 {pending ? 'Conferma in corso...' : 'Conferma prenotazione'}
               </Button>
             )}
