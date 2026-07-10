@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "assets" / "sostituisci-immagini" / "icone" / "favicon" / "barberia_garofalo-no-white.png"
@@ -11,20 +11,32 @@ OUT_DIRS = [
 APP_DIR = ROOT / "app"
 TRANSPARENT = (0, 0, 0, 0)
 WHITE = (255, 255, 255, 255)
+CORE_LUMINANCE = 118
 
 
-def strip_to_white_logo(img: Image.Image, black_threshold: int = 32) -> Image.Image:
+def strip_glow_keep_core(img: Image.Image) -> Image.Image:
+    """Toglie alone/glow grigio e mantiene solo il nucleo bianco del logo."""
     img = img.convert("RGBA")
     px = img.load()
     width, height = img.size
     for y in range(height):
         for x in range(width):
             r, g, b, a = px[x, y]
-            if a == 0 or max(r, g, b) <= black_threshold:
+            if a == 0 or max(r, g, b) < CORE_LUMINANCE:
                 px[x, y] = TRANSPARENT
             else:
                 px[x, y] = WHITE
     return img
+
+
+def clean_edges(img: Image.Image, passes: int = 1) -> Image.Image:
+    """Rimuove pixel isolati del glow residuo con erosione leggera."""
+    alpha = img.split()[3]
+    for _ in range(passes):
+        alpha = alpha.filter(ImageFilter.MinFilter(3))
+    cleaned = Image.new("RGBA", img.size, TRANSPARENT)
+    cleaned.paste(WHITE, mask=alpha)
+    return cleaned
 
 
 def load_logo() -> Image.Image:
@@ -35,7 +47,8 @@ def load_logo() -> Image.Image:
             (max(1, int(logo.width * ratio)), max(1, int(logo.height * ratio))),
             Image.Resampling.LANCZOS,
         )
-    logo = strip_to_white_logo(logo)
+    logo = strip_glow_keep_core(logo)
+    logo = clean_edges(logo, passes=1)
     bbox = logo.getbbox()
     if not bbox:
         raise RuntimeError(f"No visible pixels in {SRC}")
@@ -48,7 +61,7 @@ def solid_white(img: Image.Image) -> Image.Image:
     width, height = img.size
     for y in range(height):
         for x in range(width):
-            if px[x, y][3] > 20:
+            if px[x, y][3] > 16:
                 px[x, y] = WHITE
             else:
                 px[x, y] = TRANSPARENT
@@ -86,8 +99,6 @@ def main() -> None:
         print("saved", name)
 
     ico_16 = make_icon(16)
-    ico_32 = make_icon(32)
-    ico_48 = make_icon(48)
     for path in [OUT_DIRS[0] / "favicon.ico", OUT_DIRS[1] / "favicon.ico", APP_DIR / "favicon.ico"]:
         ico_16.save(path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48)])
         print("saved", path)
