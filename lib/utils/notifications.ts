@@ -1,5 +1,7 @@
 import { Resend } from 'resend';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
+import { renderAdminBookingEmailHtml } from '@/lib/utils/email-templates';
 import { formatItalianDate } from '@/lib/utils/slots';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -91,24 +93,35 @@ export async function sendAdminBookingEmail(data: BookingNotificationData) {
   if (!resend || !process.env.ADMIN_EMAIL) return { ok: false, reason: 'not_configured' };
 
   const { dateStr, timeStr, price, phone } = formatBookingDetails(data);
-  const from = process.env.RESEND_FROM ?? 'Garofalo Barberia <onboarding@resend.dev>';
   const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni`;
+  const subject = `Nuova prenotazione — ${data.customerName} — ${dateStr} ${timeStr}`;
+  const text =
+    `Nuova prenotazione online\n\n` +
+    `Cliente: ${data.customerName} (${phone})\n` +
+    `Servizio: ${data.serviceName} — ${price}\n` +
+    `Barbiere: ${data.barberName}\n` +
+    `Data: ${dateStr} alle ${timeStr}\n` +
+    (data.notes ? `Note: ${data.notes}\n` : '') +
+    `\nCalendario admin: ${adminUrl}`;
 
   try {
-    const { error } = await resend.emails.send({
-      from,
-      to: process.env.ADMIN_EMAIL,
-      subject: `Nuova prenotazione — ${data.customerName} — ${dateStr} ${timeStr}`,
-      html: `
-        <h2>Nuova prenotazione online</h2>
-        <p><strong>Cliente:</strong> ${data.customerName} (${phone})</p>
-        <p><strong>Servizio:</strong> ${data.serviceName} — ${price}</p>
-        <p><strong>Barbiere:</strong> ${data.barberName}</p>
-        <p><strong>Data:</strong> ${dateStr} alle ${timeStr}</p>
-        ${data.notes ? `<p><strong>Note:</strong> ${data.notes}</p>` : ''}
-        <p><a href="${adminUrl}">Apri calendario admin</a></p>
-      `,
-    });
+    const { error } = await resend.emails.send(
+      buildTransactionalEmail({
+        to: process.env.ADMIN_EMAIL,
+        subject,
+        text,
+        html: renderAdminBookingEmailHtml({
+          customerName: data.customerName,
+          phone,
+          serviceName: data.serviceName,
+          price,
+          barberName: data.barberName,
+          dateStr,
+          timeStr,
+          notes: data.notes,
+        }),
+      })
+    );
 
     if (error) {
       console.error('Email notification failed:', error);

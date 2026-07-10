@@ -2,6 +2,8 @@ import { Resend } from 'resend';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
+import { renderScheduleChangeEmailHtml } from '@/lib/utils/email-templates';
 import type { SupabaseClient } from '@supabase/supabase-js';
 type DayScheduleInput = {
   dayOfWeek: number;
@@ -98,19 +100,7 @@ export async function getAllCustomerEmails(supabase: SupabaseClient) {
 }
 
 function buildScheduleEmailHtml(heading: string, lines: string[]) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app';
-  const bodyLines = lines.map((line) => `<li>${line}</li>`).join('');
-
-  return `
-    <h2>${heading}</h2>
-    <p>Ti informiamo di un aggiornamento degli orari di <strong>Garofalo Barberia</strong>.</p>
-    <ul>${bodyLines}</ul>
-    <p>Puoi prenotare o gestire i tuoi appuntamenti dalla <a href="${siteUrl}/prenota">pagina prenotazioni</a> o dalla <a href="${siteUrl}/area-cliente/appuntamenti">tua area cliente</a>.</p>
-    <p style="margin-top:1.5rem;color:#666;font-size:13px">
-      ${SITE_CONFIG.address}<br />
-      Tel. ${SITE_CONFIG.phoneDisplay}
-    </p>
-  `;
+  return renderScheduleChangeEmailHtml(heading, lines);
 }
 
 export async function sendScheduleChangeEmails(
@@ -121,18 +111,20 @@ export async function sendScheduleChangeEmails(
     return { ok: false, sent: 0, total: emails.length, reason: 'not_configured' as const };
   }
 
-  const from = process.env.RESEND_FROM ?? 'Garofalo Barberia <onboarding@resend.dev>';
   const html = buildScheduleEmailHtml(payload.heading, payload.lines);
+  const text = `${payload.heading}\n\n${payload.lines.join('\n')}\n\nGarofalo Barberia — ${SITE_CONFIG.address}`;
   let sent = 0;
 
   const results = await Promise.all(
     emails.map(async (email) => {
-      const { error } = await resend.emails.send({
-        from,
-        to: email,
-        subject: payload.subject,
-        html,
-      });
+      const { error } = await resend.emails.send(
+        buildTransactionalEmail({
+          to: email,
+          subject: payload.subject,
+          text,
+          html,
+        })
+      );
       return !error;
     })
   );
@@ -151,7 +143,7 @@ export async function notifyCustomersBarberScheduleChanges(
   const emails = await getAllCustomerEmails(supabase);
   const lines = changes.map((change) => {
     const prefix = change.type === 'closed' ? 'Chiusura' : 'Mezza giornata';
-    return `<strong>${change.dayLabel}</strong> — ${prefix}: ${change.detail}`;
+    return `${change.dayLabel} — ${prefix}: ${change.detail}`;
   });
 
   return sendScheduleChangeEmails(emails, {
@@ -172,7 +164,7 @@ export async function notifyCustomersSalonClosure(
   const endLabel = format(parseISO(`${endDate}T12:00:00`), 'd MMMM yyyy', { locale: it });
 
   const lines = [
-    `Il salone sarà <strong>chiuso</strong> dal ${startLabel} al ${endLabel}.`,
+    `Il salone sarà chiuso dal ${startLabel} al ${endLabel}.`,
     ...(reason ? [`Motivo: ${reason}`] : []),
   ];
 

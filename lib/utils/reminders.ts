@@ -2,6 +2,8 @@ import { addMinutes } from 'date-fns';
 import { Resend } from 'resend';
 import { createServiceClient } from '@/lib/supabase/server';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
+import { renderCustomerReminderEmailHtml } from '@/lib/utils/email-templates';
 import { formatItalianDate } from '@/lib/utils/slots';
 import { normalizeItalianPhone } from '@/lib/utils/phone';
 
@@ -181,28 +183,34 @@ export async function sendCustomerEmailReminder(email: string, data: ReminderPay
   const dateStr = formatItalianDate(data.startsAt);
   const timeStr = data.startsAt.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app';
-  const from = process.env.RESEND_FROM ?? 'Garofalo Barberia <onboarding@resend.dev>';
   const message = buildReminderMessage(data);
+  const subject = `Promemoria appuntamento — oggi alle ${timeStr} | Garofalo Barberia`;
+  const text =
+    `Ciao ${data.customerName}!\n\n` +
+    `Ti ricordiamo il tuo appuntamento da Garofalo Barberia tra circa 6 ore.\n\n` +
+    `Servizio: ${data.serviceName}\n` +
+    `Barbiere: ${data.barberName}\n` +
+    `Data: ${dateStr}\n` +
+    `Orario: ${timeStr}\n` +
+    `Indirizzo: ${SITE_CONFIG.address}\n\n` +
+    `Area cliente: ${siteUrl}/area-cliente/appuntamenti\n\n` +
+    message;
 
   try {
-    const { error } = await resend.emails.send({
-      from,
-      to: email,
-      subject: `Promemoria appuntamento — oggi alle ${timeStr} | Garofalo Barberia`,
-      html: `
-        <h2>Ciao ${data.customerName}!</h2>
-        <p>Ti ricordiamo il tuo appuntamento da <strong>Garofalo Barberia</strong> tra circa 6 ore.</p>
-        <ul>
-          <li><strong>Servizio:</strong> ${data.serviceName}</li>
-          <li><strong>Barbiere:</strong> ${data.barberName}</li>
-          <li><strong>Data:</strong> ${dateStr}</li>
-          <li><strong>Orario:</strong> ${timeStr}</li>
-          <li><strong>Indirizzo:</strong> ${SITE_CONFIG.address}</li>
-        </ul>
-        <p>Puoi modificare o disdire dalla tua <a href="${siteUrl}/area-cliente/appuntamenti">area cliente</a> (entro 30 minuti prima dell'orario).</p>
-        <p style="white-space:pre-line;margin-top:1.5rem;color:#666;font-size:13px">${message}</p>
-      `,
-    });
+    const { error } = await resend.emails.send(
+      buildTransactionalEmail({
+        to: email,
+        subject,
+        text,
+        html: renderCustomerReminderEmailHtml({
+          customerName: data.customerName,
+          serviceName: data.serviceName,
+          barberName: data.barberName,
+          dateStr,
+          timeStr,
+        }),
+      })
+    );
 
     if (error) {
       console.error('Email reminder failed:', error);
