@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { TeamStudioSection } from '@/components/chi-siamo/TeamStudioSection';
 import { getBarbers } from '@/lib/actions/bookings';
 import { formatBarberRole } from '@/lib/utils';
@@ -94,14 +93,6 @@ export default async function ChiSiamoPage() {
       </section>
 
       <TeamStudioSection members={teamMembers} />
-
-      <section className="section section-cream pb-16">
-        <div className="container-lux text-center">
-          <Link href="/prenota" className="btn-primary">
-            Prenota ora
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

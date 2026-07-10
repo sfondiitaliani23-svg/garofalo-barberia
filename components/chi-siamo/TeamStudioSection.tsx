@@ -105,8 +105,8 @@ export function TeamStudioSection({ members }: TeamStudioSectionProps) {
         </div>
 
         <div className="text-center mt-12">
-          <Link href="/prenota" className="btn-primary">
-            Vieni a conoscerci — prenota ora
+          <Link href="/contatti" className="btn-primary">
+            Vieni a trovarci
           </Link>
         </div>
       </div>
