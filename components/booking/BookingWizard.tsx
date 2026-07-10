@@ -129,9 +129,14 @@ export function BookingWizard({
   useEffect(() => {
     if (step === 2 && selectedService) {
       loadBarberStatuses();
+    }
+  }, [step, selectedService, loadBarberStatuses]);
+
+  useEffect(() => {
+    if (step === 2 && selectedService) {
       loadDates();
     }
-  }, [step, selectedService, barberId, loadBarberStatuses, loadDates]);
+  }, [step, selectedService, barberId, loadDates]);
 
   useEffect(() => {
     if (step === 2 && date && selectedService) loadSlots();

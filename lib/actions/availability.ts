@@ -7,6 +7,7 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import {
   filterTimeOffForBarber,
   getAbsenceMessage,
+  hasAnyBookableDayBySchedule,
   isDayFullyBlockedByTimeOff,
   type TimeOffRow,
 } from '@/lib/utils/barber-absence';
@@ -18,6 +19,166 @@ export type BarberBookingStatus = {
   canBook: boolean;
   reason?: string;
 };
+
+type AvailabilityRow = {
+  barber_id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
+};
+
+type BookingContext = {
+  barberIds: string[];
+  availabilityByBarber: Map<string, AvailabilityRow[]>;
+  appointmentsByBarber: Map<string, { starts_at: string; ends_at: string }[]>;
+  timeOff: TimeOffRow[];
+};
+
+function getBookingCandidateDates(): string[] {
+  const bookingEnd = endOfDay(parseISO(SITE_CONFIG.bookingEndDate));
+  const candidates: string[] = [];
+  let cursor = addDays(new Date(), 1);
+
+  while (cursor <= bookingEnd) {
+    const day = cursor.getDay();
+    if (day !== 0 && day !== 1) {
+      candidates.push(format(cursor, 'yyyy-MM-dd'));
+    }
+    cursor = addDays(cursor, 1);
+  }
+
+  return candidates;
+}
+
+async function fetchBookingContext(
+  barberId: string | null,
+  candidateDates: string[],
+  excludeAppointmentId?: string | null
+): Promise<BookingContext | null> {
+  const supabase = await createClient();
+  if (!supabase) return null;
+
+  let barberIds: string[];
+  if (barberId) {
+    barberIds = [barberId];
+  } else {
+    const { data: barbers } = await supabase
+      .from('barbers')
+      .select('id')
+      .eq('is_active', true);
+    barberIds = (barbers ?? []).map((b) => b.id);
+  }
+
+  if (barberIds.length === 0) return null;
+
+  const rangeStart = startOfDay(parseISO(candidateDates[0])).toISOString();
+  const rangeEnd = addDays(startOfDay(parseISO(candidateDates[candidateDates.length - 1])), 1).toISOString();
+
+  const [availabilityRes, appointmentsRes, timeOffRes] = await Promise.all([
+    supabase
+      .from('barber_availability')
+      .select('*')
+      .in('barber_id', barberIds)
+      .eq('is_available', true),
+    supabase
+      .from('appointments')
+      .select('id, barber_id, starts_at, ends_at')
+      .in('barber_id', barberIds)
+      .eq('status', 'confirmed')
+      .gte('starts_at', rangeStart)
+      .lt('starts_at', rangeEnd),
+    supabase
+      .from('barber_time_off')
+      .select('barber_id, start_at, end_at, reason')
+      .lte('start_at', rangeEnd)
+      .gte('end_at', rangeStart),
+  ]);
+
+  const availabilityByBarber = new Map<string, AvailabilityRow[]>();
+  for (const row of availabilityRes.data ?? []) {
+    const list = availabilityByBarber.get(row.barber_id) ?? [];
+    list.push(row);
+    availabilityByBarber.set(row.barber_id, list);
+  }
+
+  const appointmentsByBarber = new Map<string, { starts_at: string; ends_at: string }[]>();
+  for (const apt of appointmentsRes.data ?? []) {
+    if (excludeAppointmentId && apt.id === excludeAppointmentId) continue;
+    const list = appointmentsByBarber.get(apt.barber_id) ?? [];
+    list.push({ starts_at: apt.starts_at, ends_at: apt.ends_at });
+    appointmentsByBarber.set(apt.barber_id, list);
+  }
+
+  return {
+    barberIds,
+    availabilityByBarber,
+    appointmentsByBarber,
+    timeOff: (timeOffRes.data ?? []) as TimeOffRow[],
+  };
+}
+
+function getAppointmentsForDay(
+  appointments: { starts_at: string; ends_at: string }[],
+  dayStart: string,
+  dayEnd: string
+) {
+  return appointments.filter((apt) => apt.starts_at >= dayStart && apt.starts_at < dayEnd);
+}
+
+function computeSlotsFromContext(
+  targetBarberIds: string[],
+  dateStr: string,
+  durationMinutes: number,
+  context: BookingContext,
+  forAdmin = false
+): string[] {
+  const date = parseISO(dateStr);
+  const dayOfWeek = date.getDay();
+
+  if (dayOfWeek === 0 || dayOfWeek === 1) return [];
+
+  const dayStart = startOfDay(date).toISOString();
+  const dayEnd = addDays(startOfDay(date), 1).toISOString();
+  const allSlotsSet = new Set<string>();
+  const minAdvance = new Date();
+  if (!forAdmin) minAdvance.setHours(minAdvance.getHours() + 2);
+
+  for (const bid of targetBarberIds) {
+    const availabilityRows = context.availabilityByBarber.get(bid);
+    if (!availabilityRows?.length) continue;
+
+    const dayAvailability = availabilityRows.filter((row) => row.day_of_week === dayOfWeek);
+    if (!dayAvailability.length) continue;
+
+    const appointments = getAppointmentsForDay(
+      context.appointmentsByBarber.get(bid) ?? [],
+      dayStart,
+      dayEnd
+    );
+    const timeOff = filterTimeOffForBarber(context.timeOff, bid);
+
+    for (const availability of dayAvailability) {
+      const slots = generateSlots(
+        date,
+        availability.start_time.slice(0, 5),
+        availability.end_time.slice(0, 5),
+        durationMinutes,
+        SITE_CONFIG.slotIntervalMinutes
+      );
+
+      const available = filterAvailableSlots(slots, appointments, timeOff);
+
+      for (const slot of available) {
+        if (forAdmin || slot.startsAt > minAdvance) {
+          allSlotsSet.add(slot.time);
+        }
+      }
+    }
+  }
+
+  return Array.from(allSlotsSet).sort();
+}
 
 export async function getAvailableSlots(
   barberId: string | null,
@@ -31,109 +192,24 @@ export async function getAvailableSlots(
   }
 
   try {
-    const supabase = await createClient();
-    if (!supabase) return getFallbackSlots(dateStr, durationMinutes);
+    const candidates = [dateStr];
+    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId);
+    if (!context) return getFallbackSlots(dateStr, durationMinutes);
 
-    const date = parseISO(dateStr);
-    const dayOfWeek = date.getDay();
+    const targetBarberIds = barberId ? [barberId] : context.barberIds;
+    const slots = computeSlotsFromContext(targetBarberIds, dateStr, durationMinutes, context, forAdmin);
 
-    if (dayOfWeek === 0 || dayOfWeek === 1) {
-      return { slots: [], error: 'Chiuso in questo giorno' };
-    }
-
-    const { data: barbers } = await supabase
-      .from('barbers')
-      .select('id')
-      .eq('is_active', true);
-
-    const barberIds = barberId
-      ? [barberId]
-      : (barbers ?? []).map((b) => b.id);
-
-    if (barberIds.length === 0) return getFallbackSlots(dateStr, durationMinutes);
-
-    const dayStart = startOfDay(date).toISOString();
-    const dayEnd = addDays(startOfDay(date), 1).toISOString();
-
-    const [availabilityRes, appointmentsRes, timeOffRes] = await Promise.all([
-      supabase
-        .from('barber_availability')
-        .select('*')
-        .in('barber_id', barberIds)
-        .eq('day_of_week', dayOfWeek)
-        .eq('is_available', true),
-      supabase
-        .from('appointments')
-        .select('id, barber_id, starts_at, ends_at')
-        .in('barber_id', barberIds)
-        .eq('status', 'confirmed')
-        .gte('starts_at', dayStart)
-        .lt('starts_at', dayEnd),
-      supabase
-        .from('barber_time_off')
-        .select('barber_id, start_at, end_at')
-        .lte('start_at', dayEnd)
-        .gte('end_at', dayStart),
-    ]);
-
-    const availabilityByBarber = new Map<string, typeof availabilityRes.data>();
-    for (const row of availabilityRes.data ?? []) {
-      const list = availabilityByBarber.get(row.barber_id) ?? [];
-      list.push(row);
-      availabilityByBarber.set(row.barber_id, list);
-    }
-
-    const appointmentsByBarber = new Map<string, { starts_at: string; ends_at: string }[]>();
-    for (const apt of appointmentsRes.data ?? []) {
-      if (excludeAppointmentId && apt.id === excludeAppointmentId) continue;
-      const list = appointmentsByBarber.get(apt.barber_id) ?? [];
-      list.push({ starts_at: apt.starts_at, ends_at: apt.ends_at });
-      appointmentsByBarber.set(apt.barber_id, list);
-    }
-
-    const allSlotsSet = new Set<string>();
-    const minAdvance = new Date();
-    if (!forAdmin) minAdvance.setHours(minAdvance.getHours() + 2);
-
-    for (const bid of barberIds) {
-      const availabilityRows = availabilityByBarber.get(bid);
-      if (!availabilityRows?.length) continue;
-
-      const appointments = appointmentsByBarber.get(bid) ?? [];
-      const timeOff = (timeOffRes.data ?? []).filter(
-        (row) => row.barber_id === bid || row.barber_id === null
-      );
-
-      for (const availability of availabilityRows) {
-        const slots = generateSlots(
-          date,
-          availability.start_time.slice(0, 5),
-          availability.end_time.slice(0, 5),
-          durationMinutes,
-          SITE_CONFIG.slotIntervalMinutes
-        );
-
-        const available = filterAvailableSlots(slots, appointments, timeOff);
-
-        for (const slot of available) {
-          if (forAdmin || slot.startsAt > minAdvance) {
-            allSlotsSet.add(slot.time);
-          }
-        }
-      }
-    }
-
-    const slots = Array.from(allSlotsSet).sort();
     if (slots.length === 0) {
       if (barberId) {
-        const timeOffRows = (timeOffRes.data ?? []) as TimeOffRow[];
-        const fullyBlocked = isDayFullyBlockedByTimeOff(dayStart, dayEnd, timeOffRows, barberId);
-        const hasSchedule = Boolean(availabilityByBarber.get(barberId)?.length);
-        const absenceBlock = filterTimeOffForBarber(timeOffRows, barberId).find((block) => {
+        const date = parseISO(dateStr);
+        const dayStart = startOfDay(date).toISOString();
+        const dayEnd = addDays(startOfDay(date), 1).toISOString();
+        const fullyBlocked = isDayFullyBlockedByTimeOff(dayStart, dayEnd, context.timeOff, barberId);
+        const hasSchedule = Boolean(context.availabilityByBarber.get(barberId)?.length);
+        const absenceBlock = filterTimeOffForBarber(context.timeOff, barberId).find((block) => {
           const blockStart = new Date(block.start_at);
           const blockEnd = new Date(block.end_at);
-          const day = parseISO(dateStr);
-          return blockStart <= endOfDay(day) && blockEnd >= startOfDay(day);
+          return blockStart <= endOfDay(date) && blockEnd >= startOfDay(date);
         });
 
         if (fullyBlocked || !hasSchedule) {
@@ -165,39 +241,16 @@ export async function resolveBarberForSlot(
 ): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
 
-  const supabase = await createClient();
-  if (!supabase) return null;
+  const candidates = [dateStr];
+  const context = await fetchBookingContext(null, candidates);
+  if (!context) return null;
 
-  const { data: barbers } = await supabase
-    .from('barbers')
-    .select('id')
-    .eq('is_active', true)
-    .order('sort_order');
-
-  const checks = await Promise.all(
-    (barbers ?? []).map(async (barber) => {
-      const { slots } = await getAvailableSlots(barber.id, dateStr, durationMinutes);
-      return slots.includes(timeStr) ? barber.id : null;
-    })
-  );
-
-  return checks.find((id) => id !== null) ?? null;
-}
-
-function getBookingCandidateDates(): string[] {
-  const bookingEnd = endOfDay(parseISO(SITE_CONFIG.bookingEndDate));
-  const candidates: string[] = [];
-  let cursor = addDays(new Date(), 1);
-
-  while (cursor <= bookingEnd) {
-    const day = cursor.getDay();
-    if (day !== 0 && day !== 1) {
-      candidates.push(format(cursor, 'yyyy-MM-dd'));
-    }
-    cursor = addDays(cursor, 1);
+  for (const barber of context.barberIds) {
+    const slots = computeSlotsFromContext([barber], dateStr, durationMinutes, context);
+    if (slots.includes(timeStr)) return barber;
   }
 
-  return candidates;
+  return null;
 }
 
 export async function getAvailableDates(
@@ -206,21 +259,25 @@ export async function getAvailableDates(
   excludeAppointmentId?: string | null
 ): Promise<string[]> {
   const candidates = getBookingCandidateDates();
-  const results: (string | null)[] = [];
-  const batchSize = 21;
+  if (candidates.length === 0) return [];
 
-  for (let i = 0; i < candidates.length; i += batchSize) {
-    const batch = candidates.slice(i, i + batchSize);
-    const batchResults = await Promise.all(
-      batch.map(async (dateStr) => {
-        const { slots } = await getAvailableSlots(barberId, dateStr, durationMinutes, excludeAppointmentId);
-        return slots.length > 0 ? dateStr : null;
-      })
-    );
-    results.push(...batchResults);
+  if (!isSupabaseConfigured()) {
+    return candidates;
   }
 
-  return results.filter((d): d is string => d !== null);
+  try {
+    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId);
+    if (!context) return candidates;
+
+    const targetBarberIds = barberId ? [barberId] : context.barberIds;
+
+    return candidates.filter((dateStr) => {
+      const slots = computeSlotsFromContext(targetBarberIds, dateStr, durationMinutes, context);
+      return slots.length > 0;
+    });
+  } catch {
+    return candidates;
+  }
 }
 
 export async function getBarbersBookingAvailability(
@@ -242,18 +299,42 @@ export async function getBarbersBookingAvailability(
 
     if (!barbers?.length) return [];
 
-    const statuses = await Promise.all(
-      barbers.map(async (barber) => {
-        const dates = await getAvailableDates(durationMinutes, barber.id);
+    const candidates = getBookingCandidateDates();
+    const context = await fetchBookingContext(null, candidates);
+    if (!context) {
+      return barbers.map((barber) => ({ barberId: barber.id, canBook: true }));
+    }
+
+    return barbers.map((barber) => {
+      const availabilityRows = context.availabilityByBarber.get(barber.id) ?? [];
+      const availabilityDays = new Set(availabilityRows.map((row) => row.day_of_week));
+
+      const scheduleCheck = hasAnyBookableDayBySchedule(
+        candidates,
+        availabilityDays,
+        context.timeOff,
+        barber.id
+      );
+
+      if (!scheduleCheck.canBook) {
         return {
           barberId: barber.id,
-          canBook: dates.length > 0,
-          reason: dates.length === 0 ? 'In ferie o non disponibile' : undefined,
+          canBook: false,
+          reason: scheduleCheck.reason ?? 'In ferie o non disponibile',
         };
-      })
-    );
+      }
 
-    return statuses;
+      const hasSlots = candidates.some((dateStr) => {
+        const slots = computeSlotsFromContext([barber.id], dateStr, durationMinutes, context);
+        return slots.length > 0;
+      });
+
+      return {
+        barberId: barber.id,
+        canBook: hasSlots,
+        reason: hasSlots ? undefined : 'In ferie o non disponibile',
+      };
+    });
   } catch {
     return [];
   }

@@ -31,3 +31,29 @@ export function getAbsenceMessage(reason?: string | null) {
   }
   return 'In ferie o assente';
 }
+
+export function hasAnyBookableDayBySchedule(
+  candidateDates: string[],
+  availabilityDays: Set<number>,
+  timeOff: TimeOffRow[],
+  barberId: string
+): { canBook: boolean; reason?: string } {
+  if (availabilityDays.size === 0) {
+    return { canBook: false, reason: 'Non disponibile' };
+  }
+
+  for (const dateStr of candidateDates) {
+    const date = new Date(`${dateStr}T12:00:00`);
+    if (!availabilityDays.has(date.getDay())) continue;
+
+    const dayStart = new Date(`${dateStr}T00:00:00`).toISOString();
+    const dayEnd = new Date(`${dateStr}T23:59:59.999`).toISOString();
+
+    if (!isDayFullyBlockedByTimeOff(dayStart, dayEnd, timeOff, barberId)) {
+      return { canBook: true };
+    }
+  }
+
+  const block = filterTimeOffForBarber(timeOff, barberId)[0];
+  return { canBook: false, reason: getAbsenceMessage(block?.reason) };
+}
