@@ -11,16 +11,21 @@ const HEARTBEAT_MS = 60_000;
 export function VisitorTracker() {
   const pathname = usePathname();
   const lastPath = useRef<string | null>(null);
+  const isAdminArea = pathname.startsWith('/admin');
 
   useEffect(() => {
+    if (isAdminArea) return;
+
     const sessionId = getOrCreateSessionId();
     if (!sessionId || pathname === lastPath.current) return;
 
     lastPath.current = pathname;
     trackPageView(sessionId, pathname);
-  }, [pathname]);
+  }, [isAdminArea, pathname]);
 
   useEffect(() => {
+    if (isAdminArea) return;
+
     const sessionId = getOrCreateSessionId();
     if (!sessionId) return;
 
@@ -29,7 +34,9 @@ export function VisitorTracker() {
 
     const interval = setInterval(ping, HEARTBEAT_MS);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAdminArea]);
+
+  if (isAdminArea) return null;
 
   return <DemographicsSurvey />;
 }

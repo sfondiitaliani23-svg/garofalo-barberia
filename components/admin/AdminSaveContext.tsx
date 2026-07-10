@@ -7,6 +7,7 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -33,6 +34,16 @@ export function AdminSaveProvider({ children }: { children: ReactNode }) {
     setRegistrations((current) => {
       const index = current.findIndex((item) => item.id === registration.id);
       if (index === -1) return [...current, registration];
+
+      const existing = current[index];
+      if (
+        existing.isDirty === registration.isDirty &&
+        existing.isSaving === registration.isSaving &&
+        existing.save === registration.save
+      ) {
+        return current;
+      }
+
       const next = [...current];
       next[index] = registration;
       return next;
@@ -40,7 +51,10 @@ export function AdminSaveProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const unregister = useCallback((id: string) => {
-    setRegistrations((current) => current.filter((item) => item.id !== id));
+    setRegistrations((current) => {
+      if (!current.some((item) => item.id === id)) return current;
+      return current.filter((item) => item.id !== id);
+    });
   }, []);
 
   const value = useMemo(
@@ -56,18 +70,34 @@ export function useAdminSaveRegistration(
 ) {
   const context = useContext(AdminSaveContext);
   const id = useId();
+  const saveRef = useRef(registration?.save);
+  saveRef.current = registration?.save;
+
+  const isActive = registration !== null;
+  const isDirty = registration?.isDirty ?? false;
+  const isSaving = registration?.isSaving ?? false;
+
+  const stableSave = useCallback(() => {
+    saveRef.current?.();
+  }, []);
 
   useEffect(() => {
     if (!context) return;
 
-    if (!registration) {
+    if (!isActive) {
       context.unregister(id);
       return;
     }
 
-    context.register({ id, ...registration });
+    context.register({
+      id,
+      isDirty,
+      isSaving,
+      save: stableSave,
+    });
+
     return () => context.unregister(id);
-  }, [context, id, registration, registration?.isDirty, registration?.isSaving, registration?.save]);
+  }, [context, id, isActive, isDirty, isSaving, stableSave]);
 }
 
 export function useAdminSaveState() {

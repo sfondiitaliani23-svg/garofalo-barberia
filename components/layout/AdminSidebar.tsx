@@ -34,7 +34,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-56 flex-col border-r border-white/10 bg-[#0a0a0a] p-4 min-h-screen">
+    <aside className="sticky top-0 flex h-screen w-56 shrink-0 flex-col overflow-y-auto border-r border-white/10 bg-[#0a0a0a] p-4">
       <Link href="/admin/dashboard" className="mb-8 font-display text-sm uppercase tracking-wider text-gold">
         Admin Garofalo
       </Link>
