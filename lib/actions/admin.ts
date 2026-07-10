@@ -5,6 +5,11 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
+import {
+  detectScheduleChanges,
+  notifyCustomersBarberScheduleChanges,
+  notifyCustomersSalonClosure,
+} from '@/lib/utils/schedule-notifications';
 
 export interface AdminAppointmentInput {
   serviceId: string;
@@ -517,6 +522,13 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
   const supabase = await createServiceClient();
   if (!supabase) return { ok: false, error: 'Database non configurato' };
 
+  const [{ data: oldAvailability }, { data: barber }] = await Promise.all([
+    supabase.from('barber_availability').select('day_of_week, is_available, start_time, end_time').eq('barber_id', barberId),
+    supabase.from('barbers').select('name').eq('id', barberId).single(),
+  ]);
+
+  const scheduleChanges = detectScheduleChanges(oldAvailability ?? [], days);
+
   for (const day of days) {
     if (day.dayOfWeek === 0 || day.dayOfWeek === 1) continue;
 
@@ -541,8 +553,18 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
     if (error) return { ok: false, error: 'Errore durante il salvataggio orari' };
   }
 
+  let emailsSent = 0;
+  if (scheduleChanges.length > 0) {
+    const notifyResult = await notifyCustomersBarberScheduleChanges(
+      supabase,
+      barber?.name ?? 'Barbiere',
+      scheduleChanges
+    );
+    emailsSent = notifyResult.sent;
+  }
+
   revalidateTeamPaths();
-  return { ok: true };
+  return { ok: true, emailsSent, scheduleChanges: scheduleChanges.length };
 }
 
 export async function saveAdminTimeOff(input: AdminTimeOffInput) {
@@ -570,8 +592,19 @@ export async function saveAdminTimeOff(input: AdminTimeOffInput) {
 
   if (error) return { ok: false, error: 'Errore durante il salvataggio ferie' };
 
+  let emailsSent = 0;
+  if (!input.barberId) {
+    const notifyResult = await notifyCustomersSalonClosure(
+      supabase,
+      input.startDate,
+      input.endDate,
+      input.reason
+    );
+    emailsSent = notifyResult.sent;
+  }
+
   revalidateTeamPaths();
-  return { ok: true };
+  return { ok: true, emailsSent };
 }
 
 export async function deleteAdminTimeOff(timeOffId: string) {

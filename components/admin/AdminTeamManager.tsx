@@ -191,7 +191,13 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
         return;
       }
 
-      toast.success('Orari aggiornati');
+      if (result.emailsSent && result.emailsSent > 0) {
+        toast.success(`Orari aggiornati — ${result.emailsSent} clienti avvisati via email`);
+      } else if (result.scheduleChanges && result.scheduleChanges > 0) {
+        toast.success('Orari aggiornati (email non inviate: Resend non configurato)');
+      } else {
+        toast.success('Orari aggiornati');
+      }
       router.refresh();
     });
   }
@@ -215,7 +221,13 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
         return;
       }
 
-      toast.success('Ferie / assenza registrata');
+      if (result.emailsSent && result.emailsSent > 0) {
+        toast.success(`Ferie registrate — ${result.emailsSent} clienti avvisati via email`);
+      } else if (timeOffBarberId === 'all') {
+        toast.success('Ferie registrate (email non inviate: Resend non configurato)');
+      } else {
+        toast.success('Ferie / assenza registrata');
+      }
       setTimeOffStart('');
       setTimeOffEnd('');
       setTimeOffReason('');
