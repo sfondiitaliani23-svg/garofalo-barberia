@@ -28,7 +28,9 @@ function LoginFormInner({ authConfigured }: { authConfigured: boolean }) {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Accedi</CardTitle>
-        <p className="text-sm text-white/50">Area cliente Garofalo Barberia</p>
+        <p className="text-sm text-white/50">
+          Area cliente Garofalo Barberia — resti connesso per 2 mesi su questo dispositivo.
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
         {!authConfigured && !error && (

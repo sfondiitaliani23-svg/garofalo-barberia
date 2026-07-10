@@ -2,6 +2,13 @@ import { createServerClient } from '@supabase/ssr';
 import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { ensureProfileForAuthUser } from '@/lib/auth/ensure-profile';
+import {
+  applyCustomerSessionCookieOptions,
+  CUSTOMER_SESSION_MAX_AGE_SECONDS,
+  CUSTOMER_SESSION_UNTIL_COOKIE,
+  getCustomerSessionCookieOptions,
+  getCustomerSessionExpiryDate,
+} from '@/lib/supabase/session-config';
 import { resolveSiteOriginFromRequest } from '@/lib/utils/site-origin';
 
 export async function GET(request: NextRequest) {
@@ -39,11 +46,12 @@ export async function GET(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+          applyCustomerSessionCookieOptions(cookiesToSet).forEach(({ name, value, options }) => {
             redirectResponse.cookies.set(name, value, options);
           });
         },
       },
+      cookieOptions: getCustomerSessionCookieOptions(),
     }
   );
 
@@ -55,6 +63,20 @@ export async function GET(request: NextRequest) {
 
   if (data.user) {
     await ensureProfileForAuthUser(data.user);
+  }
+
+  if (!safeNext.startsWith('/admin')) {
+    redirectResponse.cookies.set(
+      CUSTOMER_SESSION_UNTIL_COOKIE,
+      getCustomerSessionExpiryDate().toISOString(),
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: CUSTOMER_SESSION_MAX_AGE_SECONDS,
+      }
+    );
   }
 
   return redirectResponse;

@@ -1,5 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import {
+  applyCustomerSessionCookieOptions,
+  CUSTOMER_SESSION_UNTIL_COOKIE,
+  getCustomerSessionCookieOptions,
+  isCustomerSessionExpired,
+} from '@/lib/supabase/session-config';
 
 export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,19 +23,34 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          const persistentCookies = applyCustomerSessionCookieOptions(cookiesToSet);
+          persistentCookies.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
+          persistentCookies.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
+      cookieOptions: getCustomerSessionCookieOptions(),
     }
   );
 
+  const pathname = request.nextUrl.pathname;
+  const sessionUntil = request.cookies.get(CUSTOMER_SESSION_UNTIL_COOKIE)?.value;
+
+  if (pathname.startsWith('/area-cliente') && isCustomerSessionExpired(sessionUntil)) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('redirect', pathname);
+    url.searchParams.set('error', 'La sessione è scaduta dopo 2 mesi. Accedi di nuovo.');
+    const expiredResponse = NextResponse.redirect(url);
+    expiredResponse.cookies.delete(CUSTOMER_SESSION_UNTIL_COOKIE);
+    return expiredResponse;
+  }
+
   // Aggiorna il token di sessione su ogni richiesta (anche pagine pubbliche come /prenota)
   const { data: { user } } = await supabase.auth.getUser();
-  const pathname = request.nextUrl.pathname;
 
   const needsRoleCheck =
     pathname.startsWith('/area-cliente') ||

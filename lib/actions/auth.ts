@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { clearCustomerSessionExpiryCookie, setCustomerSessionExpiryCookie } from '@/lib/auth/customer-session';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSiteOriginFromHeaders } from '@/lib/utils/site-origin';
 
@@ -22,6 +23,10 @@ export async function signInWithEmail(formData: FormData) {
   if (error) {
     const loginPath = redirectTo.startsWith('/admin') ? '/admin/login' : '/login';
     redirect(`${loginPath}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (!redirectTo.startsWith('/admin')) {
+    await setCustomerSessionExpiryCookie();
   }
 
   revalidatePath('/', 'layout');
@@ -54,6 +59,8 @@ export async function signUpWithEmail(formData: FormData) {
       await supabase.from('profiles').update({ phone, full_name: fullName }).eq('id', user.id);
     }
   }
+
+  await setCustomerSessionExpiryCookie();
 
   revalidatePath('/', 'layout');
   redirect('/area-cliente/dashboard');
@@ -118,6 +125,7 @@ export async function signInWithGoogle(formData: FormData) {
 export async function signOut() {
   const supabase = await createClient();
   if (supabase) await supabase.auth.signOut();
+  await clearCustomerSessionExpiryCookie();
   revalidatePath('/', 'layout');
   redirect('/');
 }
