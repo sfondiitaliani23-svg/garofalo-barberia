@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { addWeeks, format, subWeeks } from 'date-fns';
+import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
+import { WeekMonthPicker } from '@/components/admin/WeekMonthPicker';
 
 import {
   buildWeekGrid,
   generateCalendarTimeSlots,
-  getWeekStart,
   getWorkingDays,
   dateKey,
   type CalendarAppointment,
@@ -33,7 +33,6 @@ export function WeeklyBookingCalendar({
   weekStartIso,
 }: WeeklyBookingCalendarProps) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
   const weekStart = new Date(weekStartIso);
   const [barberId, setBarberId] = useState(barbers[0]?.id ?? '');
   const [modalOpen, setModalOpen] = useState(false);
@@ -45,13 +44,6 @@ export function WeeklyBookingCalendar({
   const timeSlots = generateCalendarTimeSlots();
   const grid = buildWeekGrid(days, timeSlots, initialAppointments, barberId);
   const selectedBarber = barbers.find((b) => b.id === barberId);
-
-  function navigateWeek(direction: -1 | 1) {
-    const next = direction === 1 ? addWeeks(weekStart, 1) : subWeeks(weekStart, 1);
-    startTransition(() => {
-      router.push(`/admin/prenotazioni?week=${format(next, 'yyyy-MM-dd')}`);
-    });
-  }
 
   function openCreate(day: Date, time: string) {
     setSelectedAppointment(null);
@@ -76,26 +68,7 @@ export function WeeklyBookingCalendar({
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => navigateWeek(-1)}>
-            <ChevronLeft size={18} />
-          </Button>
-          <span className="min-w-[180px] text-center font-semibold capitalize">{weekLabel}</span>
-          <Button variant="outline" size="icon" onClick={() => navigateWeek(1)}>
-            <ChevronRight size={18} />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              startTransition(() => {
-                router.push(`/admin/prenotazioni?week=${format(getWeekStart(), 'yyyy-MM-dd')}`);
-              });
-            }}
-          >
-            Oggi
-          </Button>
-        </div>
+        <WeekMonthPicker weekStart={weekStart} weekLabel={weekLabel} />
 
         <Button
           onClick={() => {
