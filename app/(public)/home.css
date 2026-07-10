@@ -1084,26 +1084,36 @@
     inset: 0;
     z-index: 90;
     background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     pointer-events: none;
-    animation: perfume-spotlight-in 0.4s cubic-bezier(0.4, 0.2, 0.2, 1);
+    animation: perfume-spotlight-in 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
   }
 
   .perfume-spotlight-card {
     position: fixed;
-    top: 50%;
-    left: 50%;
     z-index: 100;
-    width: min(360px, 88vw);
-    aspect-ratio: 4/5;
-    transform: translate(-50%, -50%);
     perspective: 1100px;
     pointer-events: none;
     filter:
       drop-shadow(0 28px 52px rgba(0, 0, 0, 0.55))
       drop-shadow(0 10px 24px rgba(0, 0, 0, 0.3));
-    animation: perfume-card-pop 0.45s cubic-bezier(0.4, 0.2, 0.2, 1);
+  }
+
+  .perfume-spotlight-card .perfume-card-inner {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1);
+  }
+
+  .section-profumi-mood.is-perfume-spotlight .heading-center,
+  .section-profumi-mood.is-perfume-spotlight .text-center {
+    filter: blur(6px);
+    opacity: 0.35;
+    transition:
+      filter 0.45s ease,
+      opacity 0.45s ease;
+    pointer-events: none;
   }
 
   .perfume-spotlight-card .perfume-card-back {
@@ -1135,9 +1145,9 @@
   }
 
   .perfumes-grid-wrap.is-spotlight-active .perfume-card-flip:not(.is-spotlight-source) {
-    opacity: 0.4;
-    filter: blur(4px) brightness(0.6);
-    transform: scale(0.96);
+    opacity: 0.3;
+    filter: blur(8px) brightness(0.5);
+    transform: scale(0.94);
   }
 
   .perfumes-grid-wrap.is-spotlight-active .perfume-card-flip.is-spotlight-source {
@@ -1152,17 +1162,6 @@
   }
   to {
     opacity: 1;
-  }
-}
-
-@keyframes perfume-card-pop {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.88);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
   }
 }
 
