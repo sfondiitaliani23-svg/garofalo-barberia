@@ -126,7 +126,7 @@ body {
   position: fixed;
   bottom: calc(1.25rem + env(safe-area-inset-bottom));
   right: calc(1.25rem + env(safe-area-inset-right, 0px));
-  z-index: 150;
+  z-index: 200;
   width: 56px;
   height: 56px;
   background: transparent;
@@ -134,13 +134,50 @@ body {
   align-items: center;
   justify-content: center;
   line-height: 0;
-  transition: transform 0.2s;
+  transition: bottom 0.25s ease, transform 0.2s;
   -webkit-tap-highlight-color: transparent;
+}
+
+.whatsapp-float[data-cookie-offset='true'] {
+  bottom: calc(8.5rem + env(safe-area-inset-bottom));
+}
+
+.demographics-survey {
+  top: clamp(5rem, 30vh, calc(100vh - 23rem));
+  bottom: auto;
+}
+
+.demographics-survey[data-cookie-offset='true'] {
+  top: clamp(5rem, 26vh, calc(100vh - 27rem));
+}
+
+@media (min-width: 640px) {
+  .demographics-survey {
+    top: auto;
+    bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+
+  .demographics-survey[data-cookie-offset='true'] {
+    top: auto;
+    bottom: calc(12.5rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (min-width: 1024px) {
   .whatsapp-float {
     bottom: 1.5rem;
+  }
+
+  .whatsapp-float[data-cookie-offset='true'] {
+    bottom: calc(7.5rem + env(safe-area-inset-bottom));
+  }
+
+  .demographics-survey {
+    bottom: calc(8rem + env(safe-area-inset-bottom));
+  }
+
+  .demographics-survey[data-cookie-offset='true'] {
+    bottom: calc(12rem + env(safe-area-inset-bottom));
   }
 }
 

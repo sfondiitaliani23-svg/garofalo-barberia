@@ -1,6 +1,7 @@
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteBanners } from '@/components/layout/SiteBanners';
+import { CookieConsent } from '@/components/layout/CookieConsent';
 import { WhatsAppFloat } from '@/components/layout/WhatsAppFloat';
 import { VisitorTracker } from '@/components/analytics/VisitorTracker';
 import { getActiveSiteBanners } from '@/lib/actions/content';
@@ -22,6 +23,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <SiteBanners banners={banners} />
       <main>{children}</main>
       <SiteFooter />
+      <CookieConsent />
       <WhatsAppFloat />
       <VisitorTracker />
     </>

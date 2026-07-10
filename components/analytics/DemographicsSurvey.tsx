@@ -8,8 +8,11 @@ import {
   hasCompletedDemographics,
   markDemographicsCompleted,
 } from '@/lib/analytics/session';
+import { hasPreferencesConsent } from '@/lib/consent/cookie-consent';
+import { useCookieBannerVisible } from '@/components/layout/CookieConsent';
 
 export function DemographicsSurvey() {
+  const cookieBannerVisible = useCookieBannerVisible();
   const [open, setOpen] = useState(false);
   const [gender, setGender] = useState<'male' | 'female' | 'child' | null>(null);
   const [ageRange, setAgeRange] = useState<string | null>(null);
@@ -17,10 +20,23 @@ export function DemographicsSurvey() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (hasCompletedDemographics()) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const timer = setTimeout(() => setOpen(true), 4000);
-    return () => clearTimeout(timer);
+    const scheduleOpen = () => {
+      if (timer) clearTimeout(timer);
+      if (hasCompletedDemographics() || !hasPreferencesConsent()) {
+        setOpen(false);
+        return;
+      }
+      timer = setTimeout(() => setOpen(true), 4000);
+    };
+
+    scheduleOpen();
+    window.addEventListener('garofalo:cookie-consent', scheduleOpen);
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('garofalo:cookie-consent', scheduleOpen);
+    };
   }, []);
 
   const dismiss = () => {
@@ -54,7 +70,9 @@ export function DemographicsSurvey() {
 
   return (
     <div
-      className="fixed bottom-24 right-4 z-40 w-[min(100vw-2rem,22rem)] rounded-xl border border-white/10 bg-[#111] p-5 shadow-2xl"
+      data-demographics-survey
+      data-cookie-offset={cookieBannerVisible ? 'true' : 'false'}
+      className="demographics-survey fixed left-1/2 z-[110] w-[min(calc(100vw-2rem),22rem)] -translate-x-1/2 rounded-xl border border-white/10 bg-[#111] p-5 shadow-2xl sm:right-6 sm:left-auto sm:translate-x-0"
       role="dialog"
       aria-label="Sondaggio visitatori"
     >

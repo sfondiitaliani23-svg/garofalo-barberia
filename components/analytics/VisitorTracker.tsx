@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { trackHeartbeat, trackPageView } from '@/lib/actions/analytics';
 import { getOrCreateSessionId } from '@/lib/analytics/session';
+import { hasAnalyticsConsent } from '@/lib/consent/cookie-consent';
 import { DemographicsSurvey } from './DemographicsSurvey';
 
 const HEARTBEAT_MS = 60_000;
@@ -14,7 +15,7 @@ export function VisitorTracker() {
   const isAdminArea = pathname.startsWith('/admin');
 
   useEffect(() => {
-    if (isAdminArea) return;
+    if (isAdminArea || !hasAnalyticsConsent()) return;
 
     const sessionId = getOrCreateSessionId();
     if (!sessionId || pathname === lastPath.current) return;
@@ -24,7 +25,7 @@ export function VisitorTracker() {
   }, [isAdminArea, pathname]);
 
   useEffect(() => {
-    if (isAdminArea) return;
+    if (isAdminArea || !hasAnalyticsConsent()) return;
 
     const sessionId = getOrCreateSessionId();
     if (!sessionId) return;
@@ -35,6 +36,19 @@ export function VisitorTracker() {
     const interval = setInterval(ping, HEARTBEAT_MS);
     return () => clearInterval(interval);
   }, [isAdminArea]);
+
+  useEffect(() => {
+    const handleConsent = () => {
+      if (!hasAnalyticsConsent()) return;
+      const sessionId = getOrCreateSessionId();
+      if (!sessionId || !pathname || pathname === lastPath.current) return;
+      lastPath.current = pathname;
+      trackPageView(sessionId, pathname);
+    };
+
+    window.addEventListener('garofalo:cookie-consent', handleConsent);
+    return () => window.removeEventListener('garofalo:cookie-consent', handleConsent);
+  }, [pathname]);
 
   if (isAdminArea) return null;
 
