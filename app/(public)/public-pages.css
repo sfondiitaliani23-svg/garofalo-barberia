@@ -166,11 +166,68 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+.public-page .contatti-map-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .public-page .map-embed {
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   min-height: 400px;
+}
+
+.public-page .contatti-instagram-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.public-page .contatti-instagram-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.public-page .contatti-instagram-icon {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #fff;
+}
+
+.public-page .contatti-instagram-icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.public-page .contatti-instagram-handle {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--gold);
+  margin: 0 0 0.35rem;
+}
+
+.public-page .contatti-instagram-text {
+  font-family: 'Bitter', serif;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.public-page .contatti-instagram-btn {
+  align-self: flex-start;
+  min-width: 8.5rem;
+  text-align: center;
 }
 
 .public-page .contact-message-card {
