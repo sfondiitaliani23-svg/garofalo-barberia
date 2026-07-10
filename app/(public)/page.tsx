@@ -109,10 +109,6 @@ export default function HomePage() {
               <p className="section-lead mb-6">
                 Da Garofalo Barberia trovi barbieri esperti, prodotti professionali e tecniche classiche. Che tu voglia un taglio pulito, una barba modellata o un servizio delicato per i più piccoli, uscirai dal salone con stile e sicurezza.
               </p>
-              <Link href="/chi-siamo" className="btn-primary">
-                <span>Chi siamo</span>
-                <BtnArrow />
-              </Link>
             </div>
           </div>
         </div>
