@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import { saveAdminService, deleteAdminService } from '@/lib/actions/admin';
 import { formatPrice, formatDuration } from '@/lib/utils';
 import { cn } from '@/lib/utils';
@@ -54,7 +55,7 @@ export function AdminServicesManager({ services }: AdminServicesManagerProps) {
     setModalOpen(true);
   }
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     const priceEuros = parseFloat(price.replace(',', '.'));
     const durationMinutes = parseInt(duration, 10);
 
@@ -91,7 +92,11 @@ export function AdminServicesManager({ services }: AdminServicesManagerProps) {
       setModalOpen(false);
       router.refresh();
     });
-  }
+  }, [category, description, duration, editing, name, price, router, startTransition]);
+
+  useAdminSaveRegistration(
+    modalOpen ? { isDirty: true, isSaving: pending, save: handleSave } : null
+  );
 
   function handleDelete(service: Service) {
     const confirmed = window.confirm(

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { X, Pencil, XCircle } from 'lucide-react';
+import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -101,7 +102,7 @@ export function AdminAppointmentForm({
     };
   }
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     if (!customerName.trim() || !serviceId || !time) {
       toast.error('Compila nome, servizio e orario');
       return;
@@ -123,7 +124,23 @@ export function AdminAppointmentForm({
       onSaved();
       onClose();
     });
-  }
+  }, [
+    appointment,
+    barberId,
+    customerName,
+    customerPhone,
+    date,
+    isEdit,
+    loadSlots,
+    notes,
+    onClose,
+    onSaved,
+    serviceId,
+    startTransition,
+    time,
+  ]);
+
+  useAdminSaveRegistration({ isDirty: true, isSaving: pending, save: handleSave });
 
   function handleCancel() {
     if (!appointment) return;

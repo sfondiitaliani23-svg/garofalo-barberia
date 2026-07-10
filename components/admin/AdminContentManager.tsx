@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Megaphone, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import {
   saveAdminSiteContent,
   toggleSiteContentActive,
@@ -97,7 +98,7 @@ export function AdminContentManager({ contents }: AdminContentManagerProps) {
     setModalOpen(true);
   }
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     const previousItems = items;
     const isEditing = !!editing;
     const tempId = editing?.id ?? `temp-${Date.now()}`;
@@ -147,7 +148,11 @@ export function AdminContentManager({ contents }: AdminContentManagerProps) {
 
       toast.success(isEditing ? 'Contenuto aggiornato' : 'Contenuto creato');
     });
-  }
+  }, [body, editing, endsAt, isActive, items, key, startsAt, title]);
+
+  useAdminSaveRegistration(
+    modalOpen ? { isDirty: true, isSaving: saving, save: handleSave } : null
+  );
 
   function handleToggle(item: SiteContent) {
     const nextActive = !item.is_active;

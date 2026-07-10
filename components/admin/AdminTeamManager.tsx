@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
@@ -10,6 +10,7 @@ import { CalendarOff, Clock, Pencil, Plus, Trash2, UserCog, X } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import {
   deleteAdminBarber,
   deleteAdminTimeOff,
@@ -105,10 +106,22 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
     return timeOff.filter((entry) => new Date(entry.end_at) >= now);
   }, [timeOff]);
 
-  function selectBarber(barberId: string) {
+  const baselineSchedule = useMemo(
+    () => (selectedBarberId ? buildSchedule(selectedBarberId, availability) : []),
+    [selectedBarberId, availability]
+  );
+
+  const scheduleDirty = useMemo(
+    () => JSON.stringify(schedule) !== JSON.stringify(baselineSchedule),
+    [baselineSchedule, schedule]
+  );
+
+  const timeOffDirty = Boolean(timeOffStart && timeOffEnd);
+
+  const selectBarber = useCallback((barberId: string) => {
     setSelectedBarberId(barberId);
     setSchedule(buildSchedule(barberId, availability));
-  }
+  }, [availability]);
 
   function openCreateBarber() {
     setEditingBarber(null);
@@ -128,7 +141,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
     setBarberModalOpen(true);
   }
 
-  function handleSaveBarber() {
+  const handleSaveBarber = useCallback(() => {
     if (!barberName.trim()) {
       toast.error('Inserisci il nome del barbiere');
       return;
@@ -154,7 +167,16 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
       if (result.barberId) selectBarber(result.barberId);
       router.refresh();
     });
-  }
+  }, [
+    barberBio,
+    barberImageUrl,
+    barberName,
+    barberRole,
+    editingBarber,
+    router,
+    selectBarber,
+    startTransition,
+  ]);
 
   function handleDeleteBarber(barber: Barber) {
     if (!window.confirm(`Rimuovere ${barber.name} dal team?`)) return;
@@ -181,7 +203,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
     );
   }
 
-  function handleSaveSchedule() {
+  const handleSaveSchedule = useCallback(() => {
     if (!selectedBarberId) return;
 
     startTransition(async () => {
@@ -200,9 +222,9 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
       }
       router.refresh();
     });
-  }
+  }, [router, schedule, selectedBarberId, startTransition]);
 
-  function handleAddTimeOff() {
+  const handleAddTimeOff = useCallback(() => {
     if (!timeOffStart || !timeOffEnd) {
       toast.error('Inserisci data inizio e fine');
       return;
@@ -233,7 +255,41 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
       setTimeOffReason('');
       router.refresh();
     });
-  }
+  }, [
+    router,
+    startTransition,
+    timeOffBarberId,
+    timeOffEnd,
+    timeOffReason,
+    timeOffStart,
+  ]);
+
+  const handleSaveAll = useCallback(() => {
+    if (barberModalOpen) {
+      handleSaveBarber();
+      return;
+    }
+    if (scheduleDirty) {
+      handleSaveSchedule();
+      return;
+    }
+    if (timeOffDirty) {
+      handleAddTimeOff();
+    }
+  }, [
+    barberModalOpen,
+    handleAddTimeOff,
+    handleSaveBarber,
+    handleSaveSchedule,
+    scheduleDirty,
+    timeOffDirty,
+  ]);
+
+  useAdminSaveRegistration(
+    barberModalOpen || scheduleDirty || timeOffDirty
+      ? { isDirty: true, isSaving: pending, save: handleSaveAll }
+      : null
+  );
 
   function handleDeleteTimeOff(entry: BarberTimeOff) {
     if (!window.confirm('Eliminare questo periodo di assenza?')) return;
@@ -303,22 +359,11 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
 
       {selectedBarber && (
         <section className="rounded-xl border border-white/10 bg-[#111] p-5">
-          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Clock size={18} className="text-gold" />
-              <h2 className="font-display text-xl uppercase text-gold">
-                Orari — {selectedBarber.name}
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={handleSaveSchedule}
-              disabled={pending}
-              className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-semibold text-black transition hover:bg-gold-light disabled:opacity-50"
-            >
-              <Pencil size={14} />
-              {pending ? 'Salvataggio...' : 'Salva orari'}
-            </button>
+          <div className="mb-5 flex items-center gap-2">
+            <Clock size={18} className="text-gold" />
+            <h2 className="font-display text-xl uppercase text-gold">
+              Orari — {selectedBarber.name}
+            </h2>
           </div>
 
           <div className="space-y-2">
@@ -424,16 +469,6 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
             />
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={handleAddTimeOff}
-          disabled={pending}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-semibold text-black transition hover:bg-gold-light disabled:opacity-50"
-        >
-          <Plus size={14} />
-          Aggiungi assenza
-        </button>
 
         <div className="mt-6 space-y-2">
           {upcomingTimeOff.length === 0 ? (

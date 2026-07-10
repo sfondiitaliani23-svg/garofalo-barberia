@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import { saveAdminPromotion, deleteAdminPromotion } from '@/lib/actions/admin';
 import { formatDiscountLabel, isPromotionActive } from '@/lib/utils/promotions';
 import { cn } from '@/lib/utils';
@@ -87,7 +88,7 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
     setModalOpen(true);
   }
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     if (!title.trim()) {
       toast.error('Inserisci il titolo della promozione');
       return;
@@ -123,7 +124,24 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
       setModalOpen(false);
       router.refresh();
     });
-  }
+  }, [
+    code,
+    description,
+    discountType,
+    discountValue,
+    editing,
+    endsAt,
+    isActive,
+    router,
+    serviceId,
+    startTransition,
+    startsAt,
+    title,
+  ]);
+
+  useAdminSaveRegistration(
+    modalOpen ? { isDirty: true, isSaving: pending, save: handleSave } : null
+  );
 
   function handleDelete(promo: Promotion) {
     const confirmed = window.confirm(

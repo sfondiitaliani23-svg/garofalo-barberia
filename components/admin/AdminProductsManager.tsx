@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Package, Minus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import {
   saveAdminProduct,
   deleteAdminProduct,
@@ -91,6 +92,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const [price, setPrice] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [pendingStockCount, setPendingStockCount] = useState(0);
 
   const stockTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const pendingStock = useRef<Map<string, number>>(new Map());
@@ -141,7 +143,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
     return { name, brand, category, sku, stock, minStock, price, imageUrl, description };
   }
 
-  function handleSave() {
+  const handleSave = useCallback(() => {
     const stockQty = parseInt(stock, 10);
     const minStockQty = parseInt(minStock, 10);
     const priceEuros = price ? parseFloat(price.replace(',', '.')) : null;
@@ -208,7 +210,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
 
       toast.success(isEditing ? 'Prodotto modificato' : 'Prodotto creato');
     });
-  }
+  }, [brand, category, description, editing, imageUrl, items, minStock, name, price, sku, stock]);
 
   function handleDelete(product: Product) {
     const confirmed = window.confirm(`Eliminare "${product.name}" dall'inventario?`);
@@ -233,6 +235,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
     const targetQty = pendingStock.current.get(productId);
     if (targetQty === undefined) return;
     pendingStock.current.delete(productId);
+    setPendingStockCount(pendingStock.current.size);
 
     void setProductStock(productId, targetQty).then((result) => {
       if (!result.ok) {
@@ -263,6 +266,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
         return { ...p, stock_quantity: nextQty };
       })
     );
+    setPendingStockCount(pendingStock.current.size);
 
     const existing = stockTimers.current.get(product.id);
     if (existing) clearTimeout(existing);
@@ -275,6 +279,32 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
       }, STOCK_SYNC_DELAY_MS)
     );
   }
+
+  const flushPendingStock = useCallback(() => {
+    const productIds = Array.from(pendingStock.current.keys());
+    stockTimers.current.forEach((timer) => clearTimeout(timer));
+    stockTimers.current.clear();
+    productIds.forEach((productId) => syncStock(productId));
+    toast.success('Scorte aggiornate');
+  }, []);
+
+  const handleSaveAll = useCallback(() => {
+    if (modalOpen) {
+      handleSave();
+      return;
+    }
+    flushPendingStock();
+  }, [flushPendingStock, handleSave, modalOpen]);
+
+  useAdminSaveRegistration(
+    modalOpen || pendingStockCount > 0
+      ? {
+          isDirty: true,
+          isSaving: saving,
+          save: handleSaveAll,
+        }
+      : null
+  );
 
   const activeProducts = items.filter((p) => p.is_active);
   const inactiveProducts = items.filter((p) => !p.is_active);
