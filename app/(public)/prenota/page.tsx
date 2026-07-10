@@ -14,7 +14,7 @@ export default async function PrenotaPage() {
 
   return (
     <section className="py-16">
-      <div className="container-lux">
+      <div className="container-lux min-w-0 overflow-x-hidden">
         <div className="mb-10 text-center">
           <h1 className="font-display text-4xl uppercase">Prenota il tuo appuntamento</h1>
           <p className="mt-2 text-white/60">Scegli servizio, barbiere e orario disponibile</p>

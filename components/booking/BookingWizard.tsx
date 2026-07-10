@@ -272,7 +272,7 @@ export function BookingWizard({
 
   if (confirmation) {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto w-full min-w-0 max-w-3xl">
         <Card>
           <CardHeader>
             <CardTitle className="text-gold">Prenotazione confermata</CardTitle>
@@ -305,7 +305,7 @@ export function BookingWizard({
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-full min-w-0 max-w-3xl">
       <div className="mb-8 flex items-center justify-center gap-2 sm:gap-4">
         {STEPS.map((label, i) => {
           const n = i + 1;
@@ -324,12 +324,12 @@ export function BookingWizard({
         })}
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="w-full min-w-0 overflow-hidden">
         <CardHeader className="px-4 sm:px-6">
           <CardTitle>Prenotazione online</CardTitle>
           <p className="text-sm text-white/50">Scegli servizio, barbiere e orario — conferma automatica</p>
         </CardHeader>
-        <CardContent className="space-y-6 px-4 sm:px-6">
+        <CardContent className="min-w-0 space-y-6 overflow-x-hidden px-4 sm:px-6">
           {step === 1 && (
             <div className="grid gap-3 sm:grid-cols-2">
               {services.map((s) => (
@@ -535,23 +535,31 @@ export function BookingWizard({
             </div>
           )}
 
-          <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div
+            className={cn(
+              'grid gap-3 border-t border-white/10 pt-4',
+              step === 3 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-[auto_1fr] md:items-center'
+            )}
+          >
             {step > 1 ? (
               <Button
                 variant="outline"
                 onClick={() => setStep(step - 1)}
-                className="w-full sm:w-auto"
+                className="w-full max-w-full min-w-0 md:w-auto"
               >
                 Indietro
               </Button>
             ) : (
-              <div className="hidden sm:block" />
+              <div className="hidden md:block" />
             )}
             {step < 3 ? (
               <Button
                 disabled={step === 2 && !time}
                 onClick={() => time && setStep(3)}
-                className={cn('w-full sm:ml-auto sm:w-auto', step === 2 && !time && 'opacity-50')}
+                className={cn(
+                  'w-full max-w-full min-w-0 md:ml-auto md:w-auto',
+                  step === 2 && !time && 'opacity-50'
+                )}
               >
                 Avanti
               </Button>
@@ -559,7 +567,7 @@ export function BookingWizard({
               <Button
                 onClick={handleSubmit}
                 disabled={pending}
-                className="h-auto min-h-11 w-full whitespace-normal px-4 py-2.5 text-center leading-snug sm:ml-auto sm:h-11 sm:w-auto sm:whitespace-nowrap sm:px-6"
+                className="h-auto min-h-11 w-full max-w-full min-w-0 whitespace-normal px-4 py-2.5 text-center text-sm leading-snug"
               >
                 {pending ? 'Conferma in corso...' : 'Conferma prenotazione'}
               </Button>
