@@ -36,7 +36,7 @@ if (!existsSync(ENV_FILE)) {
   process.exit(1);
 }
 
-const lines = readFileSync(ENV_FILE, 'utf8').split('\n');
+const lines = readFileSync(ENV_FILE, 'utf8').replace(/^\uFEFF/, '').split('\n');
 const vars = {};
 
 for (const line of lines) {
@@ -63,16 +63,18 @@ for (const key of KEYS) {
     shell: true,
   });
 
-  const result = spawnSync(
-    'npx',
-    ['vercel', 'env', 'add', key, 'production', '--yes'],
-    {
-      input: value,
-      encoding: 'utf8',
-      stdio: ['pipe', 'inherit', 'inherit'],
-      shell: true,
-    }
-  );
+  const addArgs = ['vercel', 'env', 'add', key, 'production', '--value', value, '--yes'];
+  if (key.startsWith('NEXT_PUBLIC_')) {
+    addArgs.push('--no-sensitive');
+  } else {
+    addArgs.push('--sensitive');
+  }
+
+  const result = spawnSync('npx', addArgs, {
+    encoding: 'utf8',
+    stdio: 'inherit',
+    shell: true,
+  });
 
   if (result.status === 0) {
     console.log(`✅ ${key}`);
