@@ -27,10 +27,6 @@ export function GalleryGrid() {
         ))}
       </div>
 
-      <p className="mb-6 text-sm text-white/50">
-        Nota privacy: le foto con bambini mostrano solo dettagli del taglio — mai il volto in primo piano.
-      </p>
-
       <div className="gallery-grid">
         {filtered.map((image) => (
           <div key={image.src} className="gallery-item" data-category={image.category}>
