@@ -1,9 +1,10 @@
 'use server';
 
-import { addDays, endOfDay, format, parseISO, startOfDay } from 'date-fns';
+import { addDays, endOfDay, format, parseISO } from 'date-fns';
 import { createClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { getShopDayBounds, getShopDayOfWeek, parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import {
   filterTimeOffForBarber,
   getAbsenceMessage,
@@ -130,8 +131,8 @@ async function fetchBookingContext(
 
   if (barberIds.length === 0) return null;
 
-  const rangeStart = startOfDay(parseISO(candidateDates[0])).toISOString();
-  const rangeEnd = addDays(startOfDay(parseISO(candidateDates[candidateDates.length - 1])), 1).toISOString();
+  const rangeStart = getShopDayBounds(candidateDates[0]).dayStart.toISOString();
+  const rangeEnd = getShopDayBounds(candidateDates[candidateDates.length - 1]).dayEnd.toISOString();
 
   const [availabilityRes, appointmentsRes, timeOffRes] = await Promise.all([
     supabase
@@ -178,10 +179,13 @@ async function fetchBookingContext(
 
 function getAppointmentsForDay(
   appointments: { starts_at: string; ends_at: string }[],
-  dayStart: string,
-  dayEnd: string
+  dayStart: Date,
+  dayEnd: Date
 ) {
-  return appointments.filter((apt) => apt.starts_at >= dayStart && apt.starts_at < dayEnd);
+  return appointments.filter((apt) => {
+    const aptStart = new Date(apt.starts_at);
+    return aptStart >= dayStart && aptStart < dayEnd;
+  });
 }
 
 function computeSlotsFromContext(
@@ -191,13 +195,11 @@ function computeSlotsFromContext(
   context: BookingContext,
   forAdmin = false
 ): string[] {
-  const date = parseISO(dateStr);
-  const dayOfWeek = date.getDay();
+  const dayOfWeek = getShopDayOfWeek(dateStr);
 
   if (dayOfWeek === 0 || dayOfWeek === 1) return [];
 
-  const dayStart = startOfDay(date).toISOString();
-  const dayEnd = addDays(startOfDay(date), 1).toISOString();
+  const { dayStart, dayEnd } = getShopDayBounds(dateStr);
   const allSlotsSet = new Set<string>();
   const minAdvance = new Date();
   if (!forAdmin) minAdvance.setHours(minAdvance.getHours() + 2);
@@ -220,7 +222,7 @@ function computeSlotsFromContext(
 
     for (const period of periods) {
       const slots = generateSlots(
-        date,
+        dateStr,
         period.start,
         period.end,
         durationMinutes,
@@ -262,14 +264,18 @@ export async function getAvailableSlots(
     if (slots.length === 0) {
       if (barberId) {
         const date = parseISO(dateStr);
-        const dayStart = startOfDay(date).toISOString();
-        const dayEnd = addDays(startOfDay(date), 1).toISOString();
-        const fullyBlocked = isDayFullyBlockedByTimeOff(dayStart, dayEnd, context.timeOff, barberId);
+        const { dayStart, dayEnd } = getShopDayBounds(dateStr);
+        const fullyBlocked = isDayFullyBlockedByTimeOff(
+          dayStart.toISOString(),
+          dayEnd.toISOString(),
+          context.timeOff,
+          barberId
+        );
         const hasSchedule = Boolean(context.availabilityByBarber.get(barberId)?.length);
         const absenceBlock = filterTimeOffForBarber(context.timeOff, barberId).find((block) => {
           const blockStart = new Date(block.start_at);
           const blockEnd = new Date(block.end_at);
-          return blockStart <= endOfDay(date) && blockEnd >= startOfDay(date);
+          return blockStart <= endOfDay(date) && blockEnd >= dayStart;
         });
 
         if (fullyBlocked || !hasSchedule) {
@@ -285,7 +291,10 @@ export async function getAvailableSlots(
         };
       }
 
-      return getFallbackSlots(dateStr, durationMinutes);
+      return {
+        slots: [],
+        error: 'Nessun orario libero per questo giorno. Scegli un altro giorno.',
+      };
     }
 
     return { slots };

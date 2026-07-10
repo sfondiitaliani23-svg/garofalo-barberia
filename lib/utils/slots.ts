@@ -1,5 +1,7 @@
-import { addMinutes, format, parse, setHours, setMinutes, startOfDay } from 'date-fns';
+import { addMinutes } from 'date-fns';
+import { formatShopTime, parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import { it } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 export interface TimeSlot {
   time: string;
@@ -17,26 +19,21 @@ export interface TimeOffBlock {
   end_at: string;
 }
 
-export function parseTimeOnDate(date: Date, timeStr: string): Date {
-  const [h, m] = timeStr.split(':').map(Number);
-  return setMinutes(setHours(startOfDay(date), h), m);
-}
-
 export function generateSlots(
-  date: Date,
+  dateStr: string,
   startTime: string,
   endTime: string,
   durationMinutes: number,
   intervalMinutes: number = 30
 ): TimeSlot[] {
   const slots: TimeSlot[] = [];
-  let cursor = parseTimeOnDate(date, startTime);
-  const dayEnd = parseTimeOnDate(date, endTime);
+  let cursor = parseBookingDateTime(dateStr, startTime);
+  const dayEnd = parseBookingDateTime(dateStr, endTime);
 
   while (addMinutes(cursor, durationMinutes) <= dayEnd) {
     const endsAt = addMinutes(cursor, durationMinutes);
     slots.push({
-      time: format(cursor, 'HH:mm'),
+      time: formatShopTime(cursor, dateStr),
       startsAt: new Date(cursor),
       endsAt,
     });

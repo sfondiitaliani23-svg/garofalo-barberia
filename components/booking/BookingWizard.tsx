@@ -211,7 +211,23 @@ export function BookingWizard({
     setStep(2);
   }
 
-  function selectSlot(t: string) {
+  async function selectSlot(t: string) {
+    if (!selectedService || !date) return;
+
+    setLoadingSlots(true);
+    const { slots: freshSlots } = await getAvailableSlots(
+      barberId,
+      date,
+      selectedService.duration_minutes
+    );
+    setSlots(freshSlots);
+    setLoadingSlots(false);
+
+    if (!freshSlots.includes(t)) {
+      setTime(null);
+      return;
+    }
+
     setTime(t);
     setStep(3);
   }
@@ -237,9 +253,17 @@ export function BookingWizard({
         });
 
         if (!result?.ok) {
-          toast.error(result?.error ?? 'Impossibile confermare la prenotazione. Riprova.');
-          if (result?.error?.includes('prenotato') || result?.error?.includes('disponibile')) {
+          if (result?.error?.includes('prenotato')) {
             setStep(2);
+            setTime(null);
+            void loadSlots();
+            return;
+          }
+
+          toast.error(result?.error ?? 'Impossibile confermare la prenotazione. Riprova.');
+          if (result?.error?.includes('disponibile')) {
+            setStep(2);
+            setTime(null);
             void loadSlots();
           }
           return;

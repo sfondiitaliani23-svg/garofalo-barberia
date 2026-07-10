@@ -1,9 +1,35 @@
-import { parseISO } from 'date-fns';
+import { addDays, parseISO } from 'date-fns';
 
 /** DST approssimato per l'Italia (ultima domenica mar–ott). */
-function isItalySummerTime(dateStr: string): boolean {
+export function isItalySummerTime(dateStr: string): boolean {
   const month = Number(dateStr.slice(5, 7));
   return month > 3 && month < 11;
+}
+
+/** Giorno della settimana (0–6) da una data calendario YYYY-MM-DD. */
+export function getShopDayOfWeek(dateStr: string): number {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).getDay();
+}
+
+/** Limiti del giorno di salone in UTC (mezzanotte–mezzanotte Europe/Rome). */
+export function getShopDayBounds(dateStr: string): { dayStart: Date; dayEnd: Date } {
+  const dayStart = parseBookingDateTime(dateStr, '00:00');
+  return { dayStart, dayEnd: addDays(dayStart, 1) };
+}
+
+/** Formatta un istante come orario HH:mm del salone (Europe/Rome). */
+export function formatShopTime(date: Date, dateStr: string): string {
+  const parts = new Intl.DateTimeFormat('it-IT', {
+    timeZone: 'Europe/Rome',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+
+  const hour = parts.find((part) => part.type === 'hour')?.value ?? '00';
+  const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
+  return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
 }
 
 /** Interpreta data e ora come orario di salone (Europe/Rome). */
