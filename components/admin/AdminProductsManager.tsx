@@ -102,8 +102,8 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
     originalStock.current = new Map(products.map((product) => [product.id, product.stock_quantity]));
   }, [products]);
 
-  const lowStockProducts = items.filter(
-    (p) => p.is_active && p.stock_quantity <= p.min_stock_level
+  const outOfStockProducts = items.filter(
+    (p) => p.is_active && p.stock_quantity === 0
   );
 
   function openCreate() {
@@ -327,13 +327,13 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
 
   return (
     <div>
-      {lowStockProducts.length > 0 && (
+      {outOfStockProducts.length > 0 && (
         <div className="mb-6 flex items-start gap-3 rounded-lg border border-orange-500/30 bg-orange-500/10 p-4">
           <AlertTriangle size={18} className="mt-0.5 shrink-0 text-orange-300" />
           <div>
-            <p className="text-sm font-medium text-orange-200">Scorte basse</p>
+            <p className="text-sm font-medium text-orange-200">Scorte esaurite</p>
             <p className="mt-1 text-xs text-orange-200/70">
-              {lowStockProducts.map((p) => `${p.name} (${p.stock_quantity})`).join(' · ')}
+              {outOfStockProducts.map((p) => p.name).join(' · ')}
             </p>
           </div>
         </div>
@@ -494,7 +494,7 @@ const ProductRow = memo(function ProductRow({
   onAdjustStock: (productId: string, delta: number) => void;
   inactive?: boolean;
 }) {
-  const isLowStock = product.is_active && product.stock_quantity <= product.min_stock_level;
+  const isOutOfStock = product.is_active && product.stock_quantity === 0;
   const isTemp = product.id.startsWith('temp-');
 
   return (
@@ -533,7 +533,7 @@ const ProductRow = memo(function ProductRow({
           <span
             className={cn(
               'min-w-[2.5rem] text-center text-lg font-bold',
-              isLowStock ? 'text-orange-300' : 'text-gold'
+              isOutOfStock ? 'text-orange-300' : 'text-gold'
             )}
           >
             {product.stock_quantity}
@@ -547,9 +547,9 @@ const ProductRow = memo(function ProductRow({
             <Plus size={14} />
           </button>
         </div>
-        {isLowStock && (
+        {isOutOfStock && (
           <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-xs text-orange-300">
-            Scorte basse
+            Esaurito
           </span>
         )}
         <button
