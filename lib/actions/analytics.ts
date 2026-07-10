@@ -141,18 +141,35 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
 
   const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-  const [{ count: dailyVisits }, { count: liveVisitors }, { data: sessions }] =
-    await Promise.all([
-      supabase
-        .from('page_views')
-        .select('*', { count: 'exact', head: true })
-        .gte('viewed_at', today.toISOString()),
+  const genderKeys = GENDERS.filter((key) => key !== 'unknown');
+  const ageKeys = AGE_RANGES.filter((key) => key !== 'unknown');
+
+  const [
+    { count: dailyVisits },
+    { count: liveVisitors },
+    ...breakdownCounts
+  ] = await Promise.all([
+    supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .gte('viewed_at', today.toISOString()),
+    supabase
+      .from('visitor_sessions')
+      .select('*', { count: 'exact', head: true })
+      .gte('last_seen_at', fiveMinAgo.toISOString()),
+    ...genderKeys.map((gender) =>
       supabase
         .from('visitor_sessions')
         .select('*', { count: 'exact', head: true })
-        .gte('last_seen_at', fiveMinAgo.toISOString()),
-      supabase.from('visitor_sessions').select('gender, age_range'),
-    ]);
+        .eq('gender', gender)
+    ),
+    ...ageKeys.map((ageRange) =>
+      supabase
+        .from('visitor_sessions')
+        .select('*', { count: 'exact', head: true })
+        .eq('age_range', ageRange)
+    ),
+  ]);
 
   const genderBreakdown: Record<Gender, number> = {
     male: 0,
@@ -171,12 +188,13 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
     unknown: 0,
   };
 
-  for (const row of sessions ?? []) {
-    const g = row.gender as Gender;
-    const a = row.age_range as AgeRange;
-    if (GENDERS.includes(g)) genderBreakdown[g]++;
-    if (AGE_RANGES.includes(a)) ageBreakdown[a]++;
-  }
+  genderKeys.forEach((gender, index) => {
+    genderBreakdown[gender] = breakdownCounts[index]?.count ?? 0;
+  });
+
+  ageKeys.forEach((ageRange, index) => {
+    ageBreakdown[ageRange] = breakdownCounts[genderKeys.length + index]?.count ?? 0;
+  });
 
   return {
     configured: true,

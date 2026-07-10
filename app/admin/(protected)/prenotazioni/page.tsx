@@ -9,16 +9,20 @@ export const metadata = { title: 'Prenotazioni Admin' };
 export default async function AdminPrenotazioniPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>;
+  searchParams: Promise<{ week?: string; barber?: string }>;
 }) {
   const params = await searchParams;
   const weekStart = params.week ? getWeekStart(parseISO(params.week)) : getWeekStart();
 
-  const [barbers, services, appointments] = await Promise.all([
-    getBarbers(),
-    getServices(),
-    getAdminWeekAppointments(weekStart.toISOString()),
-  ]);
+  const [barbers, services] = await Promise.all([getBarbers(), getServices()]);
+  const selectedBarberId =
+    params.barber && barbers.some((barber) => barber.id === params.barber)
+      ? params.barber
+      : barbers[0]?.id;
+
+  const appointments = selectedBarberId
+    ? await getAdminWeekAppointments(weekStart.toISOString(), selectedBarberId)
+    : [];
 
   return (
     <div>
@@ -33,6 +37,7 @@ export default async function AdminPrenotazioniPage({
           services={services}
           appointments={appointments}
           weekStartIso={weekStart.toISOString()}
+          initialBarberId={selectedBarberId}
         />
       </div>
     </div>

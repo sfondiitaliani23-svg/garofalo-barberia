@@ -6,9 +6,8 @@ import {
   useContext,
   useEffect,
   useId,
-  useMemo,
   useRef,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 
@@ -19,56 +18,123 @@ export type AdminSaveRegistration = {
   save: () => void | Promise<void>;
 };
 
-type AdminSaveContextValue = {
+type AdminSaveActions = {
   register: (registration: AdminSaveRegistration) => void;
   unregister: (id: string) => void;
-  registrations: AdminSaveRegistration[];
+  saveAll: () => Promise<void>;
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => { isDirty: boolean; isSaving: boolean };
 };
 
-const AdminSaveContext = createContext<AdminSaveContextValue | null>(null);
+const AdminSaveActionsContext = createContext<AdminSaveActions | null>(null);
+
+function buildSnapshot(registrations: AdminSaveRegistration[]) {
+  return {
+    isDirty: registrations.some((item) => item.isDirty),
+    isSaving: registrations.some((item) => item.isSaving),
+  };
+}
 
 export function AdminSaveProvider({ children }: { children: ReactNode }) {
-  const [registrations, setRegistrations] = useState<AdminSaveRegistration[]>([]);
+  const storeRef = useRef({
+    registrations: [] as AdminSaveRegistration[],
+    listeners: new Set<() => void>(),
+    snapshot: { isDirty: false, isSaving: false },
+  });
 
-  const register = useCallback((registration: AdminSaveRegistration) => {
-    setRegistrations((current) => {
-      const index = current.findIndex((item) => item.id === registration.id);
-      if (index === -1) return [...current, registration];
+  const notify = useCallback(() => {
+    for (const listener of storeRef.current.listeners) {
+      listener();
+    }
+  }, []);
 
-      const existing = current[index];
-      if (
-        existing.isDirty === registration.isDirty &&
-        existing.isSaving === registration.isSaving &&
-        existing.save === registration.save
-      ) {
-        return current;
+  const register = useCallback(
+    (registration: AdminSaveRegistration) => {
+      const store = storeRef.current;
+      const index = store.registrations.findIndex((item) => item.id === registration.id);
+
+      if (index === -1) {
+        store.registrations = [...store.registrations, registration];
+      } else {
+        const existing = store.registrations[index];
+        if (
+          existing.isDirty === registration.isDirty &&
+          existing.isSaving === registration.isSaving &&
+          existing.save === registration.save
+        ) {
+          return;
+        }
+        const next = [...store.registrations];
+        next[index] = registration;
+        store.registrations = next;
       }
 
-      const next = [...current];
-      next[index] = registration;
-      return next;
-    });
-  }, []);
-
-  const unregister = useCallback((id: string) => {
-    setRegistrations((current) => {
-      if (!current.some((item) => item.id === id)) return current;
-      return current.filter((item) => item.id !== id);
-    });
-  }, []);
-
-  const value = useMemo(
-    () => ({ register, unregister, registrations }),
-    [register, unregister, registrations]
+      const nextSnapshot = buildSnapshot(store.registrations);
+      if (
+        nextSnapshot.isDirty !== store.snapshot.isDirty ||
+        nextSnapshot.isSaving !== store.snapshot.isSaving
+      ) {
+        store.snapshot = nextSnapshot;
+        notify();
+      }
+    },
+    [notify]
   );
 
-  return <AdminSaveContext.Provider value={value}>{children}</AdminSaveContext.Provider>;
+  const unregister = useCallback(
+    (id: string) => {
+      const store = storeRef.current;
+      if (!store.registrations.some((item) => item.id === id)) return;
+
+      store.registrations = store.registrations.filter((item) => item.id !== id);
+      const nextSnapshot = buildSnapshot(store.registrations);
+      if (
+        nextSnapshot.isDirty !== store.snapshot.isDirty ||
+        nextSnapshot.isSaving !== store.snapshot.isSaving
+      ) {
+        store.snapshot = nextSnapshot;
+        notify();
+      }
+    },
+    [notify]
+  );
+
+  const saveAll = useCallback(async () => {
+    for (const item of storeRef.current.registrations.filter((entry) => entry.isDirty)) {
+      await item.save();
+    }
+  }, []);
+
+  const subscribe = useCallback((listener: () => void) => {
+    storeRef.current.listeners.add(listener);
+    return () => {
+      storeRef.current.listeners.delete(listener);
+    };
+  }, []);
+
+  const getSnapshot = useCallback(() => storeRef.current.snapshot, []);
+
+  const actions = useRef({
+    register,
+    unregister,
+    saveAll,
+    subscribe,
+    getSnapshot,
+  });
+
+  actions.current = { register, unregister, saveAll, subscribe, getSnapshot };
+
+  return (
+    <AdminSaveActionsContext.Provider value={actions.current}>
+      {children}
+    </AdminSaveActionsContext.Provider>
+  );
 }
 
 export function useAdminSaveRegistration(
   registration: Omit<AdminSaveRegistration, 'id'> | null
 ) {
-  const context = useContext(AdminSaveContext);
+  const context = useContext(AdminSaveActionsContext);
   const id = useId();
   const saveRef = useRef(registration?.save);
   saveRef.current = registration?.save;
@@ -101,18 +167,17 @@ export function useAdminSaveRegistration(
 }
 
 export function useAdminSaveState() {
-  const context = useContext(AdminSaveContext);
-  const registrations = context?.registrations ?? [];
-
-  const dirtyRegistrations = registrations.filter((item) => item.isDirty);
-  const isSaving = registrations.some((item) => item.isSaving);
-  const isDirty = dirtyRegistrations.length > 0;
-
-  async function saveAll() {
-    for (const item of dirtyRegistrations) {
-      await item.save();
-    }
+  const context = useContext(AdminSaveActionsContext);
+  if (!context) {
+    return { isDirty: false, isSaving: false, saveAll: async () => {}, hasRegistrations: false };
   }
 
-  return { isDirty, isSaving, saveAll, hasRegistrations: registrations.length > 0 };
+  const snapshot = useSyncExternalStore(context.subscribe, context.getSnapshot, context.getSnapshot);
+
+  return {
+    isDirty: snapshot.isDirty,
+    isSaving: snapshot.isSaving,
+    saveAll: context.saveAll,
+    hasRegistrations: snapshot.isDirty || snapshot.isSaving,
+  };
 }

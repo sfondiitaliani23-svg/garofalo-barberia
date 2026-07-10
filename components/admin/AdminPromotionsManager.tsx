@@ -1,7 +1,6 @@
 'use client';
 
-import { useCallback, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,8 +41,12 @@ function promotionStatus(promo: Promotion) {
 }
 
 export function AdminPromotionsManager({ promotions, services }: AdminPromotionsManagerProps) {
-  const router = useRouter();
+  const [items, setItems] = useState(promotions);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setItems(promotions);
+  }, [promotions]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Promotion | null>(null);
   const [title, setTitle] = useState('');
@@ -120,9 +123,27 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
         return;
       }
 
+      const optimistic: Promotion = {
+        id: editing?.id ?? `temp-${Date.now()}`,
+        title: title.trim(),
+        description: description.trim() || null,
+        code: code.trim() || null,
+        discount_type: discountType,
+        discount_value: payload.discountValue,
+        service_id: serviceId || null,
+        starts_at: payload.startsAt,
+        ends_at: payload.endsAt,
+        is_active: isActive,
+        created_at: editing?.created_at ?? new Date().toISOString(),
+      };
+
+      setItems((prev) =>
+        editing
+          ? prev.map((promo) => (promo.id === editing.id ? optimistic : promo))
+          : [...prev, optimistic]
+      );
       toast.success(editing ? 'Promozione modificata' : 'Promozione creata');
       setModalOpen(false);
-      router.refresh();
     });
   }, [
     code,
@@ -132,7 +153,6 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
     editing,
     endsAt,
     isActive,
-    router,
     serviceId,
     startTransition,
     startsAt,
@@ -156,17 +176,21 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
         return;
       }
 
+      setItems((prev) =>
+        result.deactivated
+          ? prev.map((entry) => (entry.id === promo.id ? { ...entry, is_active: false } : entry))
+          : prev.filter((entry) => entry.id !== promo.id)
+      );
       toast.success(
         result.deactivated
           ? 'Promozione disattivata (usata in prenotazioni)'
           : 'Promozione eliminata'
       );
-      router.refresh();
     });
   }
 
-  const activePromos = promotions.filter((p) => p.is_active);
-  const inactivePromos = promotions.filter((p) => !p.is_active);
+  const activePromos = items.filter((p) => p.is_active);
+  const inactivePromos = items.filter((p) => !p.is_active);
 
   return (
     <div>

@@ -77,18 +77,21 @@ export function AdminAppointmentForm({
       appointment?.id ?? null,
       true
     );
-    const withCurrent =
-      isEdit && date === format(parseISO(appointment!.starts_at), 'yyyy-MM-dd') && !s.includes(time)
-        ? [time, ...s].sort()
-        : s;
-    setSlots(withCurrent);
+    setSlots(s);
     if (error) toast.error(error);
     setLoadingSlots(false);
-  }, [barberId, date, selectedService, appointment, isEdit, time]);
+  }, [barberId, date, selectedService, appointment?.id]);
 
   useEffect(() => {
-    loadSlots();
+    void loadSlots();
   }, [loadSlots]);
+
+  useEffect(() => {
+    if (!isEdit || !appointment || !date) return;
+    const appointmentDate = format(parseISO(appointment.starts_at), 'yyyy-MM-dd');
+    if (date !== appointmentDate) return;
+    setSlots((current) => (current.includes(time) ? current : [time, ...current].sort()));
+  }, [appointment, date, isEdit, time]);
 
   function buildInput() {
     return {

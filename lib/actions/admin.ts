@@ -47,38 +47,45 @@ export async function getAdminStats() {
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const { count: todayCount } = await supabase
-    .from('appointments')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'confirmed')
-    .gte('starts_at', today.toISOString())
-    .lt('starts_at', tomorrow.toISOString());
+  const [
+    { count: todayCount },
+    { data: todayAppointments },
+    { data: weekAppointments },
+    { count: customerCount },
+  ] = await Promise.all([
+    supabase
+      .from('appointments')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'confirmed')
+      .gte('starts_at', today.toISOString())
+      .lt('starts_at', tomorrow.toISOString()),
+    supabase
+      .from('appointments')
+      .select('discount_cents, service:services(price_cents)')
+      .in('status', ['confirmed', 'completed'])
+      .gte('starts_at', today.toISOString())
+      .lt('starts_at', tomorrow.toISOString()),
+    supabase
+      .from('appointments')
+      .select('discount_cents, service:services(price_cents)')
+      .in('status', ['confirmed', 'completed'])
+      .gte('starts_at', weekAgo.toISOString()),
+    supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'customer'),
+  ]);
 
-  const { data: weekAppointments } = await supabase
-    .from('appointments')
-    .select('*, service:services(price_cents)')
-    .in('status', ['confirmed', 'completed'])
-    .gte('starts_at', weekAgo.toISOString());
+  const sumRevenue = (rows: { discount_cents: number | null; service: { price_cents: number } | { price_cents: number }[] | null }[]) =>
+    rows.reduce((sum, apt) => {
+      const service = Array.isArray(apt.service) ? apt.service[0] : apt.service;
+      const gross = service?.price_cents ?? 0;
+      const net = Math.max(0, gross - (apt.discount_cents ?? 0));
+      return sum + net;
+    }, 0);
 
-  const { count: customerCount } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .eq('role', 'customer');
-
-  const weekRevenue = (weekAppointments ?? []).reduce((sum, apt) => {
-    const service = apt.service as { price_cents: number } | null;
-    return sum + (service?.price_cents ?? 0);
-  }, 0);
-
-  const todayAppointments = (weekAppointments ?? []).filter((apt) => {
-    const d = new Date(apt.starts_at);
-    return d >= today && d < tomorrow;
-  });
-
-  const todayRevenue = todayAppointments.reduce((sum, apt) => {
-    const service = apt.service as { price_cents: number } | null;
-    return sum + (service?.price_cents ?? 0);
-  }, 0);
+  const todayRevenue = sumRevenue(todayAppointments ?? []);
+  const weekRevenue = sumRevenue(weekAppointments ?? []);
 
   return {
     appointmentsToday: todayCount ?? 0,
@@ -262,9 +269,10 @@ export async function getCustomers() {
 
   const { data } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, role, full_name, phone, email, hair_preferences, personal_notes, avatar_url, created_at, updated_at')
     .eq('role', 'customer')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(1000);
 
   return data ?? [];
 }
@@ -418,13 +426,17 @@ export async function getAdminTeamData() {
     return { barbers: [], availability: [], timeOff: [] };
   }
 
+  const historyCutoff = addDays(new Date(), -90).toISOString();
+
   const [barbersRes, availabilityRes, timeOffRes] = await Promise.all([
     supabase.from('barbers').select('*').order('sort_order'),
     supabase.from('barber_availability').select('*'),
     supabase
       .from('barber_time_off')
       .select('*, barber:barbers(name)')
-      .order('start_at', { ascending: false }),
+      .gte('end_at', historyCutoff)
+      .order('start_at', { ascending: false })
+      .limit(100),
   ]);
 
   return {

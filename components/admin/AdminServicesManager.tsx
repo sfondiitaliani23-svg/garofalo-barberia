@@ -1,7 +1,6 @@
 'use client';
 
-import { useCallback, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,8 +24,12 @@ interface AdminServicesManagerProps {
 }
 
 export function AdminServicesManager({ services }: AdminServicesManagerProps) {
-  const router = useRouter();
+  const [items, setItems] = useState(services);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    setItems(services);
+  }, [services]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Service | null>(null);
   const [name, setName] = useState('');
@@ -88,11 +91,27 @@ export function AdminServicesManager({ services }: AdminServicesManagerProps) {
         return;
       }
 
+      const priceCents = Math.round(priceEuros * 100);
+      const optimistic: Service = {
+        id: editing?.id ?? `temp-${Date.now()}`,
+        name: name.trim(),
+        category,
+        price_cents: priceCents,
+        duration_minutes: durationMinutes,
+        description: description.trim() || null,
+        is_active: true,
+        sort_order: editing?.sort_order ?? items.length + 1,
+      };
+
+      setItems((prev) =>
+        editing
+          ? prev.map((service) => (service.id === editing.id ? optimistic : service))
+          : [...prev, optimistic]
+      );
       toast.success(editing ? 'Servizio modificato' : 'Servizio creato');
       setModalOpen(false);
-      router.refresh();
     });
-  }, [category, description, duration, editing, name, price, router, startTransition]);
+  }, [category, description, duration, editing, items.length, name, price, startTransition]);
 
   useAdminSaveRegistration(
     modalOpen ? { isDirty: true, isSaving: pending, save: handleSave } : null
@@ -111,17 +130,21 @@ export function AdminServicesManager({ services }: AdminServicesManagerProps) {
         return;
       }
 
+      setItems((prev) =>
+        result.deactivated
+          ? prev.map((entry) => (entry.id === service.id ? { ...entry, is_active: false } : entry))
+          : prev.filter((entry) => entry.id !== service.id)
+      );
       toast.success(
         result.deactivated
           ? 'Servizio disattivato (ha prenotazioni attive)'
           : 'Servizio eliminato'
       );
-      router.refresh();
     });
   }
 
-  const activeServices = services.filter((s) => s.is_active);
-  const inactiveServices = services.filter((s) => !s.is_active);
+  const activeServices = items.filter((s) => s.is_active);
+  const inactiveServices = items.filter((s) => !s.is_active);
 
   return (
     <div>

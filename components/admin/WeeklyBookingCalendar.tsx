@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Plus } from 'lucide-react';
@@ -24,6 +24,7 @@ interface WeeklyBookingCalendarProps {
   services: Service[];
   appointments: CalendarAppointment[];
   weekStartIso: string;
+  initialBarberId?: string;
 }
 
 export function WeeklyBookingCalendar({
@@ -31,19 +32,34 @@ export function WeeklyBookingCalendar({
   services,
   appointments: initialAppointments,
   weekStartIso,
+  initialBarberId,
 }: WeeklyBookingCalendarProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
   const weekStart = new Date(weekStartIso);
-  const [barberId, setBarberId] = useState(barbers[0]?.id ?? '');
+  const [barberId, setBarberId] = useState(initialBarberId ?? barbers[0]?.id ?? '');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<CalendarAppointment | null>(null);
   const [prefillDate, setPrefillDate] = useState<string | undefined>();
   const [prefillTime, setPrefillTime] = useState<string | undefined>();
 
-  const days = getWorkingDays(weekStart);
-  const timeSlots = generateCalendarTimeSlots();
-  const grid = buildWeekGrid(days, timeSlots, initialAppointments, barberId);
+  const days = useMemo(() => getWorkingDays(weekStart), [weekStart]);
+  const timeSlots = useMemo(() => generateCalendarTimeSlots(), []);
+  const grid = useMemo(
+    () => buildWeekGrid(days, timeSlots, initialAppointments, barberId),
+    [barberId, days, initialAppointments, timeSlots]
+  );
   const selectedBarber = barbers.find((b) => b.id === barberId);
+
+  function selectBarber(nextBarberId: string) {
+    setBarberId(nextBarberId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('barber', nextBarberId);
+    startTransition(() => {
+      router.replace(`/admin/prenotazioni?${params.toString()}`);
+    });
+  }
 
   function openCreate(day: Date, time: string) {
     setSelectedAppointment(null);
@@ -60,7 +76,9 @@ export function WeeklyBookingCalendar({
   }
 
   function handleSaved() {
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   const weekLabel = `${format(days[0], 'd MMM', { locale: it })} – ${format(days[days.length - 1], 'd MMM yyyy', { locale: it })}`;
@@ -88,7 +106,7 @@ export function WeeklyBookingCalendar({
           <button
             key={b.id}
             type="button"
-            onClick={() => setBarberId(b.id)}
+            onClick={() => selectBarber(b.id)}
             className={cn(
               'rounded-full border px-4 py-2 text-sm font-medium transition',
               barberId === b.id

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -30,7 +31,7 @@ const links = [
   { href: '/admin/report', label: 'Report', icon: BarChart3 },
 ];
 
-export function AdminSidebar() {
+export const AdminSidebar = memo(function AdminSidebar() {
   const pathname = usePathname();
 
   return (
@@ -60,4 +61,4 @@ export function AdminSidebar() {
       </form>
     </aside>
   );
-}
+});

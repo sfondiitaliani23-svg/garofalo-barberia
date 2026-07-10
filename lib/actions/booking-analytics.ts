@@ -1,6 +1,6 @@
 'use server';
 
-import { format } from 'date-fns';
+import { format, subMonths } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { requireAdmin } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
@@ -87,6 +87,8 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
   const supabase = await createServiceClient();
   if (!supabase) return emptyAnalytics();
 
+  const analyticsStart = subMonths(new Date(), 24).toISOString();
+
   const [{ data: appointments }, { data: allServices }] = await Promise.all([
     supabase
       .from('appointments')
@@ -102,7 +104,9 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
         barber_id,
         service:services(id, name, price_cents),
         barber:barbers(id, name)
-      `),
+      `)
+      .gte('starts_at', analyticsStart)
+      .order('starts_at', { ascending: false }),
     supabase.from('services').select('id, name, price_cents').eq('is_active', true),
   ]);
 
