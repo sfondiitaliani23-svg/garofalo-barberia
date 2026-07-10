@@ -138,10 +138,6 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.whatsapp-float[data-cookie-offset='true'] {
-  bottom: calc(8.5rem + env(safe-area-inset-bottom));
-}
-
 .demographics-survey {
   top: clamp(5rem, 30vh, calc(100vh - 23rem));
   bottom: auto;
@@ -166,10 +162,6 @@ body {
 @media (min-width: 1024px) {
   .whatsapp-float {
     bottom: 1.5rem;
-  }
-
-  .whatsapp-float[data-cookie-offset='true'] {
-    bottom: calc(7.5rem + env(safe-area-inset-bottom));
   }
 
   .demographics-survey {

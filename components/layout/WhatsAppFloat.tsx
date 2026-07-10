@@ -7,11 +7,12 @@ import { useCookieBannerVisible } from '@/components/layout/CookieConsent';
 export function WhatsAppFloat() {
   const cookieBannerVisible = useCookieBannerVisible();
 
+  if (cookieBannerVisible) return null;
+
   return (
     <a
       href={getWhatsAppLink()}
       className="whatsapp-float"
-      data-cookie-offset={cookieBannerVisible ? 'true' : 'false'}
       aria-label="WhatsApp"
       target="_blank"
       rel="noopener noreferrer"
