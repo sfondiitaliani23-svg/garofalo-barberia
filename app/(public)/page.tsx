@@ -73,7 +73,7 @@ export default function HomePage() {
             <h2 className="heading-display">Chi siamo</h2>
             <AnimatedDivider />
           </div>
-          <div className="split-section split-reverse">
+          <div className="split-section">
             <div className="split-image">
               <Image
                 src="/assets/sostituisci-immagini/homepage/3.jpg"
@@ -82,14 +82,6 @@ export default function HomePage() {
                 height={520}
                 style={{ width: '100%', height: 'auto', minHeight: 320, maxHeight: 520, objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
               />
-            </div>
-            <div className="section-story-header mb-6">
-              <span className="text-xs uppercase tracking-widest text-gold font-semibold block mb-2">
-                BARBERIA GAROFALO
-              </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white uppercase tracking-tight font-sans leading-none">
-                LA STORIA
-              </h2>
             </div>
             <div>
               <p className="section-lead mb-4 text-white/90">
