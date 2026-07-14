@@ -18,7 +18,7 @@ export default function HomePage() {
         style={{ backgroundImage: "url('/assets/sostituisci-immagini/homepage/1.jpg')" }}
       >
         {/* Paging slider laterale sinistro (stile Treatwell) */}
-        <div className="hero-slider-indicator hidden md:flex">
+        <div className="hero-slider-indicator">
           <div className="indicator-item active">
             <span className="num">01</span>
             <span className="bar"></span>
