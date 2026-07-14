@@ -137,18 +137,24 @@ export function LiveTrafficChart({
         <div className="text-right">
           <div className="flex items-center justify-end gap-2">
             <span className="text-3xl font-bold text-white">{data.todayTotal}</span>
-            <span
-              className={cn(
-                'flex items-center text-sm font-bold px-2 py-0.5 rounded-full',
-                data.percentChange === 0
-                  ? 'text-white/50 bg-white/5'
-                  : isPositive
-                  ? 'text-emerald-400 bg-emerald-500/10'
-                  : 'text-red-400 bg-red-500/10'
-              )}
-            >
-              {data.percentChange === 0 ? '→' : isPositive ? '↗' : '↘'} {percent}%
-            </span>
+            {data.percentChange !== 0 && (
+              <span
+                className={cn(
+                  'flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full shadow-lg',
+                  isPositive
+                    ? 'bg-green-500 text-white shadow-green-500/30'
+                    : 'bg-red-500 text-white shadow-red-500/30'
+                )}
+              >
+                {isPositive ? '▲' : '▼'}
+                {isPositive ? '+' : '-'}{percent}%
+              </span>
+            )}
+            {data.percentChange === 0 && (
+              <span className="flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full bg-white/10 text-white/50">
+                → 0%
+              </span>
+            )}
           </div>
           <p className="text-[10px] text-white/40 uppercase tracking-wider mt-1">rispetto a ieri alla stessa ora</p>
         </div>
