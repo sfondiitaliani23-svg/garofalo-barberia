@@ -108,7 +108,7 @@ export function LiveTrafficChart({
   const percent = Math.abs(data.percentChange);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111] p-6 shadow-xl relative overflow-hidden transition-all duration-300">
+    <div className="rounded-xl border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] relative overflow-hidden transition-all duration-300">
       {/* Indicatore dorato in alto */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
 

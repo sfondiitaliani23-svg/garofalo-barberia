@@ -130,7 +130,7 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-white/10 bg-[#111] p-6">
+        <div className="rounded-lg border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
           <div className="flex items-center gap-2">
             <Scissors size={16} className="text-gold" />
             <h3 className="text-sm font-medium text-white/70">Top 5 servizi più richiesti</h3>
@@ -153,8 +153,10 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
             )}
           </div>
         </div>
+      </div>
 
-        <div className="rounded-lg border border-white/10 bg-[#111] p-6">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="rounded-lg border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
           <div className="flex items-center gap-2">
             <Users size={16} className="text-gold" />
             <h3 className="text-sm font-medium text-white/70">Top 5 clienti più fedeli</h3>
@@ -180,7 +182,7 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
       </div>
 
       {stats.bookingsByMonth.length > 0 && (
-        <div className="mt-6 rounded-lg border border-white/10 bg-[#111] p-6">
+        <div className="mt-6 rounded-lg border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
           <div className="flex items-center gap-2">
             <TrendingUp size={16} className="text-gold" />
             <h3 className="text-sm font-medium text-white/70">Andamento prenotazioni (ultimi 6 mesi)</h3>
@@ -206,7 +208,7 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
       )}
 
       {stats.topBarbers.length > 0 && (
-        <div className="mt-6 rounded-lg border border-white/10 bg-[#111] p-6">
+        <div className="mt-6 rounded-lg border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
           <h3 className="text-sm font-medium text-white/70">Barbieri più prenotati</h3>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {stats.topBarbers.map((barber, index) => (

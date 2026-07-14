@@ -149,7 +149,7 @@ export function AnalyticsSection({
 
       {showBreakdown && (
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-white/10 bg-[#111] p-6">
+          <div className="rounded-lg border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
             <h3 className="text-sm font-medium text-white/70">Genere (uomo/donna/bimbi)</h3>
             <div className="mt-4 space-y-3">
               {(['male', 'female', 'child'] as const).map((key) => (
@@ -168,7 +168,7 @@ export function AnalyticsSection({
             )}
           </div>
 
-          <div className="rounded-lg border border-white/10 bg-[#111] p-6">
+          <div className="rounded-lg border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
             <h3 className="text-sm font-medium text-white/70">Target di età</h3>
             <div className="mt-4 space-y-3">
               {Object.entries(stats.ageBreakdown)
