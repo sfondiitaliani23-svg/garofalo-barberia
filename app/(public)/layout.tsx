@@ -4,6 +4,7 @@ import { SiteBanners } from '@/components/layout/SiteBanners';
 import { CookieConsent } from '@/components/layout/CookieConsent';
 import { WhatsAppFloat } from '@/components/layout/WhatsAppFloat';
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
+import { EliseoChat } from '@/components/layout/EliseoChat';
 import { VisitorTracker } from '@/components/analytics/VisitorTracker';
 import { getActiveSiteBanners } from '@/lib/actions/content';
 import { getProfile, getSession } from '@/lib/auth';
@@ -27,6 +28,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <CookieConsent />
       <WhatsAppFloat />
       <ScrollToTop />
+      <EliseoChat />
       <VisitorTracker />
     </>
   );
