@@ -1,10 +1,10 @@
 export const PRICE_LIST = [
   { name: 'Taglio e shampoo', price: '€17' },
   { name: 'Taglio baby', price: '€13' },
-  { name: 'Barba rasata / lama', price: '€6' },
-  { name: 'Barba modellata a forbici', price: '€8' },
   { name: 'Barba con panno caldo', price: '€10' },
+  { name: 'Barba modellata a forbici', price: '€8' },
   { name: 'Shampoo e acconciatura', price: '€8' },
+  { name: 'Barba rasata / lama', price: '€6' },
 ] as const;
 
 export const PHOTO_STRIP = [
