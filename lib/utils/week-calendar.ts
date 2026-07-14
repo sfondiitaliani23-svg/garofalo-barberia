@@ -1,4 +1,4 @@
-import { addDays, format, parseISO, startOfWeek } from 'date-fns';
+import { addDays, differenceInMinutes, format, parseISO, startOfWeek } from 'date-fns';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { isShopDateFullyBlocked, type TimeOffRow } from '@/lib/utils/barber-absence';
 import { getDayClosingTime as getClosingForDay, isSlotWithinShopHours } from '@/lib/utils/shop-hours';
@@ -116,7 +116,10 @@ export function buildWeekGrid(
       });
 
       if (apt) {
-        const span = durationToRowSpan(apt.service?.duration_minutes ?? 30);
+        const starts = parseISO(apt.starts_at);
+        const ends = parseISO(apt.ends_at);
+        const actualDuration = differenceInMinutes(ends, starts);
+        const span = durationToRowSpan(actualDuration);
         for (let i = 0; i < span; i++) {
           const slotTime = timeSlots[timeSlots.indexOf(time) + i];
           if (slotTime) dayCovered.add(slotTime);
