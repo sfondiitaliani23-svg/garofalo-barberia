@@ -1,6 +1,7 @@
 import { getAdminStats } from '@/lib/actions/admin';
 import { getAnalyticsStats } from '@/lib/actions/analytics';
 import { AnalyticsSection } from '@/components/admin/AnalyticsSection';
+import { LiveTrafficChart } from '@/components/admin/LiveTrafficChart';
 import { formatPrice } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -31,6 +32,11 @@ export default async function AdminDashboardPage() {
           <CardHeader className="pb-2"><CardTitle className="text-sm text-white/60">Clienti totali</CardTitle></CardHeader>
           <CardContent><p className="text-3xl font-bold text-gold">{stats.totalCustomers}</p></CardContent>
         </Card>
+      </div>
+
+      {/* Grafico Visite in tempo reale (Shopify Analytics Style) */}
+      <div className="mt-8">
+        <LiveTrafficChart />
       </div>
 
       <AnalyticsSection stats={analytics} showBreakdown={false} />

@@ -1,7 +1,6 @@
 import { getAdminStats } from '@/lib/actions/admin';
 import { getAnalyticsStats } from '@/lib/actions/analytics';
 import { AnalyticsSection } from '@/components/admin/AnalyticsSection';
-import { LiveTrafficChart } from '@/components/admin/LiveTrafficChart';
 import { formatPrice } from '@/lib/utils';
 
 export const metadata = { title: 'Report' };
@@ -26,9 +25,6 @@ export default async function AdminReportPage() {
           <p className="mt-2 text-4xl font-bold text-gold">{stats.appointmentsToday}</p>
         </div>
       </div>
-
-      {/* Grafico Visite in tempo reale (Shopify Analytics Style) */}
-      <LiveTrafficChart />
 
       <AnalyticsSection stats={analytics} />
     </div>

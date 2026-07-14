@@ -65,16 +65,8 @@ export function AnalyticsSection({
         )}
       </div>
 
+      {/* Prima riga: Panoramica visite (traffico) */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white/60">Visite oggi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-gold">{stats.dailyVisits}</p>
-            <p className="mt-1 text-xs text-white/40">Page view giornaliere</p>
-          </CardContent>
-        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-white/60">Visitatori live</CardTitle>
@@ -82,10 +74,50 @@ export function AnalyticsSection({
           <CardContent>
             <LiveVisitorsCounter initialCount={stats.liveVisitors} />
             <p className="mt-1 text-xs text-white/40">
-              Connessi adesso · aggiornamento ogni {ADMIN_LIVE_POLL_MS / 1000}s
+              Connessi adesso · aggiornato ogni {ADMIN_LIVE_POLL_MS / 1000}s
             </p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-white/60">Visite oggi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gold">{stats.dailyVisits}</p>
+            <p className="mt-1 text-xs text-white/40">Page view odierne</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-white/60">Visite ieri</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gold">{stats.yesterdayVisits}</p>
+            <p className="mt-1 text-xs text-white/40">Page view ieri</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-white/60">Ultimi 7 giorni</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gold">{stats.weeklyVisits}</p>
+            <p className="mt-1 text-xs text-white/40">Page view settimanali</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-white/60">Ultimi 30 giorni</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gold">{stats.monthlyVisits}</p>
+            <p className="mt-1 text-xs text-white/40">Page view mensili</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Seconda riga: Risposte sondaggio pubblico */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-white/60">Uomini</CardTitle>

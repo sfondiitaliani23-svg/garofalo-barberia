@@ -26,6 +26,9 @@ type AgeRange = (typeof AGE_RANGES)[number];
 export type AnalyticsStats = {
   configured: boolean;
   dailyVisits: number;
+  yesterdayVisits: number;
+  weeklyVisits: number;
+  monthlyVisits: number;
   liveVisitors: number;
   genderBreakdown: Record<Gender, number>;
   ageBreakdown: Record<AgeRange, number>;
@@ -35,6 +38,9 @@ function emptyStats(): AnalyticsStats {
   return {
     configured: false,
     dailyVisits: 0,
+    yesterdayVisits: 0,
+    weeklyVisits: 0,
+    monthlyVisits: 0,
     liveVisitors: 0,
     genderBreakdown: { male: 0, female: 0, child: 0, other: 0, unknown: 0 },
     ageBreakdown: {
@@ -124,11 +130,23 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const yesterdayStart = new Date(today);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+  const lastWeekStart = new Date(today);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+
+  const lastMonthStart = new Date(today);
+  lastMonthStart.setDate(lastMonthStart.getDate() - 30);
+
   const genderKeys = GENDERS.filter((key) => key !== 'unknown');
   const ageKeys = AGE_RANGES.filter((key) => key !== 'unknown');
 
   const [
     { count: dailyVisits },
+    { count: yesterdayVisits },
+    { count: weeklyVisits },
+    { count: monthlyVisits },
     liveVisitors,
     ...breakdownCounts
   ] = await Promise.all([
@@ -136,6 +154,19 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
       .from('page_views')
       .select('*', { count: 'exact', head: true })
       .gte('viewed_at', today.toISOString()),
+    supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .gte('viewed_at', yesterdayStart.toISOString())
+      .lt('viewed_at', today.toISOString()),
+    supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .gte('viewed_at', lastWeekStart.toISOString()),
+    supabase
+      .from('page_views')
+      .select('*', { count: 'exact', head: true })
+      .gte('viewed_at', lastMonthStart.toISOString()),
     countLiveVisitors(),
     ...genderKeys.map((gender) =>
       supabase
@@ -179,6 +210,9 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   return {
     configured: true,
     dailyVisits: dailyVisits ?? 0,
+    yesterdayVisits: yesterdayVisits ?? 0,
+    weeklyVisits: weeklyVisits ?? 0,
+    monthlyVisits: monthlyVisits ?? 0,
     liveVisitors,
     genderBreakdown,
     ageBreakdown,
