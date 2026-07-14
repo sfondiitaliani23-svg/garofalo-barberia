@@ -17,7 +17,30 @@ export default function HomePage() {
         className="hero-section"
         style={{ backgroundImage: "url('/assets/sostituisci-immagini/homepage/1.jpg')" }}
       >
+        {/* Paging slider laterale sinistro (stile Treatwell) */}
+        <div className="hero-slider-indicator hidden md:flex">
+          <div className="indicator-item active">
+            <span className="num">01</span>
+            <span className="bar"></span>
+          </div>
+          <div className="indicator-item">
+            <span className="num">02</span>
+          </div>
+        </div>
+
         <div className="hero-content">
+          {/* Logo centrale gigante visibile solo su Mobile */}
+          <div className="hero-mobile-logo-wrap md:hidden mb-6 flex justify-center">
+            <Image
+              src="/assets/sostituisci-immagini/brand/logo.png"
+              alt="Barberia Garofalo"
+              width={150}
+              height={150}
+              className="hero-mobile-logo rounded-full border border-gold/40 shadow-[0_0_30px_rgba(205,154,79,0.3)] bg-black/40 backdrop-blur"
+              priority
+            />
+          </div>
+
           <h1 className="hero-heading">
             La migliore esperienza è solo da<br />Barberia Garofalo
           </h1>
@@ -29,6 +52,17 @@ export default function HomePage() {
               <span>Prenota ora</span>
               <BtnArrow />
             </Link>
+          </div>
+        </div>
+
+        {/* Indicatore verticale di scorrimento in basso al centro (La Nostra Storia ↓) */}
+        <div className="hero-scroll-down">
+          <span className="text-xs uppercase tracking-widest text-white/60 font-semibold mb-2 block">
+            La Nostra Storia
+          </span>
+          <div className="scroll-arrow flex flex-col items-center">
+            <span className="line w-[1px] h-12 bg-gradient-to-b from-white to-transparent block mb-1"></span>
+            <span className="arrow text-base text-gold animate-bounce">↓</span>
           </div>
         </div>
       </section>
@@ -49,19 +83,30 @@ export default function HomePage() {
                 style={{ width: '100%', height: 'auto', minHeight: 320, maxHeight: 520, objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
               />
             </div>
+            <div className="section-story-header mb-6">
+              <span className="text-xs uppercase tracking-widest text-gold font-semibold block mb-2">
+                BARBERIA GAROFALO
+              </span>
+              <h2 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-white uppercase tracking-tight font-sans leading-none">
+                LA STORIA
+              </h2>
+            </div>
             <div>
-              <h3 className="heading-display" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)' }}>
-                𝑮𝑨𝑹𝑶𝑭𝑨𝑳𝑶 𝑩𝑨𝑹𝑩𝑬𝑹𝑰𝑨
-              </h3>
-              <p className="section-lead mb-4">Per l&apos;uomo di ogni età… e anche per i più piccoli!</p>
-              <p className="section-lead mb-4">Dal papà al nonno, dal ragazzo al bambino: qui ogni maschio trova il suo posto.</p>
-              <p className="section-lead mb-4">
-                Tagli precisi, rasature perfette, barbe curate e primi tagli speciali per i piccoli eroi, fatti con tanta pazienza e un grande sorriso.
+              <p className="section-lead mb-4 text-white/90">
+                La <strong className="text-white font-bold">Barberia Garofalo</strong> è un salone situato nel cuore della città di <strong className="text-white font-bold">Foggia</strong>. Nato come punto di riferimento per l&apos;uomo di ogni età… e anche per i più piccoli!
               </p>
-              <p className="section-lead mb-4">
-                Perché prendersi cura di sé non ha età.<br />È semplicemente da veri uomini.
+              <p className="section-lead mb-4 text-white/70">
+                Dal papà al nonno, dal ragazzo al bambino: qui ogni maschio trova il suo posto, vivendo un&apos;esperienza autentica di relax e cura.
               </p>
-              <p className="section-lead mb-6">Viale Ignazio D&apos;Addedda, 236 - Foggia</p>
+              <p className="section-lead mb-4 text-white/70">
+                Offriamo <strong className="text-gold font-semibold">tagli precisi</strong>, rasature perfette, barbe curate e primi tagli speciali per i piccoli eroi, eseguiti con dedizione, tecnica e il massimo comfort.
+              </p>
+              <p className="section-lead mb-4 text-white/70 font-medium">
+                Perché prendersi cura di sé non ha età. È semplicemente da veri uomini.
+              </p>
+              <p className="section-lead mb-6 text-gold/80 font-semibold tracking-wide uppercase text-xs">
+                Viale Ignazio D&apos;Addedda, 236 - Foggia
+              </p>
               <div className="flex flex-wrap gap-3">
                 <Link href="/prenota" className="btn-primary">
                   <span>Prenota</span>

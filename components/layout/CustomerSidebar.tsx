@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/actions/auth';
-import { LayoutDashboard, Calendar, History, Image, User } from 'lucide-react';
+import { LayoutDashboard, Calendar, History, Image, User, HelpCircle } from 'lucide-react';
 
 const links = [
   { href: '/area-cliente/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -12,6 +12,7 @@ const links = [
   { href: '/area-cliente/storico', label: 'Storico', icon: History },
   { href: '/area-cliente/galleria', label: 'Galleria', icon: Image },
   { href: '/area-cliente/profilo', label: 'Profilo', icon: User },
+  { href: '/area-cliente/assistenza', label: 'Assistenza', icon: HelpCircle },
 ];
 
 export function CustomerSidebar() {

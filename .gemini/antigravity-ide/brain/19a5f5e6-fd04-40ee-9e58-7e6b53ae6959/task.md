@@ -1,0 +1,10 @@
+- `[x]` Creazione del componente ScrollToTop
+- `[ ]` Modifica del componente WhatsAppFloat per riposizionamento a sinistra su mobile
+- `[ ]` Modifica di CustomerSidebar.tsx per aggiungere la voce "Assistenza"
+- `[ ]` Creazione della pagina Assistenza Clienti FAQ in stile Treatwell
+- `[ ]` Modifica di AppointmentCard.tsx per il layout Treatwell con riferimento ordine univoco
+- `[ ]` Modifica dello Storico Prenotazioni (storico/page.tsx) con banner e categorie in stile Treatwell
+- `[ ]` Modifica di SiteHeader per logo compatto, bottone custom ME/NU e menu overlay a schermo intero
+- `[ ]` Modifica della Homepage (page.tsx) per logo grande centrato, paging 01/02 e indicatore verticale di scorrimento su mobile
+- `[ ]` Modifica degli stili CSS (home.css) per allineare l'aspetto grafico della homepage al riferimento
+- `[ ]` Test finale e compilazione (npm run build)

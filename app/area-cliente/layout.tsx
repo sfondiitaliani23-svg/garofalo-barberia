@@ -1,4 +1,5 @@
 import { CustomerSidebar } from '@/components/layout/CustomerSidebar';
+import { ScrollToTop } from '@/components/layout/ScrollToTop';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
       <main className="flex-1 p-6 lg:p-8">
         <div className="mx-auto w-full max-w-3xl">{children}</div>
       </main>
+      <ScrollToTop />
     </div>
   );
 }

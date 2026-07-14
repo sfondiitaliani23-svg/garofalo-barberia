@@ -125,7 +125,8 @@ body {
 .whatsapp-float {
   position: fixed;
   bottom: calc(1.25rem + env(safe-area-inset-bottom));
-  right: calc(1.25rem + env(safe-area-inset-right, 0px));
+  left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  right: auto;
   z-index: 200;
   width: 56px;
   height: 56px;
@@ -136,6 +137,13 @@ body {
   line-height: 0;
   transition: bottom 0.25s ease, transform 0.2s;
   -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 640px) {
+  .whatsapp-float {
+    left: auto;
+    right: 1.5rem;
+  }
 }
 
 .demographics-survey {
