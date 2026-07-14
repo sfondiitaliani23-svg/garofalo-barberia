@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import { getProfile } from '@/lib/auth';
 import { updateProfile } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SavedToast } from '@/components/customer/SavedToast';
 
 export const metadata = { title: 'Profilo' };
 
@@ -11,6 +13,11 @@ export default async function CustomerProfiloPage() {
 
   return (
     <div>
+      {/* Toast di conferma salvataggio */}
+      <Suspense fallback={null}>
+        <SavedToast />
+      </Suspense>
+
       <h1 className="font-display text-3xl uppercase">Profilo</h1>
       <p className="mt-1 text-white/50">I tuoi dati e preferenze</p>
       <form action={updateProfile} className="mt-8 space-y-4">

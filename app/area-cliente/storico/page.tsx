@@ -46,26 +46,7 @@ export default async function CustomerStoricoPage() {
           Prossime prenotazioni
         </h2>
 
-        {/* Banner Garofalo Rewards stile twREWARDS */}
-        <div className="rounded-xl border border-gold/15 bg-gradient-to-r from-gold/5 via-gold/10 to-transparent p-6 mb-6 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-6 shadow-[0_10px_30px_rgba(205,154,79,0.05)]">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-gold uppercase tracking-widest bg-gold/10 px-2.5 py-1 rounded-full border border-gold/20">
-              Garofalo Rewards
-            </span>
-            <h3 className="text-base font-bold text-white pt-2">
-              Più si prenota e più si risparmia!
-            </h3>
-            <p className="text-xs text-white/50 max-w-md">
-              Prenota i tuoi trattamenti preferiti per capelli e barba, raccogli punti fedeltà ad ogni visita e ottieni sconti esclusivi.
-            </p>
-          </div>
-          <Link
-            href="/prenota"
-            className="shrink-0 bg-gold hover:bg-gold-light text-black font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full transition-all shadow-lg hover:-translate-y-0.5"
-          >
-            Prenota ora
-          </Link>
-        </div>
+
 
         {upcoming.length > 0 ? (
           <div className="space-y-4">
