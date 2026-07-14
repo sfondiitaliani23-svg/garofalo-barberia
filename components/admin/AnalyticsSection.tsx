@@ -129,7 +129,7 @@ export function AnalyticsSection({
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white/60">Donne</CardTitle>
+            <CardTitle className="text-sm text-white/60">Ragazzi</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-gold">{stats.genderBreakdown.female}</p>

@@ -80,16 +80,7 @@ export function AnimatedDivider({ variant = 'compact', className }: AnimatedDivi
   return (
     <div ref={ref} className={cn('animated-divider animated-divider-compact', className)} aria-hidden>
       <svg viewBox="0 0 220 20" className="animated-divider-svg-compact">
-        <line className="animated-divider-line animated-divider-line-left" x1="0" y1="10" x2="88" y2="10" />
-        <rect
-          className="animated-divider-gem animated-divider-gem-compact"
-          x="102"
-          y="6"
-          width="16"
-          height="16"
-          transform="rotate(45 110 14)"
-        />
-        <line className="animated-divider-line animated-divider-line-right" x1="132" y1="10" x2="220" y2="10" />
+        <line className="animated-divider-line animated-divider-line-single" x1="0" y1="10" x2="220" y2="10" />
       </svg>
     </div>
   );

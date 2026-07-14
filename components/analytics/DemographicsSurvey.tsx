@@ -89,7 +89,7 @@ export function DemographicsSurvey() {
           {(
             [
               { value: 'male', label: 'Uomo' },
-              { value: 'female', label: 'Donna' },
+              { value: 'female', label: 'Ragazzo' },
               { value: 'child', label: 'Bimbo' },
             ] as const
           ).map(({ value, label }) => (

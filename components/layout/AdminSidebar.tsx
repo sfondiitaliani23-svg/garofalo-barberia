@@ -28,7 +28,6 @@ const links = [
   { href: '/admin/inventario', label: 'Inventario', icon: Package },
   { href: '/admin/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/admin/staff', label: 'Gestione team', icon: UserCog },
-  { href: '/admin/report', label: 'Report', icon: BarChart3 },
 ];
 
 export const AdminSidebar = memo(function AdminSidebar() {

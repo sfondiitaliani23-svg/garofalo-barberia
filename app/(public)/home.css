@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500;600&display=swap');
 
 .home-page {
   --gold: #cd9a4f;
@@ -435,6 +435,14 @@
   stroke-dashoffset: 88;
 }
 
+.animated-divider-line-single {
+  stroke: var(--divider-gold);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 220;
+  stroke-dashoffset: 220;
+}
+
 .animated-divider.is-visible .animated-divider-line-left {
   animation: divider-line-draw 1s ease forwards;
 }
@@ -443,10 +451,15 @@
   animation: divider-line-draw 1s ease 0.25s forwards;
 }
 
+.animated-divider.is-visible .animated-divider-line-single {
+  animation: divider-line-draw 1.2s ease forwards;
+}
+
 .animated-divider-gem-compact {
   fill: var(--divider-gold);
   opacity: 0;
-  transform-origin: 110px 14px;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .animated-divider.is-visible .animated-divider-gem-compact {
@@ -513,7 +526,8 @@
 .animated-divider-gem-eyebrow {
   fill: var(--divider-gold-light);
   opacity: 0;
-  transform-origin: 79px 12px;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .animated-divider-eyebrow.is-visible .animated-divider-stroke-left {
@@ -560,7 +574,8 @@
 .animated-divider-gem {
   fill: var(--divider-gold-light);
   opacity: 0;
-  transform-origin: 600px 32px;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .animated-divider.is-visible .animated-divider-gem {

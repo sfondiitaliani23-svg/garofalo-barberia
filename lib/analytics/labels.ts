@@ -1,6 +1,6 @@
 export const GENDER_LABELS: Record<string, string> = {
   male: 'Uomo',
-  female: 'Donna',
+  female: 'Ragazzo',
   child: 'Bimbo',
   other: 'Altro',
   unknown: 'Non indicato',

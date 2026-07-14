@@ -39,7 +39,7 @@ export default async function AdminDashboardPage() {
         <LiveTrafficChart />
       </div>
 
-      <AnalyticsSection stats={analytics} showBreakdown={false} />
+      <AnalyticsSection stats={analytics} showBreakdown={true} />
     </div>
   );
 }
