@@ -17,16 +17,6 @@ export default function HomePage() {
         className="hero-section"
         style={{ backgroundImage: "url('/assets/sostituisci-immagini/homepage/1.jpg')" }}
       >
-        {/* Paging slider laterale sinistro (stile Treatwell) */}
-        <div className="hero-slider-indicator">
-          <div className="indicator-item active">
-            <span className="num">01</span>
-            <span className="bar"></span>
-          </div>
-          <div className="indicator-item">
-            <span className="num">02</span>
-          </div>
-        </div>
 
         <div className="hero-content">
           {/* Logo centrale gigante visibile solo su Mobile */}
@@ -54,18 +44,8 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-
-        {/* Indicatore verticale di scorrimento in basso al centro (La Nostra Storia ↓) */}
-        <div className="hero-scroll-down">
-          <span className="text-xs uppercase tracking-widest text-white/60 font-semibold mb-2 block">
-            La Nostra Storia
-          </span>
-          <div className="scroll-arrow flex flex-col items-center">
-            <span className="line w-[1px] h-12 bg-gradient-to-b from-white to-transparent block mb-1"></span>
-            <span className="arrow text-base text-gold animate-bounce">↓</span>
-          </div>
-        </div>
       </section>
+
 
       <section className="section section-dark section-chi-siamo">
         <div className="container-lux">
