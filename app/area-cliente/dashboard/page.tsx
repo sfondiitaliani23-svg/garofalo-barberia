@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { parseISO } from 'date-fns';
 import { formatShopDateTimeShort } from '@/lib/utils/booking-datetime';
-import { Calendar, Scissors, Clock, Star, ChevronRight, Sparkles } from 'lucide-react';
+import { Calendar, Scissors, Clock, Star, ChevronRight } from 'lucide-react';
 
 export const metadata = { title: 'La mia Dashboard | Barberia Garofalo' };
 
@@ -78,13 +78,6 @@ export default async function CustomerDashboardPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-4 py-2.5 border border-white/8">
-              <Sparkles size={15} className="text-gold" />
-              <div>
-                <p className="text-xs text-white/40 leading-none">Punti fedeltà</p>
-                <p className="text-base font-bold text-white leading-tight">{totalCount * 10}</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -147,19 +140,7 @@ export default async function CustomerDashboardPage() {
         )}
       </section>
 
-      {/* CTA Prenota */}
-      <div className="rounded-xl border border-gold/15 bg-gradient-to-r from-gold/5 to-transparent p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <p className="font-bold text-white text-sm">Pronto per il prossimo taglio?</p>
-          <p className="text-xs text-white/40 mt-0.5">Prenota in pochi secondi, scegli il tuo barbiere preferito</p>
-        </div>
-        <Link
-          href="/prenota"
-          className="shrink-0 bg-gold hover:bg-[#ffb949] text-black font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-full transition-all shadow-lg hover:-translate-y-0.5"
-        >
-          Prenota ora
-        </Link>
-      </div>
+
 
       {/* Accesso rapido sezioni */}
       <div className="grid grid-cols-2 gap-3">
