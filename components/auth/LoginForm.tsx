@@ -42,20 +42,12 @@ function LoginFormInner({
     setIsDesktop(!isMobileUA && !isSmallScreen);
   }, [qrSessionId]);
 
-  if (!mounted) {
-    return (
-      <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
-        <CardHeader className="space-y-1">
-          <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Accedi</CardTitle>
-          <p className="text-xs text-white/45">Caricamento in corso...</p>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gold" />
-        </CardContent>
-      </Card>
-    );
-  }
+  // State per i flussi di accesso aggiuntivi (Shopify-style)
+  const [authMethod, setAuthMethod] = useState<'email' | 'whatsapp' | 'passkey'>('email');
+  const [whatsAppStep, setWhatsAppStep] = useState<'phone' | 'otp'>('phone');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [loading, setLoading] = useState(false);
 
   // Generazione della sessione QR per Desktop
   useEffect(() => {
@@ -121,18 +113,26 @@ function LoginFormInner({
     return () => clearInterval(interval);
   }, [qrSessionIdState, qrStatus, redirect, router]);
 
-  // State per i flussi di accesso aggiuntivi (Shopify-style)
-  const [authMethod, setAuthMethod] = useState<'email' | 'whatsapp' | 'passkey'>('email');
-  const [whatsAppStep, setWhatsAppStep] = useState<'phone' | 'otp'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     if (error) {
       toast.error(safeDecodeURIComponent(error));
     }
   }, [error]);
+
+  if (!mounted) {
+    return (
+      <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+        <CardHeader className="space-y-1">
+          <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Accedi</CardTitle>
+          <p className="text-xs text-white/45">Caricamento in corso...</p>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gold" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Gestione simulata dell'invio OTP WhatsApp
   const handleSendWhatsAppOTP = (e: React.FormEvent) => {

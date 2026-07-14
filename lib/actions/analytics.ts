@@ -270,6 +270,7 @@ export async function getLiveTrafficData(): Promise<LiveTrafficData> {
       month: 'numeric',
       day: 'numeric',
       hour: 'numeric',
+      hour12: false,
     }).formatToParts(date);
 
     const getVal = (type: string) => parts.find(p => p.type === type)?.value ?? '0';
@@ -277,7 +278,8 @@ export async function getLiveTrafficData(): Promise<LiveTrafficData> {
     const year = getVal('year');
     const month = getVal('month').padStart(2, '0');
     const day = getVal('day').padStart(2, '0');
-    const hour = parseInt(getVal('hour'), 10);
+    let hour = parseInt(getVal('hour'), 10);
+    if (hour === 24) hour = 0;
     
     return {
       dateKey: `${year}-${month}-${day}`,
