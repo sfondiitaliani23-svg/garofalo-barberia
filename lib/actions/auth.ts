@@ -19,10 +19,15 @@ export async function signInWithEmail(formData: FormData) {
   const password = formData.get('password') as string;
   const redirectTo = (formData.get('redirect') as string) || '/area-cliente/dashboard';
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const loginPath = redirectTo.startsWith('/admin') ? '/admin/login' : '/login';
     redirect(`${loginPath}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  if (data?.user) {
+    const { ensureProfileForAuthUser } = await import('@/lib/auth/ensure-profile');
+    await ensureProfileForAuthUser(data.user);
   }
 
   if (!redirectTo.startsWith('/admin')) {
@@ -66,16 +71,18 @@ export async function signUpWithEmail(formData: FormData) {
   redirect('/area-cliente/dashboard');
 }
 
-const OAUTH_LABELS: Record<'google' | 'github', string> = {
+const OAUTH_LABELS: Record<'google' | 'github' | 'apple' | 'facebook', string> = {
   google: 'Google',
   github: 'GitHub',
+  apple: 'Apple',
+  facebook: 'Facebook',
 };
 
 export async function signInWithOAuth(formData: FormData) {
-  const provider = formData.get('provider') as 'google' | 'github';
+  const provider = formData.get('provider') as 'google' | 'github' | 'apple' | 'facebook';
   const redirectTo = (formData.get('redirect') as string) || '/area-cliente/dashboard';
 
-  if (provider !== 'google' && provider !== 'github') {
+  if (provider !== 'google' && provider !== 'github' && provider !== 'apple' && provider !== 'facebook') {
     redirect('/login?error=Provider%20non%20valido');
   }
 

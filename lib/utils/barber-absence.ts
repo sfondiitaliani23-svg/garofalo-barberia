@@ -1,9 +1,26 @@
+import { getShopDayBounds } from '@/lib/utils/booking-datetime';
+
 export type TimeOffRow = {
   barber_id: string | null;
   start_at: string;
   end_at: string;
   reason?: string | null;
 };
+
+export function isShopDateFullyBlocked(
+  dateStr: string,
+  barberId: string,
+  timeOff: TimeOffRow[]
+): boolean {
+  const { dayStart, dayEnd } = getShopDayBounds(dateStr);
+  const dayEndInclusive = new Date(dayEnd.getTime() - 1);
+  return isDayFullyBlockedByTimeOff(
+    dayStart.toISOString(),
+    dayEndInclusive.toISOString(),
+    timeOff,
+    barberId
+  );
+}
 
 export function filterTimeOffForBarber(timeOff: TimeOffRow[], barberId: string) {
   return timeOff.filter((row) => row.barber_id === barberId || row.barber_id === null);
@@ -46,10 +63,7 @@ export function hasAnyBookableDayBySchedule(
     const date = new Date(`${dateStr}T12:00:00`);
     if (!availabilityDays.has(date.getDay())) continue;
 
-    const dayStart = new Date(`${dateStr}T00:00:00`).toISOString();
-    const dayEnd = new Date(`${dateStr}T23:59:59.999`).toISOString();
-
-    if (!isDayFullyBlockedByTimeOff(dayStart, dayEnd, timeOff, barberId)) {
+    if (!isShopDateFullyBlocked(dateStr, barberId, timeOff)) {
       return { canBook: true };
     }
   }

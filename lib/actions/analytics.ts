@@ -2,9 +2,12 @@
 
 import { requireAdmin } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
-
-const UUID_REGEX =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import {
+  countLiveVisitors,
+  endVisitorSession,
+  isValidVisitorSessionId,
+  touchVisitorSession,
+} from '@/lib/analytics/presence';
 
 const GENDERS = ['male', 'female', 'child', 'other', 'unknown'] as const;
 const AGE_RANGES = [
@@ -28,10 +31,6 @@ export type AnalyticsStats = {
   ageBreakdown: Record<AgeRange, number>;
 };
 
-function isValidSessionId(id: string) {
-  return UUID_REGEX.test(id);
-}
-
 function emptyStats(): AnalyticsStats {
   return {
     configured: false,
@@ -50,36 +49,12 @@ function emptyStats(): AnalyticsStats {
   };
 }
 
-async function touchSession(sessionId: string) {
-  const supabase = await createServiceClient();
-  if (!supabase || !isValidSessionId(sessionId)) return null;
-
-  const now = new Date().toISOString();
-  const { data: existing } = await supabase
-    .from('visitor_sessions')
-    .select('id')
-    .eq('id', sessionId)
-    .maybeSingle();
-
-  if (existing) {
-    await supabase
-      .from('visitor_sessions')
-      .update({ last_seen_at: now })
-      .eq('id', sessionId);
-  } else {
-    await supabase.from('visitor_sessions').insert({
-      id: sessionId,
-      last_seen_at: now,
-      first_seen_at: now,
-    });
-  }
-
-  return supabase;
-}
-
 export async function trackPageView(sessionId: string, path: string) {
-  const supabase = await touchSession(sessionId);
-  if (!supabase) return { ok: false };
+  const supabase = await createServiceClient();
+  if (!supabase || !isValidVisitorSessionId(sessionId)) return { ok: false };
+
+  const touched = await touchVisitorSession(sessionId);
+  if (!touched) return { ok: false };
 
   const safePath = path.slice(0, 500) || '/';
   await supabase.from('page_views').insert({
@@ -91,8 +66,18 @@ export async function trackPageView(sessionId: string, path: string) {
 }
 
 export async function trackHeartbeat(sessionId: string) {
-  const supabase = await touchSession(sessionId);
-  return { ok: !!supabase };
+  const ok = await touchVisitorSession(sessionId);
+  return { ok };
+}
+
+export async function trackSessionEnd(sessionId: string) {
+  const ok = await endVisitorSession(sessionId);
+  return { ok };
+}
+
+export async function getLiveVisitorsCount(): Promise<number> {
+  await requireAdmin();
+  return countLiveVisitors();
 }
 
 export async function saveDemographics(
@@ -101,7 +86,7 @@ export async function saveDemographics(
   ageRange: AgeRange
 ) {
   const supabase = await createServiceClient();
-  if (!supabase || !isValidSessionId(sessionId)) return { ok: false };
+  if (!supabase || !isValidVisitorSessionId(sessionId)) return { ok: false };
   if (!AGE_RANGES.includes(ageRange)) return { ok: false };
 
   const now = new Date().toISOString();
@@ -139,24 +124,19 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
-
   const genderKeys = GENDERS.filter((key) => key !== 'unknown');
   const ageKeys = AGE_RANGES.filter((key) => key !== 'unknown');
 
   const [
     { count: dailyVisits },
-    { count: liveVisitors },
+    liveVisitors,
     ...breakdownCounts
   ] = await Promise.all([
     supabase
       .from('page_views')
       .select('*', { count: 'exact', head: true })
       .gte('viewed_at', today.toISOString()),
-    supabase
-      .from('visitor_sessions')
-      .select('*', { count: 'exact', head: true })
-      .gte('last_seen_at', fiveMinAgo.toISOString()),
+    countLiveVisitors(),
     ...genderKeys.map((gender) =>
       supabase
         .from('visitor_sessions')
@@ -199,8 +179,154 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   return {
     configured: true,
     dailyVisits: dailyVisits ?? 0,
-    liveVisitors: liveVisitors ?? 0,
+    liveVisitors,
     genderBreakdown,
     ageBreakdown,
+  };
+}
+
+export interface LiveTrafficData {
+  liveCount: number;
+  todayHourly: number[];
+  yesterdayHourly: number[];
+  todayTotal: number;
+  yesterdayTotalCompare: number;
+  percentChange: number;
+  isChangePositive: boolean;
+  todayDateStr: string;
+  yesterdayDateStr: string;
+}
+
+export async function getLiveTrafficData(): Promise<LiveTrafficData> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) {
+    return {
+      liveCount: 0,
+      todayHourly: Array(24).fill(0),
+      yesterdayHourly: Array(24).fill(0),
+      todayTotal: 0,
+      yesterdayTotalCompare: 0,
+      percentChange: 0,
+      isChangePositive: true,
+      todayDateStr: '',
+      yesterdayDateStr: '',
+    };
+  }
+
+  const SHOP_TIMEZONE = 'Europe/Rome';
+  
+  function getRomeTimeParts(date: Date) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: SHOP_TIMEZONE,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+    }).formatToParts(date);
+
+    const getVal = (type: string) => parts.find(p => p.type === type)?.value ?? '0';
+    
+    const year = getVal('year');
+    const month = getVal('month').padStart(2, '0');
+    const day = getVal('day').padStart(2, '0');
+    const hour = parseInt(getVal('hour'), 10);
+    
+    return {
+      dateKey: `${year}-${month}-${day}`,
+      hour,
+    };
+  }
+
+  const now = new Date();
+  const todayParts = getRomeTimeParts(now);
+  const todayDateKey = todayParts.dateKey;
+  const currentRomeHour = todayParts.hour;
+
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayDateKey = getRomeTimeParts(yesterdayDate).dateKey;
+
+  const startOfYesterday = new Date();
+  startOfYesterday.setHours(startOfYesterday.getHours() - 36);
+
+  const [
+    liveCount,
+    { data: pageViews }
+  ] = await Promise.all([
+    countLiveVisitors(),
+    supabase
+      .from('page_views')
+      .select('session_id, viewed_at')
+      .gte('viewed_at', startOfYesterday.toISOString())
+  ]);
+
+  const todayHourlySessions = Array.from({ length: 24 }, () => new Set<string>());
+  const yesterdayHourlySessions = Array.from({ length: 24 }, () => new Set<string>());
+
+  const todayTotalUniqueSessions = new Set<string>();
+
+  if (pageViews) {
+    for (const view of pageViews) {
+      const date = new Date(view.viewed_at);
+      const { dateKey, hour } = getRomeTimeParts(date);
+      
+      if (dateKey === todayDateKey) {
+        todayHourlySessions[hour].add(view.session_id);
+        todayTotalUniqueSessions.add(view.session_id);
+      } else if (dateKey === yesterdayDateKey) {
+        yesterdayHourlySessions[hour].add(view.session_id);
+      }
+    }
+  }
+
+  const todayHourly = todayHourlySessions.map(s => s.size);
+  const yesterdayHourly = yesterdayHourlySessions.map(s => s.size);
+
+  const todayTotal = todayTotalUniqueSessions.size;
+
+  const yesterdayCompareSet = new Set<string>();
+  for (let h = 0; h <= currentRomeHour; h++) {
+    yesterdayHourlySessions[h].forEach(sid => yesterdayCompareSet.add(sid));
+  }
+  const yesterdayTotalCompare = yesterdayCompareSet.size;
+
+  let percentChange = 0;
+  if (yesterdayTotalCompare > 0) {
+    percentChange = Math.round(((todayTotal - yesterdayTotalCompare) / yesterdayTotalCompare) * 100);
+  } else if (todayTotal > 0) {
+    percentChange = 100;
+  }
+
+  const itMonthNames = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
+  
+  const formatRomeDateStr = (date: Date) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: SHOP_TIMEZONE,
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    }).formatToParts(date);
+    
+    const day = parts.find(p => p.type === 'day')?.value ?? '';
+    const monthIndex = parseInt(parts.find(p => p.type === 'month')?.value ?? '1', 10) - 1;
+    const year = parts.find(p => p.type === 'year')?.value ?? '';
+    
+    return `${day} ${itMonthNames[monthIndex]} ${year}`;
+  };
+
+  const todayDateStr = formatRomeDateStr(now);
+  const yesterdayDateStr = formatRomeDateStr(yesterdayDate);
+
+  return {
+    liveCount,
+    todayHourly,
+    yesterdayHourly,
+    todayTotal,
+    yesterdayTotalCompare,
+    percentChange,
+    isChangePositive: percentChange >= 0,
+    todayDateStr,
+    yesterdayDateStr,
   };
 }

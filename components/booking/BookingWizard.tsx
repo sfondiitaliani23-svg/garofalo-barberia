@@ -15,6 +15,8 @@ import {
   getBarbersBookingAvailability,
   type BarberBookingStatus,
 } from '@/lib/actions/availability';
+import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
+import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';
 import { formatPrice, formatDuration, formatBarberRole } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
@@ -66,6 +68,7 @@ export function BookingWizard({
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
+  const [slotsUnavailable, setSlotsUnavailable] = useState(false);
   const [dates, setDates] = useState<string[]>([]);
   const [name, setName] = useState(defaultName);
   const [phone, setPhone] = useState(defaultPhone);
@@ -100,7 +103,6 @@ export function BookingWizard({
       setBarberId(null);
       setDate(null);
       setTime(null);
-      toast.error('Il barbiere selezionato non è prenotabile in questo periodo (ferie o assenza).');
     }
   }, [barberId, selectedService]);
 
@@ -120,9 +122,13 @@ export function BookingWizard({
   const loadSlots = useCallback(async () => {
     if (!selectedService || !date) return;
     setLoadingSlots(true);
-    const { slots: s, error } = await getAvailableSlots(barberId, date, selectedService.duration_minutes);
+    const { slots: s, unavailable } = await getAvailableSlots(
+      barberId,
+      date,
+      selectedService.duration_minutes
+    );
     setSlots(s);
-    if (error) toast.error(error);
+    setSlotsUnavailable(Boolean(unavailable));
     setLoadingSlots(false);
   }, [selectedService, barberId, date]);
 
@@ -450,6 +456,8 @@ export function BookingWizard({
                 <h3 className="mb-3 text-sm font-semibold text-gold">Orari disponibili</h3>
                 {loadingSlots ? (
                   <p className="text-sm text-white/50">Caricamento orari...</p>
+                ) : slotsUnavailable && date ? (
+                  <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} />
                 ) : slots.length === 0 ? (
                   <p className="text-sm text-white/50">Nessun orario libero per questo giorno. Scegli un altro giorno.</p>
                 ) : (

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
+import { parseISO } from 'date-fns';
+import { formatShopDateTimeShort } from '@/lib/utils/booking-datetime';
 
 export const metadata = { title: 'La mia Dashboard' };
 
@@ -36,7 +36,7 @@ export default async function CustomerDashboardPage() {
               <div key={apt.id} className="rounded-lg border border-white/10 bg-[#111] p-4">
                 <p className="font-semibold">{service?.name}</p>
                 <p className="text-sm text-gold">
-                  {format(new Date(apt.starts_at), "EEEE d MMMM 'alle' HH:mm", { locale: it })}
+                  {formatShopDateTimeShort(parseISO(apt.starts_at))}
                 </p>
                 <p className="text-sm text-white/50">con {barber?.name}</p>
               </div>

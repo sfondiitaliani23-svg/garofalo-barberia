@@ -1,6 +1,8 @@
 import type { AnalyticsStats } from '@/lib/actions/analytics';
 import { AGE_LABELS, GENDER_LABELS } from '@/lib/analytics/labels';
+import { ADMIN_LIVE_POLL_MS } from '@/lib/analytics/live-config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { LiveVisitorsCounter } from '@/components/admin/LiveVisitorsCounter';
 
 function BreakdownBar({
   label,
@@ -78,8 +80,10 @@ export function AnalyticsSection({
             <CardTitle className="text-sm text-white/60">Visitatori live</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold text-gold">{stats.liveVisitors}</p>
-            <p className="mt-1 text-xs text-white/40">Attivi negli ultimi 5 min</p>
+            <LiveVisitorsCounter initialCount={stats.liveVisitors} />
+            <p className="mt-1 text-xs text-white/40">
+              Connessi adesso · aggiornamento ogni {ADMIN_LIVE_POLL_MS / 1000}s
+            </p>
           </CardContent>
         </Card>
         <Card>

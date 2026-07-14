@@ -72,3 +72,42 @@ export function parseBookingDateTime(date: string, time: string): Date {
 
   return parsed;
 }
+
+/** Data e ora estese in italiano nel fuso del salone (es. martedì 14 luglio 2026 alle 09:00). */
+export function formatShopDateTimeLong(date: Date): string {
+  const datePart = formatShopDateLong(date);
+  const timePart = formatShopTimeFromDate(date);
+  return `${datePart} alle ${timePart}`;
+}
+
+/** Data e ora corte in italiano nel fuso del salone (es. martedì 14 luglio alle 09:00). */
+export function formatShopDateTimeShort(date: Date): string {
+  const datePart = new Intl.DateTimeFormat('it-IT', {
+    timeZone: SHOP_TIMEZONE,
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(date);
+  const timePart = formatShopTimeFromDate(date);
+  return `${datePart} alle ${timePart}`;
+}
+
+/** Ottiene la data stringa YYYY-MM-DD nel fuso del salone da una Date. */
+export function getShopDateString(date: Date): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: SHOP_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  
+  const year = parts.find(p => p.type === 'year')?.value ?? '2026';
+  const month = parts.find(p => p.type === 'month')?.value ?? '01';
+  const day = parts.find(p => p.type === 'day')?.value ?? '01';
+  return `${year}-${month}-${day}`;
+}
+
+/** Ottiene l'ora stringa HH:mm nel fuso del salone da una Date. */
+export function getShopTimeString(date: Date): string {
+  return formatShopTimeFromDate(date);
+}

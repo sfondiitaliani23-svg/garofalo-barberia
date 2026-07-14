@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { X, Pencil, XCircle } from 'lucide-react';
 import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
@@ -18,6 +18,8 @@ import {
   updateAppointmentStatus,
 } from '@/lib/actions/admin';
 import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability';
+import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
+import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { formatPrice, formatDuration } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
@@ -48,6 +50,7 @@ export function AdminAppointmentForm({
   const barberId = defaultBarberId;
   const selectedBarber = barbers.find((b) => b.id === barberId);
   const [serviceId, setServiceId] = useState(appointment?.service_id ?? services[0]?.id ?? '');
+  const selectedService = services.find((s) => s.id === serviceId);
   const [date, setDate] = useState(
     appointment
       ? format(parseISO(appointment.starts_at), 'yyyy-MM-dd')
@@ -60,8 +63,34 @@ export function AdminAppointmentForm({
   );
   const [customerName, setCustomerName] = useState(appointment?.customer_name ?? '');
   const [customerPhone, setCustomerPhone] = useState(appointment?.customer_phone ?? '');
+  const [customDuration, setCustomDuration] = useState<number>(() => {
+    if (appointment) {
+      const starts = parseISO(appointment.starts_at);
+      const ends = parseISO(appointment.ends_at);
+      return differenceInMinutes(ends, starts);
+    }
+    const service = services[0];
+    return service?.duration_minutes ?? 30;
+  });
+
+  useEffect(() => {
+    if (!isEdit && selectedService) {
+      setCustomDuration(selectedService.duration_minutes);
+    }
+  }, [serviceId, selectedService, isEdit]);
   const [notes, setNotes] = useState(appointment?.notes ?? '');
   const [slots, setSlots] = useState<string[]>([]);
+  const [notificationTime, setNotificationTime] = useState(() => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Europe/Rome',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    return formatter.format(now);
+  });
+  const [slotsUnavailable, setSlotsUnavailable] = useState(false);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingDates, setLoadingDates] = useState(false);
@@ -87,28 +116,28 @@ export function AdminAppointmentForm({
     };
   }, [onClose]);
 
-  const selectedService = services.find((s) => s.id === serviceId);
+
 
   const loadSlots = useCallback(async () => {
     if (!selectedService || !date) return;
     setLoadingSlots(true);
-    const { slots: s, error } = await getAvailableSlots(
+    const { slots: s, unavailable } = await getAvailableSlots(
       barberId,
       date,
-      selectedService.duration_minutes,
+      customDuration,
       appointment?.id ?? null,
       true
     );
     setSlots(s);
-    if (error) toast.error(error);
+    setSlotsUnavailable(Boolean(unavailable));
     setLoadingSlots(false);
-  }, [barberId, date, selectedService, appointment?.id]);
+  }, [barberId, date, selectedService, appointment?.id, customDuration]);
 
   const loadDates = useCallback(async () => {
     if (!selectedService) return;
     setLoadingDates(true);
     const dates = await getAvailableDates(
-      selectedService.duration_minutes,
+      customDuration,
       barberId,
       appointment?.id ?? null
     );
@@ -123,7 +152,7 @@ export function AdminAppointmentForm({
 
     setAvailableDates(Array.from(extraDates).sort());
     setLoadingDates(false);
-  }, [appointment, barberId, initialDate, selectedService]);
+  }, [appointment, barberId, initialDate, selectedService, customDuration]);
 
   useEffect(() => {
     void loadSlots();
@@ -149,8 +178,31 @@ export function AdminAppointmentForm({
       customerName,
       customerPhone,
       notes,
+      customDurationMinutes: customDuration,
     };
   }
+
+  const handleSendAnticipateNotification = () => {
+    if (!appointment) return;
+    const phone = appointment.customer_phone.trim();
+    if (!phone) {
+      toast.error('Il cliente non ha un numero di telefono associato.');
+      return;
+    }
+
+    let formattedPhone = phone.replace(/\s+/g, '').replace(/[-+]/g, '');
+    if (!formattedPhone.startsWith('39') && formattedPhone.length === 10) {
+      formattedPhone = '39' + formattedPhone;
+    }
+
+    const name = appointment.customer_name;
+    const originalTime = format(parseISO(appointment.starts_at), 'HH:mm');
+    const msg = `Ciao ${name}! Ti scriviamo da Garofalo Barberia. Volevamo avvisarti che si è liberato un posto prima, all'incirca per le ${notificationTime}. Se ti fa comodo anticipare il tuo appuntamento delle ${originalTime}, rispondi a questo messaggio! Grazie.`;
+
+    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+    toast.success('Apertura WhatsApp in corso...');
+  };
 
   const handleSave = useCallback(() => {
     if (!customerName.trim() || !serviceId || !time) {
@@ -321,6 +373,10 @@ export function AdminAppointmentForm({
             <Label>Orario *</Label>
             {loadingSlots ? (
               <p className="mt-2 text-sm text-white/50">Caricamento orari...</p>
+            ) : slotsUnavailable ? (
+              <div className="mt-2">
+                <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} className="grid-cols-4" />
+              </div>
             ) : slots.length === 0 ? (
               <p className="mt-2 text-sm text-white/50">Nessun orario libero in questa data.</p>
             ) : (
@@ -342,6 +398,24 @@ export function AdminAppointmentForm({
             )}
           </div>
           <div>
+            <Label htmlFor="admin-duration">Durata personalizzata (minuti) *</Label>
+            <Input
+              id="admin-duration"
+              type="number"
+              min={5}
+              max={240}
+              step={5}
+              value={customDuration}
+              onChange={(e) => setCustomDuration(Number(e.target.value))}
+              placeholder="Usa durata standard del servizio"
+              className="mt-1"
+              required
+            />
+            <p className="mt-1 text-xs text-white/40">
+              Durata standard per {selectedService?.name}: {selectedService?.duration_minutes} min. Modificala per liberare lo slot.
+            </p>
+          </div>
+          <div>
             <Label htmlFor="admin-notes">Note</Label>
             <textarea
               id="admin-notes"
@@ -354,9 +428,43 @@ export function AdminAppointmentForm({
           </div>
 
           {isEdit && appointment && (
-            <p className="text-center text-xs text-white/40">
-              Attuale: {format(parseISO(appointment.starts_at), "EEEE d MMMM 'alle' HH:mm", { locale: it })}
-            </p>
+            <>
+              <div className="rounded-lg border border-gold/20 bg-gold/5 p-4 space-y-3 mt-4">
+                <h4 className="text-sm font-semibold text-gold uppercase tracking-wider flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
+                  </span>
+                  Avviso per anticipo orario
+                </h4>
+                <p className="text-xs text-white/60">
+                  Invia un messaggio precompilato su WhatsApp a questo cliente informandolo che si è liberato uno slot a causa di una disdetta o di un servizio concluso prima.
+                </p>
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <Label htmlFor="notification-free-time" className="text-[10px] uppercase text-white/50">Orario Libero</Label>
+                    <Input
+                      id="notification-free-time"
+                      type="time"
+                      value={notificationTime}
+                      onChange={(e) => setNotificationTime(e.target.value)}
+                      className="mt-1 bg-[#161616] text-xs h-9 border-white/10"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleSendAnticipateNotification}
+                    className="bg-gold hover:bg-gold-light text-black font-semibold text-xs h-9 border-none px-4 rounded-md"
+                  >
+                    Avvisa su WhatsApp
+                  </Button>
+                </div>
+              </div>
+
+              <p className="text-center text-xs text-white/40">
+                Attuale: {format(parseISO(appointment.starts_at), "EEEE d MMMM 'alle' HH:mm", { locale: it })}
+              </p>
+            </>
           )}
         </div>
 

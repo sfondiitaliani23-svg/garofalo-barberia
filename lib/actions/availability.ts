@@ -7,7 +7,6 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { getShopDayBounds, getShopDayOfWeek, parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import {
   filterTimeOffForBarber,
-  getAbsenceMessage,
   hasAnyBookableDayBySchedule,
   isDayFullyBlockedByTimeOff,
   type TimeOffRow,
@@ -248,7 +247,7 @@ export async function getAvailableSlots(
   durationMinutes: number,
   excludeAppointmentId?: string | null,
   forAdmin = false
-): Promise<{ slots: string[]; error?: string }> {
+): Promise<{ slots: string[]; unavailable?: boolean; error?: string }> {
   if (!isSupabaseConfigured()) {
     return getFallbackSlots(dateStr, durationMinutes);
   }
@@ -263,38 +262,38 @@ export async function getAvailableSlots(
 
     if (slots.length === 0) {
       if (barberId) {
-        const date = parseISO(dateStr);
         const { dayStart, dayEnd } = getShopDayBounds(dateStr);
+        const dayEndInclusive = new Date(dayEnd.getTime() - 1);
         const fullyBlocked = isDayFullyBlockedByTimeOff(
           dayStart.toISOString(),
-          dayEnd.toISOString(),
+          dayEndInclusive.toISOString(),
           context.timeOff,
           barberId
         );
-        const hasSchedule = Boolean(context.availabilityByBarber.get(barberId)?.length);
-        const absenceBlock = filterTimeOffForBarber(context.timeOff, barberId).find((block) => {
-          const blockStart = new Date(block.start_at);
-          const blockEnd = new Date(block.end_at);
-          return blockStart <= endOfDay(date) && blockEnd >= dayStart;
-        });
 
-        if (fullyBlocked || !hasSchedule) {
-          return {
-            slots: [],
-            error: `${getAbsenceMessage(absenceBlock?.reason)} in questa data. Scegli un altro barbiere o un altro giorno.`,
-          };
+        if (fullyBlocked) {
+          return { slots: [], unavailable: true };
         }
 
-        return {
-          slots: [],
-          error: 'Nessun orario libero per questo giorno. Scegli un altro giorno.',
-        };
+        return { slots: [] };
       }
 
-      return {
-        slots: [],
-        error: 'Nessun orario libero per questo giorno. Scegli un altro giorno.',
-      };
+      const allBlocked = context.barberIds.every((id) => {
+        const { dayStart, dayEnd } = getShopDayBounds(dateStr);
+        const dayEndInclusive = new Date(dayEnd.getTime() - 1);
+        return isDayFullyBlockedByTimeOff(
+          dayStart.toISOString(),
+          dayEndInclusive.toISOString(),
+          context.timeOff,
+          id
+        );
+      });
+
+      if (allBlocked) {
+        return { slots: [], unavailable: true };
+      }
+
+      return { slots: [] };
     }
 
     return { slots };

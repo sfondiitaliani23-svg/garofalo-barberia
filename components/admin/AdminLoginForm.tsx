@@ -76,7 +76,6 @@ function AdminLoginFormInner() {
           type="email"
           required
           autoComplete="email"
-          defaultValue="luigigarofalo1996@gmail.com"
           className="mt-1"
         />
       </div>

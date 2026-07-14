@@ -1,45 +1,38 @@
 #!/usr/bin/env node
+/**
+ * Applica migration 007 (fasce orarie pomeriggio/mattina).
+ */
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import pg from 'pg';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_REF = 'uautnlmnpxgbajtucuko';
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.error('❌ Imposta DATABASE_URL prima di eseguire questo script.');
+  console.error('   Esempio (PowerShell):');
+  console.error('   $env:DATABASE_URL="postgresql://postgres.uautnlmnpxgbajtucuko:[PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres"');
+  console.error('   node scripts/run-migration-007.mjs');
+  process.exit(1);
+}
+
 const sql = readFileSync(join(__dirname, '../supabase/migrations/007_fix_availability_periods.sql'), 'utf8');
 
-async function runSql(query, connectionString) {
-  if (connectionString) {
-    const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
-    await client.connect();
-    await client.query(query);
-    await client.end();
-    return;
-  }
-
-  const token = process.env.SUPABASE_ACCESS_TOKEN;
-  if (!token) throw new Error('Serve DATABASE_URL o SUPABASE_ACCESS_TOKEN');
-
-  const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ query }),
-  });
-
-  const text = await res.text();
-  if (!res.ok) throw new Error(`Management API ${res.status}: ${text}`);
-}
-
-async function main() {
-  console.log('→ Applico migration 007 (fasce orarie barbieri)...');
-  await runSql(sql, process.env.DATABASE_URL);
-  console.log('✅ Orari barbieri aggiornati con pausa pranzo');
-}
-
-main().catch((error) => {
-  console.error('❌', error.message);
-  process.exit(1);
+const pg = await import('pg');
+const client = new pg.default.Client({
+  connectionString: databaseUrl,
+  ssl: { rejectUnauthorized: false },
 });
+
+try {
+  await client.connect();
+  console.log('✓ Connesso al database Supabase');
+  await client.query(sql);
+  console.log('✓ Migration 007 applicata con successo.');
+} catch (error) {
+  console.error('❌ Errore:', error.message);
+  process.exit(1);
+} finally {
+  await client.end();
+}

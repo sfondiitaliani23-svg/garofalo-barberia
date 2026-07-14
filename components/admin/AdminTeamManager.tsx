@@ -17,7 +17,6 @@ import {
   saveAdminBarber,
   saveAdminBarberSchedule,
   saveAdminTimeOff,
-  type AdminDayScheduleInput,
 } from '@/lib/actions/admin';
 import {
   buildBarberSchedule,
@@ -26,6 +25,7 @@ import {
   SCHEDULE_PERIOD_LABELS,
   type AdminPeriodInput,
   type SchedulePeriod,
+  type AdminDayScheduleInput,
 } from '@/lib/utils/barber-schedule';
 import { cn } from '@/lib/utils';
 import type { Barber, BarberAvailability, BarberTimeOff } from '@/types/database';

@@ -7,7 +7,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { getProfile, getSession } from '@/lib/auth';
 import { ensureProfileForAuthUser } from '@/lib/auth/ensure-profile';
 import { getAvailableSlots, resolveBarberForSlot } from '@/lib/actions/availability';
-import { notifyAdminNewBooking } from '@/lib/utils/notifications';
+import { notifyAdminBookingCancellation, notifyAdminNewBooking } from '@/lib/utils/notifications';
 import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appointments';
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
@@ -177,7 +177,7 @@ export async function cancelAppointment(appointmentId: string) {
 
   const { data: apt } = await supabase
     .from('appointments')
-    .select('*')
+    .select('*, service:services(name, price_cents), barber:barbers(name)')
     .eq('id', appointmentId)
     .single();
 
@@ -197,6 +197,27 @@ export async function cancelAppointment(appointmentId: string) {
     .eq('id', appointmentId);
 
   if (error) return { ok: false, error: 'Errore cancellazione' };
+
+  if (isOwner) {
+    const service = apt.service as { name: string; price_cents: number } | null;
+    const barber = apt.barber as { name: string } | null;
+    const discountCents = apt.discount_cents ?? 0;
+    const priceCents = Math.max(0, (service?.price_cents ?? 0) - discountCents);
+
+    try {
+      await notifyAdminBookingCancellation({
+        serviceName: service?.name ?? 'Servizio',
+        priceCents,
+        barberName: barber?.name ?? 'Barbiere',
+        startsAt: new Date(apt.starts_at),
+        customerName: apt.customer_name,
+        customerPhone: apt.customer_phone,
+        notes: apt.notes ?? undefined,
+      });
+    } catch (notifyError) {
+      console.error('cancelAppointment notification failed:', notifyError);
+    }
+  }
 
   revalidatePath('/area-cliente/appuntamenti');
   revalidatePath('/area-cliente/storico');

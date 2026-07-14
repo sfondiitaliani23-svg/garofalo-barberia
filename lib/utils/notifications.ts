@@ -1,7 +1,10 @@
 import { Resend } from 'resend';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
-import { renderAdminBookingEmailHtml } from '@/lib/utils/email-templates';
+import {
+  renderAdminBookingEmailHtml,
+  renderAdminCancellationEmailHtml,
+} from '@/lib/utils/email-templates';
 import { formatShopBookingDateTime } from '@/lib/utils/booking-datetime';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -198,5 +201,109 @@ export async function notifyAdminNewBooking(data: BookingNotificationData) {
     push,
     email,
     web3,
+  };
+}
+
+export async function sendAdminCancellationEmail(data: BookingNotificationData) {
+  const notificationEmail = getBookingNotificationEmail();
+  if (!resend || !notificationEmail) return { ok: false, reason: 'not_configured' };
+
+  const { dateStr, timeStr, price, phone } = formatBookingDetails(data);
+  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni/storico`;
+  const subject = `Disdetta cliente — ${data.customerName} — ${dateStr} ${timeStr}`;
+  const text =
+    `Un cliente ha disdetto la prenotazione\n\n` +
+    `Cliente: ${data.customerName} (${phone})\n` +
+    `Servizio: ${data.serviceName} — ${price}\n` +
+    `Barbiere: ${data.barberName}\n` +
+    `Appuntamento: ${dateStr} alle ${timeStr}\n` +
+    (data.notes ? `Note: ${data.notes}\n` : '') +
+    `\nStorico prenotazioni: ${adminUrl}`;
+
+  try {
+    const { error } = await resend.emails.send(
+      buildTransactionalEmail({
+        to: notificationEmail,
+        subject,
+        text,
+        html: renderAdminCancellationEmailHtml({
+          customerName: data.customerName,
+          phone,
+          serviceName: data.serviceName,
+          price,
+          barberName: data.barberName,
+          dateStr,
+          timeStr,
+          notes: data.notes,
+        }),
+      })
+    );
+
+    if (error) {
+      console.error('Cancellation email failed:', error);
+      return { ok: false, reason: 'send_failed' };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error('Cancellation email failed:', error);
+    return { ok: false, reason: 'send_failed' };
+  }
+}
+
+export async function sendAdminCancellationPush(data: BookingNotificationData) {
+  const topic = process.env.NTFY_TOPIC;
+  if (!topic) return { ok: false, reason: 'not_configured' };
+
+  const baseUrl = (process.env.NTFY_URL ?? 'https://ntfy.sh').replace(/\/$/, '');
+  const { dateStr, timeStr, price, phone } = formatBookingDetails(data);
+  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni/storico`;
+
+  const message =
+    `DISDETTA — ${data.customerName} (${phone})\n` +
+    `${data.serviceName} — ${price}\n` +
+    `Con ${data.barberName}\n` +
+    `${dateStr} alle ${timeStr}` +
+    (data.notes ? `\nNote: ${data.notes}` : '');
+
+  const headers: Record<string, string> = {
+    Title: `Disdetta — ${data.customerName}`,
+    Priority: 'high',
+    Tags: 'warning,calendar',
+    Click: adminUrl,
+  };
+
+  if (process.env.NTFY_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.NTFY_TOKEN}`;
+  }
+
+  try {
+    const response = await fetch(`${baseUrl}/${topic}`, {
+      method: 'POST',
+      headers,
+      body: message,
+    });
+
+    if (!response.ok) {
+      return { ok: false, reason: 'send_failed' };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    console.error('Cancellation push failed:', error);
+    return { ok: false, reason: 'send_failed' };
+  }
+}
+
+export async function notifyAdminBookingCancellation(data: BookingNotificationData) {
+  const [email, push] = await Promise.all([
+    sendAdminCancellationEmail(data),
+    sendAdminCancellationPush(data),
+  ]);
+
+  return {
+    ok: email.ok || push.ok,
+    email,
+    push,
   };
 }

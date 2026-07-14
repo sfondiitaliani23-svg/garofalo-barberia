@@ -17,12 +17,13 @@ import {
   type CalendarAppointment,
 } from '@/lib/utils/week-calendar';
 import { cn } from '@/lib/utils';
-import type { Barber, Service } from '@/types/database';
+import type { Barber, BarberTimeOff, Service } from '@/types/database';
 
 interface WeeklyBookingCalendarProps {
   barbers: Barber[];
   services: Service[];
   appointments: CalendarAppointment[];
+  timeOff: BarberTimeOff[];
   weekStartIso: string;
   initialBarberId?: string;
 }
@@ -31,6 +32,7 @@ export function WeeklyBookingCalendar({
   barbers,
   services,
   appointments: initialAppointments,
+  timeOff,
   weekStartIso,
   initialBarberId,
 }: WeeklyBookingCalendarProps) {
@@ -47,8 +49,8 @@ export function WeeklyBookingCalendar({
   const days = useMemo(() => getWorkingDays(weekStart), [weekStart]);
   const timeSlots = useMemo(() => generateCalendarTimeSlots(), []);
   const grid = useMemo(
-    () => buildWeekGrid(days, timeSlots, initialAppointments, barberId),
-    [barberId, days, initialAppointments, timeSlots]
+    () => buildWeekGrid(days, timeSlots, initialAppointments, barberId, timeOff),
+    [barberId, days, initialAppointments, timeOff, timeSlots]
   );
   const selectedBarber = barbers.find((b) => b.id === barberId);
 
@@ -156,10 +158,24 @@ export function WeeklyBookingCalendar({
                   {row.slice(1).map((cell, ci) => {
                     if (cell.type === 'skip') return null;
 
-                    if (cell.type === 'closed') {
+                    if (cell.type === 'closed' || cell.type === 'unavailable') {
                       return (
-                        <td key={ci} className="bg-[#0d0d0d] px-1 py-1">
-                          <div className="h-10 rounded bg-white/[0.02]" />
+                        <td
+                          key={ci}
+                          className={cn(
+                            'px-1 py-1',
+                            cell.type === 'unavailable' ? 'bg-[#0d0d0d]' : 'bg-[#0d0d0d]'
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              'h-10 rounded',
+                              cell.type === 'unavailable'
+                                ? 'bg-white/[0.03] ring-1 ring-inset ring-white/5'
+                                : 'bg-white/[0.02]'
+                            )}
+                            title={cell.type === 'unavailable' ? 'Non disponibile (ferie o chiusura)' : undefined}
+                          />
                         </td>
                       );
                     }

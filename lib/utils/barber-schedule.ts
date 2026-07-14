@@ -130,13 +130,19 @@ export function scheduleToAvailabilityRows(barberId: string, days: AdminDaySched
 
     for (const period of ['morning', 'afternoon'] as const) {
       const slot = day[period];
+      const defaults = defaultPeriodsForDay(day.dayOfWeek)[period];
+      
+      const isValidTime = (t: string | undefined | null) => typeof t === 'string' && /^\d{2}:\d{2}$/.test(t.trim().slice(0, 5));
+      const start = isValidTime(slot.startTime) ? slot.startTime.trim().slice(0, 5) : defaults.startTime;
+      const end = isValidTime(slot.endTime) ? slot.endTime.trim().slice(0, 5) : defaults.endTime;
+
       rows.push({
         barber_id: barberId,
         day_of_week: day.dayOfWeek,
         period,
-        start_time: slot.startTime.slice(0, 5),
-        end_time: slot.endTime.slice(0, 5),
-        is_available: slot.enabled && slot.startTime < slot.endTime,
+        start_time: start,
+        end_time: end,
+        is_available: slot.enabled && start < end,
       });
     }
   }

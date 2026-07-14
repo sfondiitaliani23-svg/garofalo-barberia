@@ -1,6 +1,6 @@
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
+import { parseISO } from 'date-fns';
 import { AppointmentActions } from '@/components/customer/AppointmentActions';
+import { formatShopDateTimeLong } from '@/lib/utils/booking-datetime';
 import type { AppointmentStatus } from '@/types/database';
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
@@ -43,7 +43,7 @@ export function AppointmentCard({
         <div>
           <p className="font-semibold">{serviceName}</p>
           <p className="text-sm text-white/60">
-            {format(new Date(startsAt), "EEEE d MMMM yyyy 'alle' HH:mm", { locale: it })} — {barberName}
+            {formatShopDateTimeLong(parseISO(startsAt))} — {barberName}
           </p>
           <p className={`mt-1 text-xs uppercase ${STATUS_COLORS[status]}`}>
             {STATUS_LABELS[status]}

@@ -1,5 +1,6 @@
 import { addDays, format, parseISO, startOfWeek } from 'date-fns';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { isShopDateFullyBlocked, type TimeOffRow } from '@/lib/utils/barber-absence';
 import { getDayClosingTime as getClosingForDay, isSlotWithinShopHours } from '@/lib/utils/shop-hours';
 
 export const WORKING_DAY_OFFSETS = [1, 2, 3, 4, 5]; // Mar–Sab dalla settimana che inizia lunedì
@@ -21,6 +22,7 @@ export interface CalendarAppointment {
 export type GridCell =
   | { type: 'time'; time: string }
   | { type: 'closed'; day: Date }
+  | { type: 'unavailable'; day: Date }
   | { type: 'empty'; day: Date; time: string }
   | { type: 'skip' }
   | { type: 'appointment'; day: Date; appointment: CalendarAppointment; rowSpan: number };
@@ -67,8 +69,14 @@ export function buildWeekGrid(
   days: Date[],
   timeSlots: string[],
   appointments: CalendarAppointment[],
-  barberId: string
+  barberId: string,
+  timeOff: TimeOffRow[] = []
 ): GridCell[][] {
+  const blockedDays = new Set(
+    days
+      .filter((day) => isShopDateFullyBlocked(dateKey(day), barberId, timeOff))
+      .map((day) => dateKey(day))
+  );
   const confirmed = appointments.filter(
     (apt) => apt.barber_id === barberId && apt.status === 'confirmed'
   );
@@ -88,6 +96,11 @@ export function buildWeekGrid(
 
       if (dayCovered.has(time)) {
         row.push({ type: 'skip' });
+        continue;
+      }
+
+      if (blockedDays.has(key)) {
+        row.push({ type: 'unavailable', day });
         continue;
       }
 

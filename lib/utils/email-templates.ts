@@ -206,6 +206,42 @@ export function renderAdminBookingEmailHtml(data: {
   });
 }
 
+export function renderAdminCancellationEmailHtml(data: {
+  customerName: string;
+  phone: string;
+  serviceName: string;
+  price: string;
+  barberName: string;
+  dateStr: string;
+  timeStr: string;
+  notes?: string;
+}) {
+  const adminUrl = `${siteUrl()}/admin/prenotazioni/storico`;
+
+  return renderEmailTemplate({
+    preheader: `${data.customerName} ha disdetto l'appuntamento del ${data.dateStr} alle ${data.timeStr}`,
+    badge: 'Disdetta cliente',
+    eyebrow: 'Notifica staff',
+    title: `${escapeHtml(data.customerName)} ha disdetto`,
+    intro:
+      'Un cliente ha annullato la propria prenotazione online. Lo slot è di nuovo libero nel calendario — controlla i dettagli qui sotto.',
+    detailRows: [
+      { label: 'Cliente', value: escapeHtml(data.customerName), highlight: true },
+      { label: 'Telefono', value: escapeHtml(data.phone) },
+      { label: 'Servizio', value: `${escapeHtml(data.serviceName)} · ${escapeHtml(data.price)}` },
+      { label: 'Barbiere', value: escapeHtml(data.barberName) },
+      {
+        label: 'Appuntamento disdetto',
+        value: `${escapeHtml(data.dateStr)} alle ${escapeHtml(data.timeStr)}`,
+        highlight: true,
+      },
+      ...(data.notes ? [{ label: 'Note cliente', value: escapeHtml(data.notes) }] : []),
+    ],
+    cta: { href: adminUrl, label: 'Apri storico prenotazioni' },
+    footerNote: 'Ricevi questa email perché sei il referente delle prenotazioni online.',
+  });
+}
+
 export function renderCustomerReminderEmailHtml(data: {
   customerName: string;
   serviceName: string;

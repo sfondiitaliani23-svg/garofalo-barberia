@@ -17,8 +17,6 @@ import {
   notifyCustomersSalonClosure,
 } from '@/lib/utils/schedule-notifications';
 
-export type { AdminDayScheduleInput };
-
 export interface AdminAppointmentInput {
   serviceId: string;
   barberId: string;
@@ -27,6 +25,7 @@ export interface AdminAppointmentInput {
   customerName: string;
   customerPhone?: string;
   notes?: string;
+  customDurationMinutes?: number;
 }
 
 function revalidateAppointmentPaths() {
@@ -151,7 +150,10 @@ export async function createAdminAppointment(input: AdminAppointmentInput) {
   if (serviceError || !service) return { ok: false, error: 'Servizio non trovato' };
 
   const startsAt = parseBookingDateTime(input.date, input.time);
-  const endsAt = addMinutes(startsAt, service.duration_minutes);
+  const duration = input.customDurationMinutes && input.customDurationMinutes > 0
+    ? input.customDurationMinutes
+    : service.duration_minutes;
+  const endsAt = addMinutes(startsAt, duration);
 
   const { data: barber } = await supabase
     .from('barbers')
@@ -225,7 +227,10 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
   if (!service) return { ok: false, error: 'Servizio non trovato' };
 
   const startsAt = parseBookingDateTime(input.date, input.time);
-  const endsAt = addMinutes(startsAt, service.duration_minutes);
+  const duration = input.customDurationMinutes && input.customDurationMinutes > 0
+    ? input.customDurationMinutes
+    : service.duration_minutes;
+  const endsAt = addMinutes(startsAt, duration);
 
   const { error } = await supabase
     .from('appointments')
@@ -555,19 +560,33 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
 
   const scheduleChanges = detectScheduleChanges(oldAvailability ?? [], days);
 
+  const DAY_NAMES = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
   for (const day of days) {
     if (day.dayOfWeek === 0 || day.dayOfWeek === 1) continue;
 
     for (const period of ['morning', 'afternoon'] as const) {
       const slot = day[period];
-      const startTime = slot.startTime.slice(0, 5);
-      const endTime = slot.endTime.slice(0, 5);
+      const startTime = slot.startTime?.trim().slice(0, 5) || '';
+      const endTime = slot.endTime?.trim().slice(0, 5) || '';
 
-      if (slot.enabled && startTime >= endTime) {
-        return {
-          ok: false,
-          error: `Orario ${period === 'morning' ? 'mattutino' : 'pomeridiano'} non valido`,
-        };
+      if (slot.enabled) {
+        if (!startTime || !endTime) {
+          const dayName = DAY_NAMES[day.dayOfWeek] || `giorno ${day.dayOfWeek}`;
+          const periodName = period === 'morning' ? 'mattutino' : 'pomeridiano';
+          return {
+            ok: false,
+            error: `Inserisci sia l'orario di apertura che quello di chiusura per il periodo ${periodName} di ${dayName}`,
+          };
+        }
+        if (startTime >= endTime) {
+          const dayName = DAY_NAMES[day.dayOfWeek] || `giorno ${day.dayOfWeek}`;
+          const periodName = period === 'morning' ? 'mattutino' : 'pomeridiano';
+          return {
+            ok: false,
+            error: `L'orario di apertura deve essere precedente a quello di chiusura per il periodo ${periodName} di ${dayName}`,
+          };
+        }
       }
     }
   }

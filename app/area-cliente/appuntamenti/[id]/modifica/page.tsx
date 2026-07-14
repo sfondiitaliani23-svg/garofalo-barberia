@@ -3,7 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import { getAppointmentForCustomer } from '@/lib/actions/bookings';
 import { RescheduleForm } from '@/components/customer/RescheduleForm';
 import { canManageAppointment } from '@/lib/utils/appointments';
-import { format, parseISO } from 'date-fns';
+import { getShopDateString, getShopTimeString } from '@/lib/utils/booking-datetime';
+import { parseISO } from 'date-fns';
 
 export const metadata = { title: 'Modifica prenotazione' };
 
@@ -24,8 +25,8 @@ export default async function ModificaAppuntamentoPage({
   const service = apt.service as { name: string; duration_minutes: number; price_cents: number } | null;
   if (!service) notFound();
 
-  const date = format(parseISO(apt.starts_at), 'yyyy-MM-dd');
-  const time = format(parseISO(apt.starts_at), 'HH:mm');
+  const date = getShopDateString(parseISO(apt.starts_at));
+  const time = getShopTimeString(parseISO(apt.starts_at));
 
   return (
     <div>
