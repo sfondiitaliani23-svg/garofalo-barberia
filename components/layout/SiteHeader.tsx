@@ -24,7 +24,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
   const accountLabel = userLabel ? `Ciao, ${userLabel}` : 'Area cliente';
 
   return (
-    <header className="sticky top-0 z-[100] border-b border-white/10 bg-black/95 backdrop-blur">
+    <header className={`sticky top-0 z-[100] border-b border-white/10 bg-black/95 ${open ? '' : 'backdrop-blur'}`}>
       <div className="container-lux flex h-16 items-center justify-between gap-4">
         {/* Logo Link con versioni differenti per Mobile e Desktop */}
         <Link href="/" className="relative z-[151] flex shrink-0 items-center">
@@ -97,7 +97,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
 
       {/* Menu Overlay Mobile a Schermo Intero in stile Treatwell */}
       {open && (
-        <div className="fixed inset-0 z-[150] bg-black/98 flex flex-col justify-start px-6 pt-24 pb-8 overflow-y-auto animate-in fade-in slide-in-from-top duration-300 lg:hidden">
+        <div className="fixed inset-0 z-[150] bg-black flex flex-col justify-start px-6 pt-24 pb-8 overflow-y-auto animate-in fade-in slide-in-from-top duration-300 lg:hidden">
           {/* Logo centratissimo decorativo in alto del menu */}
           <div className="flex justify-center mb-6">
             <Image
