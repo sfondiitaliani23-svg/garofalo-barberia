@@ -1,7 +1,6 @@
 import { getAdminStats } from '@/lib/actions/admin';
 import { getAnalyticsStats } from '@/lib/actions/analytics';
-import { AnalyticsSection } from '@/components/admin/AnalyticsSection';
-import { LiveTrafficChart } from '@/components/admin/LiveTrafficChart';
+import { DashboardAnalyticsBlock } from '@/components/admin/DashboardAnalyticsBlock';
 import { formatPrice } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -34,12 +33,11 @@ export default async function AdminDashboardPage() {
         </Card>
       </div>
 
-      {/* Grafico Visite in tempo reale (Shopify Analytics Style) */}
-      <div className="mt-8">
-        <LiveTrafficChart />
-      </div>
-
-      <AnalyticsSection stats={analytics} showBreakdown={true} />
+      {/*
+        DashboardAnalyticsBlock unifica grafico + card statistiche in un'unica
+        fonte di verità: ogni 10s il LiveTrafficChart aggiorna anche le card.
+      */}
+      <DashboardAnalyticsBlock initialStats={analytics} />
     </div>
   );
 }

@@ -27,6 +27,7 @@ function LoginFormInner({
   const redirect = searchParams.get('redirect') ?? '/area-cliente/dashboard';
 
   // Stato per l'accesso QR su PC
+  const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showClassicOnDesktop, setShowClassicOnDesktop] = useState(false);
   const [qrSessionIdState, setQrSessionIdState] = useState<string | null>(null);
@@ -34,11 +35,27 @@ function LoginFormInner({
 
   // Rilevamento PC vs Mobile
   useEffect(() => {
+    setMounted(true);
     if (qrSessionId) return; // Se stiamo già autorizzando una sessione su telefono, salta il rilevamento
     const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     const isSmallScreen = window.innerWidth < 768;
     setIsDesktop(!isMobileUA && !isSmallScreen);
   }, [qrSessionId]);
+
+  if (!mounted) {
+    return (
+      <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+        <CardHeader className="space-y-1">
+          <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Accedi</CardTitle>
+          <p className="text-xs text-white/45">Caricamento in corso...</p>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gold" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Generazione della sessione QR per Desktop
   useEffect(() => {

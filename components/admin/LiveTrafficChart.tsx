@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ResponsiveContainer,
   LineChart,
@@ -13,9 +13,36 @@ import {
 import { getLiveTrafficData, type LiveTrafficData } from '@/lib/actions/analytics';
 import { cn } from '@/lib/utils';
 
-export function LiveTrafficChart() {
+type ChartPoint = { hourNum: number; hourLabel: string; Oggi: number; Ieri: number };
+
+export function LiveTrafficChart({
+  onDataUpdate,
+}: {
+  onDataUpdate?: (d: LiveTrafficData) => void;
+}) {
   const [data, setData] = useState<LiveTrafficData | null>(null);
+  const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const prevLiveRef = useRef<number>(0);
+  const onDataUpdateRef = useRef(onDataUpdate);
+  useEffect(() => { onDataUpdateRef.current = onDataUpdate; }, [onDataUpdate]);
+
+  /** Builds the 24-slot chart array from a LiveTrafficData snapshot. */
+  function buildChartData(d: LiveTrafficData): ChartPoint[] {
+    return Array.from({ length: 24 }, (_, hourNum) => ({
+      hourNum,
+      hourLabel: `${hourNum}:00`,
+      Oggi: d.todayHourly[hourNum] ?? 0,
+      Ieri: d.yesterdayHourly[hourNum] ?? 0,
+    }));
+  }
+
+  /** Current Rome hour (simple local approximation). */
+  function currentHour(): number {
+    return new Date(
+      new Date().toLocaleString('en-US', { timeZone: 'Europe/Rome' })
+    ).getHours();
+  }
 
   useEffect(() => {
     let active = true;
@@ -23,10 +50,15 @@ export function LiveTrafficChart() {
     const fetchTraffic = async () => {
       try {
         const trafficData = await getLiveTrafficData();
-        if (active) {
-          setData(trafficData);
-          setLoading(false);
-        }
+        if (!active) return;
+
+        const built = buildChartData(trafficData);
+        setData(trafficData);
+        setChartData(built);
+        setLoading(false);
+        prevLiveRef.current = trafficData.liveCount;
+        // Notify parent with fresh, synchronized data
+        onDataUpdateRef.current?.(trafficData);
       } catch (error) {
         console.error('Errore nel caricamento del traffico live:', error);
       }
@@ -41,6 +73,26 @@ export function LiveTrafficChart() {
     };
   }, []);
 
+  // Real-time bump: when liveCount changes, update current hour's "Oggi" value immediately.
+  useEffect(() => {
+    if (!data) return;
+    const liveNow = data.liveCount;
+    if (liveNow === prevLiveRef.current) return;
+    prevLiveRef.current = liveNow;
+
+    const h = currentHour();
+    setChartData(prev =>
+      prev.map(point => {
+        if (point.hourNum !== h) return point;
+        // The new "Oggi" for this hour = the stored hourly sessions + live count delta
+        // We add the live visitors on top of the already-counted unique sessions to show
+        // a real-time spike on the line.
+        const base = data.todayHourly[h] ?? 0;
+        return { ...point, Oggi: Math.max(base, base + liveNow) };
+      })
+    );
+  }, [data]);
+
   if (loading || !data) {
     return (
       <div className="rounded-xl border border-white/10 bg-[#111] p-6 animate-pulse space-y-4">
@@ -50,14 +102,6 @@ export function LiveTrafficChart() {
       </div>
     );
   }
-
-  // Prepara i dati per Recharts
-  const chartData = Array.from({ length: 24 }, (_, hourNum) => ({
-    hourNum,
-    hourLabel: `${hourNum}:00`,
-    Oggi: data.todayHourly[hourNum] ?? 0,
-    Ieri: data.yesterdayHourly[hourNum] ?? 0,
-  }));
 
   const liveCount = data.liveCount;
   const isPositive = data.isChangePositive;
@@ -152,8 +196,9 @@ export function LiveTrafficChart() {
               strokeDasharray="5 5"
               dot={false}
               activeDot={{ r: 4 }}
+              isAnimationActive={false}
             />
-            {/* Linea Oggi (Solid Gold) */}
+            {/* Linea Oggi (Solid Gold) — isAnimationActive=false per evitare flicker sui live update */}
             <Line
               type="monotone"
               dataKey="Oggi"
@@ -161,6 +206,7 @@ export function LiveTrafficChart() {
               strokeWidth={3}
               dot={false}
               activeDot={{ r: 6, fill: '#d4af37', strokeWidth: 0 }}
+              isAnimationActive={false}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -176,7 +222,17 @@ export function LiveTrafficChart() {
           <span className="h-2.5 w-2.5 rounded-full bg-white/20 border border-dashed border-white/40"></span>
           <span className="text-white/50">Ieri ({data.yesterdayDateStr})</span>
         </div>
+        {liveCount > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-emerald-400 font-semibold">{liveCount} Live ora</span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

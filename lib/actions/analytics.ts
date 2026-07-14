@@ -127,60 +127,67 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   const supabase = await createServiceClient();
   if (!supabase) return emptyStats();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const SHOP_TIMEZONE = 'Europe/Rome';
+  function getRomeDateKey(date: Date) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: SHOP_TIMEZONE,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    }).formatToParts(date);
+    const getV = (t: string) => parts.find(p => p.type === t)?.value ?? '0';
+    return `${getV('year')}-${getV('month').padStart(2,'0')}-${getV('day').padStart(2,'0')}`;
+  }
 
-  const yesterdayStart = new Date(today);
-  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  const now = new Date();
+  const todayKey = getRomeDateKey(now);
+  const yesterdayDate = new Date(now); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayKey = getRomeDateKey(yesterdayDate);
+  const lastWeekDate = new Date(now); lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+  const lastWeekKey = getRomeDateKey(lastWeekDate);
+  const lastMonthDate = new Date(now); lastMonthDate.setDate(lastMonthDate.getDate() - 30);
+  const lastMonthKey = getRomeDateKey(lastMonthDate);
 
-  const lastWeekStart = new Date(today);
-  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-
-  const lastMonthStart = new Date(today);
-  lastMonthStart.setDate(lastMonthStart.getDate() - 30);
-
-  const genderKeys = GENDERS.filter((key) => key !== 'unknown');
-  const ageKeys = AGE_RANGES.filter((key) => key !== 'unknown');
-
-  const [
-    { count: dailyVisits },
-    { count: yesterdayVisits },
-    { count: weeklyVisits },
-    { count: monthlyVisits },
-    liveVisitors,
-    ...breakdownCounts
-  ] = await Promise.all([
+  // Fetch all page_views covering last 31 days to count unique sessions per period
+  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 31);
+  const [{ data: allViews }, liveVisitors, ...breakdownCounts] = await Promise.all([
     supabase
       .from('page_views')
-      .select('*', { count: 'exact', head: true })
-      .gte('viewed_at', today.toISOString()),
-    supabase
-      .from('page_views')
-      .select('*', { count: 'exact', head: true })
-      .gte('viewed_at', yesterdayStart.toISOString())
-      .lt('viewed_at', today.toISOString()),
-    supabase
-      .from('page_views')
-      .select('*', { count: 'exact', head: true })
-      .gte('viewed_at', lastWeekStart.toISOString()),
-    supabase
-      .from('page_views')
-      .select('*', { count: 'exact', head: true })
-      .gte('viewed_at', lastMonthStart.toISOString()),
+      .select('session_id, viewed_at')
+      .gte('viewed_at', cutoff.toISOString()),
     countLiveVisitors(),
-    ...genderKeys.map((gender) =>
+    ...(['male', 'female', 'child', 'other'] as const).map((gender) =>
       supabase
         .from('visitor_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('gender', gender)
     ),
-    ...ageKeys.map((ageRange) =>
+    ...(['under_18', '18_24', '25_34', '35_44', '45_54', '55_plus'] as const).map((ageRange) =>
       supabase
         .from('visitor_sessions')
         .select('*', { count: 'exact', head: true })
         .eq('age_range', ageRange)
     ),
   ]);
+
+  // Count raw page views per time window (same method as getLiveTrafficData)
+  let dailyVisits = 0;
+  let yesterdayVisits = 0;
+  let weeklyVisits = 0;
+  let monthlyVisits = 0;
+
+  if (allViews) {
+    for (const view of allViews) {
+      const dateKey = getRomeDateKey(new Date(view.viewed_at));
+      if (dateKey === todayKey) dailyVisits++;
+      if (dateKey === yesterdayKey) yesterdayVisits++;
+      if (dateKey >= lastWeekKey) weeklyVisits++;
+      if (dateKey >= lastMonthKey) monthlyVisits++;
+    }
+  }
+
+  const genderKeys = GENDERS.filter((key) => key !== 'unknown');
+  const ageKeys = AGE_RANGES.filter((key) => key !== 'unknown');
 
   const genderBreakdown: Record<Gender, number> = {
     male: 0,
@@ -224,6 +231,9 @@ export interface LiveTrafficData {
   todayHourly: number[];
   yesterdayHourly: number[];
   todayTotal: number;
+  yesterdayTotal: number;   // sessioni uniche ieri (giorno completo)
+  weeklyTotal: number;     // sessioni uniche ultimi 7 giorni
+  monthlyTotal: number;    // sessioni uniche ultimi 30 giorni
   yesterdayTotalCompare: number;
   percentChange: number;
   isChangePositive: boolean;
@@ -240,6 +250,9 @@ export async function getLiveTrafficData(): Promise<LiveTrafficData> {
       todayHourly: Array(24).fill(0),
       yesterdayHourly: Array(24).fill(0),
       todayTotal: 0,
+      yesterdayTotal: 0,
+      weeklyTotal: 0,
+      monthlyTotal: 0,
       yesterdayTotalCompare: 0,
       percentChange: 0,
       isChangePositive: true,
@@ -281,8 +294,17 @@ export async function getLiveTrafficData(): Promise<LiveTrafficData> {
   yesterdayDate.setDate(yesterdayDate.getDate() - 1);
   const yesterdayDateKey = getRomeTimeParts(yesterdayDate).dateKey;
 
-  const startOfYesterday = new Date();
-  startOfYesterday.setHours(startOfYesterday.getHours() - 36);
+  // Extend window to 31 days to cover weekly + monthly stats
+  const cutoff31 = new Date();
+  cutoff31.setDate(cutoff31.getDate() - 31);
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoKey = getRomeTimeParts(sevenDaysAgo).dateKey;
+
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoKey = getRomeTimeParts(thirtyDaysAgo).dateKey;
 
   const [
     liveCount,
@@ -292,38 +314,39 @@ export async function getLiveTrafficData(): Promise<LiveTrafficData> {
     supabase
       .from('page_views')
       .select('session_id, viewed_at')
-      .gte('viewed_at', startOfYesterday.toISOString())
+      .gte('viewed_at', cutoff31.toISOString())
   ]);
 
-  const todayHourlySessions = Array.from({ length: 24 }, () => new Set<string>());
-  const yesterdayHourlySessions = Array.from({ length: 24 }, () => new Set<string>());
+  const todayHourlyCount = Array(24).fill(0);
+  const yesterdayHourlyCount = Array(24).fill(0);
 
-  const todayTotalUniqueSessions = new Set<string>();
+  let todayTotal = 0;
+  let yesterdayTotal = 0;
+  let weeklyTotal = 0;
+  let monthlyTotal = 0;
+  let yesterdayTotalCompare = 0;
 
   if (pageViews) {
     for (const view of pageViews) {
       const date = new Date(view.viewed_at);
       const { dateKey, hour } = getRomeTimeParts(date);
-      
+
       if (dateKey === todayDateKey) {
-        todayHourlySessions[hour].add(view.session_id);
-        todayTotalUniqueSessions.add(view.session_id);
-      } else if (dateKey === yesterdayDateKey) {
-        yesterdayHourlySessions[hour].add(view.session_id);
+        todayHourlyCount[hour]++;
+        todayTotal++;
       }
+      if (dateKey === yesterdayDateKey) {
+        yesterdayHourlyCount[hour]++;
+        yesterdayTotal++;
+        if (hour <= currentRomeHour) yesterdayTotalCompare++;
+      }
+      if (dateKey >= sevenDaysAgoKey) weeklyTotal++;
+      if (dateKey >= thirtyDaysAgoKey) monthlyTotal++;
     }
   }
 
-  const todayHourly = todayHourlySessions.map(s => s.size);
-  const yesterdayHourly = yesterdayHourlySessions.map(s => s.size);
-
-  const todayTotal = todayTotalUniqueSessions.size;
-
-  const yesterdayCompareSet = new Set<string>();
-  for (let h = 0; h <= currentRomeHour; h++) {
-    yesterdayHourlySessions[h].forEach(sid => yesterdayCompareSet.add(sid));
-  }
-  const yesterdayTotalCompare = yesterdayCompareSet.size;
+  const todayHourly = todayHourlyCount;
+  const yesterdayHourly = yesterdayHourlyCount;
 
   let percentChange = 0;
   if (yesterdayTotalCompare > 0) {
@@ -357,6 +380,9 @@ export async function getLiveTrafficData(): Promise<LiveTrafficData> {
     todayHourly,
     yesterdayHourly,
     todayTotal,
+    yesterdayTotal,
+    weeklyTotal,
+    monthlyTotal,
     yesterdayTotalCompare,
     percentChange,
     isChangePositive: percentChange >= 0,
