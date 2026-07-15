@@ -36,21 +36,10 @@ export function getWorkingDays(weekStart: Date): Date[] {
 }
 
 export function generateCalendarTimeSlots(): string[] {
-  const slots: string[] = [];
-  
-  // Inizia con lo slot delle 08:30
-  slots.push('08:30');
-  
-  // Genera gli slot da 09:00 a 20:00 inclusi
-  for (let hour = 9; hour <= 20; hour++) {
-    for (const minute of [0, 30]) {
-      if (hour === 20 && minute === 30) {
-        break;
-      }
-      slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
-    }
-  }
-  return slots;
+  return [
+    '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30',
+    '15:30', '16:00', '16:30', '17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00'
+  ];
 }
 
 export function getDayClosingTime(day: Date): string {
