@@ -297,11 +297,6 @@ export function EliseoChat() {
             </span>
           )}
         </div>
-        {!isOpen && (
-          <span className="mt-1 text-[9px] font-bold text-white/60 uppercase tracking-widest">
-            Eliseo AI
-          </span>
-        )}
       </button>
     </>
   );
