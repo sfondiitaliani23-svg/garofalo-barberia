@@ -30,7 +30,7 @@ export function getShopPeriodsForDay(dayOfWeek: number): ShopPeriod[] {
 }
 
 export function getDayClosingTime(dayOfWeek: number): string {
-  return dayOfWeek === 6 ? '18:00' : '19:30';
+  return '20:30';
 }
 
 export function isWithinShopHours(date: Date, time: string): boolean {
@@ -39,12 +39,12 @@ export function isWithinShopHours(date: Date, time: string): boolean {
 }
 
 export function isSlotWithinShopHours(day: Date, time: string): boolean {
-  if (time < '09:00') return false;
+  if (time < '08:30') return false;
 
   const closing = getDayClosingTime(day.getDay());
-  if (time > closing) return false;
+  if (time >= closing) return false;
 
-  if (time >= '13:00' && time < '14:00') return false;
+  if (time >= '13:00' && time < '15:30') return false;
 
   return true;
 }

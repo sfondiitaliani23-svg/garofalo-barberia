@@ -20,13 +20,10 @@ export const SCHEDULE_PERIOD_LABELS: Record<SchedulePeriod, string> = {
 };
 
 export function defaultPeriodsForDay(dayOfWeek: number): AdminDayScheduleInput {
-  const isSaturday = dayOfWeek === 6;
-  const afternoonEnd = isSaturday ? '18:00' : '19:30';
-
   return {
     dayOfWeek,
-    morning: { enabled: true, startTime: '09:00', endTime: '13:00' },
-    afternoon: { enabled: true, startTime: '14:00', endTime: afternoonEnd },
+    morning: { enabled: true, startTime: '08:30', endTime: '13:00' },
+    afternoon: { enabled: true, startTime: '15:30', endTime: '20:30' },
   };
 }
 

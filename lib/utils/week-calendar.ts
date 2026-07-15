@@ -37,10 +37,14 @@ export function getWorkingDays(weekStart: Date): Date[] {
 
 export function generateCalendarTimeSlots(): string[] {
   const slots: string[] = [];
-  for (let hour = 9; hour <= 19; hour++) {
+  
+  // Inizia con lo slot delle 08:30
+  slots.push('08:30');
+  
+  // Genera gli slot da 09:00 a 20:00 inclusi
+  for (let hour = 9; hour <= 20; hour++) {
     for (const minute of [0, 30]) {
-      if (hour === 19 && minute === 30) {
-        slots.push('19:30');
+      if (hour === 20 && minute === 30) {
         break;
       }
       slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
