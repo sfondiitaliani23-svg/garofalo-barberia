@@ -15,6 +15,15 @@ html {
   overflow-x: hidden;
 }
 
+/* Nasconde la scrollbar mantenendo la funzionalità di scorrimento */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE e Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome, Safari, Opera */
+}
+
 body {
   font-family: var(--font-sans);
   background: #000;

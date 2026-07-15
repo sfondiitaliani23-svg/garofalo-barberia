@@ -119,7 +119,7 @@ export function AdminSidebar() {
 
       {/* ── 3. OVERLAY MENU COMPLETO MOBILE (< lg) ── */}
       {menuOpen && (
-        <div className="fixed inset-0 z-[210] bg-black/95 backdrop-blur-md p-6 overflow-y-auto flex flex-col lg:hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div className="no-scrollbar fixed inset-0 z-[210] bg-black/95 backdrop-blur-md p-6 overflow-y-auto flex flex-col lg:hidden">
           {/* Header Overlay */}
           <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
             <span className="font-display text-sm uppercase tracking-wider text-gold">
