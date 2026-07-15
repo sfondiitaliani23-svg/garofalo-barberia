@@ -132,8 +132,8 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   // 1. Check conversational / smalltalk / high-culture topics first
   // This avoids generic utility keywords matching casual talk (e.g. "quanto" matching "quanto è finita la partita")
   
-  // EVENTI SPORTIVI - RISULTATI / SCORE (es. "quanto è finita la partita?")
-  if (['finita', 'punteggio', 'risultato', 'chi ha vinto', 'chi ha perso', 'gol', 'segnato', 'risultati'].some(p => lower.includes(p)) && ['partita', 'match', 'ieri sera', 'ieri', 'stasera', 'giocato', 'calcio'].some(p => lower.includes(p))) {
+  // EVENTI SPORTIVI - RISULTATI / SCORE (es. "quanto è finita la partita di ieri sera?")
+  if (['finita', 'punteggio', 'risultato', 'chi ha vinto', 'chi ha perso', 'gol', 'segnato', 'risultati'].some(p => lower.includes(p)) && ['partita', 'match', 'ieri sera', 'ieri', 'stasera', 'giocato', 'calcio', 'francia'].some(p => lower.includes(p))) {
     return {
       replies: [
         "È finita 2-0 per la Francia! ⚽ Una partita molto solida: hanno controllato bene il campo con un'ottima fase difensiva e ripartenze veloci ed efficaci che hanno chiuso il match. Tu ieri sera come l'hai vista?",
@@ -142,11 +142,41 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
     };
   }
 
-  // EVENTI SPORTIVI - GENERALI (Francia ieri sera, partita, europei, olimpiadi, etc.)
-  if (['francia', 'ieri sera', 'partita', 'partite', 'europei', 'mondiali', 'olimpiadi', 'match', 'coppa', 'finale', 'giocato', 'sport', 'calcio', 'foggia', 'milan', 'juve', 'napoli', 'roma', 'guardiola', 'ancelotti', 'pallone', 'giocatore', 'arbitro'].some(p => lower.includes(p))) {
+  // EVENTI SPORTIVI - OGGI / STASERA GIOCA (es. "oggi chi gioca?", "chi gioca stasera?")
+  if (['oggi chi gioca', 'chi gioca', 'partite oggi', 'partite stasera', 'gioca stasera', 'gioca oggi'].some(p => lower.includes(p)) || (lower.includes('oggi') && ['gioca', 'partit', 'match', 'squadr'].some(p => lower.includes(p)))) {
     return {
       replies: [
-        "È finita 2-0 per la Francia! ⚽ Una prestazione solida e tatticamente perfetta: hanno saputo gestire il ritmo e colpire nei momenti decisivi con grande cinismo, concedendo pochissimo in difesa. Da tifoso del Foggia porto sempre nel cuore la passione calcistica e lo storico Foggia rossonero di Zeman. Tu ieri sera l'hai vista? Chi meritava secondo te?",
+        "Oggi ci sono sfide molto interessanti in programma! ⚽ Anche se non ho i tabellini dei calendari sportivi aggiornati al minuto sotto mano, ti posso dire che il palinsesto del giorno riserva sempre grandi emozioni tra campionati e coppe. Tu quale partita hai intenzione di seguire o per chi fai il tifo stasera?",
+      ],
+      isFriendMode: true,
+    };
+  }
+
+  // EVENTI SPORTIVI - FRANCIA (es. "hai visto la francia?")
+  if (lower.includes('francia')) {
+    return {
+      replies: [
+        "È finita 2-0 per la Francia! ⚽ Una prestazione solida e tatticamente perfetta: hanno saputo gestire il ritmo e colpire nei momenti decisivi con grande cinismo, concedendo pochissimo in difesa. Tu ieri sera l'hai vista? Chi meritava secondo te?",
+      ],
+      isFriendMode: true,
+    };
+  }
+
+  // EVENTI SPORTIVI - FOGGIA CALCIO (es. "pronostici del foggia", "campionato foggia")
+  if (lower.includes('foggia') && !['dove', 'indirizz', 'trov', 'posizion', 'mappa'].some(p => lower.includes(p))) {
+    return {
+      replies: [
+        "Il nostro Foggia rossonero! ❤️🖤 Quest'anno in campionato c'è una bella sfida. Tra nuovi innesti e ambizioni storiche, l'obiettivo è sempre lottare con il coltello tra i denti per risalire e onorare lo Zaccheria. Tu che pronostico fai per questa stagione? Credi che riusciremo a fare il salto di qualità?",
+      ],
+      isFriendMode: true,
+    };
+  }
+
+  // EVENTI SPORTIVI - CALCIO / SPORT IN GENERALE (es. "parliamo di calcio", "mi piace lo sport")
+  if (['calcio', 'partita', 'partite', 'sport', 'champions', 'serie a', 'milan', 'juve', 'napoli', 'roma', 'guardiola', 'ancelotti', 'pallone', 'giocatore', 'arbitro', 'giocare', 'gioca'].some(p => lower.includes(p))) {
+    return {
+      replies: [
+        "Lo sport e il calcio sono passioni pazzesche! ⚽ Che si tratti della Serie A, dei campionati europei o delle discussioni infinite tra il bel gioco di Guardiola e il pragmatismo vincente di Ancelotti. Senza dimenticare il nostro amore locale per i colori rossoneri del Foggia. Tu che tipo di calcio preferisci seguire?",
       ],
       isFriendMode: true,
     };
@@ -203,7 +233,7 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   }
 
   // FOGGIA (città natale di Eliseo)
-  if (['foggia', 'foggiano', 'foggiana', 'da queste parti', 'dintorni', "viale d'addedda"].some(p => lower.includes(p))) {
+  if (['foggiano', 'foggiana', 'da queste parti', 'dintorni', "viale d'addedda"].some(p => lower.includes(p))) {
     return {
       replies: [
         "Ah, Foggia! Terra di passioni intense, calore estivo travolgente e grandi tradizioni. Da foggiano verace, ho un legame profondo con questa città, pur con tutte le sue contraddizioni. Tu ci vivi o ci passi per lavoro/studio?",
