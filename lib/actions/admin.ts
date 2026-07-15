@@ -109,7 +109,7 @@ export async function getAdminAppointments(from: string, to: string, barberId?: 
     .lte('starts_at', to)
     .order('starts_at');
 
-  if (barberId) query = query.eq('barber_id', barberId);
+  if (barberId && barberId !== 'all') query = query.eq('barber_id', barberId);
 
   const { data } = await query;
   return data ?? [];

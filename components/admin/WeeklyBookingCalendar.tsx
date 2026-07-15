@@ -104,6 +104,18 @@ export function WeeklyBookingCalendar({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => selectBarber('all')}
+          className={cn(
+            'rounded-full border px-4 py-2 text-sm font-medium transition',
+            barberId === 'all'
+              ? 'border-gold bg-gold/15 text-gold'
+              : 'border-white/15 text-white/60 hover:border-white/30'
+          )}
+        >
+          Tutti i barbieri 👥
+        </button>
         {barbers.map((b) => (
           <button
             key={b.id}
@@ -122,7 +134,11 @@ export function WeeklyBookingCalendar({
       </div>
 
       <p className="mt-2 text-sm text-white/50">
-        Calendario di <strong className="text-gold">{selectedBarber?.name}</strong> — clicca uno slot libero per prenotare, o un appuntamento per modificarlo
+        {barberId === 'all' ? (
+          <>Visualizzazione di <strong className="text-gold">Tutti i barbieri</strong> — clicca un appuntamento per modificarlo</>
+        ) : (
+          <>Calendario di <strong className="text-gold">{selectedBarber?.name}</strong> — clicca uno slot libero per prenotare, o un appuntamento per modificarlo</>
+        )}
       </p>
 
       <div className="mt-6 overflow-x-auto rounded-xl border border-white/10">
@@ -181,22 +197,35 @@ export function WeeklyBookingCalendar({
                     }
 
                     if (cell.type === 'appointment') {
-                      const apt = cell.appointment;
-                      const service = apt.service as { name: string } | null;
+                      const list = (cell as any).appointmentsList || [cell.appointment];
                       return (
-                        <td key={ci} rowSpan={cell.rowSpan} className="border-l border-white/5 px-1 py-1 align-top">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(apt)}
-                            className="flex h-full min-h-[40px] w-full flex-col rounded-lg border border-gold/40 bg-gold/10 p-2 text-left transition hover:bg-gold/20"
-                          >
-                            <span className="text-xs font-bold text-gold">{time}</span>
-                            <span className="truncate text-xs font-semibold text-white">{apt.customer_name}</span>
-                            <span className="truncate text-[10px] text-white/50">{service?.name}</span>
-                            {apt.customer_phone && (
-                              <span className="truncate text-[10px] text-white/40">{apt.customer_phone}</span>
-                            )}
-                          </button>
+                        <td key={ci} rowSpan={cell.rowSpan} className="border-l border-white/5 px-1 py-1 align-top space-y-1.5 min-w-[140px]">
+                          {list.map((apt: CalendarAppointment) => {
+                            const service = apt.service as { name: string } | null;
+                            const barber = apt.barber as { name: string } | null;
+                            return (
+                              <button
+                                key={apt.id}
+                                type="button"
+                                onClick={() => openEdit(apt)}
+                                className="flex w-full flex-col rounded-lg border border-gold/40 bg-gold/10 p-2 text-left transition hover:bg-gold/20"
+                              >
+                                <span className="text-[10px] font-bold text-gold flex items-center justify-between gap-1 w-full">
+                                  <span>{time}</span>
+                                  {barberId === 'all' && (
+                                    <span className="bg-gold/20 text-gold px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wide truncate max-w-[80px]">
+                                      {barber?.name}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="truncate text-xs font-semibold text-white mt-1">{apt.customer_name}</span>
+                                <span className="truncate text-[10px] text-white/50">{service?.name}</span>
+                                {apt.customer_phone && (
+                                  <span className="truncate text-[10px] text-white/40">{apt.customer_phone}</span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </td>
                       );
                     }
@@ -231,7 +260,7 @@ export function WeeklyBookingCalendar({
         </h3>
         <div className="space-y-2">
           {initialAppointments
-            .filter((apt) => apt.barber_id === barberId && apt.status !== 'confirmed')
+            .filter((apt) => (barberId === 'all' || apt.barber_id === barberId) && apt.status !== 'confirmed')
             .map((apt) => {
               const service = apt.service as { name: string } | null;
               const statusColors: Record<string, string> = {
@@ -257,7 +286,7 @@ export function WeeklyBookingCalendar({
                 </div>
               );
             })}
-          {initialAppointments.filter((apt) => apt.barber_id === barberId && apt.status !== 'confirmed').length === 0 && (
+          {initialAppointments.filter((apt) => (barberId === 'all' || apt.barber_id === barberId) && apt.status !== 'confirmed').length === 0 && (
             <p className="text-sm text-white/40">Nessuna prenotazione completata o disdetta in questa settimana.</p>
           )}
         </div>
@@ -267,7 +296,7 @@ export function WeeklyBookingCalendar({
         <AdminAppointmentForm
           barbers={barbers}
           services={services}
-          barberId={barberId}
+          barberId={barberId === 'all' ? barbers[0].id : barberId}
           appointment={selectedAppointment}
           initialDate={prefillDate}
           initialTime={prefillTime}

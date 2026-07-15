@@ -65,13 +65,18 @@ export function buildWeekGrid(
   barberId: string,
   timeOff: TimeOffRow[] = []
 ): GridCell[][] {
+  const isAll = barberId === 'all';
+
   const blockedDays = new Set(
-    days
-      .filter((day) => isShopDateFullyBlocked(dateKey(day), barberId, timeOff))
-      .map((day) => dateKey(day))
+    isAll
+      ? []
+      : days
+          .filter((day) => isShopDateFullyBlocked(dateKey(day), barberId, timeOff))
+          .map((day) => dateKey(day))
   );
+
   const confirmed = appointments.filter(
-    (apt) => apt.barber_id === barberId && apt.status === 'confirmed'
+    (apt) => (isAll || apt.barber_id === barberId) && apt.status === 'confirmed'
   );
 
   const covered = new Map<string, Set<string>>();
@@ -102,22 +107,34 @@ export function buildWeekGrid(
         continue;
       }
 
-      const apt = confirmed.find((a) => {
+      const aptsAtSlot = confirmed.filter((a) => {
         const aptDate = format(parseISO(a.starts_at), 'yyyy-MM-dd');
         const aptTime = format(parseISO(a.starts_at), 'HH:mm');
         return aptDate === key && aptTime === time;
       });
 
-      if (apt) {
-        const starts = parseISO(apt.starts_at);
-        const ends = parseISO(apt.ends_at);
-        const actualDuration = differenceInMinutes(ends, starts);
-        const span = durationToRowSpan(actualDuration);
-        for (let i = 0; i < span; i++) {
+      if (aptsAtSlot.length > 0) {
+        let maxSpan = 1;
+        for (const apt of aptsAtSlot) {
+          const starts = parseISO(apt.starts_at);
+          const ends = parseISO(apt.ends_at);
+          const actualDuration = differenceInMinutes(ends, starts);
+          const span = durationToRowSpan(actualDuration);
+          if (span > maxSpan) maxSpan = span;
+        }
+
+        for (let i = 0; i < maxSpan; i++) {
           const slotTime = timeSlots[timeSlots.indexOf(time) + i];
           if (slotTime) dayCovered.add(slotTime);
         }
-        row.push({ type: 'appointment', day, appointment: apt, rowSpan: span });
+
+        row.push({ 
+          type: 'appointment', 
+          day, 
+          appointment: aptsAtSlot[0], 
+          appointmentsList: aptsAtSlot, 
+          rowSpan: maxSpan 
+        } as any);
         continue;
       }
 

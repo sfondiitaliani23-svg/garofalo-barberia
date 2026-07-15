@@ -20,7 +20,7 @@ export default async function AdminPrenotazioniPage({
     getAdminTeamData(),
   ]);
   const selectedBarberId =
-    params.barber && barbers.some((barber) => barber.id === params.barber)
+    params.barber === 'all' || (params.barber && barbers.some((barber) => barber.id === params.barber))
       ? params.barber
       : barbers[0]?.id;
 
