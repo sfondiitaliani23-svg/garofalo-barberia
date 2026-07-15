@@ -119,22 +119,24 @@ const INTENTS: Intent[] = [
   },
 ];
 
-function detectIntent(message: string): string {
+function detectIntent(message: string): string[] {
   // Normalize character accents and punctuation
   const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  const suffix = "Basta così? Vuoi sapere qualcos'altro? O vuoi fare una tranquilla chiacchierata?";
 
   // 1. Check greeting
   const greetingIntent = INTENTS[0];
   const greetingNormalised = greetingIntent.patterns.map(p => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
   if (greetingNormalised.some(pattern => lower.includes(pattern))) {
-    return greetingIntent.response();
+    return [greetingIntent.response()];
   }
 
   // 2. Check goodbye
   const goodbyeIntent = INTENTS[INTENTS.length - 1];
   const goodbyeNormalised = goodbyeIntent.patterns.map(p => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
   if (goodbyeNormalised.some(pattern => lower.includes(pattern))) {
-    return goodbyeIntent.response();
+    return [goodbyeIntent.response()];
   }
 
   // 3. Check all other intents
@@ -144,12 +146,15 @@ function detectIntent(message: string): string {
       p.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     );
     if (normalised.some(pattern => lower.includes(pattern))) {
-      return intent.response() + "\n\nBasta così? Vuoi sapere qualcos'altro? O vuoi fare una tranquilla chiacchierata?";
+      return [intent.response(), suffix];
     }
   }
 
   // Fallback
-  return `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱\n\nBasta così? Vuoi sapere qualcos'altro? O vuoi fare una tranquilla chiacchierata?`;
+  return [
+    `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱`,
+    suffix
+  ];
 }
 
 export async function POST(request: NextRequest) {
@@ -158,17 +163,17 @@ export async function POST(request: NextRequest) {
     const message: string = body?.message ?? '';
 
     if (!message.trim()) {
-      return NextResponse.json({ reply: 'Scrivi un messaggio per iniziare! 😊' });
+      return NextResponse.json({ replies: ['Scrivi un messaggio per iniziare! 😊'] });
     }
 
     // Small artificial delay for a more natural feel
     await new Promise(r => setTimeout(r, 200 + Math.random() * 300));
 
-    const reply = detectIntent(message);
-    return NextResponse.json({ reply });
+    const replies = detectIntent(message);
+    return NextResponse.json({ replies });
   } catch {
     return NextResponse.json(
-      { reply: `Mi dispiace, si è verificato un errore. Contattaci su WhatsApp al ${SITE_CONFIG.phoneDisplay}. 📱` },
+      { replies: [`Mi dispiace, si è verificato un errore. Contattaci su WhatsApp al ${SITE_CONFIG.phoneDisplay}. 📱`] },
       { status: 500 }
     );
   }

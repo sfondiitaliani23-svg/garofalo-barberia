@@ -63,12 +63,21 @@ export function EliseoChat() {
         body: JSON.stringify({ message: text.trim() }),
       });
       const data = await res.json();
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.reply ?? 'Mi dispiace, riprova tra poco.',
-      };
-      setMessages(prev => [...prev, botMsg]);
+      
+      const replies: string[] = data.replies || (data.reply ? [data.reply] : ['Mi dispiace, riprova tra poco.']);
+      
+      for (let i = 0; i < replies.length; i++) {
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 600));
+        }
+        const botMsg: Message = {
+          id: `${Date.now()}-${i}`,
+          role: 'assistant',
+          content: replies[i],
+        };
+        setMessages(prev => [...prev, botMsg]);
+      }
+      
       if (!isOpen) setUnread(true);
     } catch {
       setMessages(prev => [
