@@ -26,7 +26,8 @@ export default function HomePage() {
               alt="Barberia Garofalo"
               width={200}
               height={200}
-              className="hero-mobile-logo drop-shadow-[0_0_18px_rgba(205,154,79,0.4)]"
+              className="hero-mobile-logo"
+              style={{ mixBlendMode: 'screen' }}
               priority
             />
           </div>
