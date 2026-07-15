@@ -105,7 +105,7 @@ export function EliseoChat() {
     <>
       {/* ── Chat window ── */}
       <div
-        className={`fixed bottom-[5.5rem] right-4 z-[301] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.7)] border border-gold/20 overflow-hidden flex flex-col bg-[#090909] transition-all duration-300 origin-bottom-right ${
+        className={`fixed bottom-[9rem] right-4 z-[301] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.7)] border border-gold/20 overflow-hidden flex flex-col bg-[#090909] transition-all duration-300 origin-bottom-right ${
           isOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-90 pointer-events-none'
         }`}
         style={{ maxHeight: '540px' }}
@@ -217,7 +217,7 @@ export function EliseoChat() {
         id="eliseo-chat-btn"
         onClick={() => setIsOpen(o => !o)}
         aria-label="Apri assistente Eliseo"
-        className="fixed bottom-4 right-4 z-[302] group flex flex-col items-center"
+        className="fixed bottom-20 right-4 z-[302] group flex flex-col items-center"
       >
         <div
           className={`relative w-14 h-14 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] shadow-[0_4px_22px_rgba(205,154,79,0.55)] flex items-center justify-center transition-all duration-300 ${
