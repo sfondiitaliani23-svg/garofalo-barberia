@@ -5,6 +5,9 @@ import { formatPrice } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const metadata = { title: 'Admin Dashboard' };
+// Rivalidazione ogni 60s: le statistiche non cambiano al millisecondo,
+// cachare riduce drasticamente il carico sul DB e i tempi di risposta.
+export const revalidate = 60;
 
 export default async function AdminDashboardPage() {
   const [stats, analytics] = await Promise.all([getAdminStats(), getAnalyticsStats()]);

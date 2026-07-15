@@ -11,28 +11,29 @@ export const metadata = { title: 'La mia Dashboard | Barberia Garofalo' };
 export default async function CustomerDashboardPage() {
   const profile = await getProfile();
   const supabase = await createClient();
-  const upcoming = supabase
-    ? (
-        await supabase
+  const customerId = profile?.id ?? '';
+
+  // Parallelizziamo le due query per dimezzare il tempo di attesa
+  const [upcomingResult, countResult] = supabase
+    ? await Promise.all([
+        supabase
           .from('appointments')
           .select('*, barber:barbers(name), service:services(name)')
-          .eq('customer_id', profile?.id ?? '')
+          .eq('customer_id', customerId)
           .eq('status', 'confirmed')
           .gte('starts_at', new Date().toISOString())
           .order('starts_at')
-          .limit(3)
-      ).data ?? []
-    : [];
-
-  const totalCount = supabase
-    ? (
-        await supabase
+          .limit(3),
+        supabase
           .from('appointments')
           .select('id', { count: 'exact', head: true })
-          .eq('customer_id', profile?.id ?? '')
-          .eq('status', 'completed')
-      ).count ?? 0
-    : 0;
+          .eq('customer_id', customerId)
+          .eq('status', 'completed'),
+      ])
+    : [{ data: null }, { count: null }];
+
+  const upcoming = upcomingResult.data ?? [];
+  const totalCount = countResult.count ?? 0;
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Cliente';
   const hour = new Date().getHours();
