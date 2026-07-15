@@ -23,7 +23,7 @@ export const GALLERY_IMAGES: GalleryImage[] = [
   { src: '/assets/gallery/1000313556.png', alt: 'Bimbo skin fade vista dall alto', category: 'bimbo' },
   { src: '/assets/gallery/1000313557.jpg', alt: 'Uomo rasato con barba lunga', category: 'uomo' },
   { src: '/assets/gallery/1000313558.jpg', alt: 'Taglio ragazzo texturizzato', category: 'ragazzo' },
-  { src: '/assets/gallery/1000313559.jpg', alt: 'Bimbo capelli rasati', category: 'bimbo' },
+  { src: '/assets/gallery/1000313559.jpg', alt: 'Uomo capelli rasati skin fade', category: 'uomo' },
 ];
 
 export const GALLERY_FILTERS = [

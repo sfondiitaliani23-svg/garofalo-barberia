@@ -94,17 +94,20 @@
 }
 
 .menu-panel-content {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.3s ease;
 }
 
 .menu-panel.is-open .menu-panel-content {
-  grid-template-rows: 1fr;
+  max-height: 800px;
+  opacity: 1;
 }
 
 .menu-panel-inner {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .menu-panel.is-open .menu-panel-inner {

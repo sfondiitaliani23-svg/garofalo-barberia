@@ -22,11 +22,11 @@ export default function HomePage() {
           {/* Logo centrale gigante visibile solo su Mobile */}
           <div className="hero-mobile-logo-wrap md:hidden mb-6 flex justify-center">
             <Image
-              src="/assets/sostituisci-immagini/brand/logo.png"
+              src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
               alt="Barberia Garofalo"
-              width={150}
-              height={150}
-              className="hero-mobile-logo rounded-full border border-gold/40 shadow-[0_0_30px_rgba(205,154,79,0.3)] bg-black/40 backdrop-blur"
+              width={200}
+              height={200}
+              className="hero-mobile-logo drop-shadow-[0_0_18px_rgba(205,154,79,0.4)]"
               priority
             />
           </div>

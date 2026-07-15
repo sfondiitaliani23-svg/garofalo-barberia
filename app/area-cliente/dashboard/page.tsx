@@ -4,6 +4,7 @@ import { getProfile } from '@/lib/auth';
 import { parseISO } from 'date-fns';
 import { formatShopDateTimeShort } from '@/lib/utils/booking-datetime';
 import { Calendar, Scissors, Clock, Star, ChevronRight } from 'lucide-react';
+import { LogoutCard } from '@/components/customer/LogoutCard';
 
 export const metadata = { title: 'La mia Dashboard | Barberia Garofalo' };
 
@@ -161,6 +162,9 @@ export default async function CustomerDashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Logout */}
+      <LogoutCard />
     </div>
   );
 }

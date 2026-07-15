@@ -37,13 +37,13 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
             className="hidden lg:block h-[58px] w-auto max-w-[180px] object-contain"
             priority
           />
-          {/* Logo circolare compatto per Mobile */}
+          {/* Logo PNG senza sfondo per Mobile */}
           <Image
-            src="/assets/sostituisci-immagini/brand/logo.png"
+            src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
             alt={SITE_CONFIG.name}
-            width={40}
-            height={40}
-            className="block lg:hidden h-[40px] w-auto max-w-[40px] object-contain rounded-full border border-gold/30 shadow-[0_0_10px_rgba(205,154,79,0.2)] bg-black"
+            width={44}
+            height={44}
+            className="block lg:hidden h-[44px] w-auto max-w-[44px] object-contain drop-shadow-[0_0_8px_rgba(205,154,79,0.3)]"
             priority
           />
         </Link>
@@ -101,11 +101,11 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
           {/* Logo centratissimo decorativo in alto del menu */}
           <div className="flex justify-center mb-6">
             <Image
-              src="/assets/sostituisci-immagini/brand/logo.png"
+              src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
               alt=""
-              width={70}
-              height={70}
-              className="rounded-full border border-gold/30 shadow-[0_0_15px_rgba(205,154,79,0.15)] bg-[#111]"
+              width={120}
+              height={120}
+              className="object-contain drop-shadow-[0_0_12px_rgba(205,154,79,0.3)]"
             />
           </div>
 
