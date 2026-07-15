@@ -26,7 +26,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   const [date, setDate] = useState('');
   const [time, setTime] = useState('10:00');
   const [barberId, setBarberId] = useState('');
-  const [serviceId, setServiceId] = useState('');
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
@@ -61,7 +61,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
       }
       if (sData && sData.length > 0) {
         setServices(sData);
-        setServiceId(sData[0].id);
+        setSelectedServiceIds([sData[0].id]);
       }
     };
     fetchOptions();
@@ -132,14 +132,14 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
       toast.error('Seleziona un barbiere.');
       return;
     }
-    if (!serviceId) {
-      toast.error('Seleziona un servizio.');
+    if (selectedServiceIds.length === 0) {
+      toast.error('Seleziona almeno un servizio.');
       return;
     }
 
     startTransition(async () => {
       const result = await createAdminAppointment({
-        serviceId,
+        serviceIds: selectedServiceIds,
         barberId,
         date,
         time,
@@ -238,7 +238,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <Label htmlFor="inst-barber" className="text-xs text-white/60">Barbiere</Label>
               <select
@@ -255,19 +255,29 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
               </select>
             </div>
             <div>
-              <Label htmlFor="inst-service" className="text-xs text-white/60">Servizio</Label>
-              <select
-                id="inst-service"
-                value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
-              >
-                {services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
+              <Label className="text-xs text-white/60">Servizi (seleziona uno o più)</Label>
+              <div className="mt-1 max-h-36 overflow-y-auto border border-white/10 bg-black/40 rounded-md p-2 space-y-1.5 no-scrollbar">
+                {services.map((s) => {
+                  const isSelected = selectedServiceIds.includes(s.id);
+                  return (
+                    <label key={s.id} className="flex items-center gap-2.5 cursor-pointer hover:bg-white/5 p-1 rounded transition select-none">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {
+                          setSelectedServiceIds(prev => 
+                            prev.includes(s.id) 
+                              ? prev.filter(id => id !== s.id) 
+                              : [...prev, s.id]
+                          );
+                        }}
+                        className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-4 w-4"
+                      />
+                      <span className="text-xs text-white/80">{s.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
