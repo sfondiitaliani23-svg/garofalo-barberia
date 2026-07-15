@@ -42,6 +42,12 @@ export function EliseoChat() {
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('eliseo-chat-open', handleOpen);
+    return () => window.removeEventListener('eliseo-chat-open', handleOpen);
+  }, []);
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return;
 

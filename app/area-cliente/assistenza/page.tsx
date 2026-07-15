@@ -182,18 +182,28 @@ export default function CustomerCarePage() {
             href={getWhatsAppLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-black font-semibold text-sm transition-all"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-black font-semibold text-sm transition-all shadow-[0_4px_12px_rgba(37,211,102,0.2)]"
           >
             <MessageCircle className="h-4 w-4 fill-black" />
             <span>Scrivici su WhatsApp</span>
           </a>
           <a
             href="tel:+390881236236" // Numero fittizio o del salone
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-gold hover:bg-gold/10 text-gold font-semibold text-sm transition-all"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-black font-semibold text-sm transition-all shadow-[0_4px_12px_rgba(37,211,102,0.2)]"
           >
             <Phone className="h-4 w-4" />
             <span>Chiamaci in Salone</span>
           </a>
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('eliseo-chat-open'));
+            }}
+            type="button"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-black font-semibold text-sm transition-all shadow-[0_4px_12px_rgba(37,211,102,0.2)]"
+          >
+            <Scissors className="h-4 w-4" />
+            <span>Chiedi a Eliseo ( Il nostro agente AI )</span>
+          </button>
         </div>
       </div>
     </div>
