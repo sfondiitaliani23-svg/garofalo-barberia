@@ -12,12 +12,12 @@ export function AdminFloatingSaveButton() {
 
   return (
     <>
-      <div className="pointer-events-none fixed bottom-6 right-6 z-40 flex items-center gap-3">
+      <div className="pointer-events-none fixed bottom-[4.5rem] right-4 z-40 flex items-center gap-2 lg:bottom-6 lg:right-6 lg:gap-3">
         {/* Bottone Prenotazione Istantanea */}
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-bold text-black shadow-lg shadow-black/40 transition hover:bg-gold-light"
+          className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-2 text-xs font-bold text-black shadow-lg shadow-black/40 transition hover:bg-gold-light lg:gap-2 lg:px-6 lg:py-3 lg:text-sm"
         >
           <Plus size={18} />
           Prenotazione Istantanea
@@ -29,7 +29,7 @@ export function AdminFloatingSaveButton() {
           onClick={() => void saveAll()}
           disabled={!isDirty || isSaving}
           className={cn(
-            'pointer-events-auto inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-lg shadow-black/40 transition',
+            'pointer-events-auto inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold shadow-lg shadow-black/40 transition lg:gap-2 lg:px-6 lg:py-3 lg:text-sm',
             isDirty && !isSaving
               ? 'bg-white text-black hover:bg-white/90'
               : 'cursor-not-allowed border border-white/15 bg-[#1a1a1a] text-white/35'
