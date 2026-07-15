@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import type { Profile } from '@/types/database';
@@ -92,8 +93,13 @@ export function AdminCustomersList({ customers }: AdminCustomersListProps) {
                   key={customer.id}
                   className="border-b border-white/5 transition hover:bg-white/[0.03]"
                 >
-                  <td className="px-4 py-3 font-medium text-white">
-                    {customer.full_name || '—'}
+                  <td className="px-4 py-3 font-medium">
+                    <Link
+                      href={`/admin/clienti/${customer.id}/galleria`}
+                      className="text-white hover:text-gold hover:underline transition"
+                    >
+                      {customer.full_name || '—'}
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-white/80">{customer.email || '—'}</td>
                   <td className="px-4 py-3 text-white/80">{customer.phone || '—'}</td>
