@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { ChevronUp } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
+  const isCustomerArea = pathname?.startsWith('/area-cliente') ?? false;
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -32,9 +35,12 @@ export function ScrollToTop() {
       onClick={scrollToTop}
       type="button"
       className={cn(
-        'fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-6 z-[200]',
-        'flex h-10 w-10 items-center justify-center rounded bg-gold text-black shadow-lg transition-all duration-300 hover:bg-gold-light',
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'
+        'fixed z-[200] right-6 transition-all duration-300',
+        isCustomerArea
+          ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]'
+          : 'bottom-[calc(1.5rem+env(safe-area-inset-bottom))]',
+        'flex h-10 w-10 items-center justify-center rounded bg-[#cd9a4f] text-black shadow-lg hover:bg-[#e5b565]',
+        isVisible ? 'translate-y-0 opacity-100 animate-in fade-in zoom-in-50' : 'translate-y-10 opacity-0 pointer-events-none'
       )}
       aria-label="Torna in alto"
     >

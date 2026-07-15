@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Scissors, RotateCcw, ChevronDown } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -31,6 +33,22 @@ export function EliseoChat() {
   const [isFriendMode, setIsFriendMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const pathname = usePathname();
+  const isCustomerArea = pathname?.startsWith('/area-cliente') ?? false;
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollToTop(true);
+      } else {
+        setShowScrollToTop(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -130,9 +148,13 @@ export function EliseoChat() {
     <>
       {/* ── Chat window ── */}
       <div
-        className={`fixed bottom-[9rem] sm:bottom-[13rem] right-4 z-[301] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.7)] border border-gold/20 overflow-hidden flex flex-col bg-[#090909] transition-all duration-300 origin-bottom-right ${
+        className={cn(
+          "fixed z-[301] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.7)] border border-gold/20 overflow-hidden flex flex-col bg-[#090909] transition-all duration-300 origin-bottom-right right-4",
+          isCustomerArea
+            ? "bottom-[calc(10.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(6.5rem+env(safe-area-inset-bottom))]"
+            : "bottom-[calc(6.5rem+env(safe-area-inset-bottom))]",
           isOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-90 pointer-events-none'
-        }`}
+        )}
         style={{ maxHeight: '540px' }}
       >
         {/* Header */}
@@ -242,12 +264,19 @@ export function EliseoChat() {
         id="eliseo-chat-btn"
         onClick={() => setIsOpen(o => !o)}
         aria-label="Apri assistente Eliseo"
-        className="fixed bottom-20 sm:bottom-[9rem] right-4 z-[302] group flex flex-col items-center"
+        className={cn(
+          "fixed z-[302] group flex flex-col items-center transition-all duration-300",
+          isCustomerArea
+            ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
+            : "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
+          showScrollToTop ? "right-20" : "right-6"
+        )}
       >
         <div
-          className={`relative w-14 h-14 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] shadow-[0_4px_22px_rgba(205,154,79,0.55)] flex items-center justify-center transition-all duration-300 ${
+          className={cn(
+            "relative w-14 h-14 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] shadow-[0_4px_22px_rgba(205,154,79,0.55)] flex items-center justify-center transition-all duration-300",
             isOpen ? 'rotate-0 scale-95' : 'group-hover:scale-110'
-          }`}
+          )}
         >
           {isOpen ? (
             <X size={22} className="text-black" />
