@@ -13,7 +13,8 @@ import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
 
 export interface CreateAppointmentInput {
-  serviceId: string;
+  serviceId?: string; // Mantieni per retrocompatibilità
+  serviceIds?: string[]; // Array di ID dei servizi selezionati
   barberId: string | null;
   date: string;
   time: string;
@@ -37,8 +38,9 @@ export async function createAppointment(input: CreateAppointmentInput) {
       return { ok: false, error: 'Compila nome e telefono per confermare la prenotazione.' };
     }
 
-    if (!input.serviceId || !input.date || !input.time) {
-      return { ok: false, error: 'Seleziona servizio, data e orario prima di confermare.' };
+    const serviceIds = input.serviceIds || (input.serviceId ? [input.serviceId] : []);
+    if (serviceIds.length === 0 || !input.date || !input.time) {
+      return { ok: false, error: 'Seleziona almeno un servizio, la data e l\'orario prima di confermare.' };
     }
 
     const sessionUser = await getSession();
@@ -48,25 +50,33 @@ export async function createAppointment(input: CreateAppointmentInput) {
 
     const profile = await getProfile();
 
-    const { data: service, error: serviceError } = await supabase
+    // Recupera tutti i servizi richiesti
+    const { data: services, error: servicesError } = await supabase
       .from('services')
       .select('*')
-      .eq('id', input.serviceId)
-      .single();
+      .in('id', serviceIds);
 
-    if (serviceError || !service) {
-      return { ok: false, error: 'Servizio non trovato' };
+    if (servicesError || !services || services.length === 0) {
+      return { ok: false, error: 'Servizi non trovati' };
     }
+
+    // Ordina i servizi secondo l'ordine di selezione dell'utente
+    const orderedServices = serviceIds
+      .map((id) => services.find((s) => s.id === id))
+      .filter((s): s is typeof services[number] => !!s);
+
+    // Calcola la durata totale combinata di tutti i servizi
+    const totalDuration = orderedServices.reduce((acc, s) => acc + s.duration_minutes, 0);
 
     let barberId = input.barberId;
     if (!barberId) {
-      barberId = await resolveBarberForSlot(input.date, input.time, service.duration_minutes);
-      if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario' };
+      barberId = await resolveBarberForSlot(input.date, input.time, totalDuration);
+      if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario per tutti i servizi scelti.' };
     } else {
       const { slots, error } = await getAvailableSlots(
         barberId,
         input.date,
-        service.duration_minutes
+        totalDuration
       );
 
       if (!slots.includes(input.time)) {
@@ -74,14 +84,12 @@ export async function createAppointment(input: CreateAppointmentInput) {
           ok: false,
           error:
             error ??
-            'Il barbiere selezionato non è disponibile in questo orario (ferie o assenza). Scegli un altro orario.',
+            'Il barbiere selezionato non è disponibile per l\'intera durata dei servizi scelti.',
         };
       }
     }
 
-    const startsAt = parseBookingDateTime(input.date, input.time);
-    const endsAt = addMinutes(startsAt, service.duration_minutes);
-
+    const startsAtBase = parseBookingDateTime(input.date, input.time);
     const { data: barber } = await supabase
       .from('barbers')
       .select('name')
@@ -94,8 +102,9 @@ export async function createAppointment(input: CreateAppointmentInput) {
       sessionUser?.email?.trim() ||
       null;
 
+    // Applica promozione/sconto sul primo servizio come riferimento
     const promotionResult = await resolvePromotionForBooking(
-      input.serviceId,
+      serviceIds[0],
       input.promotionCode
     );
 
@@ -103,41 +112,69 @@ export async function createAppointment(input: CreateAppointmentInput) {
       return { ok: false, error: promotionResult.error };
     }
 
-    const { promotion, discountCents, finalCents } = promotionResult;
+    const { promotion, discountCents } = promotionResult;
 
-    const { data: appointment, error } = await supabase
-      .from('appointments')
-      .insert({
-        customer_id: sessionUser?.id ?? profile?.id ?? null,
-        barber_id: barberId,
-        service_id: input.serviceId,
-        starts_at: startsAt.toISOString(),
-        ends_at: endsAt.toISOString(),
-        status: 'confirmed',
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_email: customerEmail,
-        notes: input.notes?.trim() || null,
-        promotion_id: promotion?.id ?? null,
-        discount_cents: discountCents,
-      })
-      .select('id')
-      .single();
+    // Genera un ID combo univoco per collegare i diversi record
+    const comboId = `combo_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
+    const insertedIds: string[] = [];
+    let currentStartsAt = startsAtBase;
+    
+    // Calcoliamo i prezzi totali
+    const totalOriginalPriceCents = orderedServices.reduce((acc, s) => acc + s.price_cents, 0);
+    const finalPriceCents = Math.max(0, totalOriginalPriceCents - discountCents);
 
-    if (error) {
-      console.error('createAppointment insert failed:', error);
-      if (error.code === '23P01') {
-        return { ok: false, error: 'Questo orario è appena stato prenotato. Scegline un altro.' };
+    for (let idx = 0; idx < orderedServices.length; idx++) {
+      const s = orderedServices[idx];
+      const currentEndsAt = addMinutes(currentStartsAt, s.duration_minutes);
+      
+      const comboLabel = `[Combo: ${comboId}]`;
+      const rowNotes = input.notes?.trim()
+        ? `${comboLabel} ${input.notes.trim()}`
+        : comboLabel;
+
+      const { data: appointment, error } = await supabase
+        .from('appointments')
+        .insert({
+          customer_id: sessionUser?.id ?? profile?.id ?? null,
+          barber_id: barberId,
+          service_id: s.id,
+          starts_at: currentStartsAt.toISOString(),
+          ends_at: currentEndsAt.toISOString(),
+          status: 'confirmed',
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          customer_email: customerEmail,
+          notes: rowNotes,
+          promotion_id: idx === 0 && promotion && discountCents > 0 ? promotion.id : null,
+          discount_cents: idx === 0 ? discountCents : 0,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        console.error('createAppointment combo insert failed at index', idx, error);
+        // Pulizia transazionale manuale per evitare record orfani
+        if (insertedIds.length > 0) {
+          await supabase.from('appointments').delete().in('id', insertedIds);
+        }
+        if (error.code === '23P01') {
+          return { ok: false, error: 'Questo orario è appena stato occupato. Scegline un altro.' };
+        }
+        return { ok: false, error: 'Errore durante il salvataggio dei servizi. Riprova.' };
       }
-      return { ok: false, error: 'Errore durante la prenotazione. Riprova tra poco.' };
+
+      insertedIds.push(appointment.id);
+      currentStartsAt = currentEndsAt;
     }
+
+    const combinedServiceNames = orderedServices.map((s) => s.name).join(' + ');
 
     try {
       await notifyAdminNewBooking({
-        serviceName: service.name,
-        priceCents: finalCents,
+        serviceName: combinedServiceNames,
+        priceCents: finalPriceCents,
         barberName: barber?.name ?? 'Barbiere',
-        startsAt,
+        startsAt: startsAtBase,
         customerName,
         customerPhone,
         notes: input.notes,
@@ -151,12 +188,12 @@ export async function createAppointment(input: CreateAppointmentInput) {
 
     return {
       ok: true,
-      appointmentId: appointment.id,
-      serviceName: service.name,
+      appointmentId: insertedIds[0],
+      serviceName: combinedServiceNames,
       barberName: barber?.name ?? 'Barbiere',
-      startsAt: startsAt.toISOString(),
-      priceCents: finalCents,
-      originalPriceCents: service.price_cents,
+      startsAt: startsAtBase.toISOString(),
+      priceCents: finalPriceCents,
+      originalPriceCents: totalOriginalPriceCents,
       discountCents,
       promotionTitle: promotion?.title ?? null,
     };
@@ -191,23 +228,46 @@ export async function cancelAppointment(appointmentId: string) {
     return { ok: false, error: manageAppointmentError() };
   }
 
-  const { error } = await supabase
-    .from('appointments')
-    .update({ status: 'cancelled' })
-    .eq('id', appointmentId);
+  // Estrae l'ID combo se presente nelle note
+  const comboMatch = apt.notes?.match(/\[Combo:\s*(combo_[a-zA-Z0-9_]+)\]/);
+  const comboId = comboMatch ? comboMatch[1] : null;
 
+  let cancelQuery = supabase.from('appointments').update({ status: 'cancelled' });
+  if (comboId) {
+    cancelQuery = cancelQuery.like('notes', `%[Combo: ${comboId}]%`);
+  } else {
+    cancelQuery = cancelQuery.eq('id', appointmentId);
+  }
+
+  const { error } = await cancelQuery;
   if (error) return { ok: false, error: 'Errore cancellazione' };
 
   if (isOwner) {
-    const service = apt.service as { name: string; price_cents: number } | null;
     const barber = apt.barber as { name: string } | null;
-    const discountCents = apt.discount_cents ?? 0;
-    const priceCents = Math.max(0, (service?.price_cents ?? 0) - discountCents);
+    let serviceNames = (apt.service as { name: string } | null)?.name ?? 'Servizio';
+    let totalPriceCents = Math.max(0, ((apt.service as { price_cents: number } | null)?.price_cents ?? 0) - (apt.discount_cents ?? 0));
+
+    // Se fa parte di una combo, calcola il prezzo totale cumulativo e i nomi dei servizi
+    if (comboId) {
+      const { data: comboApts } = await supabase
+        .from('appointments')
+        .select('*, service:services(name, price_cents)')
+        .like('notes', `%[Combo: ${comboId}]%`);
+
+      if (comboApts && comboApts.length > 0) {
+        serviceNames = comboApts.map((a) => (a.service as { name: string } | null)?.name ?? 'Servizio').join(' + ');
+        totalPriceCents = comboApts.reduce((acc, a) => {
+          const sprice = (a.service as { price_cents: number } | null)?.price_cents ?? 0;
+          const sdiscount = a.discount_cents ?? 0;
+          return acc + Math.max(0, sprice - sdiscount);
+        }, 0);
+      }
+    }
 
     try {
       await notifyAdminBookingCancellation({
-        serviceName: service?.name ?? 'Servizio',
-        priceCents,
+        serviceName: serviceNames,
+        priceCents: totalPriceCents,
         barberName: barber?.name ?? 'Barbiere',
         startsAt: new Date(apt.starts_at),
         customerName: apt.customer_name,

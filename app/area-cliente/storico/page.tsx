@@ -2,19 +2,22 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { AppointmentCard } from '@/components/customer/AppointmentCard';
+import { groupComboAppointments } from '@/lib/utils/group-appointments';
 
 export const metadata = { title: 'Le mie prenotazioni' };
 
 export default async function CustomerStoricoPage() {
   const profile = await getProfile();
   const supabase = await createClient();
-  const appointments = supabase
+  const rawAppointments = supabase
     ? (await supabase
         .from('appointments')
         .select('*, barber:barbers(name), service:services(name), photos:appointment_photos(*)')
         .eq('customer_id', profile?.id ?? '')
         .order('starts_at', { ascending: false })).data ?? []
     : [];
+
+  const appointments = groupComboAppointments(rawAppointments);
 
   const upcoming = appointments.filter(
     (apt) => apt.status === 'confirmed' && new Date(apt.starts_at) > new Date()

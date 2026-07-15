@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { AppointmentCard } from '@/components/customer/AppointmentCard';
+import { groupComboAppointments } from '@/lib/utils/group-appointments';
 
 export const metadata = { title: 'I miei appuntamenti' };
 
@@ -22,10 +23,12 @@ export default async function CustomerAppointmentsPage() {
     .eq('customer_id', profile?.id ?? '')
     .order('starts_at', { ascending: false });
 
-  const upcoming = (appointments ?? []).filter(
+  const groupedAppointments = groupComboAppointments(appointments ?? []);
+
+  const upcoming = groupedAppointments.filter(
     (apt) => apt.status === 'confirmed' && new Date(apt.starts_at) > new Date()
   );
-  const past = (appointments ?? []).filter(
+  const past = groupedAppointments.filter(
     (apt) => !(apt.status === 'confirmed' && new Date(apt.starts_at) > new Date())
   );
 

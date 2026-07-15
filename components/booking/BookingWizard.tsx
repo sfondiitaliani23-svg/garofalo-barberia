@@ -63,7 +63,7 @@ export function BookingWizard({
 }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [serviceId, setServiceId] = useState<string | null>(null);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [barberId, setBarberId] = useState<string | null>(null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
@@ -85,7 +85,20 @@ export function BookingWizard({
   const [loadingBarberStatuses, setLoadingBarberStatuses] = useState(false);
   const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null);
 
-  const selectedService = services.find((s) => s.id === serviceId);
+  const selectedServices = useMemo(
+    () => selectedServiceIds.map((id) => services.find((s) => s.id === id)).filter((s): s is Service => !!s),
+    [selectedServiceIds, services]
+  );
+
+  const totalDuration = useMemo(
+    () => selectedServices.reduce((acc, s) => acc + s.duration_minutes, 0),
+    [selectedServices]
+  );
+
+  const totalOriginalPrice = useMemo(
+    () => selectedServices.reduce((acc, s) => acc + s.price_cents, 0),
+    [selectedServices]
+  );
 
   const barberStatusMap = useMemo(
     () => new Map(barberStatuses.map((status) => [status.barberId, status])),
@@ -93,9 +106,9 @@ export function BookingWizard({
   );
 
   const loadBarberStatuses = useCallback(async () => {
-    if (!selectedService) return;
+    if (selectedServices.length === 0) return;
     setLoadingBarberStatuses(true);
-    const statuses = await getBarbersBookingAvailability(selectedService.duration_minutes);
+    const statuses = await getBarbersBookingAvailability(totalDuration);
     setBarberStatuses(statuses);
     setLoadingBarberStatuses(false);
 
@@ -104,12 +117,12 @@ export function BookingWizard({
       setDate(null);
       setTime(null);
     }
-  }, [barberId, selectedService]);
+  }, [barberId, selectedServices.length, totalDuration]);
 
   const loadDates = useCallback(async () => {
-    if (!selectedService) return;
+    if (selectedServices.length === 0) return;
     setLoadingDates(true);
-    const result = await getAvailableDates(selectedService.duration_minutes, barberId);
+    const result = await getAvailableDates(totalDuration, barberId);
     setDates(result);
     setDate((current) => {
       if (result.length === 0) return null;
@@ -117,69 +130,69 @@ export function BookingWizard({
       return result[0];
     });
     setLoadingDates(false);
-  }, [selectedService, barberId]);
+  }, [selectedServices.length, totalDuration, barberId]);
 
   const loadSlots = useCallback(async () => {
-    if (!selectedService || !date) return;
+    if (selectedServices.length === 0 || !date) return;
     setLoadingSlots(true);
     const { slots: s, unavailable } = await getAvailableSlots(
       barberId,
       date,
-      selectedService.duration_minutes
+      totalDuration
     );
     setSlots(s);
     setSlotsUnavailable(Boolean(unavailable));
     setLoadingSlots(false);
-  }, [selectedService, barberId, date]);
+  }, [selectedServices.length, totalDuration, barberId, date]);
 
   useEffect(() => {
-    if (step === 2 && selectedService) {
+    if (step === 2 && selectedServices.length > 0) {
       loadBarberStatuses();
     }
-  }, [step, selectedService, loadBarberStatuses]);
+  }, [step, selectedServices.length, loadBarberStatuses]);
 
   useEffect(() => {
-    if (step === 2 && selectedService) {
+    if (step === 2 && selectedServices.length > 0) {
       loadDates();
     }
-  }, [step, selectedService, barberId, loadDates]);
+  }, [step, selectedServices.length, barberId, loadDates]);
 
   useEffect(() => {
-    if (step === 2 && date && selectedService) loadSlots();
-  }, [step, date, selectedService, barberId, loadSlots]);
+    if (step === 2 && date && selectedServices.length > 0) loadSlots();
+  }, [step, date, selectedServices.length, barberId, loadSlots]);
 
   const loadAutoPromotion = useCallback(async () => {
-    if (!serviceId) return;
-    const result = await resolvePromotionForBooking(serviceId);
+    if (selectedServiceIds.length === 0) return;
+    const result = await resolvePromotionForBooking(selectedServiceIds[0]);
     if (!result.ok) return;
 
     if (result.promotion && result.discountCents > 0) {
       setAppliedPromotion({
         title: result.promotion.title,
         discountCents: result.discountCents,
-        finalCents: result.finalCents,
+        finalCents: totalOriginalPrice - result.discountCents,
       });
       setPromoSource('auto');
     } else {
       setAppliedPromotion(null);
       setPromoSource(null);
     }
-  }, [serviceId]);
+  }, [selectedServiceIds, totalOriginalPrice]);
 
   useEffect(() => {
-    if (step === 3 && serviceId && promoSource !== 'code') {
+    if (step === 3 && selectedServiceIds.length > 0 && promoSource !== 'code') {
       loadAutoPromotion();
     }
-  }, [step, serviceId, promoSource, loadAutoPromotion]);
+  }, [step, selectedServiceIds, promoSource, loadAutoPromotion]);
 
   async function handleApplyPromoCode() {
-    if (!serviceId || !promoCode.trim()) {
+    if (selectedServiceIds.length === 0 || !promoCode.trim()) {
       toast.error('Inserisci un codice promozionale');
       return;
     }
 
     setValidatingPromo(true);
-    const result = await validatePromotionCode(promoCode, serviceId);
+    const result = await validatePromotionCode(promoCode, selectedServiceIds[0]);
     setValidatingPromo(false);
 
     if (!result.ok) {
@@ -195,7 +208,7 @@ export function BookingWizard({
     setAppliedPromotion({
       title: result.promotion.title,
       discountCents: result.discountCents,
-      finalCents: result.finalCents,
+      finalCents: totalOriginalPrice - result.discountCents,
       code: result.promotion.code ?? promoCode.trim().toUpperCase(),
     });
     setPromoSource('code');
@@ -206,25 +219,30 @@ export function BookingWizard({
     setPromoCode('');
     setPromoSource(null);
     setAppliedPromotion(null);
-    if (serviceId) loadAutoPromotion();
+    if (selectedServiceIds.length > 0) loadAutoPromotion();
   }
 
-  function selectService(id: string) {
-    setServiceId(id);
+  function toggleService(id: string) {
+    setSelectedServiceIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
     setPromoCode('');
     setAppliedPromotion(null);
     setPromoSource(null);
-    setStep(2);
   }
 
   async function selectSlot(t: string) {
-    if (!selectedService || !date) return;
+    if (selectedServices.length === 0 || !date) return;
 
     setLoadingSlots(true);
     const { slots: freshSlots } = await getAvailableSlots(
       barberId,
       date,
-      selectedService.duration_minutes
+      totalDuration
     );
     setSlots(freshSlots);
     setLoadingSlots(false);
@@ -239,7 +257,7 @@ export function BookingWizard({
   }
 
   function handleSubmit() {
-    if (!serviceId || !date || !time || !name.trim() || !phone.trim()) {
+    if (selectedServiceIds.length === 0 || !date || !time || !name.trim() || !phone.trim()) {
       toast.error('Compila tutti i campi obbligatori');
       return;
     }
@@ -247,7 +265,7 @@ export function BookingWizard({
     startTransition(async () => {
       try {
         const result = await createAppointment({
-          serviceId,
+          serviceIds: selectedServiceIds,
           barberId,
           date,
           time,
@@ -259,7 +277,7 @@ export function BookingWizard({
         });
 
         if (!result?.ok) {
-          if (result?.error?.includes('prenotato')) {
+          if (result?.error?.includes('occupato') || result?.error?.includes('prenotato')) {
             setStep(2);
             setTime(null);
             void loadSlots();
@@ -276,15 +294,15 @@ export function BookingWizard({
         }
 
         setConfirmation({
-          serviceName: result.serviceName ?? selectedService?.name ?? 'Servizio',
+          serviceName: result.serviceName ?? selectedServices.map((s) => s.name).join(' + '),
           barberName:
             result.barberName ??
             (barberId ? barbers.find((b) => b.id === barberId)?.name ?? 'Barbiere' : 'Primo disponibile'),
           date: date!,
           time: time!,
           customerName: name,
-          priceCents: result.priceCents ?? selectedService?.price_cents ?? 0,
-          originalPriceCents: result.originalPriceCents ?? selectedService?.price_cents ?? 0,
+          priceCents: result.priceCents ?? totalOriginalPrice,
+          originalPriceCents: result.originalPriceCents ?? totalOriginalPrice,
           discountCents: result.discountCents ?? 0,
           promotionTitle: result.promotionTitle,
         });
@@ -292,7 +310,7 @@ export function BookingWizard({
         toast.error('Errore di connessione durante la conferma. Ricarica la pagina e riprova.');
       }
     });
-  };
+  }
 
   useEffect(() => {
     if (!confirmation) return;
@@ -361,25 +379,59 @@ export function BookingWizard({
         </CardHeader>
         <CardContent className="min-w-0 space-y-6 overflow-x-hidden px-4 sm:px-6">
           {step === 1 && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {services.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => selectService(s.id)}
-                  className={cn(
-                    'rounded-lg border p-4 text-left transition hover:border-gold',
-                    serviceId === s.id ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
-                  )}
-                >
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-gold">{formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}</p>
-                </button>
-              ))}
+            <div className="space-y-6">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {services.map((s) => {
+                  const isSelected = selectedServiceIds.includes(s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => toggleService(s.id)}
+                      className={cn(
+                        'flex items-center justify-between rounded-lg border p-4 text-left transition hover:border-gold',
+                        isSelected ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
+                      )}
+                    >
+                      <div>
+                        <p className="font-medium text-white">{s.name}</p>
+                        <p className="text-sm text-gold">{formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}</p>
+                      </div>
+                      <div className={cn(
+                        'flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all',
+                        isSelected ? 'border-gold bg-gold text-black' : 'border-white/30'
+                      )}>
+                        {isSelected && (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="h-3.5 w-3.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedServices.length > 0 && (
+                <div className="rounded-lg border border-gold/20 bg-gold/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p className="text-sm text-white/50">Servizi selezionati ({selectedServices.length})</p>
+                    <p className="font-medium text-gold mt-0.5">
+                      {selectedServices.map(s => s.name).join(' + ')}
+                    </p>
+                  </div>
+                  <div className="text-left sm:text-right shrink-0">
+                    <p className="text-sm text-white/50">Totale stimato</p>
+                    <p className="text-lg font-bold text-white mt-0.5">
+                      {formatDuration(totalDuration)} · {formatPrice(totalOriginalPrice)}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {step === 2 && selectedService && (
+          {step === 2 && selectedServices.length > 0 && (
             <div className="space-y-6">
               <div>
                 <h3 className="mb-3 text-sm font-semibold text-gold">Con chi vuoi prenotare?</h3>
@@ -411,7 +463,7 @@ export function BookingWizard({
                         )}
                       >
                         <div>
-                          <p className="font-medium">{b.name}</p>
+                          <p className="font-medium text-white">{b.name}</p>
                           <p className={cn('text-sm', unavailable ? 'text-white/45' : 'text-gold')}>
                             {unavailable ? status?.reason ?? 'In ferie o non disponibile' : formatBarberRole(b.role)}
                           </p>
@@ -436,7 +488,7 @@ export function BookingWizard({
                       barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
                     )}
                   >
-                    <p className="font-medium">Nessuna preferenza</p>
+                    <p className="font-medium text-white">Nessuna preferenza</p>
                     <p className="text-sm text-white/50">Il primo barbiere disponibile</p>
                   </button>
                 </div>
@@ -481,24 +533,25 @@ export function BookingWizard({
             </div>
           )}
 
-          {step === 3 && selectedService && date && time && (
+          {step === 3 && selectedServices.length > 0 && date && time && (
             <div className="space-y-4">
               <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-sm space-y-1">
-                <p><strong>Servizio:</strong> {selectedService.name}</p>
+                <p><strong>Servizi selezionati:</strong> {selectedServices.map(s => s.name).join(' + ')}</p>
+                <p><strong>Durata totale:</strong> {formatDuration(totalDuration)}</p>
                 {appliedPromotion && appliedPromotion.discountCents > 0 ? (
                   <>
                     <p>
-                      <strong>Prezzo:</strong>{' '}
-                      <span className="line-through text-white/40">{formatPrice(selectedService.price_cents)}</span>{' '}
-                      <span className="text-gold">{formatPrice(appliedPromotion.finalCents)}</span>
+                      <strong>Prezzo complessivo:</strong>{' '}
+                      <span className="line-through text-white/40">{formatPrice(totalOriginalPrice)}</span>{' '}
+                      <span className="text-gold font-semibold">{formatPrice(appliedPromotion.finalCents)}</span>
                     </p>
-                    <p className="text-emerald-400/90">
+                    <p className="text-emerald-400/90 text-xs">
                       Sconto {formatPrice(appliedPromotion.discountCents)} — {appliedPromotion.title}
                       {appliedPromotion.code ? ` (${appliedPromotion.code})` : ''}
                     </p>
                   </>
                 ) : (
-                  <p><strong>Prezzo:</strong> {formatPrice(selectedService.price_cents)}</p>
+                  <p><strong>Prezzo complessivo:</strong> {formatPrice(totalOriginalPrice)}</p>
                 )}
                 <p><strong>Data:</strong> {format(parseISO(date), "EEEE d MMMM yyyy", { locale: it })} alle {time}</p>
                 <p><strong>Barbiere:</strong> {barberId ? barbers.find((b) => b.id === barberId)?.name : 'Primo disponibile'}</p>
@@ -511,7 +564,7 @@ export function BookingWizard({
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                     placeholder="Es. PRIMAVERA20"
-                    className="font-mono uppercase"
+                    className="font-mono uppercase bg-[#1a1a1a] border-white/15"
                     disabled={promoSource === 'code'}
                   />
                   {promoSource === 'code' ? (
@@ -533,11 +586,11 @@ export function BookingWizard({
               </div>
               <div>
                 <Label htmlFor="name">Nome e cognome *</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Mario Rossi" className="mt-1" />
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Mario Rossi" className="mt-1 bg-[#1a1a1a] border-white/15" />
               </div>
               <div>
                 <Label htmlFor="phone">Telefono *</Label>
-                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="320 188 6277" className="mt-1" />
+                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="320 188 6277" className="mt-1 bg-[#1a1a1a] border-white/15" />
                 <p className="mt-1 text-xs text-white/45">Per il promemoria WhatsApp 6 ore prima dell&apos;appuntamento</p>
               </div>
               <div>
@@ -549,7 +602,7 @@ export function BookingWizard({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tua@email.com"
                   autoComplete="email"
-                  className="mt-1"
+                  className="mt-1 bg-[#1a1a1a] border-white/15"
                 />
                 <p className="mt-1 text-xs text-white/45">Per ricevere anche il promemoria via email</p>
               </div>
@@ -586,11 +639,14 @@ export function BookingWizard({
             )}
             {step < 3 ? (
               <Button
-                disabled={step === 2 && !time}
-                onClick={() => time && setStep(3)}
+                disabled={step === 1 ? selectedServiceIds.length === 0 : (step === 2 && !time)}
+                onClick={() => {
+                  if (step === 1) setStep(2);
+                  else if (step === 2 && time) setStep(3);
+                }}
                 className={cn(
                   'w-full max-w-full min-w-0 md:ml-auto md:w-auto',
-                  step === 2 && !time && 'opacity-50'
+                  (step === 1 ? selectedServiceIds.length === 0 : (step === 2 && !time)) && 'opacity-50'
                 )}
               >
                 Avanti

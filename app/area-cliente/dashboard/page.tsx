@@ -5,6 +5,7 @@ import { parseISO } from 'date-fns';
 import { formatShopDateTimeShort } from '@/lib/utils/booking-datetime';
 import { Calendar, Scissors, Clock, Star, ChevronRight } from 'lucide-react';
 import { LogoutCard } from '@/components/customer/LogoutCard';
+import { groupComboAppointments } from '@/lib/utils/group-appointments';
 
 export const metadata = { title: 'La mia Dashboard | Barberia Garofalo' };
 
@@ -23,7 +24,7 @@ export default async function CustomerDashboardPage() {
           .eq('status', 'confirmed')
           .gte('starts_at', new Date().toISOString())
           .order('starts_at')
-          .limit(3),
+          .limit(6), // Aumentato a 6 per coprire eventuali combo multiple che verranno raggruppate
         supabase
           .from('appointments')
           .select('id', { count: 'exact', head: true })
@@ -32,7 +33,8 @@ export default async function CustomerDashboardPage() {
       ])
     : [{ data: null }, { count: null }];
 
-  const upcoming = upcomingResult.data ?? [];
+  const rawUpcoming = upcomingResult.data ?? [];
+  const upcoming = groupComboAppointments(rawUpcoming).slice(0, 3);
   const totalCount = countResult.count ?? 0;
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Cliente';
