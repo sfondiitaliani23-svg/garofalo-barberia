@@ -1,5 +1,6 @@
 import { CustomerSidebar } from '@/components/layout/CustomerSidebar';
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
+import { EliseoChat } from '@/components/layout/EliseoChat';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
         <div className="mx-auto w-full max-w-3xl">{children}</div>
       </main>
       <ScrollToTop />
+      <EliseoChat />
     </div>
   );
 }
