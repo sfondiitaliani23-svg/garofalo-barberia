@@ -123,17 +123,33 @@ function detectIntent(message: string): string {
   // Normalize character accents and punctuation
   const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  for (const intent of INTENTS) {
+  // 1. Check greeting
+  const greetingIntent = INTENTS[0];
+  const greetingNormalised = greetingIntent.patterns.map(p => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+  if (greetingNormalised.some(pattern => lower.includes(pattern))) {
+    return greetingIntent.response();
+  }
+
+  // 2. Check goodbye
+  const goodbyeIntent = INTENTS[INTENTS.length - 1];
+  const goodbyeNormalised = goodbyeIntent.patterns.map(p => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+  if (goodbyeNormalised.some(pattern => lower.includes(pattern))) {
+    return goodbyeIntent.response();
+  }
+
+  // 3. Check all other intents
+  for (let i = 1; i < INTENTS.length - 1; i++) {
+    const intent = INTENTS[i];
     const normalised = intent.patterns.map(p =>
       p.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     );
     if (normalised.some(pattern => lower.includes(pattern))) {
-      return intent.response();
+      return intent.response() + "\n\nBasta così? Vuoi sapere qualcos'altro? O vuoi fare una tranquilla chiacchierata?";
     }
   }
 
   // Fallback
-  return `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱`;
+  return `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱\n\nBasta così? Vuoi sapere qualcos'altro? O vuoi fare una tranquilla chiacchierata?`;
 }
 
 export async function POST(request: NextRequest) {

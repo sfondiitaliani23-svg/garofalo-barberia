@@ -221,3 +221,27 @@ body {
 .admin-modal-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(205, 154, 79, 0.65);
 }
+
+.eliseo-chat-messages {
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(205, 154, 79, 0.5) rgba(0, 0, 0, 0.2);
+}
+
+.eliseo-chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.eliseo-chat-messages::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+}
+
+.eliseo-chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(205, 154, 79, 0.5);
+  border-radius: 9999px;
+}
+
+.eliseo-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(205, 154, 79, 0.8);
+}
