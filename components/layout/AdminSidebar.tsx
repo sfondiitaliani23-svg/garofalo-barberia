@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,6 @@ import {
   Users,
   Scissors,
   UserCog,
-  BarChart3,
   Tag,
   TrendingUp,
   Package,
@@ -37,7 +36,35 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const toggleMenu = () => setMenuOpen(!menuOpen);
+  // Blocca/sblocca lo scroll del body quando il menu è aperto.
+  // Questo impedisce al browser di mostrare la scrollbar nativa del body
+  // attraverso l'overlay, eliminando la barra grigia laterale.
+  useEffect(() => {
+    if (menuOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
+  }, [menuOpen]);
+
+  const toggleMenu = () => setMenuOpen(prev => !prev);
   const closeMenu = () => setMenuOpen(false);
 
   // 4 link principali visibili nella barra inferiore mobile
@@ -119,9 +146,15 @@ export function AdminSidebar() {
 
       {/* ── 3. OVERLAY MENU COMPLETO MOBILE (< lg) ── */}
       {menuOpen && (
-        <div className="no-scrollbar fixed inset-0 z-[210] bg-black/95 backdrop-blur-md p-6 overflow-y-auto flex flex-col lg:hidden">
+        // L'overlay occupa tutto lo schermo senza scroll proprio.
+        // Il body è bloccato (useEffect sopra), quindi nessuna scrollbar appare.
+        // Il contenuto interno scorre separatamente tramite inner-scroll con scrollbar nascosta.
+        <div
+          className="fixed inset-0 z-[210] bg-black/95 backdrop-blur-md flex flex-col lg:hidden"
+          style={{ overflow: 'hidden' }}
+        >
           {/* Header Overlay */}
-          <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-6">
+          <div className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-6 py-4">
             <span className="font-display text-sm uppercase tracking-wider text-gold">
               Menu Amministratore
             </span>
@@ -135,44 +168,60 @@ export function AdminSidebar() {
             </button>
           </div>
 
-          {/* Lista di tutti i link */}
-          <nav className="flex-1 space-y-2">
-            {links.map(({ href, label, icon: Icon, exact }) => {
-              const isActive = exact
-                ? pathname === href
-                : pathname === href || pathname.startsWith(`${href}/`);
+          {/* Area scorrevole interna — scrollbar nascosta via CSS inline garantito */}
+          <div
+            className="flex-1 flex flex-col px-6 py-4"
+            style={{
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              scrollbarWidth: 'none',       /* Firefox */
+              msOverflowStyle: 'none',      /* IE/Edge */
+            } as React.CSSProperties}
+          >
+            {/* Lista di tutti i link */}
+            <nav className="space-y-2">
+              {links.map(({ href, label, icon: Icon, exact }) => {
+                const isActive = exact
+                  ? pathname === href
+                  : pathname === href || pathname.startsWith(`${href}/`);
 
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={closeMenu}
-                  className={cn(
-                    'flex items-center gap-3.5 rounded-xl px-4 py-3 text-base font-semibold transition',
-                    isActive ? 'bg-gold/15 text-gold' : 'text-white/70 hover:bg-white/5 hover:text-white'
-                  )}
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={closeMenu}
+                    className={cn(
+                      'flex items-center gap-3.5 rounded-xl px-4 py-3 text-base font-semibold transition',
+                      isActive ? 'bg-gold/15 text-gold' : 'text-white/70 hover:bg-white/5 hover:text-white'
+                    )}
+                  >
+                    <Icon size={20} className={isActive ? 'text-gold' : 'text-white/40'} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Footer Overlay - Pulsante Esci */}
+            <div className="mt-8 border-t border-white/10 pt-4">
+              <form action={signOut} onSubmit={closeMenu}>
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-600/10 border border-red-500/20 px-4 py-3.5 text-base font-bold text-red-500 hover:bg-red-600/20 transition"
                 >
-                  <Icon size={20} className={isActive ? 'text-gold' : 'text-white/40'} />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Footer Overlay - Pulsante Esci */}
-          <div className="mt-8 border-t border-white/10 pt-4">
-            <form action={signOut} onSubmit={closeMenu}>
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-600/10 border border-red-500/20 px-4 py-3.5 text-base font-bold text-red-500 hover:bg-red-600/20 transition"
-              >
-                <LogOut size={20} />
-                Disconnetti Account
-              </button>
-            </form>
+                  <LogOut size={20} />
+                  Disconnetti Account
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       )}
+
+      {/* Stile per nascondere webkit scrollbar nell'inner scroll (Chrome/Safari) */}
+      <style>{`
+        .admin-menu-inner::-webkit-scrollbar { display: none; }
+      `}</style>
     </>
   );
 }
