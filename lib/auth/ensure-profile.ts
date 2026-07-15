@@ -20,8 +20,14 @@ export async function ensureProfileForAuthUser(user: User) {
   const supabase = await createServiceClient();
   if (!supabase) return;
 
+  const { data: existingProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
   const metaRole = user.user_metadata?.role;
-  const role = metaRole === 'admin' ? 'admin' : 'customer';
+  const role = existingProfile?.role || (metaRole === 'admin' ? 'admin' : 'customer');
 
   await supabase.from('profiles').upsert(
     {
