@@ -21,7 +21,7 @@ export function CustomerSidebar() {
   return (
     <>
       {/* ── Sidebar Desktop (lg+) ── */}
-      <aside className="hidden lg:flex w-56 flex-col border-r border-white/10 bg-[#0a0a0a] p-4 min-h-screen sticky top-0 h-screen">
+      <aside className="hidden lg:flex w-56 flex-col border-r border-white/10 bg-[#0a0a0a] p-4 fixed left-0 top-0 bottom-0 h-screen z-30">
         <Link href="/area-cliente/dashboard" className="mb-8 font-display text-sm uppercase tracking-wider text-gold">
           Il mio account
         </Link>
