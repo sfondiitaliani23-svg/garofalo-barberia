@@ -159,8 +159,14 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-pointer"
+    >
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 cursor-default"
+      >
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-2">
             <span className="text-xl">⚡</span>
