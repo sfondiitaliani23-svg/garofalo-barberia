@@ -35,7 +35,7 @@ export function ScrollToTop() {
       onClick={scrollToTop}
       type="button"
       className={cn(
-        'fixed z-[200] right-6 transition-all duration-300',
+        'fixed z-[200] right-8 transition-all duration-300',
         isCustomerArea
           ? 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]'
           : 'bottom-[calc(1.5rem+env(safe-area-inset-bottom))]',
