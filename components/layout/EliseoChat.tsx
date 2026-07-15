@@ -151,8 +151,12 @@ export function EliseoChat() {
         className={cn(
           "fixed z-[301] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.7)] border border-gold/20 overflow-hidden flex flex-col bg-[#090909] transition-all duration-300 origin-bottom-right right-4",
           isCustomerArea
-            ? "bottom-[calc(10.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(6.5rem+env(safe-area-inset-bottom))]"
-            : "bottom-[calc(6.5rem+env(safe-area-inset-bottom))]",
+            ? (showScrollToTop
+                ? "bottom-[calc(13.25rem+env(safe-area-inset-bottom))] lg:bottom-[calc(9.25rem+env(safe-area-inset-bottom))]"
+                : "bottom-[calc(10rem+env(safe-area-inset-bottom))] lg:bottom-[calc(6.5rem+env(safe-area-inset-bottom))]")
+            : (showScrollToTop
+                ? "bottom-[calc(9.25rem+env(safe-area-inset-bottom))]"
+                : "bottom-[calc(6.5rem+env(safe-area-inset-bottom))]"),
           isOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-90 pointer-events-none'
         )}
         style={{ maxHeight: '540px' }}
@@ -265,11 +269,14 @@ export function EliseoChat() {
         onClick={() => setIsOpen(o => !o)}
         aria-label="Apri assistente Eliseo"
         className={cn(
-          "fixed z-[302] group flex flex-col items-center transition-all duration-300",
+          "fixed z-[302] group flex flex-col items-center transition-all duration-300 right-6",
           isCustomerArea
-            ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]"
-            : "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]",
-          showScrollToTop ? "right-20" : "right-6"
+            ? (showScrollToTop
+                ? "bottom-[calc(8.75rem+env(safe-area-inset-bottom))] lg:bottom-[calc(4.75rem+env(safe-area-inset-bottom))]"
+                : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")
+            : (showScrollToTop
+                ? "bottom-[calc(4.75rem+env(safe-area-inset-bottom))]"
+                : "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")
         )}
       >
         <div

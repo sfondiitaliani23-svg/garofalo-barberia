@@ -136,7 +136,7 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   if (['finita', 'punteggio', 'risultato', 'chi ha vinto', 'chi ha perso', 'gol', 'segnato'].some(p => lower.includes(p)) && ['partita', 'match', 'ieri sera', 'ieri', 'stasera', 'giocato', 'calcio'].some(p => lower.includes(p))) {
     return {
       replies: [
-        "Per il risultato esatto mi cogli alla sprovvista! 😅 Non avendo un collegamento in tempo reale ai feed dei tabellini sportivi, non ho il punteggio finale sottomano. Però so che c'era un'attesa pazzesca! Com'è finita alla fine? Chi ha trionfato?",
+        "Per tutti i risultati sportivi e i punteggi in tempo reale, recupero sempre i dati direttamente da **[Diretta.it](https://www.diretta.it/)**! ⚽\n\nTi consiglio di dare un'occhiata lì per i tabellini e i gol aggiornati al secondo. Tu che partita stavi seguendo?",
       ],
       isFriendMode: true,
     };
@@ -146,7 +146,7 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   if (['francia', 'ieri sera', 'partita', 'partite', 'europei', 'mondiali', 'olimpiadi', 'match', 'coppa', 'finale', 'giocato', 'sport', 'calcio', 'foggia', 'milan', 'juve', 'napoli', 'roma', 'guardiola', 'ancelotti', 'pallone', 'giocatore', 'arbitro'].some(p => lower.includes(p))) {
     return {
       replies: [
-        "Che partita e che spettacolo! ⚽ Seguo sempre con molta attenzione i grandi eventi sportivi, dagli Europei ai Mondiali fino alle Olimpiadi. C'è sempre un pathos incredibile nel vedere gli atleti spingersi oltre il limite sotto i riflettori globali. Da tifoso del Foggia porto nel cuore i colori rossoneri e lo storico Foggia di Zeman, ma amo lo sport in generale. Tu ieri sera l'hai vista? Chi meritava secondo te?",
+        "Che partita e che spettacolo! ⚽ Seguo sempre con molta attenzione i grandi eventi sportivi, dagli Europei ai Mondiali fino alle Olimpiadi, e recupero tutti i risultati in tempo reale direttamente da **[Diretta.it](https://www.diretta.it/)**.\n\nDa tifoso del Foggia porto nel cuore i colori rossoneri e lo storico Foggia di Zeman, ma amo lo sport a 360 gradi. Tu ieri sera l'hai vista? Chi meritava secondo te?",
       ],
       isFriendMode: true,
     };
