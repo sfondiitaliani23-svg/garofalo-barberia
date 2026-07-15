@@ -28,6 +28,7 @@ export function EliseoChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [unread, setUnread] = useState(false);
+  const [isFriendMode, setIsFriendMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,10 +61,14 @@ export function EliseoChat() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text.trim() }),
+        body: JSON.stringify({ message: text.trim(), isFriendMode }),
       });
       const data = await res.json();
       
+      if (typeof data.isFriendMode === 'boolean') {
+        setIsFriendMode(data.isFriendMode);
+      }
+
       const replies: string[] = data.replies || (data.reply ? [data.reply] : ['Mi dispiace, riprova tra poco.']);
       
       for (let i = 0; i < replies.length; i++) {
@@ -100,6 +105,7 @@ export function EliseoChat() {
 
   const resetChat = () => {
     setMessages([{ ...WELCOME, id: Date.now().toString() }]);
+    setIsFriendMode(false);
   };
 
   /** Render a single message bubble */

@@ -119,24 +119,163 @@ const INTENTS: Intent[] = [
   },
 ];
 
-function detectIntent(message: string): string[] {
+function detectIntent(message: string, isFriendMode: boolean): { replies: string[]; isFriendMode: boolean } {
   // Normalize character accents and punctuation
   const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+  // 1. Check if user wants to start or enter friend mode
+  if (lower.includes('tranquilla chiacchierat') || lower.includes('chiacchierat') || lower.includes('amico') || lower.includes('parlare un po') || lower.includes('chiacchierare')) {
+    return {
+      replies: [
+        "Ok ok! Allora rilassati, mettiti comodo... immagina di essere al bar con me davanti a una birra fresca. 🍻\n\nDimmi un po', come stai? Che si dice di bello?",
+      ],
+      isFriendMode: true,
+    };
+  }
+
+  // 2. If already in friend mode
+  if (isFriendMode) {
+    // If the user wants to stop/exit
+    if (lower.includes('basta') || lower.includes('esci') || lower.includes('fine') || lower.includes('stop') || lower.includes('ferma') || lower.includes('grazie')) {
+      return {
+        replies: [
+          "Va benissimo! 💈 Se hai bisogno di info su orari, servizi o prenotazioni, chiedimi pure in qualsiasi momento. Alla prossima!",
+        ],
+        isFriendMode: false,
+      };
+    }
+
+    // Check utility questions inside friend mode
+    if (['orar', 'apert', 'chius', 'orari'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          `⏰ **Orari del salone:**\n\n• Lunedì: Chiuso\n• Martedì – Venerdì: 09:00–13:00 e 14:00–19:30\n• Sabato: 09:00–13:00 e 14:00–18:00\n• Domenica: Chiuso`,
+          "Comunque, tornando alla nostra chiacchierata... dove eravamo rimasti? Che stavi dicendo di bello? 😄"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['prezz', 'cost', 'tariff', 'listin', 'quanto cost', 'si paga'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          `💈 **Listino prezzi:**\n\n• Taglio e shampoo: **€17**\n• Taglio baby (bimbi): **€13**\n• Barba con panno caldo: **€10**\n• Barba modellata a forbici: **€8**\n• Shampoo e acconciatura: **€8**\n• Barba rasata / lama: **€6**`,
+          "Comunque, tornando alla nostra chiacchierata... dove eravamo rimasti? Che mi raccontavi di bello? 😄"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['prenot', 'appuntament', 'fiss', 'riserv'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          `📅 **Come prenotare:**\n\nPuoi farlo direttamente sul sito cliccando su **"Prenota"** nel menu principale, oppure puoi scriverci su WhatsApp al **${PHONE}** e ti aiutiamo noi!`,
+          "Comunque, tornando a noi... che si dice di bello? Ti va una chiacchierata? 😄"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['dove', 'indirizz', 'trov', 'posizion', 'mappa', 'maps'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          `📍 **Dove siamo:**\n\n🏠 Viale Ignazio d'Addedda, 236 - 71122 Foggia (FG)\n🗺️ Google Maps: ${MAPS}`,
+          "Comunque, tornando a noi... che mi racconti di bello? Come stai? 😄"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    // Conversational topics
+    if (['come stai', 'tutto bene', 'come va', 'che si dice', 'che fai', 'novita', 'tutto apposto', 'tutto ok'].some(p => lower.includes(p))) {
+      const answers = [
+        "Io alla grande! Sto curando i post social e sistemando alcune grafiche per il salone, c'è sempre qualcosa da fare per rendere tutto perfetto. 💻 Tu invece come stai? Tutto bene?",
+        "Tutto a posto! Si programma, si pensa a nuove idee grafiche e ci si prepara per i prossimi clienti. 💈 Tu invece? Che fai di bello oggi? Lavoro o relax?",
+        "Si tira avanti benissimo, tra una grafica e l'altra! 🎨 In salone c'è una bella atmosfera oggi. Tu che mi racconti? Com'è andata la giornata?"
+      ];
+      const random = answers[Math.floor(Math.random() * answers.length)];
+      return { replies: [random], isFriendMode: true };
+    }
+
+    if (['chi sei', 'tuo ruolo', 'eliseo', 'cosa fai', 'ti occupi', 'creatore', 'gestore', 'grafico'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Sono Eliseo! 😊 Oltre ad aver creato e sviluppato questo sito, mi occupo di tutta l'immagine grafica e dei canali social di Barberia Garofalo. Insomma, faccio in modo che il salone abbia stile sia online che offline! Tu invece di cosa ti occupi? Lavori o studi?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['inter', 'squadra', 'calcio', 'lautaro', 'partita', 'tifo', 'tifare'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Ah, se parliamo di Inter e di Lautaro sfondi una porta aperta! 🖤💙 Da buon nerazzurro, per me c'è solo una squadra. Tu per chi fai il tifo? Spero che non siamo rivali calcistici! 😂"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['birra', 'bere', 'bar', 'pub', 'drink', 'offro', 'bicchiere'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Magari potessimo berla davvero adesso! 🍺 Una bella bionda fresca ghiacciata ci starebbe tutta. La prossima volta che passi in Viale d'Addedda, ci facciamo una bella chiacchierata dal vivo. Tu che birra bevi di solito?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['lavoro', 'studio', 'scuola', 'universita', 'ufficio', 'pc', 'programma', 'codice'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Capisco perfettamente! Ci sta metterci impegno nel proprio percorso. Ricordati però di prenderti sempre delle pause per staccare... e magari farti un bel taglio per rinfrescare lo stile! 😂 Che lavoro/studio fai di preciso?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['tempo', 'meteo', 'caldo', 'freddo', 'pioggia', 'estate', 'clima'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Qui a Foggia quando arriva l'estate si fa sentire sul serio! 🔥 Per fortuna in salone si sta freschi con l'aria condizionata. Da te com'è la situazione meteo oggi?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    if (['bravo', 'complimenti', 'bello', 'grande', 'mitico', 'super'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Grazie di cuore, troppo gentile! Ci metto sempre un sacco di passione in quello che faccio. 😊 Dimmi, ti piace come abbiamo impostato il sito?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    const generalReplies = [
+      "Ci sta! Alla fine la vita è fatta anche di queste chiacchiere semplici davanti a un bancone immaginario. 🍺 Ma dimmi, che programmi hai per stasera o per il weekend?",
+      "Ahahah, ci sta! Comunque è sempre bello fare due chiacchiere per staccare dal caos quotidiano. A proposito, sei di Foggia o abiti nei dintorni?",
+      "Interessante! Mi fa piacere confrontarmi. Senti, ma hai già dato un'occhiata alla nostra Galleria dei tagli sul sito? Ci sono dei lavori pazzeschi di Luigi!",
+      "Capisco! E dimmi, qual è la cosa che ti fa rilassare di più dopo una giornata intensa?"
+    ];
+    const randIdx = Math.floor(Math.random() * generalReplies.length);
+    return { replies: [generalReplies[randIdx]], isFriendMode: true };
+  }
+
+  // 3. Regular informative mode
   const suffix = "Basta così? Vuoi sapere qualcos'altro? O vuoi fare una tranquilla chiacchierata?";
 
   // 1. Check greeting
   const greetingIntent = INTENTS[0];
   const greetingNormalised = greetingIntent.patterns.map(p => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
   if (greetingNormalised.some(pattern => lower.includes(pattern))) {
-    return [greetingIntent.response()];
+    return { replies: [greetingIntent.response()], isFriendMode: false };
   }
 
   // 2. Check goodbye
   const goodbyeIntent = INTENTS[INTENTS.length - 1];
   const goodbyeNormalised = goodbyeIntent.patterns.map(p => p.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
   if (goodbyeNormalised.some(pattern => lower.includes(pattern))) {
-    return [goodbyeIntent.response()];
+    return { replies: [goodbyeIntent.response()], isFriendMode: false };
   }
 
   // 3. Check all other intents
@@ -146,34 +285,38 @@ function detectIntent(message: string): string[] {
       p.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     );
     if (normalised.some(pattern => lower.includes(pattern))) {
-      return [intent.response(), suffix];
+      return { replies: [intent.response(), suffix], isFriendMode: false };
     }
   }
 
   // Fallback
-  return [
-    `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱`,
-    suffix
-  ];
+  return {
+    replies: [
+      `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱`,
+      suffix
+    ],
+    isFriendMode: false
+  };
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const message: string = body?.message ?? '';
+    const isFriendMode: boolean = !!body?.isFriendMode;
 
     if (!message.trim()) {
-      return NextResponse.json({ replies: ['Scrivi un messaggio per iniziare! 😊'] });
+      return NextResponse.json({ replies: ['Scrivi un messaggio per iniziare! 😊'], isFriendMode: false });
     }
 
     // Small artificial delay for a more natural feel
     await new Promise(r => setTimeout(r, 200 + Math.random() * 300));
 
-    const replies = detectIntent(message);
-    return NextResponse.json({ replies });
+    const { replies, isFriendMode: newFriendMode } = detectIntent(message, isFriendMode);
+    return NextResponse.json({ replies, isFriendMode: newFriendMode });
   } catch {
     return NextResponse.json(
-      { replies: [`Mi dispiace, si è verificato un errore. Contattaci su WhatsApp al ${SITE_CONFIG.phoneDisplay}. 📱`] },
+      { replies: [`Mi dispiace, si è verificato un errore. Contattaci su WhatsApp al ${SITE_CONFIG.phoneDisplay}. 📱`], isFriendMode: false },
       { status: 500 }
     );
   }
