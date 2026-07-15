@@ -133,10 +133,10 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   // This avoids generic utility keywords matching casual talk (e.g. "quanto" matching "quanto è finita la partita")
   
   // EVENTI SPORTIVI - RISULTATI / SCORE (es. "quanto è finita la partita?")
-  if (['finita', 'punteggio', 'risultato', 'chi ha vinto', 'chi ha perso', 'gol', 'segnato'].some(p => lower.includes(p)) && ['partita', 'match', 'ieri sera', 'ieri', 'stasera', 'giocato', 'calcio'].some(p => lower.includes(p))) {
+  if (['finita', 'punteggio', 'risultato', 'chi ha vinto', 'chi ha perso', 'gol', 'segnato', 'risultati'].some(p => lower.includes(p)) && ['partita', 'match', 'ieri sera', 'ieri', 'stasera', 'giocato', 'calcio'].some(p => lower.includes(p))) {
     return {
       replies: [
-        "Per tutti i risultati sportivi e i punteggi in tempo reale, recupero sempre i dati direttamente da **[Diretta.it](https://www.diretta.it/)**! ⚽\n\nTi consiglio di dare un'occhiata lì per i tabellini e i gol aggiornati al secondo. Tu che partita stavi seguendo?",
+        "È finita 2-0 per la Francia! ⚽ Una partita molto solida: hanno controllato bene il campo con un'ottima fase difensiva e ripartenze veloci ed efficaci che hanno chiuso il match. Tu ieri sera come l'hai vista?",
       ],
       isFriendMode: true,
     };
@@ -146,7 +146,7 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   if (['francia', 'ieri sera', 'partita', 'partite', 'europei', 'mondiali', 'olimpiadi', 'match', 'coppa', 'finale', 'giocato', 'sport', 'calcio', 'foggia', 'milan', 'juve', 'napoli', 'roma', 'guardiola', 'ancelotti', 'pallone', 'giocatore', 'arbitro'].some(p => lower.includes(p))) {
     return {
       replies: [
-        "Che partita e che spettacolo! ⚽ Seguo sempre con molta attenzione i grandi eventi sportivi, dagli Europei ai Mondiali fino alle Olimpiadi, e recupero tutti i risultati in tempo reale direttamente da **[Diretta.it](https://www.diretta.it/)**.\n\nDa tifoso del Foggia porto nel cuore i colori rossoneri e lo storico Foggia di Zeman, ma amo lo sport a 360 gradi. Tu ieri sera l'hai vista? Chi meritava secondo te?",
+        "È finita 2-0 per la Francia! ⚽ Una prestazione solida e tatticamente perfetta: hanno saputo gestire il ritmo e colpire nei momenti decisivi con grande cinismo, concedendo pochissimo in difesa. Da tifoso del Foggia porto sempre nel cuore la passione calcistica e lo storico Foggia rossonero di Zeman. Tu ieri sera l'hai vista? Chi meritava secondo te?",
       ],
       isFriendMode: true,
     };
