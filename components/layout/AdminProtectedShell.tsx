@@ -3,7 +3,6 @@
 import { AdminSidebar } from '@/components/layout/AdminSidebar';
 import { AdminFloatingSaveButton } from '@/components/admin/AdminFloatingSaveButton';
 import { AdminSaveProvider } from '@/components/admin/AdminSaveContext';
-import { EliseoChat } from '@/components/layout/EliseoChat';
 
 export function AdminProtectedShell({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +13,6 @@ export function AdminProtectedShell({ children }: { children: React.ReactNode })
           <div className="mx-auto w-full max-w-5xl">{children}</div>
         </main>
         <AdminFloatingSaveButton />
-        <EliseoChat />
       </div>
     </AdminSaveProvider>
   );
