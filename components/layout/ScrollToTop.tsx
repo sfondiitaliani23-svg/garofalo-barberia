@@ -32,7 +32,7 @@ export function ScrollToTop() {
       onClick={scrollToTop}
       type="button"
       className={cn(
-        'fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-5 z-[200]',
+        'fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-6 z-[200]',
         'flex h-10 w-10 items-center justify-center rounded bg-gold text-black shadow-lg transition-all duration-300 hover:bg-gold-light',
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'
       )}

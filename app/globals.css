@@ -142,7 +142,7 @@ body {
 @media (min-width: 640px) {
   .whatsapp-float {
     left: auto;
-    right: 12px;
+    right: 16px;
     bottom: calc(4.5rem + env(safe-area-inset-bottom));
   }
 }
