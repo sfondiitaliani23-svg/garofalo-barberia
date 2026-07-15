@@ -49,8 +49,8 @@ export function WeeklyBookingCalendar({
   const days = useMemo(() => getWorkingDays(weekStart), [weekStart]);
   const timeSlots = useMemo(() => generateCalendarTimeSlots(), []);
   const grid = useMemo(
-    () => buildWeekGrid(days, timeSlots, initialAppointments, barberId, timeOff),
-    [barberId, days, initialAppointments, timeOff, timeSlots]
+    () => buildWeekGrid(days, timeSlots, initialAppointments, barberId, timeOff, barbers),
+    [barberId, days, initialAppointments, timeOff, timeSlots, barbers]
   );
   const selectedBarber = barbers.find((b) => b.id === barberId);
 

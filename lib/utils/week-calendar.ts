@@ -58,21 +58,35 @@ export function durationToRowSpan(durationMinutes: number): number {
   return Math.max(1, Math.ceil(durationMinutes / SITE_CONFIG.slotIntervalMinutes));
 }
 
+export function isSalonDateFullyBlocked(
+  dateStr: string,
+  timeOff: TimeOffRow[],
+  barbers: { id: string }[]
+): boolean {
+  if (barbers.length === 0) return false;
+  return barbers.every((b) => isShopDateFullyBlocked(dateStr, b.id, timeOff));
+}
+
 export function buildWeekGrid(
   days: Date[],
   timeSlots: string[],
   appointments: CalendarAppointment[],
   barberId: string,
-  timeOff: TimeOffRow[] = []
+  timeOff: TimeOffRow[] = [],
+  barbers: { id: string }[] = []
 ): GridCell[][] {
   const isAll = barberId === 'all';
 
   const blockedDays = new Set(
-    isAll
-      ? []
-      : days
-          .filter((day) => isShopDateFullyBlocked(dateKey(day), barberId, timeOff))
-          .map((day) => dateKey(day))
+    days
+      .filter((day) => {
+        if (isAll) {
+          return isSalonDateFullyBlocked(dateKey(day), timeOff, barbers);
+        } else {
+          return isShopDateFullyBlocked(dateKey(day), barberId, timeOff);
+        }
+      })
+      .map((day) => dateKey(day))
   );
 
   const confirmed = appointments.filter(

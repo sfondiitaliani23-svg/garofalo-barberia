@@ -47,7 +47,7 @@ export function AdminAppointmentForm({
   onSaved,
 }: AdminAppointmentFormProps) {
   const isEdit = Boolean(appointment);
-  const barberId = defaultBarberId;
+  const [barberId, setBarberId] = useState(defaultBarberId);
   const selectedBarber = barbers.find((b) => b.id === barberId);
   const [serviceId, setServiceId] = useState(appointment?.service_id ?? services[0]?.id ?? '');
   const selectedService = services.find((s) => s.id === serviceId);
@@ -350,10 +350,25 @@ export function AdminAppointmentForm({
             </div>
           </div>
           <div>
-            <Label>Barbiere</Label>
-            <p className="mt-1 rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2.5 text-sm text-white">
-              {selectedBarber?.name ?? '—'}
-            </p>
+            <Label htmlFor="admin-barber">Barbiere</Label>
+            {isEdit ? (
+              <p className="mt-1 rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2.5 text-sm text-white">
+                {selectedBarber?.name ?? '—'}
+              </p>
+            ) : (
+              <select
+                id="admin-barber"
+                value={barberId}
+                onChange={(e) => setBarberId(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2.5 text-sm text-white focus:border-gold focus:outline-none"
+              >
+                {barbers.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
           <div>
             <Label>Data *</Label>
