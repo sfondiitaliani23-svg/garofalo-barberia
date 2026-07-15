@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SITE_CONFIG } from '@/lib/site-config';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Knowledge-base: each intent has patterns (Italian keywords) + a response fn
-// ─────────────────────────────────────────────────────────────────────────────
-
 const PHONE = SITE_CONFIG.phoneDisplay;
-const WA    = SITE_CONFIG.whatsapp;
 const EMAIL = SITE_CONFIG.email;
 const MAPS  = SITE_CONFIG.googleMapsUrl;
 const IG    = SITE_CONFIG.instagramHandle;
@@ -22,133 +17,110 @@ const INTENTS: Intent[] = [
   {
     patterns: ['ciao', 'salve', 'buongiorno', 'buonasera', 'buon pomeriggio', 'hey', 'hello', 'buona sera', 'buon giorno'],
     response: () =>
-      `Ciao! 😊 Benvenuto da **Barberia Garofalo**!\n\nSono Eliseo, il tuo assistente virtuale. Come posso aiutarti?\n\nPosso risponderti su orari, servizi, prezzi, prenotazioni e molto altro!`,
+      `Ciao! 😊 Sono **Eliseo**, l'assistente virtuale di Barberia Garofalo.\n\nCome posso aiutarti? Chiedimi pure informazioni su orari, servizi, prezzi, prenotazioni o contatti.`,
   },
 
   // ── HOURS ─────────────────────────────────────────────────────────────────
   {
-    patterns: ['orari', 'orario', 'quando aprite', 'aperto', 'apertura', 'chiuso', 'chiude', 'apre', 'a che ora', 'orari di apertura', 'disponibile', 'weekend', 'sabato', 'domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'festivo'],
+    patterns: ['orar', 'quand aprite', 'apert', 'aprit', 'chius', 'chiud', 'a che ora', 'weekend', 'sabato', 'domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'festiv'],
     response: () =>
-      `⏰ **Orari di apertura:**\n\n🔴 Lunedì — Chiuso\n🟢 Martedì – Venerdì — 09:00–13:00 · 14:00–19:30\n🟡 Sabato — 09:00–13:00 · 14:00–18:00\n🔴 Domenica — Chiuso\n\nPer prenotare o per info, scrivici su WhatsApp al **${PHONE}**! 📱`,
+      `⏰ **Orari del salone:**\n\n• **Lunedì:** Chiuso\n• **Martedì – Venerdì:** 09:00–13:00 e 14:00–19:30\n• **Sabato:** 09:00–13:00 e 14:00–18:00\n• **Domenica:** Chiuso`,
   },
 
   // ── PRICES ────────────────────────────────────────────────────────────────
   {
-    patterns: ['prezzi', 'prezzo', 'costo', 'costa', 'quanto', 'tariffe', 'tariffa', 'listino', 'economico', 'costoso', 'cifra', 'soldi', 'euro', '€', 'prezzario', 'quanto si paga', 'quanto costa'],
+    patterns: ['prezz', 'cost', 'tariff', 'listin', 'quant', 'cifra', 'soldi', 'euro', '€', 'quant si paga', 'si paga'],
     response: () =>
-      `💈 **Listino prezzi:**\n\n✂️ Taglio e shampoo — **€17**\n👶 Taglio baby — **€13**\n🌡️ Barba con panno caldo — **€10**\n✂️ Barba modellata a forbici — **€8**\n💧 Shampoo e acconciatura — **€8**\n🪒 Barba rasata / lama — **€6**\n\nPrezzi fissi, chiari e trasparenti. Nessuna sorpresa in cassa! 😊`,
+      `💈 **Listino prezzi:**\n\n• Taglio e shampoo: **€17**\n• Taglio baby (bimbi): **€13**\n• Barba con panno caldo: **€10**\n• Barba modellata a forbici: **€8**\n• Shampoo e acconciatura: **€8**\n• Barba rasata / lama: **€6**`,
   },
 
   // ── BOOKING ───────────────────────────────────────────────────────────────
   {
-    patterns: ['prenota', 'prenotare', 'prenotazione', 'appuntamento', 'fissare', 'fissa', 'riservare', 'riservo', 'voglio venire', 'posso venire', 'book'],
+    patterns: ['prenot', 'appuntament', 'fiss', 'riserv', 'venire', 'book'],
     response: () =>
-      `📅 **Come prenotare:**\n\n1️⃣ Vai su **"Prenota"** nel menu del sito\n2️⃣ Scegli il servizio desiderato\n3️⃣ Seleziona il barbiere e l'orario\n4️⃣ Inserisci i tuoi dati e conferma\n\nIn alternativa, scrivici su **WhatsApp al ${PHONE}** e ti aiutiamo noi! 📱\n\nLa cancellazione è gratuita fino a **30 minuti** prima dell'appuntamento.`,
+      `📅 **Come prenotare:**\n\nPuoi prenotare in totale autonomia direttamente sul sito:\n1. Clicca su **"Prenota"** nel menu principale o in home\n2. Scegli il servizio, il barbiere e l'orario\n3. Inserisci i tuoi dati e conferma.\n\nSe preferisci, scrivici direttamente su **WhatsApp al ${PHONE}** e fisseremo noi l'appuntamento per te!`,
   },
 
   // ── SERVICES ──────────────────────────────────────────────────────────────
   {
-    patterns: ['servizi', 'servizio', 'cosa fate', 'cosa offrite', 'trattamenti', 'specialità', 'capelli', 'taglio capelli', 'barba', 'shampoo', 'acconciatura', 'lama', 'rasatura', 'panno caldo'],
+    patterns: ['serviz', 'cosa fate', 'cosa offrite', 'trattament', 'specialita', 'capell', 'barba', 'shampoo', 'acconciatur', 'lama', 'rasatur', 'panno caldo'],
     response: () =>
-      `💈 **I nostri servizi:**\n\n✂️ Taglio e shampoo\n👶 Taglio baby\n🪒 Barba rasata / lama\n✂️ Barba modellata a forbici\n🌡️ Barba con panno caldo\n💧 Shampoo e acconciatura\n\nVuoi sapere il prezzo di un servizio specifico? Chiedimi pure! 😊`,
+      `💈 **I nostri servizi:**\n\n• Taglio e shampoo\n• Taglio baby (bambini)\n• Barba rasata / lama\n• Barba modellata a forbici\n• Barba con panno caldo (trattamento completo)\n• Shampoo e acconciatura\n\nPer conoscere il prezzo di un singolo servizio, chiedimi pure "prezzi" o "listino"!`,
   },
 
   // ── ADDRESS / LOCATION ────────────────────────────────────────────────────
   {
-    patterns: ['dove', 'indirizzo', 'trovate', 'trovare', 'posizione', 'come arrivarci', 'come si arriva', 'arrivare', 'raggiungere', 'dove siete', 'sede', 'zona', 'quartiere', 'città', 'foggia', 'viale', 'strada', 'mappa', 'maps', 'navigatore'],
+    patterns: ['dove', 'indirizz', 'trov', 'posizion', 'arriv', 'raggiung', 'sede', 'zona', 'quartier', 'citta', 'foggia', 'viale', 'strada', 'mappa', 'maps', 'navigator'],
     response: () =>
-      `📍 **Dove siamo:**\n\n🏠 Viale Ignazio d'Addedda, 236\n71122 Foggia (FG)\n\n🗺️ Apri su Google Maps:\n${MAPS}\n\nSiamo facilmente raggiungibili in auto o con i mezzi pubblici. Se hai dubbi, chiamaci! 📞`,
+      `📍 **Dove siamo:**\n\n🏠 **Indirizzo:** Viale Ignazio d'Addedda, 236 - 71122 Foggia (FG)\n\n🗺️ **Google Maps:** ${MAPS}`,
   },
 
   // ── CONTACT ───────────────────────────────────────────────────────────────
   {
-    patterns: ['telefono', 'chiamare', 'chiamo', 'numero', 'contatto', 'contatti', 'whatsapp', 'messaggio', 'scrivere', 'email', 'mail', 'come contattarvi'],
+    patterns: ['telefon', 'chiam', 'numer', 'contatt', 'whatsapp', 'messaggi', 'scriv', 'email', 'mail'],
     response: () =>
-      `📞 **Contatti:**\n\n📱 Telefono / WhatsApp: **${PHONE}**\n📧 Email: ${EMAIL}\n📸 Instagram: ${IG}\n\nRispondiamo sempre il prima possibile! 😊`,
+      `📞 **Contatti ufficiali:**\n\n• **Telefono / WhatsApp:** ${PHONE}\n• **Email:** ${EMAIL}\n• **Instagram:** ${IG}`,
   },
 
   // ── CANCELLATION ──────────────────────────────────────────────────────────
   {
-    patterns: ['cancellare', 'cancellazione', 'disdire', 'annullare', 'cancello', 'disdico', 'rimandare', 'posticipare'],
+    patterns: ['cancell', 'disdi', 'annull', 'rimand', 'posticip'],
     response: () =>
-      `❌ **Cancellazione appuntamento:**\n\nPuoi cancellare il tuo appuntamento fino a **30 minuti prima** dell'orario fissato, senza alcuna penale.\n\n**Come cancellare:**\n1. Accedi alla tua **Area cliente**\n2. Vai in **"Storico prenotazioni"**\n3. Clicca su **"Cancella"**\n\nOppure scrivici su WhatsApp al **${PHONE}** e lo facciamo noi! 📱`,
+      `❌ **Cancellazione appuntamento:**\n\nLa cancellazione o modifica è gratuita fino a **30 minuti prima** dell'appuntamento.\n\nPuoi farlo autonomamente dall'**Area Cliente** nella sezione "Appuntamenti" cliccando su "Modifica" o "Disdici", oppure inviandoci un messaggio su WhatsApp al **${PHONE}**.`,
   },
 
   // ── PAYMENT ───────────────────────────────────────────────────────────────
   {
-    patterns: ['pagamento', 'pagare', 'carta', 'contanti', 'bancomat', 'cash', 'carte', 'pay', 'satispay', 'pos', 'bonifico', 'credito', 'debito'],
+    patterns: ['pagam', 'pagar', 'carta', 'carte', 'contant', 'bancomat', 'cash', 'pay', 'satispay', 'pos', 'bonific', 'credit', 'debit'],
     response: () =>
-      `💳 **Modalità di pagamento:**\n\nAccettiamo:\n✅ Contanti\n✅ Carta di credito / debito\n✅ Bancomat (POS)\n\nIl pagamento avviene direttamente in salone al termine del servizio. Nessuna sorpresa sui prezzi! 😊`,
+      `💳 **Metodi di pagamento accettati in salone:**\n\n• Contanti\n• Carte di credito / debito\n• Bancomat (POS)`,
   },
 
   // ── PARKING ───────────────────────────────────────────────────────────────
   {
-    patterns: ['parcheggio', 'parchegg', 'macchina', 'auto', 'posteggio', 'posteggiare', 'parcheggiare', 'moto'],
+    patterns: ['parchegg', 'macchin', 'auto', 'postegg', 'moto'],
     response: () =>
-      `🚗 **Parcheggio:**\n\nNella zona di Viale Ignazio d'Addedda sono disponibili parcheggi pubblici nelle immediate vicinanze del salone.\n\nPer indicazioni precise usa Google Maps:\n${MAPS}`,
+      `🚗 **Parcheggio:**\n\nSono disponibili numerosi posti auto pubblici e gratuiti lungo la strada e nelle immediate vicinanze del salone in Viale Ignazio d'Addedda.`,
   },
 
   // ── KIDS / CHILDREN ───────────────────────────────────────────────────────
   {
-    patterns: ['bambini', 'bambino', 'bambina', 'bimbo', 'bimba', 'figlio', 'figli', 'figlie', 'baby', 'piccoli', 'piccolo', 'primo taglio', 'ragazzi'],
+    patterns: ['bambin', 'bimb', 'figli', 'figlie', 'figlio', 'figlia', 'figliolo', 'figliola', 'baby', 'piccol', 'primo taglio', 'ragazz'],
     response: () =>
-      `👶 **Servizi per bambini:**\n\nSiamo specializzati anche nei tagli per i più piccoli!\n\n✂️ **Taglio baby** — **€13**\n\nEseguito con massima cura, pazienza e professionalità, in un ambiente accogliente e confortevole.\n\nDal papà al nonno, dal ragazzo al bambino: ogni maschio trova il suo posto da Barberia Garofalo! 💈`,
+      `👶 **Bambini e ragazzi:**\n\nSiamo specializzati nei tagli per ragazzi e bambini di ogni età. Il servizio dedicato **Taglio baby** ha un costo di **€13** ed è eseguito con massima cura e delicatezza per garantire un'esperienza serena al piccolo.`,
   },
 
   // ── TEAM / BARBERS ────────────────────────────────────────────────────────
   {
-    patterns: ['barbiere', 'barbieri', 'staff', 'team', 'chi siete', 'chi sono', 'chi lavora', 'personale', 'garofalo', 'professionisti', 'quante persone', 'esperienza'],
+    patterns: ['barbier', 'staff', 'team', 'chi siete', 'chi sono', 'chi lavora', 'personal', 'garofalo', 'professionist', 'quante persone', 'esperienz'],
     response: () =>
-      `👨‍💈 **Il nostro team:**\n\nLa **Barberia Garofalo** è un salone nel cuore di Foggia, nato come punto di riferimento per l'uomo di ogni età.\n\nOffriamo tagli precisi, rasature perfette, barbe curate e primi tagli per i piccoli eroi — eseguiti con dedizione, tecnica e massimo comfort.\n\nVisita la sezione **"Chi siamo"** per conoscerci meglio! 😊`,
+      `👨‍💈 **Lo Staff:**\n\nIl salone è guidato da professionisti del capello e della barba. Offriamo tagli moderni, rasature tradizionali e modellatura barba curati nei minimi dettagli. Visita la sezione **"Chi siamo"** per scoprire la nostra storia!`,
   },
 
   // ── ACCOUNT / LOGIN ───────────────────────────────────────────────────────
   {
-    patterns: ['account', 'registrarmi', 'registrazione', 'accedere', 'login', 'password', 'profilo', 'area cliente', 'accesso', 'iscrivermi', 'iscrizione'],
+    patterns: ['account', 'registr', 'acced', 'login', 'password', 'profil', 'accesso', 'iscriv'],
     response: () =>
-      `👤 **Area Cliente:**\n\nPuoi registrarti **gratuitamente** per:\n• Vedere e gestire i tuoi appuntamenti\n• Consultare lo storico prenotazioni\n• Salvare le tue preferenze di taglio\n• Accedere più facilmente in futuro\n\nClicca su **"Accedi"** in alto a destra nel menu del sito! 🔐`,
+      `👤 **Area Cliente:**\n\nRegistrandoti sul nostro sito puoi:\n• Monitorare e gestire i tuoi appuntamenti attivi\n• Consultare lo storico dei tuoi tagli precedenti\n• Accedere rapidamente con Passkey (impronta/volto)\n\nClicca su **"Accedi"** in alto a destra per entrare o registrarti!`,
   },
 
   // ── INSTAGRAM / SOCIAL ────────────────────────────────────────────────────
   {
-    patterns: ['instagram', 'social', 'foto', 'fotografie', 'gallery', 'galleria', 'seguire', 'follow', 'post', 'stories'],
+    patterns: ['instagram', 'social', 'foto', 'fotograf', 'gallery', 'galleri', 'seguir', 'follow', 'post', 'stories'],
     response: () =>
-      `📸 **Seguici su Instagram!**\n\n${IG}\n${IG_URL}\n\nPublichiamo i nostri ultimi lavori, novità e promozioni. Vieni a darci uno sguardo! 🌟`,
-  },
-
-  // ── WAIT TIME / QUEUE ─────────────────────────────────────────────────────
-  {
-    patterns: ['attesa', 'fila', 'coda', 'aspettare', 'tempo di attesa', 'quando libero', 'senza prenotazione', 'senza appuntamento'],
-    response: () =>
-      `⏳ **Tempi di attesa:**\n\nCon la prenotazione online puoi scegliere il tuo slot e **evitare qualsiasi attesa** !\n\nSe vuoi passare senza prenotazione, ti consigliamo di chiamarci prima al **${PHONE}** per verificare la disponibilità. 📱`,
-  },
-
-  // ── PROMOTIONS / DISCOUNT ─────────────────────────────────────────────────
-  {
-    patterns: ['sconto', 'sconti', 'promozione', 'promo', 'offerta', 'offerte', 'coupon', 'codice', 'convenzione', 'abbonamento'],
-    response: () =>
-      `🎁 **Promozioni:**\n\nDi tanto in tanto lanciamo promozioni esclusive!\n\nPer restare aggiornato:\n📸 Seguici su Instagram: ${IG}\n📱 O scrivici su WhatsApp al **${PHONE}**\n\nNon perdere le nostre novità! 🌟`,
-  },
-
-  // ── SITE PROBLEM ──────────────────────────────────────────────────────────
-  {
-    patterns: ['problema', 'problemi', 'errore', 'non funziona', 'bug', 'crash', 'sito down', 'non carica', 'tecnico', 'non riesco', 'non riesce', 'impossibile prenotare'],
-    response: () =>
-      `⚠️ **Problema tecnico:**\n\nMi dispiace per l'inconveniente! Il nostro sistema di monitoraggio è già al lavoro per rilevare e risolvere il problema.\n\nNel frattempo, contattaci direttamente:\n📱 WhatsApp: **${PHONE}**\n📧 Email: ${EMAIL}\n\nTi risponderemo immediatamente! 🔧`,
+      `📸 **Instagram:**\n\nSeguici sul nostro profilo ufficiale **${IG}** per vedere le foto dei nostri tagli e rimanere sempre aggiornato su novità e promozioni:\n👉 ${IG_URL}`,
   },
 
   // ── GOODBYE ───────────────────────────────────────────────────────────────
   {
-    patterns: ['grazie', 'ok grazie', 'perfetto grazie', 'arrivederci', 'ciao ciao', 'alla prossima', 'bye', 'a presto', 'saluti'],
+    patterns: ['grazie', 'ok grazie', 'perfetto grazie', 'arriveder', 'ciao ciao', 'alla prossi', 'bye', 'a presto', 'saluti'],
     response: () =>
-      `Prego! 😊 È stato un piacere aiutarti.\n\n**A presto da Barberia Garofalo!** ✂️\n\nRicorda: puoi sempre prenotare online o contattarci al **${PHONE}**!`,
+      `Prego! 😊 Se hai altre domande sono qui per aiutarti. Buona giornata da Barberia Garofalo! ✂️`,
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Intent detection: case-insensitive substring match
-// ─────────────────────────────────────────────────────────────────────────────
 function detectIntent(message: string): string {
+  // Normalize character accents and punctuation
   const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   for (const intent of INTENTS) {
@@ -161,12 +133,9 @@ function detectIntent(message: string): string {
   }
 
   // Fallback
-  return `Non ho capito perfettamente la domanda 😅\n\nPosso aiutarti con:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱`;
+  return `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Route handler
-// ─────────────────────────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
