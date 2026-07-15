@@ -226,6 +226,7 @@ body {
   color-scheme: dark;
   scrollbar-width: thin;
   scrollbar-color: rgba(205, 154, 79, 0.5) rgba(0, 0, 0, 0.2);
+  overflow-x: hidden !important;
 }
 
 .eliseo-chat-messages::-webkit-scrollbar {

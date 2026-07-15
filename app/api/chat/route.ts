@@ -119,7 +119,7 @@ const INTENTS: Intent[] = [
   },
 ];
 
-function detectIntent(message: string, isFriendMode: boolean): { replies: string[]; isFriendMode: boolean } {
+function detectIntent(message: string, isFriendMode: boolean, history: any[]): { replies: string[]; isFriendMode: boolean } {
   // Normalize character accents and punctuation
   const lower = message.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -132,6 +132,10 @@ function detectIntent(message: string, isFriendMode: boolean): { replies: string
       isFriendMode: true,
     };
   }
+
+  // Get last bot message content to prevent duplicate fallbacks
+  const lastBotMsg = history.slice().reverse().find((m: any) => m.role === 'assistant');
+  const lastBotContent = lastBotMsg ? lastBotMsg.content : '';
 
   // 2. If already in friend mode
   if (isFriendMode) {
@@ -186,6 +190,67 @@ function detectIntent(message: string, isFriendMode: boolean): { replies: string
       };
     }
 
+    // --- High Culture and Knowledge Topics ---
+    // CALCIO / SPORT
+    if (['calcio', 'partita', 'tifo', 'sport', 'champions', 'serie a', 'inter', 'milan', 'juve', 'napoli', 'roma', 'guardiola', 'ancelotti', 'pallone', 'giocatore', 'arbitro'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Il calcio per me è una scienza geometrica e una passione sconfinata. ⚽ Se ci pensi, dai sistemi tattici di Guardiola alla resilienza di Ancelotti, c'è una complessità incredibile, quasi scacchistica. E poi, da interista nel profondo, porto nel cuore il Triplete e la seconda stella. Per che squadra pulsa il tuo cuore? Giochista o risultatista?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    // POLITICA / FILOSOFIA DELLO STATO
+    if (['politica', 'governo', 'parlamento', 'voto', 'votare', 'stato', 'democrazia', 'machiavelli', 'plato', 'partito', 'destra', 'sinistra', 'legge', 'cittadin'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "La politica, partendo dal concetto aristotelico di 'animale sociale', è la ricerca del bene comune. È stimolante analizzarla attraverso le lenti storiche, dal realismo di Machiavelli al contratto sociale di Rousseau. Evito gli schieramenti faziosi da stadio, ma apprezzo il dibattito sui grandi sistemi economici e sociali. Qual è la tua visione sulla partecipazione democratica oggi?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    // CUCINA / ENOGASTRONOMIA
+    if (['cucina', 'cucinare', 'cibo', 'ricett', 'mangiare', 'pasta', 'carbonara', 'pizza', 'chef', 'gastronomia', 'piatto', 'ristorante', 'vino', 'ingrediente'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "La cucina è un sublime connubio di chimica e cultura! 🍳 Prendi la reazione di Maillard che sigilla i sapori della carne, o la fisica della panificazione per una pizza napoletana perfetta. E sulla Carbonara non transigo: solo guanciale, pecorino romano e uova (vietatissima la panna!). Ti cimenti ai fornelli o preferisci gustare da cliente?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    // SCUOLA / FILOSOFIA / LETTERATURA
+    if (['scuola', 'studio', 'universit', 'filosofia', 'letteratura', 'kant', 'nietzsche', 'leopardi', 'dante', 'libri', 'cultura', 'imparare', 'materia', 'storia', 'liceo'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "La cultura è l'unico vero strumento di emancipazione e libertà. Come cantava Dante nell'Inferno: 'Fatti non foste a viver come bruti, ma per seguir virtute e canoscenza'. Che si tratti dell'imperativo categorico di Kant, del nichilismo attivo di Nietzsche o del pessimismo cosmico di Leopardi, la filosofia ci dà le parole per interpretare l'esistenza. Cosa ti affascina di più del mondo umanistico?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    // SCIENZA / FISICA / TECNOLOGIA / IA
+    if (['scienza', 'fisica', 'tecnologia', 'spazio', 'stelle', 'universo', 'einstein', 'quantistica', 'intelligenza artificiale', 'ia', 'bot', 'robot', 'galassia'].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "La scienza e la tecnologia stanno riscrivendo i confini del possibile. Pensa alla relatività generale di Einstein, alla meccanica quantistica con il paradosso dell'entanglement, o all'avvento dei Large Language Models e dell'IA generativa che ridefiniscono l'interazione uomo-macchina. È un'epoca affascinante. Come vedi il futuro dell'IA?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
+    // FOGGIA (città natale di Eliseo)
+    if (['foggia', 'foggiano', 'foggiana', 'da queste parti', 'dintorni', "viale d'addedda"].some(p => lower.includes(p))) {
+      return {
+        replies: [
+          "Ah, Foggia! Terra di passioni intense, calore estivo travolgente e grandi tradizioni. Da foggiano verace, ho un legame profondo con questa città, pur con tutte le sue contraddizioni. Tu ci vivi o ci passi per lavoro/studio?"
+        ],
+        isFriendMode: true,
+      };
+    }
+
     // Conversational topics
     if (['come stai', 'tutto bene', 'come va', 'che si dice', 'che fai', 'novita', 'tutto apposto', 'tutto ok'].some(p => lower.includes(p))) {
       const answers = [
@@ -206,28 +271,10 @@ function detectIntent(message: string, isFriendMode: boolean): { replies: string
       };
     }
 
-    if (['inter', 'squadra', 'calcio', 'lautaro', 'partita', 'tifo', 'tifare'].some(p => lower.includes(p))) {
-      return {
-        replies: [
-          "Ah, se parliamo di Inter e di Lautaro sfondi una porta aperta! 🖤💙 Da buon nerazzurro, per me c'è solo una squadra. Tu per chi fai il tifo? Spero che non siamo rivali calcistici! 😂"
-        ],
-        isFriendMode: true,
-      };
-    }
-
     if (['birra', 'bere', 'bar', 'pub', 'drink', 'offro', 'bicchiere'].some(p => lower.includes(p))) {
       return {
         replies: [
           "Magari potessimo berla davvero adesso! 🍺 Una bella bionda fresca ghiacciata ci starebbe tutta. La prossima volta che passi in Viale d'Addedda, ci facciamo una bella chiacchierata dal vivo. Tu che birra bevi di solito?"
-        ],
-        isFriendMode: true,
-      };
-    }
-
-    if (['lavoro', 'studio', 'scuola', 'universita', 'ufficio', 'pc', 'programma', 'codice'].some(p => lower.includes(p))) {
-      return {
-        replies: [
-          "Capisco perfettamente! Ci sta metterci impegno nel proprio percorso. Ricordati però di prenderti sempre delle pause per staccare... e magari farti un bel taglio per rinfrescare lo stile! 😂 Che lavoro/studio fai di preciso?"
         ],
         isFriendMode: true,
       };
@@ -251,14 +298,18 @@ function detectIntent(message: string, isFriendMode: boolean): { replies: string
       };
     }
 
+    // General replies (anti-repetition fallback)
     const generalReplies = [
       "Ci sta! Alla fine la vita è fatta anche di queste chiacchiere semplici davanti a un bancone immaginario. 🍺 Ma dimmi, che programmi hai per stasera o per il weekend?",
       "Ahahah, ci sta! Comunque è sempre bello fare due chiacchiere per staccare dal caos quotidiano. A proposito, sei di Foggia o abiti nei dintorni?",
       "Interessante! Mi fa piacere confrontarmi. Senti, ma hai già dato un'occhiata alla nostra Galleria dei tagli sul sito? Ci sono dei lavori pazzeschi di Luigi!",
       "Capisco! E dimmi, qual è la cosa che ti fa rilassare di più dopo una giornata intensa?"
     ];
-    const randIdx = Math.floor(Math.random() * generalReplies.length);
-    return { replies: [generalReplies[randIdx]], isFriendMode: true };
+    
+    const availableReplies = generalReplies.filter(r => r !== lastBotContent);
+    const finalReplies = availableReplies.length > 0 ? availableReplies : generalReplies;
+    const randIdx = Math.floor(Math.random() * finalReplies.length);
+    return { replies: [finalReplies[randIdx]], isFriendMode: true };
   }
 
   // 3. Regular informative mode
@@ -304,6 +355,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const message: string = body?.message ?? '';
     const isFriendMode: boolean = !!body?.isFriendMode;
+    const history: any[] = body?.history ?? [];
 
     if (!message.trim()) {
       return NextResponse.json({ replies: ['Scrivi un messaggio per iniziare! 😊'], isFriendMode: false });
@@ -312,7 +364,7 @@ export async function POST(request: NextRequest) {
     // Small artificial delay for a more natural feel
     await new Promise(r => setTimeout(r, 200 + Math.random() * 300));
 
-    const { replies, isFriendMode: newFriendMode } = detectIntent(message, isFriendMode);
+    const { replies, isFriendMode: newFriendMode } = detectIntent(message, isFriendMode, history);
     return NextResponse.json({ replies, isFriendMode: newFriendMode });
   } catch {
     return NextResponse.json(
