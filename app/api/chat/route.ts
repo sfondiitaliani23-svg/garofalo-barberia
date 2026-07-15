@@ -129,86 +129,24 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   const lastBotMsg = history.slice().reverse().find((m: any) => m.role === 'assistant');
   const lastBotContent = lastBotMsg ? lastBotMsg.content : '';
 
-  // 1. First, check if the user is asking a strong utility question
+  // 1. Check conversational / smalltalk / high-culture topics first
+  // This avoids generic utility keywords matching casual talk (e.g. "quanto" matching "quanto è finita la partita")
   
-  // Hours
-  if (['orar', 'quand aprite', 'apert', 'aprit', 'chius', 'chiud', 'a che ora', 'weekend', 'sabato', 'domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'festiv'].some(p => lower.includes(p))) {
-    const hoursReply = `⏰ **Orari del salone:**\n\n• **Lunedì:** Chiuso\n• **Martedì – Venerdì:** 09:00–13:00 e 14:00–19:30\n• **Sabato:** 09:00–13:00 e 14:00–18:00\n• **Domenica:** Chiuso`;
-    if (isFriendMode) {
-      return {
-        replies: [hoursReply, "Comunque, tornando alla nostra chiacchierata... dove eravamo rimasti? 😄"],
-        isFriendMode: true
-      };
-    } else {
-      return { replies: [hoursReply, suffix], isFriendMode: false };
-    }
-  }
-
-  // Prices / Services
-  if (['prezz', 'cost', 'tariff', 'listin', 'quant', 'cifra', 'soldi', 'euro', '€', 'quant si paga', 'si paga'].some(p => lower.includes(p))) {
-    const pricesReply = `💈 **Listino prezzi:**\n\n• Taglio e shampoo: **€17**\n• Taglio baby (bimbi): **€13**\n• Barba con panno caldo: **€10**\n• Barba modellata a forbici: **€8**\n• Shampoo e acconciatura: **€8**\n• Barba rasata / lama: **€6**`;
-    if (isFriendMode) {
-      return {
-        replies: [pricesReply, "Comunque, tornando alla nostra chiacchierata... dove eravamo rimasti? 😄"],
-        isFriendMode: true
-      };
-    } else {
-      return { replies: [pricesReply, suffix], isFriendMode: false };
-    }
-  }
-
-  // Booking
-  if (['prenot', 'appuntament', 'fiss', 'riserv', 'book'].some(p => lower.includes(p))) {
-    const bookingReply = `📅 **Come prenotare:**\n\nPuoi prenotare in totale autonomia direttamente sul sito:\n1. Clicca su **"Prenota"** nel menu principale o in home\n2. Scegli il servizio, il barbiere e l'orario\n3. Inserisci i tuoi dati e conferma.\n\nSe preferisci, scrivici direttamente su **WhatsApp al ${PHONE}** e fisseremo noi l'appuntamento per te!`;
-    if (isFriendMode) {
-      return {
-        replies: [bookingReply, "Comunque, tornando a noi... che si dice di bello? 😄"],
-        isFriendMode: true
-      };
-    } else {
-      return { replies: [bookingReply, suffix], isFriendMode: false };
-    }
-  }
-
-  // Location / Address
-  if (['dove', 'indirizz', 'trov', 'posizion', 'arriv', 'raggiung', 'sede', 'zona', 'quartier', 'citta', 'viale', 'strada', 'mappa', 'maps', 'navigator'].some(p => lower.includes(p) && !p.includes('foggia'))) {
-    const locationReply = `📍 **Dove siamo:**\n\n🏠 **Indirizzo:** Viale Ignazio d'Addedda, 236 - 71122 Foggia (FG)\n\n🗺️ **Google Maps:** ${MAPS}`;
-    if (isFriendMode) {
-      return {
-        replies: [locationReply, "Comunque, tornando a noi... che mi racconti di bello? Come stai? 😄"],
-        isFriendMode: true
-      };
-    } else {
-      return { replies: [locationReply, suffix], isFriendMode: false };
-    }
-  }
-
-  // 2. Check explicitly triggering conversational/friend mode (synonyms)
-  if (
-    lower.includes('tranquilla chiacchierat') ||
-    lower.includes('chiacchier') ||
-    lower.includes('amico') ||
-    lower.includes('parl') ||
-    lower.includes('convers') ||
-    lower.includes('certo') ||
-    lower.includes('volentieri') ||
-    lower.includes('due parole')
-  ) {
+  // EVENTI SPORTIVI - RISULTATI / SCORE (es. "quanto è finita la partita?")
+  if (['finita', 'punteggio', 'risultato', 'chi ha vinto', 'chi ha perso', 'gol', 'segnato'].some(p => lower.includes(p)) && ['partita', 'match', 'ieri sera', 'ieri', 'stasera', 'giocato', 'calcio'].some(p => lower.includes(p))) {
     return {
       replies: [
-        "Ok ok! Allora rilassati, mettiti comodo... immagina di essere al bar con me davanti a una birra fresca. 🍻\n\nDimmi un po', come stai? Che si dice di bello?",
+        "Per il risultato esatto mi cogli alla sprovvista! 😅 Non avendo un collegamento in tempo reale ai feed dei tabellini sportivi, non ho il punteggio finale sottomano. Però so che c'era un'attesa pazzesca! Com'è finita alla fine? Chi ha trionfato?",
       ],
       isFriendMode: true,
     };
   }
 
-  // 3. Conversational / High Culture and Knowledge Topics (automatically enters/stays in friend mode)
-  
-  // EVENTI SPORTIVI (Francia ieri sera, partita, europei, olimpiadi, etc.)
-  if (['francia', 'ieri sera', 'partita', 'partite', 'europei', 'mondiali', 'olimpiadi', 'match', 'coppa', 'finale', 'giocato', 'sport', 'calcio', 'inter', 'milan', 'juve', 'napoli', 'roma', 'guardiola', 'ancelotti', 'pallone', 'giocatore', 'arbitro'].some(p => lower.includes(p))) {
+  // EVENTI SPORTIVI - GENERALI (Francia ieri sera, partita, europei, olimpiadi, etc.)
+  if (['francia', 'ieri sera', 'partita', 'partite', 'europei', 'mondiali', 'olimpiadi', 'match', 'coppa', 'finale', 'giocato', 'sport', 'calcio', 'foggia', 'milan', 'juve', 'napoli', 'roma', 'guardiola', 'ancelotti', 'pallone', 'giocatore', 'arbitro'].some(p => lower.includes(p))) {
     return {
       replies: [
-        "Che partita e che spettacolo! ⚽ Seguo sempre con molta attenzione i grandi eventi sportivi, dagli Europei ai Mondiali fino alle Olimpiadi. C'è sempre un pathos incredibile nel vedere gli atleti spingersi oltre il limite sotto i riflettori globali. Da interista porto nel cuore il Triplete e la seconda stella, ma amo lo sport in generale. Tu ieri sera l'hai vista? Chi meritava secondo te?",
+        "Che partita e che spettacolo! ⚽ Seguo sempre con molta attenzione i grandi eventi sportivi, dagli Europei ai Mondiali fino alle Olimpiadi. C'è sempre un pathos incredibile nel vedere gli atleti spingersi oltre il limite sotto i riflettori globali. Da tifoso del Foggia porto nel cuore i colori rossoneri e lo storico Foggia di Zeman, ma amo lo sport in generale. Tu ieri sera l'hai vista? Chi meritava secondo te?",
       ],
       isFriendMode: true,
     };
@@ -325,6 +263,79 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
     };
   }
 
+  // 2. Check if user explicitly wants to start or enter friend mode (using synonyms)
+  if (
+    lower.includes('tranquilla chiacchierat') ||
+    lower.includes('chiacchier') ||
+    lower.includes('amico') ||
+    lower.includes('parl') ||
+    lower.includes('convers') ||
+    lower.includes('certo') ||
+    lower.includes('volentieri') ||
+    lower.includes('due parole')
+  ) {
+    return {
+      replies: [
+        "Ok ok! Allora rilassati, mettiti comodo... immagina di essere al bar con me davanti a una birra fresca. 🍻\n\nDimmi un po', come stai? Che si dice di bello?",
+      ],
+      isFriendMode: true,
+    };
+  }
+
+  // 3. Strong utility checks (tested if not conversationally matched first)
+  
+  // Hours
+  if (['orar', 'quand aprite', 'apert', 'aprit', 'chius', 'chiud', 'a che ora', 'weekend', 'sabato', 'domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'festiv'].some(p => lower.includes(p))) {
+    const hoursReply = `⏰ **Orari del salone:**\n\n• **Lunedì:** Chiuso\n• **Martedì – Venerdì:** 09:00–13:00 e 14:00–19:30\n• **Sabato:** 09:00–13:00 e 14:00–18:00\n• **Domenica:** Chiuso`;
+    if (isFriendMode) {
+      return {
+        replies: [hoursReply, "Comunque, tornando alla nostra chiacchierata... dove eravamo rimasti? 😄"],
+        isFriendMode: true
+      };
+    } else {
+      return { replies: [hoursReply, suffix], isFriendMode: false };
+    }
+  }
+
+  // Prices / Services (specifically requiring cost-related terms, not just raw 'quant')
+  if (['prezz', 'costo', 'costi', 'tariff', 'listin', 'quanto costa', 'quanto si paga', 'quanti soldi', 'si paga', 'euro', '€'].some(p => lower.includes(p))) {
+    const pricesReply = `💈 **Listino prezzi:**\n\n• Taglio e shampoo: **€17**\n• Taglio baby (bimbi): **€13**\n• Barba con panno caldo: **€10**\n• Barba modellata a forbici: **€8**\n• Shampoo e acconciatura: **€8**\n• Barba rasata / lama: **€6**`;
+    if (isFriendMode) {
+      return {
+        replies: [pricesReply, "Comunque, tornando alla nostra chiacchierata... dove eravamo rimasti? 😄"],
+        isFriendMode: true
+      };
+    } else {
+      return { replies: [pricesReply, suffix], isFriendMode: false };
+    }
+  }
+
+  // Booking
+  if (['prenot', 'appuntament', 'fiss', 'riserv', 'book'].some(p => lower.includes(p))) {
+    const bookingReply = `📅 **Come prenotare:**\n\nPuoi prenotare in totale autonomia direttamente sul sito:\n1. Clicca su **"Prenota"** nel menu principale o in home\n2. Scegli il servizio, il barbiere e l'orario\n3. Inserisci i tuoi dati e conferma.\n\nSe preferisci, scrivici direttamente su **WhatsApp al ${PHONE}** e fisseremo noi l'appuntamento per te!`;
+    if (isFriendMode) {
+      return {
+        replies: [bookingReply, "Comunque, tornando a noi... che si dice di bello? 😄"],
+        isFriendMode: true
+      };
+    } else {
+      return { replies: [bookingReply, suffix], isFriendMode: false };
+    }
+  }
+
+  // Location / Address
+  if (['dove', 'indirizz', 'trov', 'posizion', 'arriv', 'raggiung', 'sede', 'zona', 'quartier', 'citta', 'viale', 'strada', 'mappa', 'maps', 'navigator'].some(p => lower.includes(p) && !p.includes('foggia'))) {
+    const locationReply = `📍 **Dove siamo:**\n\n🏠 **Indirizzo:** Viale Ignazio d'Addedda, 236 - 71122 Foggia (FG)\n\n🗺️ **Google Maps:** ${MAPS}`;
+    if (isFriendMode) {
+      return {
+        replies: [locationReply, "Comunque, tornando a noi... che mi racconti di bello? Come stai? 😄"],
+        isFriendMode: true
+      };
+    } else {
+      return { replies: [locationReply, suffix], isFriendMode: false };
+    }
+  }
+
   // 4. Fallback or smalltalk loops
   if (isFriendMode) {
     if (lower.includes('basta') || lower.includes('esci') || lower.includes('fine') || lower.includes('stop') || lower.includes('ferma') || lower.includes('grazie')) {
@@ -352,7 +363,7 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   // Fallback in regular informative mode
   return {
     replies: [
-      `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponderemo subito! 📱`,
+      `Non ho capito la domanda 😅\n\nChiedimi informazioni su:\n• ⏰ Orari di apertura\n• 💈 Servizi e prezzi\n• 📅 Come prenotare\n• 📍 Dove siamo\n• 📞 Contatti\n\nOppure scrivici su WhatsApp al **${PHONE}** e ti risponeremo subito! 📱`,
       suffix
     ],
     isFriendMode: false
