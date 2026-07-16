@@ -178,7 +178,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
     >
       <div 
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 cursor-default"
+        className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 cursor-default"
       >
         <div className="flex items-center justify-between border-b border-white/5 pb-4">
           <div className="flex items-center gap-2">
@@ -193,7 +193,8 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
           </button>
         </div>
 
-        {/* Sezione Riconoscimento Vocale */}
+        <div className="admin-modal-scroll flex-1 overflow-y-auto min-h-0 pr-1 space-y-4 my-4">
+          {/* Sezione Riconoscimento Vocale */}
         <div className="mt-5 rounded-lg border border-white/5 bg-white/[0.02] p-4 text-center">
           <button
             type="button"
@@ -275,7 +276,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
             </div>
             <div>
               <Label className="text-xs text-white/60">Servizi (seleziona uno o più)</Label>
-              <div className="mt-1 max-h-36 overflow-y-auto border border-white/10 bg-black/40 rounded-md p-2 space-y-1.5 no-scrollbar">
+              <div className="admin-modal-scroll mt-1 max-h-36 overflow-y-auto border border-white/10 bg-black/40 rounded-md p-2 space-y-1.5">
                 {services.map((s) => {
                   const isSelected = selectedServiceIds.includes(s.id);
                   return (
@@ -332,6 +333,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
               </div>
             )}
           </div>
+        </div>
         </div>
 
         {/* Buttons */}
