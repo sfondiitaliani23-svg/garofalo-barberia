@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
-import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
+import { parseBookingDateTime, getShopDateString } from '@/lib/utils/booking-datetime';
 import {
   type AdminDayScheduleInput,
   defaultPeriodsForDay,
@@ -27,6 +27,18 @@ export interface AdminAppointmentInput {
   customerPhone?: string;
   notes?: string;
   customDurationMinutes?: number;
+  recurrenceWeeks?: number;
+}
+
+export interface CreateAdminAppointmentResult {
+  ok: boolean;
+  error?: string;
+  appointmentId?: string;
+  isRecurring?: boolean;
+  successCount?: number;
+  failedCount?: number;
+  successes?: string[];
+  failures?: { date: string; error: string }[];
 }
 
 function revalidateAppointmentPaths() {
@@ -137,7 +149,7 @@ export async function getUpcomingAdminAppointments(limit = 200) {
   return data ?? [];
 }
 
-export async function createAdminAppointment(input: AdminAppointmentInput) {
+export async function createAdminAppointment(input: AdminAppointmentInput): Promise<CreateAdminAppointmentResult> {
   await requireAdmin();
   const supabase = await createServiceClient();
   if (!supabase) return { ok: false, error: 'Database non configurato' };
@@ -157,83 +169,121 @@ export async function createAdminAppointment(input: AdminAppointmentInput) {
     .map((id) => services.find((s) => s.id === id))
     .filter((s): s is typeof services[number] => !!s);
 
-  const startsAtBase = parseBookingDateTime(input.date, input.time);
   const { data: barber } = await supabase
     .from('barbers')
     .select('name')
     .eq('id', input.barberId)
     .single();
 
-  const comboId = `combo_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
-  const insertedIds: string[] = [];
-  let currentStartsAt = startsAtBase;
-
   const totalOriginalPriceCents = orderedServices.reduce((acc, s) => acc + s.price_cents, 0);
+  const combinedServiceNames = orderedServices.map((s) => s.name).join(' + ');
 
-  for (let idx = 0; idx < orderedServices.length; idx++) {
-    const s = orderedServices[idx];
-    
-    // Per l'admin, permettiamo la customDurationMinutes solo sul primo/singolo servizio
-    const duration = idx === 0 && input.customDurationMinutes && input.customDurationMinutes > 0
-      ? input.customDurationMinutes
-      : s.duration_minutes;
-      
-    const currentEndsAt = addMinutes(currentStartsAt, duration);
+  const recurrenceWeeks = input.recurrenceWeeks && input.recurrenceWeeks > 1 ? input.recurrenceWeeks : 1;
+  const successes: string[] = [];
+  const failures: { date: string; error: string }[] = [];
 
-    const comboLabel = `[Combo: ${comboId}]`;
-    const rowNotes = input.notes?.trim()
-      ? `${comboLabel} ${input.notes.trim()}`
-      : comboLabel;
+  let overallSuccess = false;
+  let firstError = '';
 
-    const { data: appointment, error } = await supabase
-      .from('appointments')
-      .insert({
-        customer_id: null,
-        barber_id: input.barberId,
-        service_id: s.id,
-        starts_at: currentStartsAt.toISOString(),
-        ends_at: currentEndsAt.toISOString(),
-        status: 'confirmed',
-        customer_name: input.customerName.trim(),
-        customer_phone: input.customerPhone?.trim() ?? '',
-        notes: rowNotes,
-      })
-      .select('id')
-      .single();
+  for (let week = 0; week < recurrenceWeeks; week++) {
+    const baseDate = parseISO(input.date);
+    const currentWeekDate = addDays(baseDate, week * 7);
+    const dateStr = getShopDateString(currentWeekDate);
 
-    if (error) {
-      console.error('createAdminAppointment combo insert failed at index', idx, error);
+    const startsAtBase = parseBookingDateTime(dateStr, input.time);
+    const comboId = `combo_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
+    const insertedIds: string[] = [];
+    let currentStartsAt = startsAtBase;
+    let hasError = false;
+    let errorMsg = '';
+
+    for (let idx = 0; idx < orderedServices.length; idx++) {
+      const s = orderedServices[idx];
+      const duration = idx === 0 && input.customDurationMinutes && input.customDurationMinutes > 0
+        ? input.customDurationMinutes
+        : s.duration_minutes;
+      const currentEndsAt = addMinutes(currentStartsAt, duration);
+
+      const comboLabel = `[Combo: ${comboId}]`;
+      const rowNotes = input.notes?.trim()
+        ? `${comboLabel} ${input.notes.trim()}`
+        : comboLabel;
+
+      const { data: appointment, error } = await supabase
+        .from('appointments')
+        .insert({
+          customer_id: null,
+          barber_id: input.barberId,
+          service_id: s.id,
+          starts_at: currentStartsAt.toISOString(),
+          ends_at: currentEndsAt.toISOString(),
+          status: 'confirmed',
+          customer_name: input.customerName.trim(),
+          customer_phone: input.customerPhone?.trim() ?? '',
+          notes: rowNotes,
+        })
+        .select('id')
+        .single();
+
+      if (error) {
+        hasError = true;
+        errorMsg = error.code === '23P01'
+          ? 'Questo orario è già occupato.'
+          : 'Errore durante la prenotazione del servizio ' + s.name;
+        console.error('createAdminAppointment loop insert failed', dateStr, error);
+        break;
+      }
+
+      insertedIds.push(appointment.id);
+      currentStartsAt = currentEndsAt;
+    }
+
+    if (hasError) {
       if (insertedIds.length > 0) {
         await supabase.from('appointments').delete().in('id', insertedIds);
       }
-      if (error.code === '23P01') {
-        return { ok: false, error: 'Questo orario è già occupato. Scegline un altro.' };
+      failures.push({ date: dateStr, error: errorMsg });
+      if (!firstError) firstError = errorMsg;
+    } else {
+      successes.push(dateStr);
+      overallSuccess = true;
+
+      try {
+        await notifyAdminNewBooking({
+          serviceName: combinedServiceNames,
+          priceCents: totalOriginalPriceCents,
+          barberName: barber?.name ?? 'Barbiere',
+          startsAt: startsAtBase,
+          customerName: input.customerName,
+          customerPhone: input.customerPhone ?? '',
+          notes: input.notes,
+        });
+      } catch (notifyError) {
+        console.error('createAdminAppointment notification failed for week', week, notifyError);
       }
-      return { ok: false, error: 'Errore durante la prenotazione del servizio ' + s.name };
     }
-
-    insertedIds.push(appointment.id);
-    currentStartsAt = currentEndsAt;
-  }
-
-  const combinedServiceNames = orderedServices.map((s) => s.name).join(' + ');
-
-  try {
-    await notifyAdminNewBooking({
-      serviceName: combinedServiceNames,
-      priceCents: totalOriginalPriceCents,
-      barberName: barber?.name ?? 'Barbiere',
-      startsAt: startsAtBase,
-      customerName: input.customerName,
-      customerPhone: input.customerPhone ?? '',
-      notes: input.notes,
-    });
-  } catch (notifyError) {
-    console.error('createAdminAppointment notification failed:', notifyError);
   }
 
   revalidateAppointmentPaths();
-  return { ok: true, appointmentId: insertedIds[0] };
+
+  if (recurrenceWeeks > 1) {
+    if (!overallSuccess) {
+      return { ok: false, error: `Impossibile creare le prenotazioni. Errore: ${firstError}` };
+    }
+    return {
+      ok: true,
+      isRecurring: true,
+      successCount: successes.length,
+      failedCount: failures.length,
+      successes,
+      failures,
+    };
+  } else {
+    if (!overallSuccess) {
+      return { ok: false, error: firstError || 'Errore durante la prenotazione.' };
+    }
+    return { ok: true, appointmentId: successes[0] };
+  }
 }
 
 export async function updateAdminAppointment(appointmentId: string, input: AdminAppointmentInput) {

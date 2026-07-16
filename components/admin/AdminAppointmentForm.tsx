@@ -79,6 +79,8 @@ export function AdminAppointmentForm({
     }
   }, [serviceId, selectedService, isEdit]);
   const [notes, setNotes] = useState(appointment?.notes ?? '');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceWeeks, setRecurrenceWeeks] = useState(4);
   const [slots, setSlots] = useState<string[]>([]);
   const [notificationTime, setNotificationTime] = useState(() => {
     const now = new Date();
@@ -179,6 +181,7 @@ export function AdminAppointmentForm({
       customerPhone,
       notes,
       customDurationMinutes: customDuration,
+      recurrenceWeeks: isRecurring ? recurrenceWeeks : 1,
     };
   }
 
@@ -222,7 +225,17 @@ export function AdminAppointmentForm({
         return;
       }
 
-      toast.success(isEdit ? 'Prenotazione modificata' : 'Prenotazione creata');
+      if (!isEdit && 'isRecurring' in result && result.isRecurring) {
+        const succ = (result as any).successCount || 0;
+        const fail = (result as any).failedCount || 0;
+        if (fail > 0) {
+          toast.warning(`Prenotate ${succ} settimane su ${succ + fail}. Alcune date erano già occupate.`);
+        } else {
+          toast.success(`Prenotate con successo tutte le ${succ} settimane!`);
+        }
+      } else {
+        toast.success(isEdit ? 'Prenotazione modificata' : 'Prenotazione creata');
+      }
       onSaved();
       onClose();
     });
@@ -240,6 +253,9 @@ export function AdminAppointmentForm({
     serviceId,
     startTransition,
     time,
+    isRecurring,
+    recurrenceWeeks,
+    customDuration,
   ]);
 
   useAdminSaveRegistration({ isDirty: true, isSaving: pending, save: handleSave });
@@ -441,6 +457,43 @@ export function AdminAppointmentForm({
               className="mt-1 flex w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2 text-sm text-white"
             />
           </div>
+
+          {!isEdit && (
+            <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-4 w-4"
+                />
+                <span className="text-sm font-medium text-white/90">Prenotazione ricorrente</span>
+              </label>
+
+              {isRecurring && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Label htmlFor="recurrence-weeks" className="text-xs text-white/60">
+                    Ripeti ogni settimana per:
+                  </Label>
+                  <select
+                    id="recurrence-weeks"
+                    value={recurrenceWeeks}
+                    onChange={(e) => setRecurrenceWeeks(Number(e.target.value))}
+                    className="block w-full rounded-md border border-white/15 bg-[#1a1a1a] px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
+                  >
+                    <option value={2}>2 settimane (2 appuntamenti)</option>
+                    <option value={4}>4 settimane (4 appuntamenti)</option>
+                    <option value={6}>6 settimane (6 appuntamenti)</option>
+                    <option value={8}>8 settimane (8 appuntamenti)</option>
+                    <option value={12}>12 settimane (12 appuntamenti)</option>
+                  </select>
+                  <p className="text-[11px] text-white/40 leading-relaxed">
+                    Gli appuntamenti verranno creati lo stesso giorno della settimana alla stessa ora. Se un orario è occupato in una settimana specifica, quella settimana verrà saltata.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {isEdit && appointment && (
             <>

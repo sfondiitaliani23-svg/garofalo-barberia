@@ -27,6 +27,8 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   const [time, setTime] = useState('10:00');
   const [barberId, setBarberId] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceWeeks, setRecurrenceWeeks] = useState(4);
 
   // Speech Recognition state
   const [isListening, setIsListening] = useState(false);
@@ -145,6 +147,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
         time,
         customerName: customerName.trim(),
         customerPhone: '',
+        recurrenceWeeks: isRecurring ? recurrenceWeeks : 1,
       });
 
       if (!result.ok) {
@@ -152,7 +155,17 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
         return;
       }
 
-      toast.success('Prenotazione istantanea creata con successo!');
+      if (result.isRecurring) {
+        const succ = result.successCount || 0;
+        const fail = result.failedCount || 0;
+        if (fail > 0) {
+          toast.warning(`Prenotate ${succ} settimane su ${succ + fail}. Alcune date erano già occupate.`);
+        } else {
+          toast.success(`Prenotate con successo tutte le ${succ} settimane!`);
+        }
+      } else {
+        toast.success('Prenotazione istantanea creata con successo!');
+      }
       router.refresh();
       onClose();
     });
@@ -285,6 +298,39 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
                 })}
               </div>
             </div>
+          </div>
+
+          {/* Recurrence fields */}
+          <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 space-y-3">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
+                className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-4 w-4"
+              />
+              <span className="text-sm font-medium text-white/90">Prenotazione ricorrente</span>
+            </label>
+            
+            {isRecurring && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <Label htmlFor="inst-recurrence-weeks" className="text-xs text-white/60">
+                  Ripeti ogni settimana per:
+                </Label>
+                <select
+                  id="inst-recurrence-weeks"
+                  value={recurrenceWeeks}
+                  onChange={(e) => setRecurrenceWeeks(Number(e.target.value))}
+                  className="block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
+                >
+                  <option value={2}>2 settimane (2 appuntamenti)</option>
+                  <option value={4}>4 settimane (4 appuntamenti)</option>
+                  <option value={6}>6 settimane (6 appuntamenti)</option>
+                  <option value={8}>8 settimane (8 appuntamenti)</option>
+                  <option value={12}>12 settimane (12 appuntamenti)</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
