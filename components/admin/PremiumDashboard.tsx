@@ -134,7 +134,7 @@ export function PremiumDashboard({
   upcomingAppointments,
   yesterdayAppointments,
 }: PremiumDashboardProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'oggi' | 'ieri'>('ieri');
+  const [selectedPeriod, setSelectedPeriod] = useState<'oggi' | 'ieri' | '7giorni' | '30giorni'>('ieri');
   const [trafficData, setTrafficData] = useState<LiveTrafficData | null>(null);
 
   // Gestione dell'aggiornamento real-time dei dati di traffico dal componente figlio
@@ -145,75 +145,126 @@ export function PremiumDashboard({
   const liveVisitors = trafficData?.liveCount ?? initialStats.liveVisitors;
   const visitsToday = trafficData?.todayTotal ?? initialStats.dailyVisits;
 
-  // Calcolo condizionale delle KPI card basato su Oggi vs Ieri
+  // Dati storici reali passati dal server
+  const appointmentsSparkline = useMemo(() => adminStats.appointmentsHistory ?? Array(60).fill(0), [adminStats.appointmentsHistory]);
+  const revenueSparkline = useMemo(() => adminStats.revenueHistory ?? Array(60).fill(0), [adminStats.revenueHistory]);
+  const customersSparkline = useMemo(() => adminStats.customersHistory ?? Array(60).fill(0), [adminStats.customersHistory]);
+  
+  // Per le visite, ricaviamo i dati live o storici
+  const visitsSparkline = useMemo(() => {
+    if (trafficData) {
+      const hist = [...(initialStats.visitsHistory ?? Array(60).fill(0))];
+      hist[hist.length - 1] = trafficData.todayTotal;
+      return hist;
+    }
+    return initialStats.visitsHistory ?? Array(60).fill(0);
+  }, [trafficData, initialStats.visitsHistory]);
+
+  // Calcolo condizionale delle KPI card basato su Oggi, Ieri, 7 Giorni, 30 Giorni
+  const metrics = useMemo(() => {
+    const getValuesForPeriod = (timeline: number[], isRevenue = false) => {
+      const len = timeline.length; // dovrebbe essere 60
+      let currentVal = 0;
+      let prevVal = 0;
+      let sparkline: number[] = [];
+
+      if (selectedPeriod === 'oggi') {
+        currentVal = timeline[len - 1] ?? 0;
+        prevVal = timeline[len - 2] ?? 0;
+        sparkline = timeline.slice(len - 6, len);
+      } else if (selectedPeriod === 'ieri') {
+        currentVal = timeline[len - 2] ?? 0;
+        prevVal = timeline[len - 3] ?? 0;
+        sparkline = timeline.slice(len - 7, len - 1);
+      } else if (selectedPeriod === '7giorni') {
+        const last7 = timeline.slice(len - 7, len);
+        const prev7 = timeline.slice(len - 14, len - 7);
+        currentVal = last7.reduce((a, b) => a + b, 0);
+        prevVal = prev7.reduce((a, b) => a + b, 0);
+        sparkline = last7;
+      } else if (selectedPeriod === '30giorni') {
+        const last30 = timeline.slice(len - 30, len);
+        const prev30 = timeline.slice(len - 60, len - 30);
+        currentVal = last30.reduce((a, b) => a + b, 0);
+        prevVal = prev30.reduce((a, b) => a + b, 0);
+        sparkline = last30;
+      }
+
+      // Calcolo trend percentuale
+      let trendLabel = '0%';
+      if (prevVal === 0) {
+        trendLabel = currentVal > 0 ? `+${currentVal * 100}%` : '0%';
+      } else {
+        const pct = Math.round(((currentVal - prevVal) / prevVal) * 100);
+        trendLabel = pct >= 0 ? `+${pct}%` : `${pct}%`;
+      }
+
+      if (isRevenue) {
+        currentVal = currentVal / 100;
+        sparkline = sparkline.map(v => v / 100);
+      }
+
+      return { currentVal, trendLabel, sparkline };
+    };
+
+    const appointments = getValuesForPeriod(appointmentsSparkline);
+    const revenue = getValuesForPeriod(revenueSparkline, true);
+    const visits = getValuesForPeriod(visitsSparkline);
+    const customers = getValuesForPeriod(customersSparkline);
+
+    return { appointments, revenue, visits, customers };
+  }, [selectedPeriod, appointmentsSparkline, revenueSparkline, visitsSparkline, customersSparkline]);
+
   const isToday = selectedPeriod === 'oggi';
-  const appointmentsCount = isToday ? adminStats.appointmentsToday : (adminStats.appointmentsHistory?.[4] ?? 0);
-  const revenueCount = isToday ? adminStats.revenueToday : (adminStats.revenueHistory?.[4] ?? 0);
-  const visitsCount = isToday ? visitsToday : initialStats.yesterdayVisits;
 
-  const appointmentsTitle = isToday ? 'Appuntamenti Oggi' : 'Appuntamenti Ieri';
-  const revenueTitle = isToday ? 'Incasso Oggi' : 'Incasso Ieri';
-  const visitsTitle = isToday ? 'Visite Oggi' : 'Visite Ieri';
-
-  // Calcola il tasso di occupazione: assume max 48 slot per oggi/ieri (es: 3 barbieri * 16 appuntamenti)
+  // Calcola il tasso di occupazione: assume max 48 slot per oggi/ieri
   const occupancyRate = useMemo(() => {
-    const capacity = 48; // capacità teorica
-    const apts = isToday ? adminStats.appointmentsToday : (adminStats.appointmentsHistory?.[4] ?? 0);
-    return Math.min(100, Math.round((apts / capacity) * 100));
-  }, [isToday, adminStats.appointmentsToday, adminStats.appointmentsHistory]);
+    let capacity = 48; // capacità teorica giornaliera
+    if (selectedPeriod === '7giorni') capacity = 48 * 7;
+    else if (selectedPeriod === '30giorni') capacity = 48 * 30;
+
+    return Math.min(100, Math.round((metrics.appointments.currentVal / capacity) * 100));
+  }, [selectedPeriod, metrics.appointments.currentVal]);
 
   const pieData = useMemo(() => [
     { name: 'Occupato', value: occupancyRate },
     { name: 'Libero', value: 100 - occupancyRate },
   ], [occupancyRate]);
 
-  // Dati per il grafico a barre delle visite orarie (08:00 - 20:00)
+  // Dati per il grafico delle visite (fascia oraria o andamento giornaliero)
   const barChartData = useMemo(() => {
-    const hourlyData = isToday
-      ? (trafficData?.todayHourly ?? Array(24).fill(0))
-      : (trafficData?.yesterdayHourly ?? Array(24).fill(0));
-    return Array.from({ length: 13 }, (_, i) => {
-      const hourNum = i + 8; // dalle 08:00 alle 20:00
-      return {
-        hourLabel: `${hourNum}:00`,
-        Visite: hourlyData[hourNum] ?? 0,
-      };
-    });
-  }, [isToday, trafficData]);
-
-  // Utilizziamo i dati storici reali passati dal server
-  const appointmentsSparkline = useMemo(() => adminStats.appointmentsHistory ?? Array(6).fill(0), [adminStats.appointmentsHistory]);
-  const revenueSparkline = useMemo(() => (adminStats.revenueHistory ?? Array(6).fill(0)).map(r => r / 100), [adminStats.revenueHistory]);
-  
-  // Per le visite, ricaviamo i dati live o storici
-  const visitsHistoryReal = useMemo(() => {
-    if (trafficData) {
-      const hist = [...(initialStats.visitsHistory ?? Array(6).fill(0))];
-      hist[hist.length - 1] = trafficData.todayTotal;
-      return hist;
+    if (selectedPeriod === 'oggi' || selectedPeriod === 'ieri') {
+      const hourlyData = selectedPeriod === 'oggi'
+        ? (trafficData?.todayHourly ?? Array(24).fill(0))
+        : (trafficData?.yesterdayHourly ?? Array(24).fill(0));
+      return Array.from({ length: 13 }, (_, i) => {
+        const hourNum = i + 8; // dalle 08:00 alle 20:00
+        return {
+          label: `${hourNum}:00`,
+          Visite: hourlyData[hourNum] ?? 0,
+        };
+      });
+    } else {
+      const daysCount = selectedPeriod === '7giorni' ? 7 : 30;
+      const len = visitsSparkline.length; // 60
+      const periodVisits = visitsSparkline.slice(len - daysCount, len);
+      
+      return periodVisits.map((visits, index) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (daysCount - 1 - index));
+        const dayLabel = d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+        return {
+          label: dayLabel,
+          Visite: visits,
+        };
+      });
     }
-    return initialStats.visitsHistory ?? Array(6).fill(0);
-  }, [trafficData, initialStats.visitsHistory]);
+  }, [selectedPeriod, trafficData, visitsSparkline]);
 
-  const visitsSparkline = visitsHistoryReal;
-  const customersSparkline = useMemo(() => adminStats.customersHistory ?? Array(6).fill(0), [adminStats.customersHistory]);
-
-  // Calcola il trend percentuale dinamico rispetto al giorno precedente (in base a oggi o ieri)
-  const getTrendLabelForPeriod = useCallback((history: number[], isTodayMode: boolean) => {
-    if (!history || history.length < 3) return '0%';
-    const currentVal = isTodayMode ? history[history.length - 1] : history[history.length - 2];
-    const prevVal = isTodayMode ? history[history.length - 2] : history[history.length - 3];
-    if (prevVal === 0) {
-      return currentVal > 0 ? `+${currentVal * 100}%` : '0%';
-    }
-    const pct = Math.round(((currentVal - prevVal) / prevVal) * 100);
-    return pct >= 0 ? `+${pct}%` : `${pct}%`;
-  }, []);
-
-  const appointmentsTrend = useMemo(() => getTrendLabelForPeriod(appointmentsSparkline, isToday), [appointmentsSparkline, isToday, getTrendLabelForPeriod]);
-  const revenueTrend = useMemo(() => getTrendLabelForPeriod(adminStats.revenueHistory ?? [], isToday), [adminStats.revenueHistory, isToday, getTrendLabelForPeriod]);
-  const visitsTrend = useMemo(() => getTrendLabelForPeriod(visitsSparkline, isToday), [visitsSparkline, isToday, getTrendLabelForPeriod]);
-  const customersTrend = useMemo(() => getTrendLabelForPeriod(customersSparkline, isToday), [customersSparkline, isToday, getTrendLabelForPeriod]);
+  const appointmentsTitle = selectedPeriod === 'oggi' ? 'Appuntamenti Oggi' : selectedPeriod === 'ieri' ? 'Appuntamenti Ieri' : 'Appuntamenti Totali';
+  const revenueTitle = selectedPeriod === 'oggi' ? 'Incasso Oggi' : selectedPeriod === 'ieri' ? 'Incasso Ieri' : 'Incasso Totale';
+  const visitsTitle = selectedPeriod === 'oggi' ? 'Visite Oggi' : selectedPeriod === 'ieri' ? 'Visite Ieri' : 'Visite Totali';
+  const customersTitle = selectedPeriod === 'oggi' ? 'Nuovi Iscritti' : selectedPeriod === 'ieri' ? 'Nuovi Iscritti' : 'Nuovi Iscritti';
 
   return (
     <div className="space-y-6">
@@ -221,33 +272,38 @@ export function PremiumDashboard({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-white">
-            {isToday ? 'Analisi di Oggi' : 'Analisi di Ieri'}
+            {selectedPeriod === 'oggi'
+              ? 'Analisi di Oggi'
+              : selectedPeriod === 'ieri'
+              ? 'Analisi di Ieri'
+              : selectedPeriod === '7giorni'
+              ? 'Analisi Ultimi 7 Giorni'
+              : 'Analisi Ultimi 30 Giorni'}
           </h2>
           <p className="text-xs text-white/50">
-            {isToday ? 'Dati e traffico in tempo reale del salone' : 'Riepilogo delle statistiche consolidate di ieri'}
+            {selectedPeriod === 'oggi'
+              ? 'Dati e traffico in tempo reale del salone'
+              : selectedPeriod === 'ieri'
+              ? 'Riepilogo delle statistiche consolidate di ieri'
+              : selectedPeriod === '7giorni'
+              ? 'Riepilogo dell\'andamento degli ultimi 7 giorni'
+              : 'Riepilogo dell\'andamento degli ultimi 30 giorni'}
           </p>
         </div>
-        <div className="flex self-start sm:self-center rounded-xl bg-[#161616] p-1 border border-white/5 shrink-0">
-          <button
-            onClick={() => setSelectedPeriod('oggi')}
-            className={`rounded-lg px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-              isToday
-                ? 'bg-gold text-black shadow-md'
-                : 'text-white/60 hover:text-white'
-            }`}
-          >
-            Oggi
-          </button>
-          <button
-            onClick={() => setSelectedPeriod('ieri')}
-            className={`rounded-lg px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
-              !isToday
-                ? 'bg-gold text-black shadow-md'
-                : 'text-white/60 hover:text-white'
-            }`}
-          >
-            Ieri
-          </button>
+        <div className="flex flex-wrap gap-1 rounded-xl bg-[#161616] p-1 border border-white/5 shrink-0">
+          {(['oggi', 'ieri', '7giorni', '30giorni'] as const).map((period) => (
+            <button
+              key={period}
+              onClick={() => setSelectedPeriod(period)}
+              className={`rounded-lg px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
+                selectedPeriod === period
+                  ? 'bg-gold text-black shadow-md'
+                  : 'text-white/60 hover:text-white'
+              }`}
+            >
+              {period === 'oggi' ? 'Oggi' : period === 'ieri' ? 'Ieri' : period === '7giorni' ? '7 Giorni' : '30 Giorni'}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -255,31 +311,31 @@ export function PremiumDashboard({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           title={appointmentsTitle}
-          value={appointmentsCount}
-          trend={appointmentsTrend}
+          value={metrics.appointments.currentVal}
+          trend={metrics.appointments.trendLabel}
           icon={Calendar}
-          sparklineData={appointmentsSparkline}
+          sparklineData={metrics.appointments.sparkline}
         />
         <KpiCard
           title={revenueTitle}
-          value={formatPrice(revenueCount)}
-          trend={revenueTrend}
+          value={formatPrice(metrics.revenue.currentVal)}
+          trend={metrics.revenue.trendLabel}
           icon={DollarSign}
-          sparklineData={revenueSparkline}
+          sparklineData={metrics.revenue.sparkline}
         />
         <KpiCard
           title={visitsTitle}
-          value={visitsCount}
-          trend={visitsTrend}
+          value={metrics.visits.currentVal}
+          trend={metrics.visits.trendLabel}
           icon={TrendingUp}
-          sparklineData={visitsSparkline}
+          sparklineData={metrics.visits.sparkline}
         />
         <KpiCard
-          title="Clienti Totali"
-          value={adminStats.totalCustomers}
-          trend={customersTrend}
+          title={customersTitle}
+          value={metrics.customers.currentVal}
+          trend={metrics.customers.trendLabel}
           icon={Users}
-          sparklineData={customersSparkline}
+          sparklineData={metrics.customers.sparkline}
         />
       </div>
 
@@ -296,7 +352,15 @@ export function PremiumDashboard({
           
           <div>
             <h3 className="font-display text-lg uppercase text-gold">Tasso di Occupazione</h3>
-            <p className="text-xs text-white/40 mt-1">Appuntamenti occupati vs slot disponibili {isToday ? 'oggi' : 'ieri'}</p>
+            <p className="text-xs text-white/40 mt-1">
+              {selectedPeriod === 'oggi'
+                ? 'Appuntamenti occupati vs slot disponibili oggi'
+                : selectedPeriod === 'ieri'
+                ? 'Appuntamenti occupati vs slot disponibili ieri'
+                : selectedPeriod === '7giorni'
+                ? 'Appuntamenti occupati vs slot disponibili negli ultimi 7 giorni'
+                : 'Appuntamenti occupati vs slot disponibili negli ultimi 30 giorni'}
+            </p>
           </div>
 
           <div className="relative flex items-center justify-center h-48 mt-4">
@@ -326,7 +390,7 @@ export function PremiumDashboard({
           <div className="mt-4 flex justify-center gap-6 text-xs border-t border-white/5 pt-4">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-gold"></span>
-              <span className="text-white/70">Prenotati ({appointmentsCount} slot)</span>
+              <span className="text-white/70">Prenotati ({metrics.appointments.currentVal} slot)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-white/10"></span>
@@ -343,10 +407,20 @@ export function PremiumDashboard({
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
           
           <div>
-            <h3 className="font-display text-lg uppercase text-gold">Visite per Fascia Oraria</h3>
-            <p className="text-xs text-white/40 mt-1">Visualizzazioni del sito registrate {isToday ? 'oggi' : 'ieri'} tra le 08:00 e le 20:00</p>
+            <h3 className="font-display text-lg uppercase text-gold">
+              {selectedPeriod === 'oggi' || selectedPeriod === 'ieri' ? 'Visite per Fascia Oraria' : 'Andamento delle Visite'}
+            </h3>
+            <p className="text-xs text-white/40 mt-1">
+              {selectedPeriod === 'oggi'
+                ? 'Visualizzazioni del sito registrate oggi tra le 08:00 e le 20:00'
+                : selectedPeriod === 'ieri'
+                ? 'Visualizzazioni del sito registrate ieri tra le 08:00 e le 20:00'
+                : selectedPeriod === '7giorni'
+                ? 'Visualizzazioni del sito giornaliere negli ultimi 7 giorni'
+                : 'Visualizzazioni del sito giornaliere negli ultimi 30 giorni'}
+            </p>
           </div>
- 
+
           <div className="mt-6 h-64 w-full text-xs">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -358,7 +432,7 @@ export function PremiumDashboard({
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.03)" vertical={false} />
                 <XAxis
-                  dataKey="hourLabel"
+                  dataKey="label"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: 'rgba(255, 255, 255, 0.4)', fontSize: 10 }}
@@ -383,33 +457,41 @@ export function PremiumDashboard({
             </ResponsiveContainer>
           </div>
         </div>
- 
+
         {/* Prossimi appuntamenti in arrivo (1/3) */}
         <div className="rounded-xl border border-white/10 bg-[#111] p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
           
           <div>
             <h3 className="font-display text-lg uppercase text-gold">
-              {isToday ? 'Appuntamenti in Arrivo' : 'Appuntamenti di Ieri'}
+              {selectedPeriod === 'oggi'
+                ? 'Appuntamenti in Arrivo'
+                : selectedPeriod === 'ieri'
+                ? 'Appuntamenti di Ieri'
+                : 'Appuntamenti Recenti'}
             </h3>
             <p className="text-xs text-white/40 mt-1">
-              {isToday ? 'Le prossime prenotazioni da saldare in sede oggi' : 'Gli ultimi appuntamenti svolti nella giornata di ieri'}
+              {selectedPeriod === 'oggi'
+                ? 'Le prossime prenotazioni da saldare in sede oggi'
+                : selectedPeriod === 'ieri'
+                ? 'Gli ultimi appuntamenti svolti nella giornata di ieri'
+                : 'Panoramica degli ultimi appuntamenti registrati'}
             </p>
           </div>
- 
+
           <div className="mt-5 flex-1 divide-y divide-white/5 max-h-[360px] overflow-y-auto pr-1 admin-modal-scroll">
-            {(isToday ? upcomingAppointments : (yesterdayAppointments ?? [])).length === 0 ? (
+            {(selectedPeriod === 'oggi' ? upcomingAppointments : selectedPeriod === 'ieri' ? yesterdayAppointments : [...yesterdayAppointments, ...upcomingAppointments]).length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center text-white/40 py-8">
                 <UserCheck className="h-8 w-8 text-white/20 mb-2" />
                 <p className="text-sm font-medium">Nessun appuntamento registrato</p>
               </div>
             ) : (
-              (isToday ? upcomingAppointments : (yesterdayAppointments ?? [])).map((appointment) => {
+              (selectedPeriod === 'oggi' ? upcomingAppointments : selectedPeriod === 'ieri' ? yesterdayAppointments : [...yesterdayAppointments, ...upcomingAppointments]).slice(0, 5).map((appointment) => {
                 const startsAt = parseISO(appointment.starts_at);
                 const initials = getInitials(appointment.customer_name);
                 const timeLabel = format(startsAt, "HH:mm");
                 const dateLabel = format(startsAt, "d MMM", { locale: it });
- 
+
                 return (
                   <div key={appointment.id} className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 hover:bg-white/[0.01] transition-all px-1 rounded-lg">
                     <div className="flex items-center gap-3 min-w-0">

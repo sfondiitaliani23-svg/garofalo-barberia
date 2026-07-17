@@ -150,8 +150,8 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   const lastMonthDate = new Date(now); lastMonthDate.setDate(lastMonthDate.getDate() - 30);
   const lastMonthKey = getRomeDateKey(lastMonthDate);
 
-  // Fetch all page_views covering last 31 days to count unique sessions per period
-  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 31);
+  // Fetch all page_views covering last 61 days to count unique sessions per period
+  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 61);
   const [{ data: allViews }, liveVisitors, ...breakdownCounts] = await Promise.all([
     supabase
       .from('page_views')
@@ -217,7 +217,7 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   });
 
   const dateKeys: string[] = [];
-  for (let i = 5; i >= 0; i--) {
+  for (let i = 59; i >= 0; i--) {
     const d = new Date(now);
     d.setDate(d.getDate() - i);
     dateKeys.push(getRomeDateKey(d));

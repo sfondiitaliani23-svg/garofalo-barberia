@@ -60,8 +60,8 @@ export async function getAdminStats() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
-  const sixDaysAgo = new Date(today);
-  sixDaysAgo.setDate(sixDaysAgo.getDate() - 5);
+  const sixtyDaysAgo = new Date(today);
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 59);
 
   const [
     { count: todayCount },
@@ -96,13 +96,13 @@ export async function getAdminStats() {
       .from('appointments')
       .select('starts_at, discount_cents, service:services(price_cents)')
       .in('status', ['confirmed', 'completed'])
-      .gte('starts_at', sixDaysAgo.toISOString())
+      .gte('starts_at', sixtyDaysAgo.toISOString())
       .lt('starts_at', tomorrow.toISOString()),
     supabase
       .from('profiles')
       .select('created_at')
       .eq('role', 'customer')
-      .gte('created_at', sixDaysAgo.toISOString())
+      .gte('created_at', sixtyDaysAgo.toISOString())
       .lt('created_at', tomorrow.toISOString()),
   ]);
 
@@ -130,7 +130,7 @@ export async function getAdminStats() {
   };
 
   const dateKeys: string[] = [];
-  for (let i = 5; i >= 0; i--) {
+  for (let i = 59; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     dateKeys.push(getRomeDateKey(d));
