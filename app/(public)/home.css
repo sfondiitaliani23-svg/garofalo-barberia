@@ -1343,3 +1343,89 @@
     padding: 0 0.5rem;
   }
 }
+
+/* --- Ticker Animato Homepage --- */
+.home-ticker-wrapper {
+  border-top: 1px solid rgba(205, 154, 79, 0.2);
+  border-bottom: 1px solid rgba(205, 154, 79, 0.2);
+  background: #0d0d0d;
+  padding: 1.25rem 0;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  user-select: none;
+}
+
+/* Sfumature ai lati per un look premium sfumato */
+.home-ticker-wrapper::before,
+.home-ticker-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 15%;
+  max-width: 150px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.home-ticker-wrapper::before {
+  left: 0;
+  background: linear-gradient(to right, #000 10%, transparent);
+}
+
+.home-ticker-wrapper::after {
+  right: 0;
+  background: linear-gradient(to left, #000 10%, transparent);
+}
+
+.home-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: scroll-ticker 25s linear infinite;
+}
+
+.home-ticker-track:hover {
+  animation-play-state: paused; /* Pausa su hover per interazione */
+}
+
+@keyframes scroll-ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); /* Si sposta esattamente della metà */
+  }
+}
+
+.home-ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  padding-right: 2.5rem;
+  flex-shrink: 0;
+}
+
+.home-ticker-link {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-family: 'Oswald', sans-serif;
+  font-size: clamp(0.9rem, 2vw, 1.25rem);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  transition: color 0.3s ease, transform 0.3s ease;
+  display: inline-block;
+}
+
+.home-ticker-link:hover {
+  color: var(--gold);
+  transform: scale(1.05);
+}
+
+.home-ticker-sep {
+  color: var(--gold);
+  font-size: 1.1rem;
+  opacity: 0.8;
+  display: inline-block;
+}

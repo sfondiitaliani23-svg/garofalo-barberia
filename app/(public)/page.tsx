@@ -5,6 +5,7 @@ import { AnimatedDivider } from '@/components/home/AnimatedDivider';
 import { HomeClientEffects } from '@/components/home/HomeClientEffects';
 import { PerfumeCardsGrid } from '@/components/home/PerfumeCardsGrid';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
+import { HomeTicker } from '@/components/home/HomeTicker';
 import { PHOTO_STRIP, PRICE_LIST, REVIEWS } from '@/lib/data/homepage';
 import './home.css';
 
@@ -103,6 +104,8 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      <HomeTicker />
 
       <AnimatedDivider variant="wide" className="section-divider-esperienza" />
 

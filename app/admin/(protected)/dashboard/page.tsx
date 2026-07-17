@@ -1,4 +1,4 @@
-import { getAdminStats, getUpcomingAdminAppointments } from '@/lib/actions/admin';
+import { getAdminStats, getUpcomingAdminAppointments, getYesterdayAdminAppointments } from '@/lib/actions/admin';
 import { getAnalyticsStats } from '@/lib/actions/analytics';
 import { PremiumDashboard } from '@/components/admin/PremiumDashboard';
 
@@ -8,10 +8,11 @@ export const metadata = { title: 'Admin Dashboard' };
 export const revalidate = 60;
 
 export default async function AdminDashboardPage() {
-  const [stats, analytics, upcoming] = await Promise.all([
+  const [stats, analytics, upcoming, yesterdayAppointments] = await Promise.all([
     getAdminStats(),
     getAnalyticsStats(),
     getUpcomingAdminAppointments(5),
+    getYesterdayAdminAppointments(5),
   ]);
 
   return (
@@ -24,6 +25,7 @@ export default async function AdminDashboardPage() {
           initialStats={analytics}
           adminStats={stats}
           upcomingAppointments={upcoming}
+          yesterdayAppointments={yesterdayAppointments}
         />
       </div>
     </div>

@@ -11,7 +11,12 @@ export function CookieConsent() {
   const [preferences, setPreferences] = useState(true);
 
   useEffect(() => {
-    setVisible(!hasCookieConsentDecision());
+    const sync = () => {
+      setVisible(!hasCookieConsentDecision());
+    };
+    sync();
+    window.addEventListener('garofalo:cookie-consent', sync);
+    return () => window.removeEventListener('garofalo:cookie-consent', sync);
   }, []);
 
   const accept = (nextAnalytics: boolean, nextPreferences: boolean) => {

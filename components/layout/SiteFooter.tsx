@@ -121,6 +121,22 @@ export function SiteFooter() {
       </div>
       <div className="footer-copy container-lux flex flex-col items-center gap-2 border-t border-white/10 text-center text-xs leading-relaxed text-white/40">
         <p>© 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.</p>
+        <p className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">
+          <Link href="/privacy" className="hover:text-gold-light underline">
+            Privacy Policy
+          </Link>
+          <span>•</span>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem('garofalo_cookie_consent');
+              window.dispatchEvent(new CustomEvent('garofalo:cookie-consent'));
+            }}
+            className="hover:text-gold-light underline bg-transparent border-none p-0 cursor-pointer text-xs text-white/40 font-medium"
+          >
+            Preferenze Cookie
+          </button>
+        </p>
         <p>
           Sito creato interamente da Eliseo Miraglia (IG.{' '}
           <a

@@ -54,6 +54,7 @@ interface PremiumDashboardProps {
     customersHistory: number[];
   };
   upcomingAppointments: CalendarAppointment[];
+  yesterdayAppointments: CalendarAppointment[];
 }
 
 function getInitials(name: string) {
@@ -131,7 +132,9 @@ export function PremiumDashboard({
   initialStats,
   adminStats,
   upcomingAppointments,
+  yesterdayAppointments,
 }: PremiumDashboardProps) {
+  const [selectedPeriod, setSelectedPeriod] = useState<'oggi' | 'ieri'>('oggi');
   const [trafficData, setTrafficData] = useState<LiveTrafficData | null>(null);
 
   // Gestione dell'aggiornamento real-time dei dati di traffico dal componente figlio
@@ -142,11 +145,22 @@ export function PremiumDashboard({
   const liveVisitors = trafficData?.liveCount ?? initialStats.liveVisitors;
   const visitsToday = trafficData?.todayTotal ?? initialStats.dailyVisits;
 
-  // Calcola il tasso di occupazione odierno: assume max 48 slot per oggi (es: 3 barbieri * 16 appuntamenti)
+  // Calcolo condizionale delle KPI card basato su Oggi vs Ieri
+  const isToday = selectedPeriod === 'oggi';
+  const appointmentsCount = isToday ? adminStats.appointmentsToday : (adminStats.appointmentsHistory?.[4] ?? 0);
+  const revenueCount = isToday ? adminStats.revenueToday : (adminStats.revenueHistory?.[4] ?? 0);
+  const visitsCount = isToday ? visitsToday : initialStats.yesterdayVisits;
+
+  const appointmentsTitle = isToday ? 'Appuntamenti Oggi' : 'Appuntamenti Ieri';
+  const revenueTitle = isToday ? 'Incasso Oggi' : 'Incasso Ieri';
+  const visitsTitle = isToday ? 'Visite Oggi' : 'Visite Ieri';
+
+  // Calcola il tasso di occupazione: assume max 48 slot per oggi/ieri (es: 3 barbieri * 16 appuntamenti)
   const occupancyRate = useMemo(() => {
     const capacity = 48; // capacità teorica
-    return Math.min(100, Math.round((adminStats.appointmentsToday / capacity) * 100));
-  }, [adminStats.appointmentsToday]);
+    const apts = isToday ? adminStats.appointmentsToday : (adminStats.appointmentsHistory?.[4] ?? 0);
+    return Math.min(100, Math.round((apts / capacity) * 100));
+  }, [isToday, adminStats.appointmentsToday, adminStats.appointmentsHistory]);
 
   const pieData = useMemo(() => [
     { name: 'Occupato', value: occupancyRate },
@@ -155,7 +169,9 @@ export function PremiumDashboard({
 
   // Dati per il grafico a barre delle visite orarie (08:00 - 20:00)
   const barChartData = useMemo(() => {
-    const hourlyData = trafficData?.todayHourly ?? Array(24).fill(0);
+    const hourlyData = isToday
+      ? (trafficData?.todayHourly ?? Array(24).fill(0))
+      : (trafficData?.yesterdayHourly ?? Array(24).fill(0));
     return Array.from({ length: 13 }, (_, i) => {
       const hourNum = i + 8; // dalle 08:00 alle 20:00
       return {
@@ -163,7 +179,7 @@ export function PremiumDashboard({
         Visite: hourlyData[hourNum] ?? 0,
       };
     });
-  }, [trafficData]);
+  }, [isToday, trafficData]);
 
   // Utilizziamo i dati storici reali passati dal server
   const appointmentsSparkline = useMemo(() => adminStats.appointmentsHistory ?? Array(6).fill(0), [adminStats.appointmentsHistory]);
@@ -182,44 +198,78 @@ export function PremiumDashboard({
   const visitsSparkline = visitsHistoryReal;
   const customersSparkline = useMemo(() => adminStats.customersHistory ?? Array(6).fill(0), [adminStats.customersHistory]);
 
-  // Funzione per calcolare il trend reale rispetto a ieri
-  const getTrendLabel = useCallback((history: number[]) => {
-    if (!history || history.length < 2) return '0%';
-    const todayVal = history[history.length - 1];
-    const yesterdayVal = history[history.length - 2];
-    if (yesterdayVal === 0) {
-      return todayVal > 0 ? `+${todayVal * 100}%` : '0%';
+  // Calcola il trend percentuale dinamico rispetto al giorno precedente (in base a oggi o ieri)
+  const getTrendLabelForPeriod = useCallback((history: number[], isTodayMode: boolean) => {
+    if (!history || history.length < 3) return '0%';
+    const currentVal = isTodayMode ? history[history.length - 1] : history[history.length - 2];
+    const prevVal = isTodayMode ? history[history.length - 2] : history[history.length - 3];
+    if (prevVal === 0) {
+      return currentVal > 0 ? `+${currentVal * 100}%` : '0%';
     }
-    const pct = Math.round(((todayVal - yesterdayVal) / yesterdayVal) * 100);
+    const pct = Math.round(((currentVal - prevVal) / prevVal) * 100);
     return pct >= 0 ? `+${pct}%` : `${pct}%`;
   }, []);
 
-  const appointmentsTrend = useMemo(() => getTrendLabel(appointmentsSparkline), [appointmentsSparkline, getTrendLabel]);
-  const revenueTrend = useMemo(() => getTrendLabel(adminStats.revenueHistory ?? []), [adminStats.revenueHistory, getTrendLabel]);
-  const visitsTrend = useMemo(() => getTrendLabel(visitsSparkline), [visitsSparkline, getTrendLabel]);
-  const customersTrend = useMemo(() => getTrendLabel(customersSparkline), [customersSparkline, getTrendLabel]);
+  const appointmentsTrend = useMemo(() => getTrendLabelForPeriod(appointmentsSparkline, isToday), [appointmentsSparkline, isToday, getTrendLabelForPeriod]);
+  const revenueTrend = useMemo(() => getTrendLabelForPeriod(adminStats.revenueHistory ?? [], isToday), [adminStats.revenueHistory, isToday, getTrendLabelForPeriod]);
+  const visitsTrend = useMemo(() => getTrendLabelForPeriod(visitsSparkline, isToday), [visitsSparkline, isToday, getTrendLabelForPeriod]);
+  const customersTrend = useMemo(() => getTrendLabelForPeriod(customersSparkline, isToday), [customersSparkline, isToday, getTrendLabelForPeriod]);
 
   return (
     <div className="space-y-6">
+      {/* ── SELETTORE PERIODO ────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-white">
+            {isToday ? 'Analisi di Oggi' : 'Analisi di Ieri'}
+          </h2>
+          <p className="text-xs text-white/50">
+            {isToday ? 'Dati e traffico in tempo reale del salone' : 'Riepilogo delle statistiche consolidate di ieri'}
+          </p>
+        </div>
+        <div className="flex self-start sm:self-center rounded-xl bg-[#161616] p-1 border border-white/5 shrink-0">
+          <button
+            onClick={() => setSelectedPeriod('oggi')}
+            className={`rounded-lg px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
+              isToday
+                ? 'bg-gold text-black shadow-md'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            Oggi
+          </button>
+          <button
+            onClick={() => setSelectedPeriod('ieri')}
+            className={`rounded-lg px-4 py-1.5 text-xs font-semibold uppercase tracking-wider transition-all duration-300 ${
+              !isToday
+                ? 'bg-gold text-black shadow-md'
+                : 'text-white/60 hover:text-white'
+            }`}
+          >
+            Ieri
+          </button>
+        </div>
+      </div>
+
       {/* ── SEZIONE 1: 4 KPI CARD CON SPARKLINE ────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
-          title="Appuntamenti Oggi"
-          value={adminStats.appointmentsToday}
+          title={appointmentsTitle}
+          value={appointmentsCount}
           trend={appointmentsTrend}
           icon={Calendar}
           sparklineData={appointmentsSparkline}
         />
         <KpiCard
-          title="Incasso Oggi"
-          value={formatPrice(adminStats.revenueToday)}
+          title={revenueTitle}
+          value={formatPrice(revenueCount)}
           trend={revenueTrend}
           icon={DollarSign}
           sparklineData={revenueSparkline}
         />
         <KpiCard
-          title="Visite Oggi"
-          value={visitsToday}
+          title={visitsTitle}
+          value={visitsCount}
           trend={visitsTrend}
           icon={TrendingUp}
           sparklineData={visitsSparkline}
@@ -294,9 +344,9 @@ export function PremiumDashboard({
           
           <div>
             <h3 className="font-display text-lg uppercase text-gold">Visite per Fascia Oraria</h3>
-            <p className="text-xs text-white/40 mt-1">Visualizzazioni del sito registrate oggi tra le 08:00 e le 20:00</p>
+            <p className="text-xs text-white/40 mt-1">Visualizzazioni del sito registrate {isToday ? 'oggi' : 'ieri'} tra le 08:00 e le 20:00</p>
           </div>
-
+ 
           <div className="mt-6 h-64 w-full text-xs">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -333,29 +383,33 @@ export function PremiumDashboard({
             </ResponsiveContainer>
           </div>
         </div>
-
+ 
         {/* Prossimi appuntamenti in arrivo (1/3) */}
         <div className="rounded-xl border border-white/10 bg-[#111] p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
           
           <div>
-            <h3 className="font-display text-lg uppercase text-gold">Appuntamenti in Arrivo</h3>
-            <p className="text-xs text-white/40 mt-1">Le prossime prenotazioni da saldare in sede oggi</p>
+            <h3 className="font-display text-lg uppercase text-gold">
+              {isToday ? 'Appuntamenti in Arrivo' : 'Appuntamenti di Ieri'}
+            </h3>
+            <p className="text-xs text-white/40 mt-1">
+              {isToday ? 'Le prossime prenotazioni da saldare in sede oggi' : 'Gli ultimi appuntamenti svolti nella giornata di ieri'}
+            </p>
           </div>
-
-          <div className="mt-5 flex-1 divide-y divide-white/5">
-            {upcomingAppointments.length === 0 ? (
+ 
+          <div className="mt-5 flex-1 divide-y divide-white/5 max-h-[360px] overflow-y-auto pr-1 admin-modal-scroll">
+            {(isToday ? upcomingAppointments : (yesterdayAppointments ?? [])).length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center text-white/40 py-8">
                 <UserCheck className="h-8 w-8 text-white/20 mb-2" />
-                <p className="text-sm font-medium">Nessun appuntamento imminente</p>
+                <p className="text-sm font-medium">Nessun appuntamento registrato</p>
               </div>
             ) : (
-              upcomingAppointments.map((appointment) => {
+              (isToday ? upcomingAppointments : (yesterdayAppointments ?? [])).map((appointment) => {
                 const startsAt = parseISO(appointment.starts_at);
                 const initials = getInitials(appointment.customer_name);
                 const timeLabel = format(startsAt, "HH:mm");
                 const dateLabel = format(startsAt, "d MMM", { locale: it });
-
+ 
                 return (
                   <div key={appointment.id} className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0 hover:bg-white/[0.01] transition-all px-1 rounded-lg">
                     <div className="flex items-center gap-3 min-w-0">

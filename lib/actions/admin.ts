@@ -202,6 +202,28 @@ export async function getUpcomingAdminAppointments(limit = 200) {
   return data ?? [];
 }
 
+export async function getYesterdayAdminAppointments(limit = 200) {
+  await requireAdmin();
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const { data } = await supabase
+    .from('appointments')
+    .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
+    .in('status', ['confirmed', 'completed'])
+    .gte('starts_at', yesterday.toISOString())
+    .lt('starts_at', today.toISOString())
+    .order('starts_at', { ascending: true })
+    .limit(limit);
+
+  return data ?? [];
+}
+
 export async function createAdminAppointment(input: AdminAppointmentInput): Promise<CreateAdminAppointmentResult> {
   await requireAdmin();
   const supabase = await createServiceClient();
