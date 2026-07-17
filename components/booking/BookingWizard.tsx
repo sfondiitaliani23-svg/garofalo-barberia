@@ -24,6 +24,8 @@ import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
+import { SITE_CONFIG } from '@/lib/site-config';
+import { Calendar, CheckCircle2, Clock, MapPin, CreditCard, Star, ArrowRight, User } from 'lucide-react';
 
 interface BookingWizardProps {
   services: Service[];
@@ -43,6 +45,7 @@ interface AppliedPromotion {
 }
 
 interface BookingConfirmation {
+  appointmentId?: string;
   serviceName: string;
   barberName: string;
   date: string;
@@ -294,6 +297,7 @@ export function BookingWizard({
         }
 
         setConfirmation({
+          appointmentId: result.appointmentId,
           serviceName: result.serviceName ?? selectedServices.map((s) => s.name).join(' + '),
           barberName:
             result.barberName ??
@@ -312,40 +316,166 @@ export function BookingWizard({
     });
   }
 
-  useEffect(() => {
-    if (!confirmation) return;
-    const timer = setTimeout(() => router.push('/'), 5000);
-    return () => clearTimeout(timer);
-  }, [confirmation, router]);
+  const getGoogleCalendarUrl = useCallback(() => {
+    if (!confirmation) return '';
+    try {
+      const [year, month, day] = confirmation.date.split('-').map(Number);
+      const [hour, minute] = confirmation.time.split(':').map(Number);
+      
+      const start = new Date(year, month - 1, day, hour, minute);
+      const end = new Date(start.getTime() + totalDuration * 60 * 1000);
+      
+      const formatGCalDate = (d: Date) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(d.getDate()).padStart(2, '0');
+        const h = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        const s = String(d.getSeconds()).padStart(2, '0');
+        return `${y}${m}${dayStr}T${h}${min}${s}`;
+      };
+      
+      const dates = `${formatGCalDate(start)}/${formatGCalDate(end)}`;
+      const text = encodeURIComponent('Appuntamento @ Barberia Garofalo');
+      const details = encodeURIComponent(
+        `Dettagli prenotazione:\n💈 Servizi: ${confirmation.serviceName}\n👤 Barbiere: ${confirmation.barberName}\n⏱️ Durata: ${totalDuration} min\n💶 Prezzo: ${formatPrice(confirmation.priceCents)}\n\n📍 Indirizzo: ${SITE_CONFIG.address}`
+      );
+      const location = encodeURIComponent(SITE_CONFIG.address);
+      
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}&ctz=Europe/Rome`;
+    } catch (err) {
+      console.error('Errore nella generazione del link Google Calendar', err);
+      return '';
+    }
+  }, [confirmation, totalDuration]);
 
   if (confirmation) {
     return (
-      <div className="mx-auto w-full min-w-0 max-w-3xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gold">Prenotazione confermata</CardTitle>
-            <p className="text-sm text-white/50">
-              Ti invieremo un promemoria 6 ore prima via WhatsApp ed email (se indicata). A breve torni alla home.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 text-sm space-y-2">
-              <p><strong>Servizio:</strong> {confirmation.serviceName}</p>
+      <div className="mx-auto w-full min-w-0 max-w-3xl px-4 sm:px-0">
+        <Card className="border-gold/30 bg-[#161616] text-white">
+          <CardContent className="p-6 sm:p-8 space-y-0">
+            {/* Header / Stato */}
+            <div className="flex flex-col items-center text-center pb-6 border-b border-white/10">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-4 animate-pulse">
+                <CheckCircle2 className="h-9 w-9" />
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full mb-3">
+                Prenotazione confermata
+              </p>
+              <h2 className="text-2xl font-display uppercase font-bold text-gold tracking-wide">
+                {SITE_CONFIG.name}
+              </h2>
+              <p className="text-xs text-white/40 mt-1 font-mono">
+                {confirmation.appointmentId ? `Rif: #${confirmation.appointmentId.replace('appointment_', '').substring(0, 10).toUpperCase()}` : 'Confermato'}
+              </p>
+              
+              <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-white/80">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4.5 w-4.5 text-gold" />
+                  <span>
+                    {format(parseISO(confirmation.date), "EEEE d MMMM yyyy", { locale: it })} alle {confirmation.time}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4.5 w-4.5 text-gold" />
+                  <span>{formatDuration(totalDuration)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Azioni Principali: Google Calendar */}
+            <div className="py-6 border-b border-white/10">
+              <a
+                href={getGoogleCalendarUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full border border-gold/50 text-gold hover:bg-gold hover:text-black flex items-center justify-center gap-2.5 py-3 px-4 rounded-lg font-semibold transition-all shadow-md cursor-pointer text-center"
+              >
+                <Calendar className="h-5 w-5 shrink-0" />
+                Aggiungi a Google Calendar
+              </a>
+            </div>
+
+            {/* Dettagli della prenotazione */}
+            <div className="py-6 border-b border-white/10">
+              <h3 className="text-base font-bold uppercase tracking-wider text-gold mb-4">
+                Dettagli della prenotazione
+              </h3>
+              <div className="space-y-4">
+                {selectedServices.map((service) => (
+                  <div key={service.id} className="flex justify-between items-start gap-4">
+                    <div>
+                      <h4 className="font-semibold text-white text-base">{service.name}</h4>
+                      <div className="flex items-center gap-1.5 text-sm text-white/50 mt-1">
+                        <User className="h-3.5 w-3.5 text-gold/70" />
+                        <span>Con {confirmation.barberName}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-white/40 mt-0.5">
+                        <Clock className="h-3 w-3" />
+                        <span>{formatDuration(service.duration_minutes)}</span>
+                      </div>
+                    </div>
+                    <span className="font-bold text-white text-base shrink-0">
+                      {formatPrice(service.price_cents)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Totale */}
+            <div className="py-6 border-b border-white/10 space-y-2">
               {confirmation.discountCents > 0 ? (
                 <>
-                  <p><strong>Prezzo:</strong> <span className="line-through text-white/40">{formatPrice(confirmation.originalPriceCents)}</span> {formatPrice(confirmation.priceCents)}</p>
-                  <p><strong>Sconto:</strong> -{formatPrice(confirmation.discountCents)}{confirmation.promotionTitle ? ` (${confirmation.promotionTitle})` : ''}</p>
+                  <div className="flex justify-between text-sm text-white/60">
+                    <span>Prezzo originale</span>
+                    <span className="line-through">{formatPrice(confirmation.originalPriceCents)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-emerald-400 font-medium">
+                    <span>Sconto {confirmation.promotionTitle ? `(${confirmation.promotionTitle})` : ''}</span>
+                    <span>-{formatPrice(confirmation.discountCents)}</span>
+                  </div>
                 </>
-              ) : (
-                <p><strong>Prezzo:</strong> {formatPrice(confirmation.priceCents)}</p>
-              )}
-              <p><strong>Data:</strong> {format(parseISO(confirmation.date), "EEEE d MMMM yyyy", { locale: it })} alle {confirmation.time}</p>
-              <p><strong>Barbiere:</strong> {confirmation.barberName}</p>
-              <p><strong>Nome:</strong> {confirmation.customerName}</p>
+              ) : null}
+              <div className="flex justify-between items-center text-lg font-bold text-white pt-1">
+                <span>Totale</span>
+                <span className="text-gold text-2xl font-extrabold">{formatPrice(confirmation.priceCents)}</span>
+              </div>
             </div>
-            <Button className="w-full" onClick={() => router.push('/')}>
-              Torna alla home
-            </Button>
+
+            {/* Metodo di Pagamento */}
+            <div className="py-6 border-b border-white/10">
+              <div className="flex items-start gap-3 rounded-lg border border-gold/20 bg-gold/5 p-4">
+                <CreditCard className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs text-gold uppercase tracking-wider font-bold">Metodo di pagamento</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">Paga direttamente in salone</p>
+                  <p className="text-xs text-white/50 mt-1 leading-relaxed">
+                    Nessun pagamento anticipato. Salderai il conto in sede dopo il servizio (contanti, bancomat o carta).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Recensioni */}
+            <div className="py-6 text-center border-b border-white/10">
+              <a
+                href={SITE_CONFIG.googleReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 text-gold hover:text-gold/80 hover:underline transition-all py-1 font-semibold text-sm"
+              >
+                <Star className="h-5 w-5 fill-gold text-gold shrink-0" />
+                Lasciaci una recensione su Google
+              </a>
+            </div>
+
+            {/* Bottone Home */}
+            <div className="pt-6">
+              <Button className="w-full cursor-pointer py-6 font-bold" onClick={() => router.push('/')}>
+                Torna alla home
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
