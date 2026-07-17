@@ -55,10 +55,19 @@ export function GalleryGrid() {
     return () => document.removeEventListener('keydown', onKey);
   }, [activeIdx]);
 
-  // Blocca scroll body quando aperto
+  // Blocca scroll body e html quando aperto
   useEffect(() => {
-    document.body.style.overflow = activeIdx !== null ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (activeIdx !== null) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
   }, [activeIdx]);
 
   const openLightbox = useCallback((globalIdx: number) => {
