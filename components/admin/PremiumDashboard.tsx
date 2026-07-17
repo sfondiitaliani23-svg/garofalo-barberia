@@ -49,21 +49,12 @@ interface PremiumDashboardProps {
     revenueToday: number;
     revenueWeek: number;
     totalCustomers: number;
+    appointmentsHistory: number[];
+    revenueHistory: number[];
+    customersHistory: number[];
   };
   upcomingAppointments: CalendarAppointment[];
 }
-
-// Genera dati fittizi ma realistici per gli sparkline in base ai valori attuali
-const getSparklineData = (val: number, multiplier = 1.1) => {
-  return [
-    Math.round(val * 0.7 * multiplier),
-    Math.round(val * 0.85 * multiplier),
-    Math.round(val * 0.65 * multiplier),
-    Math.round(val * 0.95 * multiplier),
-    Math.round(val * 0.8 * multiplier),
-    Math.round(val * val * 0.05 + val), // andamento in crescita
-  ];
-};
 
 function getInitials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -153,7 +144,6 @@ export function PremiumDashboard({
 
   // Calcola il tasso di occupazione odierno: assume max 48 slot per oggi (es: 3 barbieri * 16 appuntamenti)
   const occupancyRate = useMemo(() => {
-    if (adminStats.appointmentsToday === 0) return 68; // default mockup visuale in mancanza di dati
     const capacity = 48; // capacità teorica
     return Math.min(100, Math.round((adminStats.appointmentsToday / capacity) * 100));
   }, [adminStats.appointmentsToday]);
@@ -175,11 +165,39 @@ export function PremiumDashboard({
     });
   }, [trafficData]);
 
-  // Definiamo i dati statici degli sparklines per dare stabilità visiva
-  const appointmentsSparkline = useMemo(() => getSparklineData(adminStats.appointmentsToday, 1.2), [adminStats.appointmentsToday]);
-  const revenueSparkline = useMemo(() => getSparklineData(adminStats.revenueToday / 100, 1.05), [adminStats.revenueToday]);
-  const visitsSparkline = useMemo(() => getSparklineData(visitsToday, 0.95), [visitsToday]);
-  const customersSparkline = useMemo(() => getSparklineData(adminStats.totalCustomers, 1.1), [adminStats.totalCustomers]);
+  // Utilizziamo i dati storici reali passati dal server
+  const appointmentsSparkline = useMemo(() => adminStats.appointmentsHistory ?? Array(6).fill(0), [adminStats.appointmentsHistory]);
+  const revenueSparkline = useMemo(() => (adminStats.revenueHistory ?? Array(6).fill(0)).map(r => r / 100), [adminStats.revenueHistory]);
+  
+  // Per le visite, ricaviamo i dati live o storici
+  const visitsHistoryReal = useMemo(() => {
+    if (trafficData) {
+      const hist = [...(initialStats.visitsHistory ?? Array(6).fill(0))];
+      hist[hist.length - 1] = trafficData.todayTotal;
+      return hist;
+    }
+    return initialStats.visitsHistory ?? Array(6).fill(0);
+  }, [trafficData, initialStats.visitsHistory]);
+
+  const visitsSparkline = visitsHistoryReal;
+  const customersSparkline = useMemo(() => adminStats.customersHistory ?? Array(6).fill(0), [adminStats.customersHistory]);
+
+  // Funzione per calcolare il trend reale rispetto a ieri
+  const getTrendLabel = useCallback((history: number[]) => {
+    if (!history || history.length < 2) return '0%';
+    const todayVal = history[history.length - 1];
+    const yesterdayVal = history[history.length - 2];
+    if (yesterdayVal === 0) {
+      return todayVal > 0 ? `+${todayVal * 100}%` : '0%';
+    }
+    const pct = Math.round(((todayVal - yesterdayVal) / yesterdayVal) * 100);
+    return pct >= 0 ? `+${pct}%` : `${pct}%`;
+  }, []);
+
+  const appointmentsTrend = useMemo(() => getTrendLabel(appointmentsSparkline), [appointmentsSparkline, getTrendLabel]);
+  const revenueTrend = useMemo(() => getTrendLabel(adminStats.revenueHistory ?? []), [adminStats.revenueHistory, getTrendLabel]);
+  const visitsTrend = useMemo(() => getTrendLabel(visitsSparkline), [visitsSparkline, getTrendLabel]);
+  const customersTrend = useMemo(() => getTrendLabel(customersSparkline), [customersSparkline, getTrendLabel]);
 
   return (
     <div className="space-y-6">
@@ -188,28 +206,28 @@ export function PremiumDashboard({
         <KpiCard
           title="Appuntamenti Oggi"
           value={adminStats.appointmentsToday}
-          trend="+12%"
+          trend={appointmentsTrend}
           icon={Calendar}
           sparklineData={appointmentsSparkline}
         />
         <KpiCard
           title="Incasso Oggi"
           value={formatPrice(adminStats.revenueToday)}
-          trend="+8%"
+          trend={revenueTrend}
           icon={DollarSign}
           sparklineData={revenueSparkline}
         />
         <KpiCard
           title="Visite Oggi"
           value={visitsToday}
-          trend="+16%"
+          trend={visitsTrend}
           icon={TrendingUp}
           sparklineData={visitsSparkline}
         />
         <KpiCard
           title="Clienti Totali"
           value={adminStats.totalCustomers}
-          trend="+7%"
+          trend={customersTrend}
           icon={Users}
           sparklineData={customersSparkline}
         />

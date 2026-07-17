@@ -32,6 +32,7 @@ export type AnalyticsStats = {
   liveVisitors: number;
   genderBreakdown: Record<Gender, number>;
   ageBreakdown: Record<AgeRange, number>;
+  visitsHistory?: number[];
 };
 
 function emptyStats(): AnalyticsStats {
@@ -52,6 +53,7 @@ function emptyStats(): AnalyticsStats {
       '55_plus': 0,
       unknown: 0,
     },
+    visitsHistory: [0, 0, 0, 0, 0, 0],
   };
 }
 
@@ -214,6 +216,25 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
     ageBreakdown[ageRange] = breakdownCounts[genderKeys.length + index]?.count ?? 0;
   });
 
+  const dateKeys: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    dateKeys.push(getRomeDateKey(d));
+  }
+
+  const visitsHistory = dateKeys.map(key => {
+    let count = 0;
+    if (allViews) {
+      for (const view of allViews) {
+        if (getRomeDateKey(new Date(view.viewed_at)) === key) {
+          count++;
+        }
+      }
+    }
+    return count;
+  });
+
   return {
     configured: true,
     dailyVisits: dailyVisits ?? 0,
@@ -223,6 +244,7 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
     liveVisitors,
     genderBreakdown,
     ageBreakdown,
+    visitsHistory,
   };
 }
 

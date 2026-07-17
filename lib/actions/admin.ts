@@ -52,7 +52,7 @@ function revalidateAppointmentPaths() {
 export async function getAdminStats() {
   await requireAdmin();
   const supabase = await createClient();
-  if (!supabase) return { appointmentsToday: 0, revenueToday: 0, revenueWeek: 0, totalCustomers: 0 };
+  if (!supabase) return { appointmentsToday: 0, revenueToday: 0, revenueWeek: 0, totalCustomers: 0, appointmentsHistory: [], revenueHistory: [], customersHistory: [] };
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -60,12 +60,16 @@ export async function getAdminStats() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
+  const sixDaysAgo = new Date(today);
+  sixDaysAgo.setDate(sixDaysAgo.getDate() - 5);
 
   const [
     { count: todayCount },
     { data: todayAppointments },
     { data: weekAppointments },
     { count: customerCount },
+    { data: recentAppointments },
+    { data: recentCustomers },
   ] = await Promise.all([
     supabase
       .from('appointments')
@@ -88,6 +92,18 @@ export async function getAdminStats() {
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .eq('role', 'customer'),
+    supabase
+      .from('appointments')
+      .select('starts_at, discount_cents, service:services(price_cents)')
+      .in('status', ['confirmed', 'completed'])
+      .gte('starts_at', sixDaysAgo.toISOString())
+      .lt('starts_at', tomorrow.toISOString()),
+    supabase
+      .from('profiles')
+      .select('created_at')
+      .eq('role', 'customer')
+      .gte('created_at', sixDaysAgo.toISOString())
+      .lt('created_at', tomorrow.toISOString()),
   ]);
 
   const sumRevenue = (rows: { discount_cents: number | null; service: { price_cents: number } | { price_cents: number }[] | null }[]) =>
@@ -101,11 +117,48 @@ export async function getAdminStats() {
   const todayRevenue = sumRevenue(todayAppointments ?? []);
   const weekRevenue = sumRevenue(weekAppointments ?? []);
 
+  // Elaborazione dei dati storici reali per gli ultimi 6 giorni
+  const getRomeDateKey = (date: Date) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Europe/Rome',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    }).formatToParts(date);
+    const getV = (t: string) => parts.find(p => p.type === t)?.value ?? '0';
+    return `${getV('year')}-${getV('month').padStart(2, '0')}-${getV('day').padStart(2, '0')}`;
+  };
+
+  const dateKeys: string[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    dateKeys.push(getRomeDateKey(d));
+  }
+
+  const appointmentsHistory = dateKeys.map((key) => {
+    const dayApts = recentAppointments?.filter((apt) => getRomeDateKey(new Date(apt.starts_at)) === key) ?? [];
+    return dayApts.length;
+  });
+
+  const revenueHistory = dateKeys.map((key) => {
+    const dayApts = recentAppointments?.filter((apt) => getRomeDateKey(new Date(apt.starts_at)) === key) ?? [];
+    return sumRevenue(dayApts);
+  });
+
+  const customersHistory = dateKeys.map((key) => {
+    const dayCustomers = recentCustomers?.filter((c) => getRomeDateKey(new Date(c.created_at)) === key) ?? [];
+    return dayCustomers.length;
+  });
+
   return {
     appointmentsToday: todayCount ?? 0,
     revenueToday: todayRevenue,
     revenueWeek: weekRevenue,
     totalCustomers: customerCount ?? 0,
+    appointmentsHistory,
+    revenueHistory,
+    customersHistory,
   };
 }
 
