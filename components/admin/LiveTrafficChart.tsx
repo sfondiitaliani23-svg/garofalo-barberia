@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -163,10 +163,20 @@ export function LiveTrafficChart({
       {/* Area Grafico */}
       <div className="mt-6 h-64 w-full text-xs">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+          <AreaChart
             data={chartData}
             margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
           >
+            <defs>
+              <linearGradient id="colorOggi" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#c5a859" stopOpacity={0.4}/>
+                <stop offset="95%" stopColor="#c5a859" stopOpacity={0}/>
+              </linearGradient>
+              <linearGradient id="colorIeri" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="rgba(255, 255, 255, 0.15)" stopOpacity={0.15}/>
+                <stop offset="95%" stopColor="rgba(255, 255, 255, 0.15)" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.05)" vertical={false} />
             <XAxis
               dataKey="hourNum"
@@ -193,28 +203,28 @@ export function LiveTrafficChart({
               }}
               labelFormatter={(label) => `${label}:00`}
             />
-            {/* Linea Ieri (Dotted) */}
-            <Line
+            {/* Area Ieri (Tratteggiata, grigio/bianco trasparente) */}
+            <Area
               type="monotone"
               dataKey="Ieri"
               stroke="rgba(255, 255, 255, 0.25)"
               strokeWidth={2}
               strokeDasharray="5 5"
-              dot={false}
-              activeDot={{ r: 4 }}
+              fillOpacity={1}
+              fill="url(#colorIeri)"
               isAnimationActive={false}
             />
-            {/* Linea Oggi (Solid Gold) — isAnimationActive=false per evitare flicker sui live update */}
-            <Line
+            {/* Area Oggi (Solido Oro a gradiente) */}
+            <Area
               type="monotone"
               dataKey="Oggi"
-              stroke="#d4af37"
+              stroke="#c5a859"
               strokeWidth={3}
-              dot={false}
-              activeDot={{ r: 6, fill: '#d4af37', strokeWidth: 0 }}
+              fillOpacity={1}
+              fill="url(#colorOggi)"
               isAnimationActive={false}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
