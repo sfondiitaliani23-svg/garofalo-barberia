@@ -134,7 +134,7 @@ export function PremiumDashboard({
   upcomingAppointments,
   yesterdayAppointments,
 }: PremiumDashboardProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<'oggi' | 'ieri'>('oggi');
+  const [selectedPeriod, setSelectedPeriod] = useState<'oggi' | 'ieri'>('ieri');
   const [trafficData, setTrafficData] = useState<LiveTrafficData | null>(null);
 
   // Gestione dell'aggiornamento real-time dei dati di traffico dal componente figlio
