@@ -105,8 +105,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <HomeTicker />
-
       <AnimatedDivider variant="wide" className="section-divider-esperienza" />
 
       <section className="section section-white section-esperienza">
@@ -243,6 +241,8 @@ export default function HomePage() {
           <NewsletterForm />
         </div>
       </section>
+
+      <HomeTicker />
     </div>
   );
 }
