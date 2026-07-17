@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { CookiePreferencesButton } from '@/components/layout/CookiePreferencesButton';
 
 function PhoneIcon() {
   return (
@@ -126,16 +127,7 @@ export function SiteFooter() {
             Privacy Policy
           </Link>
           <span>•</span>
-          <button
-            type="button"
-            onClick={() => {
-              localStorage.removeItem('garofalo_cookie_consent');
-              window.dispatchEvent(new CustomEvent('garofalo:cookie-consent'));
-            }}
-            className="hover:text-gold-light underline bg-transparent border-none p-0 cursor-pointer text-xs text-white/40 font-medium"
-          >
-            Preferenze Cookie
-          </button>
+          <CookiePreferencesButton />
         </p>
         <p>
           Sito creato interamente da Eliseo Miraglia (IG.{' '}

@@ -296,7 +296,7 @@ export function PremiumDashboard({
           
           <div>
             <h3 className="font-display text-lg uppercase text-gold">Tasso di Occupazione</h3>
-            <p className="text-xs text-white/40 mt-1">Appuntamenti occupati vs slot disponibili oggi</p>
+            <p className="text-xs text-white/40 mt-1">Appuntamenti occupati vs slot disponibili {isToday ? 'oggi' : 'ieri'}</p>
           </div>
 
           <div className="relative flex items-center justify-center h-48 mt-4">
@@ -326,7 +326,7 @@ export function PremiumDashboard({
           <div className="mt-4 flex justify-center gap-6 text-xs border-t border-white/5 pt-4">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-gold"></span>
-              <span className="text-white/70">Prenotati ({adminStats.appointmentsToday} slot)</span>
+              <span className="text-white/70">Prenotati ({appointmentsCount} slot)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-white/10"></span>
