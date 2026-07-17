@@ -100,7 +100,7 @@ export function GalleryGrid() {
         height: currentRect.height,
         transition: `top ${FLIGHT_MS}ms ${EASING}, left ${FLIGHT_MS}ms ${EASING}, width ${FLIGHT_MS}ms ${EASING}, height ${FLIGHT_MS}ms ${EASING}`,
         zIndex: 9999,
-        borderRadius: flightTo ? '16px' : '8px',
+        borderRadius: '24px',
         overflow: 'hidden',
         pointerEvents: 'none',
       }
