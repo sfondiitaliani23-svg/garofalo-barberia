@@ -1409,7 +1409,7 @@
 .home-ticker-link {
   color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  font-family: 'Oswald', sans-serif;
+  font-family: var(--font-sans);
   font-size: clamp(0.9rem, 2vw, 1.25rem);
   text-transform: uppercase;
   letter-spacing: 0.15em;
