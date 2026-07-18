@@ -65,7 +65,7 @@ export default async function TutteLeRecensioniPage() {
             {allReviews.map((review, idx) => (
               <div
                 key={`${review.author}-${idx}`}
-                className="flex flex-col justify-between p-6 sm:p-8 rounded-2xl border border-white/10 bg-white/[0.02] shadow-xl hover:border-gold/30 hover:bg-white/[0.03] transition-all duration-300 relative group overflow-hidden"
+                className="flex flex-col justify-between p-6 sm:p-8 rounded-2xl border border-white/10 bg-white/[0.02] shadow-xl hover:shadow-[0_4px_22px_rgba(205,154,79,0.55)] hover:border-gold hover:bg-gradient-to-br hover:from-[#cd9a4f] hover:to-[#8f6520] transition-all duration-300 relative group overflow-hidden hover:-translate-y-0.5 cursor-default"
               >
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
@@ -76,23 +76,23 @@ export default async function TutteLeRecensioniPage() {
                       <Star
                         key={i}
                         size={16}
-                        className={i < (review.rating || 5) ? 'fill-gold text-gold' : 'text-white/20'}
+                        className={i < (review.rating || 5) ? 'fill-gold text-gold group-hover:fill-black group-hover:text-black transition-colors duration-300' : 'text-white/20 group-hover:text-black/25 transition-colors duration-300'}
                       />
                     ))}
                   </div>
 
                   {/* Comment */}
-                  <p className="text-white/80 text-sm sm:text-base leading-relaxed italic">
+                  <p className="text-white/80 text-sm sm:text-base leading-relaxed italic group-hover:text-black transition-colors duration-300">
                     &ldquo;{review.text}&rdquo;
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
-                  <span className="font-semibold text-xs text-gold uppercase tracking-wider">
+                <div className="mt-6 pt-4 border-t border-white/5 group-hover:border-black/10 flex items-center justify-between transition-colors duration-300">
+                  <span className="font-semibold text-xs text-gold uppercase tracking-wider group-hover:text-black/85 transition-colors duration-300">
                     {review.author}
                   </span>
                   {review.date && (
-                    <span className="text-[10px] text-white/40 uppercase tracking-widest">
+                    <span className="text-[10px] text-white/40 uppercase tracking-widest group-hover:text-black/60 transition-colors duration-300">
                       {review.date}
                     </span>
                   )}

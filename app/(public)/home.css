@@ -1227,12 +1227,25 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1.75rem;
   border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.review-card-lux:hover {
+  background: linear-gradient(135deg, #cd9a4f, #8f6520);
+  border-color: #cd9a4f;
+  box-shadow: 0 4px 22px rgba(205, 154, 79, 0.55);
+  transform: translateY(-2px);
 }
 
 .review-stars {
   color: var(--gold-light);
   margin-bottom: 1rem;
   letter-spacing: 2px;
+  transition: color 0.3s ease;
+}
+
+.review-card-lux:hover .review-stars {
+  color: #000000;
 }
 
 .review-text {
@@ -1240,12 +1253,22 @@
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.85);
   margin-bottom: 1rem;
+  transition: color 0.3s ease;
+}
+
+.review-card-lux:hover .review-text {
+  color: #000000;
 }
 
 .review-author {
   font-family: 'Montserrat', sans-serif;
   font-size: 0.85rem;
   color: rgba(255, 255, 255, 0.55);
+  transition: color 0.3s ease;
+}
+
+.review-card-lux:hover .review-author {
+  color: rgba(0, 0, 0, 0.7);
 }
 
 /* ─── Elementi Mobile Premium ─── */
