@@ -267,12 +267,12 @@ body {
   position: absolute;
   top: 0;
   left: -150%;
-  width: 50%;
+  width: 60%;
   height: 100%;
   background: linear-gradient(
     to right,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.45) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   transform: skewX(-25deg);
@@ -282,5 +282,5 @@ body {
 
 .review-card-lux:hover::after, .review-card-shine:hover::after {
   left: 150%;
-  transition: left 0.75s ease-in-out;
+  transition: left 1.3s ease-in-out;
 }
