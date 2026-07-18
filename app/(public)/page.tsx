@@ -10,6 +10,8 @@ import { PHOTO_STRIP, PRICE_LIST, REVIEWS } from '@/lib/data/homepage';
 import { getApprovedReviews } from '@/lib/actions/reviews';
 import './home.css';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   const dbReviews = await getApprovedReviews();
   const formattedDbReviews = dbReviews.map(r => ({
@@ -223,7 +225,13 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+            <Link
+              href="/recensioni"
+              className="btn-primary inline-block"
+            >
+              Tutte le recensioni
+            </Link>
             <Link
               href="/recensioni/nuova"
               className="btn-outline inline-block"
