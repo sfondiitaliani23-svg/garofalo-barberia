@@ -256,7 +256,7 @@ body {
   background: rgba(205, 154, 79, 0.8);
 }
 
-/* Effetto lucido riflettente su hover (glossy sheen sweep) */
+/* Effetto lucido riflettente su hover (glossy sheen sweep in loop) */
 .review-card-lux, .review-card-shine {
   position: relative;
   overflow: hidden;
@@ -277,10 +277,21 @@ body {
   );
   transform: skewX(-25deg);
   pointer-events: none;
-  transition: none;
+}
+
+@keyframes sheen-sweep {
+  0% {
+    left: -150%;
+  }
+  39.4% {
+    /* 1.3s su 3.3s totali (1.3s animazione + 2s pausa) */
+    left: 150%;
+  }
+  100% {
+    left: 150%;
+  }
 }
 
 .review-card-lux:hover::after, .review-card-shine:hover::after {
-  left: 150%;
-  transition: left 1.3s ease-in-out;
+  animation: sheen-sweep 3.3s infinite ease-in-out;
 }
