@@ -17,7 +17,7 @@ export async function getApprovedReviews() {
 
     const { data, error } = await supabase
       .from('reviews')
-      .select('*')
+      .select('comment, customer_name, rating, created_at')
       .eq('authorized_by_customer', true)
       .order('created_at', { ascending: false });
 
