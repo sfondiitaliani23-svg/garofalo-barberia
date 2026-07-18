@@ -283,8 +283,8 @@ body {
   0% {
     left: -150%;
   }
-  39.4% {
-    /* 1.3s su 3.3s totali (1.3s animazione + 2s pausa) */
+  46.4% {
+    /* 1.3s su 2.8s totali (1.3s animazione + 1.5s pausa) */
     left: 150%;
   }
   100% {
@@ -293,5 +293,5 @@ body {
 }
 
 .review-card-lux:hover::after, .review-card-shine:hover::after {
-  animation: sheen-sweep 3.3s infinite ease-in-out;
+  animation: sheen-sweep 2.8s infinite ease-in-out;
 }
