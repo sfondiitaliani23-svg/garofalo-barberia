@@ -147,7 +147,7 @@ export function ReviewForm({ defaultName = '' }: ReviewFormProps) {
           onChange={(e) => setComment(e.target.value)}
           required
           rows={4}
-          className="mt-1 flex w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 focus:border-gold/50 focus:outline-none focus:ring-0"
+          className="mt-1 flex w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 focus:border-gold/50 focus:outline-none focus:ring-0 admin-modal-scroll resize-y overflow-y-auto"
         />
       </div>
 
