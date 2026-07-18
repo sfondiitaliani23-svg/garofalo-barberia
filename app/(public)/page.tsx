@@ -7,9 +7,22 @@ import { PerfumeCardsGrid } from '@/components/home/PerfumeCardsGrid';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
 import { HomeTicker } from '@/components/home/HomeTicker';
 import { PHOTO_STRIP, PRICE_LIST, REVIEWS } from '@/lib/data/homepage';
+import { getApprovedReviews } from '@/lib/actions/reviews';
 import './home.css';
 
-export default function HomePage() {
+export default async function HomePage() {
+  const dbReviews = await getApprovedReviews();
+  const formattedDbReviews = dbReviews.map(r => ({
+    text: r.comment,
+    author: r.customer_name,
+    rating: r.rating
+  }));
+  
+  const allReviews = [
+    ...formattedDbReviews,
+    ...REVIEWS.map(r => ({ text: r.text, author: r.author, rating: 5 }))
+  ].slice(0, 6);
+
   return (
     <div className="home-page">
       <HomeClientEffects />
@@ -200,23 +213,23 @@ export default function HomePage() {
             <AnimatedDivider />
           </div>
           <div className="reviews-grid">
-            {REVIEWS.map((review) => (
-              <div key={review.author} className="review-card-lux">
-                <div className="review-stars">★★★★★</div>
+            {allReviews.map((review) => (
+              <div key={`${review.author}-${review.text.substring(0, 10)}`} className="review-card-lux">
+                <div className="review-stars">
+                  {'★'.repeat(review.rating || 5)}{'☆'.repeat(5 - (review.rating || 5))}
+                </div>
                 <p className="review-text">&ldquo;{review.text}&rdquo;</p>
                 <p className="review-author">{review.author}</p>
               </div>
             ))}
           </div>
           <div className="text-center mt-8">
-            <a
-              href="https://g.page/r/garofalobarberia/review"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-outline"
+            <Link
+              href="/recensioni/nuova"
+              className="btn-outline inline-block"
             >
               Lascia una recensione
-            </a>
+            </Link>
           </div>
         </div>
       </section>

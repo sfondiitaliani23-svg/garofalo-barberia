@@ -22,6 +22,7 @@ import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid'
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { formatPrice, formatDuration } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import type { Barber, Service } from '@/types/database';
 import type { CalendarAppointment } from '@/lib/utils/week-calendar';
 
@@ -114,6 +115,33 @@ export function AdminAppointmentForm({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Carica tutti i servizi della combo associati a questo appuntamento in modifica
+  useEffect(() => {
+    if (!appointment || !mounted) return;
+
+    const comboMatch = appointment.notes?.match(/\[Combo: (combo_[a-z0-9]+_\d+)\]/);
+    const comboId = comboMatch ? comboMatch[1] : null;
+
+    if (comboId) {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      async function loadComboServices() {
+        const { data } = await supabase!
+          .from('appointments')
+          .select('service_id, starts_at')
+          .like('notes', `%[Combo: ${comboId}]%`)
+          .order('starts_at', { ascending: true });
+
+        if (data && data.length > 0) {
+          const ids = data.map((item: any) => item.service_id);
+          setSelectedServiceIds(ids);
+        }
+      }
+      void loadComboServices();
+    }
+  }, [appointment, mounted]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -365,7 +393,7 @@ export function AdminAppointmentForm({
             />
           </div>
           <div>
-            <Label>Servizi * {!isEdit && <span className="text-xs text-white/40">(seleziona uno o più)</span>}</Label>
+            <Label>Servizi * <span className="text-xs text-white/40">(seleziona uno o più)</span></Label>
             <div className="admin-modal-scroll mt-2 grid max-h-44 gap-2 overflow-y-auto sm:grid-cols-2">
               {services.map((s) => {
                 const isSelected = selectedServiceIds.includes(s.id);
@@ -374,18 +402,14 @@ export function AdminAppointmentForm({
                     key={s.id}
                     type="button"
                     onClick={() => {
-                      if (isEdit) {
-                        setSelectedServiceIds([s.id]);
-                      } else {
-                        setSelectedServiceIds((prev) => {
-                          if (prev.includes(s.id)) {
-                            if (prev.length === 1) return prev;
-                            return prev.filter((id) => id !== s.id);
-                          } else {
-                            return [...prev, s.id];
-                          }
-                        });
-                      }
+                      setSelectedServiceIds((prev) => {
+                        if (prev.includes(s.id)) {
+                          if (prev.length === 1) return prev;
+                          return prev.filter((id) => id !== s.id);
+                        } else {
+                          return [...prev, s.id];
+                        }
+                      });
                       setTime('');
                     }}
                     className={cn(
@@ -399,23 +423,21 @@ export function AdminAppointmentForm({
                         {formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}
                       </p>
                     </div>
-                    {!isEdit && (
-                      <div className={cn(
-                        'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ml-2',
-                        isSelected ? 'border-gold bg-gold text-black' : 'border-white/30'
-                      )}>
-                        {isSelected && (
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="h-3 w-3">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                          </svg>
-                        )}
-                      </div>
-                    )}
+                    <div className={cn(
+                      'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ml-2',
+                      isSelected ? 'border-gold bg-gold text-black' : 'border-white/30'
+                    )}>
+                      {isSelected && (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="h-3.5 w-3.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </div>
                   </button>
                 );
               })}
             </div>
-            {!isEdit && selectedServiceIds.length > 1 && (
+            {selectedServiceIds.length > 1 && (
               <p className="mt-1.5 text-xs text-gold">
                 Selezionati: {selectedServiceIds.map(id => services.find(s => s.id === id)?.name).filter(Boolean).join(' + ')} (Durata totale: {formatDuration(totalServicesDuration)})
               </p>

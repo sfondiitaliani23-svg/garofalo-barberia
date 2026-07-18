@@ -30,6 +30,13 @@ export async function signInWithEmail(formData: FormData) {
     await ensureProfileForAuthUser(data.user);
   }
 
+  // Se abbiamo un qrSessionId nel form, colleghiamo la sessione a quel QR Code
+  const qrSessionId = formData.get('qrSessionId') as string | null;
+  if (qrSessionId && data?.session) {
+    const { authenticateQrSession } = await import('@/lib/actions/qr-auth');
+    await authenticateQrSession(qrSessionId, data.session.access_token, data.session.refresh_token);
+  }
+
   if (!redirectTo.startsWith('/admin')) {
     await setCustomerSessionExpiryCookie();
   }
@@ -46,7 +53,7 @@ export async function signUpWithEmail(formData: FormData) {
   const fullName = formData.get('full_name') as string;
   const phone = formData.get('phone') as string;
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -63,6 +70,13 @@ export async function signUpWithEmail(formData: FormData) {
     if (user) {
       await supabase.from('profiles').update({ phone, full_name: fullName }).eq('id', user.id);
     }
+  }
+
+  // Se abbiamo un qrSessionId nel form, colleghiamo la sessione a quel QR Code
+  const qrSessionId = formData.get('qrSessionId') as string | null;
+  if (qrSessionId && data?.session) {
+    const { authenticateQrSession } = await import('@/lib/actions/qr-auth');
+    await authenticateQrSession(qrSessionId, data.session.access_token, data.session.refresh_token);
   }
 
   await setCustomerSessionExpiryCookie();
@@ -167,4 +181,23 @@ export async function updateProfile(formData: FormData) {
   revalidatePath('/area-cliente/profilo');
   revalidatePath('/prenota');
   redirect('/area-cliente/profilo?saved=1');
+}
+
+export async function signInWithQrTokens(accessToken: string, refreshToken: string) {
+  const supabase = await createClient();
+  if (!supabase) return { error: 'Database non configurato' };
+
+  const { error } = await supabase.auth.setSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  await setCustomerSessionExpiryCookie();
+
+  revalidatePath('/', 'layout');
+  return { ok: true };
 }

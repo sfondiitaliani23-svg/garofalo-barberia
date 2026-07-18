@@ -98,14 +98,12 @@ export function AppointmentCard({
       {/* Azioni Past / Completed in stile Treatwell (Lascia Recensione + Prenota di Nuovo) */}
       {status === 'completed' && (
         <div className="mt-5 border-t border-white/5 pt-4 flex flex-wrap items-center justify-between gap-4">
-          <a
-            href="https://search.google.com/local/writereview?placeid=ChIJXXXX" // Link generico recensione Google
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/recensioni/nuova"
             className="text-xs font-bold text-gold hover:text-gold-light transition-colors underline decoration-gold/30 underline-offset-4"
           >
             Lascia una recensione (accumula 10 punti)
-          </a>
+          </Link>
           <Link
             href={`/prenota?service=${encodeURIComponent(serviceName)}`}
             className="inline-flex items-center justify-center rounded-lg border border-gold hover:bg-gold/15 text-gold font-semibold text-xs px-4 py-2.5 transition-all uppercase tracking-wider"

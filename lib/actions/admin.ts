@@ -373,7 +373,7 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
 
   const { data: existing } = await supabase
     .from('appointments')
-    .select('status')
+    .select('status, notes, customer_id')
     .eq('id', appointmentId)
     .single();
 
@@ -382,40 +382,87 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
     return { ok: false, error: 'Solo le prenotazioni confermate possono essere modificate' };
   }
 
-  const { data: service } = await supabase
+  const serviceIds = input.serviceIds || (input.serviceId ? [input.serviceId] : []);
+  if (serviceIds.length === 0) return { ok: false, error: 'Seleziona almeno un servizio.' };
+
+  const { data: services, error: servicesError } = await supabase
     .from('services')
-    .select('duration_minutes')
-    .eq('id', input.serviceId)
-    .single();
+    .select('*')
+    .in('id', serviceIds);
 
-  if (!service) return { ok: false, error: 'Servizio non trovato' };
+  if (servicesError || !services || services.length === 0) return { ok: false, error: 'Servizi non trovati' };
 
-  const startsAt = parseBookingDateTime(input.date, input.time);
-  const duration = input.customDurationMinutes && input.customDurationMinutes > 0
-    ? input.customDurationMinutes
-    : service.duration_minutes;
-  const endsAt = addMinutes(startsAt, duration);
+  // Ordina i servizi secondo l'input per consistenza
+  const orderedServices = serviceIds
+    .map((id) => services.find((s) => s.id === id))
+    .filter((s): s is typeof services[number] => !!s);
 
-  const { error } = await supabase
-    .from('appointments')
-    .update({
-      barber_id: input.barberId,
-      service_id: input.serviceId,
-      starts_at: startsAt.toISOString(),
-      ends_at: endsAt.toISOString(),
-      customer_name: input.customerName.trim(),
-      customer_phone: input.customerPhone?.trim() ?? '',
-      notes: input.notes?.trim() || null,
-      reminder_email_sent_at: null,
-      reminder_whatsapp_sent_at: null,
-    })
-    .eq('id', appointmentId);
+  const startsAtBase = parseBookingDateTime(input.date, input.time);
 
-  if (error) {
-    if (error.code === '23P01') {
-      return { ok: false, error: 'Questo orario è già occupato. Scegline un altro.' };
+  // Trova eventuale vecchio comboId da eliminare per intero
+  const comboMatch = existing.notes?.match(/\[Combo: (combo_[a-z0-9]+_\d+)\]/);
+  const comboIdToDelete = comboMatch ? comboMatch[1] : null;
+
+  if (comboIdToDelete) {
+    const { error: deleteError } = await supabase
+      .from('appointments')
+      .delete()
+      .like('notes', `%[Combo: ${comboIdToDelete}]%`);
+    if (deleteError) return { ok: false, error: 'Errore durante la modifica del combo esistente.' };
+  } else {
+    const { error: deleteError } = await supabase
+      .from('appointments')
+      .delete()
+      .eq('id', appointmentId);
+    if (deleteError) return { ok: false, error: 'Errore durante la modifica del vecchio appuntamento.' };
+  }
+
+  // Genera un nuovo comboId se ci sono più servizi
+  const newComboId = serviceIds.length > 1 ? `combo_${Math.random().toString(36).substring(2, 9)}_${Date.now()}` : null;
+  const insertedIds: string[] = [];
+  let currentStartsAt = startsAtBase;
+
+  for (let idx = 0; idx < orderedServices.length; idx++) {
+    const s = orderedServices[idx];
+    const duration = idx === 0 && input.customDurationMinutes && input.customDurationMinutes > 0
+      ? input.customDurationMinutes
+      : s.duration_minutes;
+    const currentEndsAt = addMinutes(currentStartsAt, duration);
+
+    const comboLabel = newComboId ? `[Combo: ${newComboId}]` : '';
+    const rowNotes = input.notes?.trim()
+      ? (comboLabel ? `${comboLabel} ${input.notes.trim()}` : input.notes.trim())
+      : (comboLabel || null);
+
+    const { data: appointment, error } = await supabase
+      .from('appointments')
+      .insert({
+        customer_id: existing.customer_id,
+        barber_id: input.barberId,
+        service_id: s.id,
+        starts_at: currentStartsAt.toISOString(),
+        ends_at: currentEndsAt.toISOString(),
+        status: 'confirmed',
+        customer_name: input.customerName.trim(),
+        customer_phone: input.customerPhone?.trim() ?? '',
+        notes: rowNotes,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('updateAdminAppointment insert failed at index', idx, error);
+      if (insertedIds.length > 0) {
+        await supabase.from('appointments').delete().in('id', insertedIds);
+      }
+      return {
+        ok: false,
+        error: error.code === '23P01' ? 'Questo orario è già occupato.' : 'Errore durante il salvataggio dei servizi modificati.',
+      };
     }
-    return { ok: false, error: 'Errore durante la modifica. Riprova.' };
+
+    insertedIds.push(appointment.id);
+    currentStartsAt = currentEndsAt;
   }
 
   revalidateAppointmentPaths();

@@ -87,16 +87,14 @@ function LoginFormInner({
           clearInterval(interval);
           setQrStatus('authenticated');
           
-          const { createClient } = await import('@/lib/supabase/client');
-          const supabase = createClient();
-          if (supabase) {
-            await supabase.auth.setSession({
-              access_token: res.accessToken,
-              refresh_token: res.refreshToken,
-            });
+          const { signInWithQrTokens } = await import('@/lib/actions/auth');
+          const serverRes = await signInWithQrTokens(res.accessToken, res.refreshToken);
+          if (serverRes.ok) {
             toast.success('Accesso autorizzato tramite QR Code!');
             router.push(redirect);
             router.refresh();
+          } else {
+            toast.error(serverRes.error || 'Errore di sincronizzazione della sessione');
           }
         } else if (res.status === 'expired') {
           clearInterval(interval);
@@ -277,6 +275,7 @@ function LoginFormInner({
           <>
             <form action={signInWithEmail} className="space-y-4">
               <input type="hidden" name="redirect" value={redirect} />
+              {qrSessionId && <input type="hidden" name="qrSessionId" value={qrSessionId} />}
               <div>
                 <Label htmlFor="email" className="text-xs text-white/70">Email</Label>
                 <Input 
