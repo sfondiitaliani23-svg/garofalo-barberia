@@ -204,6 +204,25 @@ npm run db:migrate   # Esegue migrazioni pendenti
 
 ---
 
+## 🚀 Ultime Funzionalità Implementate (Luglio 2026)
+
+Abbiamo aggiunto le seguenti funzionalità avanzate per migliorare l'esperienza utente e la stabilità del sistema:
+
+### 1. Doppia Scelta e Modifica Combo Appuntamenti (Admin)
+- **Selezione Multipla dei Servizi**: Il pannello admin per la creazione e la modifica degli appuntamenti supporta la selezione contemporanea di più servizi.
+- **Risoluzione Combo**: In fase di modifica, il sistema pre-seleziona automaticamente tutti i servizi collegati alla combo notes e li rischedula in sequenza temporale (back-to-back) sul calendario, prevenendo la frammentazione o sovrapposizioni orarie.
+
+### 2. Recensioni Real-Time su Supabase
+- **Tabella Database Dedicata**: Schema delle recensioni integrato in Supabase con Row Level Security (RLS) attiva per l'inserimento pubblico e la visibilità ristretta ai soli consensi.
+- **Modulo di Invio e Pagina Completa**: Introdotte le pagine `/recensioni/nuova` (per inviare la recensione con spunta di consenso) e `/recensioni` (per visualizzare l'archivio di tutti i commenti in un layout responsive a griglia).
+- **Animazione Premium**: Animazione hover dorata che attiva un riflesso lucido diagonale (sheen sweep) in loop infinito, con uno scorrimento di `1.3s` seguito da una pausa di `1.5s`.
+
+### 3. Sincronizzazione Login QR Code su PC
+- **Gestione Asincrona Server-side**: Collegamento del token QR delegato direttamente all'interno delle server actions `signInWithEmail`/`signUpWithEmail` del telefono prima del redirect, evitando l'interruzione della chiamata di rete sul cellulare.
+- **Sincronizzazione Cookie PC**: L'azione server `signInWithQrTokens` imposta immediatamente i cookie lato server sul browser del PC, garantendo un accesso istantaneo e sicuro alla dashboard senza respingimenti dal middleware.
+
+---
+
 ## 🌍 Deploy
 
 Il deploy avviene automaticamente su **Vercel** ad ogni push su `main`.
