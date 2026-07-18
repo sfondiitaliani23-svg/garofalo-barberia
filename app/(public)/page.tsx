@@ -21,7 +21,7 @@ export default async function HomePage() {
   const allReviews = [
     ...formattedDbReviews,
     ...REVIEWS.map(r => ({ text: r.text, author: r.author, rating: 5 }))
-  ].slice(0, 6);
+  ].slice(0, 3);
 
   return (
     <div className="home-page">
