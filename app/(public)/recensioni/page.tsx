@@ -24,10 +24,10 @@ export default async function TutteLeRecensioniPage() {
   const allReviews = formattedDbReviews;
 
   return (
-    <section className="py-16 min-h-[85vh] bg-black text-white">
+    <section className="pt-10 pb-16 min-h-[85vh] bg-black text-white">
       <div className="container-lux max-w-6xl px-4 mx-auto">
         {/* Navigation & Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
           <div className="space-y-2">
             <Link
               href="/"
@@ -51,7 +51,7 @@ export default async function TutteLeRecensioniPage() {
           </Link>
         </div>
 
-        <div className="mb-10">
+        <div className="mb-6">
           <AnimatedDivider />
         </div>
 
