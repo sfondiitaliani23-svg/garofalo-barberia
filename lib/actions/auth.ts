@@ -143,15 +143,22 @@ export async function updateProfile(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  const avatarUrl = formData.get('avatar_url') as string | null;
+  const updateData: any = {
+    full_name: formData.get('full_name') as string,
+    phone: formData.get('phone') as string,
+    hair_preferences: formData.get('hair_preferences') as string,
+    personal_notes: formData.get('personal_notes') as string,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (avatarUrl !== null) {
+    updateData.avatar_url = avatarUrl.trim() === '' ? null : avatarUrl;
+  }
+
   const { error } = await supabase
     .from('profiles')
-    .update({
-      full_name: formData.get('full_name') as string,
-      phone: formData.get('phone') as string,
-      hair_preferences: formData.get('hair_preferences') as string,
-      personal_notes: formData.get('personal_notes') as string,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq('id', user.id);
 
   if (error) redirect(`/area-cliente/profilo?error=${encodeURIComponent(error.message)}`);

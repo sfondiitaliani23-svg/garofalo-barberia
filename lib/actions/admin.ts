@@ -22,6 +22,7 @@ export interface AdminAppointmentInput {
   serviceIds?: string[]; // Nuovi ID per le combo
   barberId: string;
   date: string;
+  dates?: string[]; // Date arbitrarie multiple
   time: string;
   customerName: string;
   customerPhone?: string;
@@ -253,18 +254,22 @@ export async function createAdminAppointment(input: AdminAppointmentInput): Prom
   const totalOriginalPriceCents = orderedServices.reduce((acc, s) => acc + s.price_cents, 0);
   const combinedServiceNames = orderedServices.map((s) => s.name).join(' + ');
 
-  const recurrenceWeeks = input.recurrenceWeeks && input.recurrenceWeeks > 1 ? input.recurrenceWeeks : 1;
   const successes: string[] = [];
   const failures: { date: string; error: string }[] = [];
 
   let overallSuccess = false;
   let firstError = '';
 
-  for (let week = 0; week < recurrenceWeeks; week++) {
-    const baseDate = parseISO(input.date);
-    const currentWeekDate = addDays(baseDate, week * 7);
-    const dateStr = getShopDateString(currentWeekDate);
+  const recurrenceWeeks = input.recurrenceWeeks && input.recurrenceWeeks > 1 ? input.recurrenceWeeks : 1;
+  const targetDates = input.dates && input.dates.length > 0
+    ? input.dates
+    : Array.from({ length: recurrenceWeeks }).map((_, week) => {
+        const baseDate = parseISO(input.date);
+        const currentWeekDate = addDays(baseDate, week * 7);
+        return getShopDateString(currentWeekDate);
+      });
 
+  for (const dateStr of targetDates) {
     const startsAtBase = parseBookingDateTime(dateStr, input.time);
     const comboId = `combo_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
     const insertedIds: string[] = [];
@@ -334,14 +339,14 @@ export async function createAdminAppointment(input: AdminAppointmentInput): Prom
           notes: input.notes,
         });
       } catch (notifyError) {
-        console.error('createAdminAppointment notification failed for week', week, notifyError);
+        console.error('createAdminAppointment notification failed for date', dateStr, notifyError);
       }
     }
   }
 
   revalidateAppointmentPaths();
 
-  if (recurrenceWeeks > 1) {
+  if (targetDates.length > 1) {
     if (!overallSuccess) {
       return { ok: false, error: `Impossibile creare le prenotazioni. Errore: ${firstError}` };
     }

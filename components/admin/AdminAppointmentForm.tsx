@@ -49,13 +49,20 @@ export function AdminAppointmentForm({
   const isEdit = Boolean(appointment);
   const [barberId, setBarberId] = useState(defaultBarberId);
   const selectedBarber = barbers.find((b) => b.id === barberId);
-  const [serviceId, setServiceId] = useState(appointment?.service_id ?? services[0]?.id ?? '');
-  const selectedService = services.find((s) => s.id === serviceId);
-  const [date, setDate] = useState(
-    appointment
-      ? format(parseISO(appointment.starts_at), 'yyyy-MM-dd')
-      : initialDate ?? format(new Date(), 'yyyy-MM-dd')
-  );
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(() => {
+    if (appointment?.service_id) {
+      return [appointment.service_id];
+    }
+    return services[0] ? [services[0].id] : [];
+  });
+  const selectedService = services.find((s) => s.id === selectedServiceIds[0]);
+  const [selectedDates, setSelectedDates] = useState<string[]>(() => {
+    if (appointment) {
+      return [format(parseISO(appointment.starts_at), 'yyyy-MM-dd')];
+    }
+    return initialDate ? [initialDate] : [format(new Date(), 'yyyy-MM-dd')];
+  });
+  const date = selectedDates[0] || '';
   const [time, setTime] = useState(
     appointment
       ? format(parseISO(appointment.starts_at), 'HH:mm')
@@ -63,21 +70,26 @@ export function AdminAppointmentForm({
   );
   const [customerName, setCustomerName] = useState(appointment?.customer_name ?? '');
   const [customerPhone, setCustomerPhone] = useState(appointment?.customer_phone ?? '');
+
+  const totalServicesDuration = selectedServiceIds.reduce((sum, id) => {
+    const s = services.find((srv) => srv.id === id);
+    return sum + (s?.duration_minutes ?? 0);
+  }, 0);
+
   const [customDuration, setCustomDuration] = useState<number>(() => {
     if (appointment) {
       const starts = parseISO(appointment.starts_at);
       const ends = parseISO(appointment.ends_at);
       return differenceInMinutes(ends, starts);
     }
-    const service = services[0];
-    return service?.duration_minutes ?? 30;
+    return totalServicesDuration;
   });
 
   useEffect(() => {
-    if (!isEdit && selectedService) {
-      setCustomDuration(selectedService.duration_minutes);
+    if (!isEdit) {
+      setCustomDuration(totalServicesDuration);
     }
-  }, [serviceId, selectedService, isEdit]);
+  }, [selectedServiceIds, totalServicesDuration, isEdit]);
   const [notes, setNotes] = useState(appointment?.notes ?? '');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceWeeks, setRecurrenceWeeks] = useState(4);
@@ -121,7 +133,7 @@ export function AdminAppointmentForm({
 
 
   const loadSlots = useCallback(async () => {
-    if (!selectedService || !date) return;
+    if (selectedServiceIds.length === 0 || !date) return;
     setLoadingSlots(true);
     const { slots: s, unavailable } = await getAvailableSlots(
       barberId,
@@ -133,10 +145,10 @@ export function AdminAppointmentForm({
     setSlots(s);
     setSlotsUnavailable(Boolean(unavailable));
     setLoadingSlots(false);
-  }, [barberId, date, selectedService, appointment?.id, customDuration]);
+  }, [barberId, date, selectedServiceIds, appointment?.id, customDuration]);
 
   const loadDates = useCallback(async () => {
-    if (!selectedService) return;
+    if (selectedServiceIds.length === 0) return;
     setLoadingDates(true);
     const dates = await getAvailableDates(
       customDuration,
@@ -154,7 +166,7 @@ export function AdminAppointmentForm({
 
     setAvailableDates(Array.from(extraDates).sort());
     setLoadingDates(false);
-  }, [appointment, barberId, initialDate, selectedService, customDuration]);
+  }, [appointment, barberId, initialDate, selectedServiceIds, customDuration]);
 
   useEffect(() => {
     void loadSlots();
@@ -173,9 +185,11 @@ export function AdminAppointmentForm({
 
   function buildInput() {
     return {
-      serviceId,
+      serviceId: selectedServiceIds[0],
+      serviceIds: selectedServiceIds,
       barberId,
       date,
+      dates: selectedDates.length > 1 ? selectedDates : undefined,
       time,
       customerName,
       customerPhone,
@@ -208,7 +222,7 @@ export function AdminAppointmentForm({
   };
 
   const handleSave = useCallback(() => {
-    if (!customerName.trim() || !serviceId || !time) {
+    if (!customerName.trim() || selectedServiceIds.length === 0 || !time) {
       toast.error('Compila nome, servizio e orario');
       return;
     }
@@ -228,10 +242,18 @@ export function AdminAppointmentForm({
       if (!isEdit && 'isRecurring' in result && result.isRecurring) {
         const succ = (result as any).successCount || 0;
         const fail = (result as any).failedCount || 0;
-        if (fail > 0) {
-          toast.warning(`Prenotate ${succ} settimane su ${succ + fail}. Alcune date erano già occupate.`);
+        if (isRecurring) {
+          if (fail > 0) {
+            toast.warning(`Prenotate ${succ} settimane su ${succ + fail}. Alcune date erano già occupate.`);
+          } else {
+            toast.success(`Prenotate con successo tutte le ${succ} settimane!`);
+          }
         } else {
-          toast.success(`Prenotate con successo tutte le ${succ} settimane!`);
+          if (fail > 0) {
+            toast.warning(`Prenotate ${succ} date su ${succ + fail}. Alcuni orari erano già occupati.`);
+          } else {
+            toast.success(`Prenotate con successo tutte le ${succ} date!`);
+          }
         }
       } else {
         toast.success(isEdit ? 'Prenotazione modificata' : 'Prenotazione creata');
@@ -250,12 +272,13 @@ export function AdminAppointmentForm({
     notes,
     onClose,
     onSaved,
-    serviceId,
+    selectedServiceIds,
     startTransition,
     time,
     isRecurring,
     recurrenceWeeks,
     customDuration,
+    selectedDates,
   ]);
 
   useAdminSaveRegistration({ isDirty: true, isSaving: pending, save: handleSave });
@@ -342,28 +365,61 @@ export function AdminAppointmentForm({
             />
           </div>
           <div>
-            <Label>Servizio *</Label>
+            <Label>Servizi * {!isEdit && <span className="text-xs text-white/40">(seleziona uno o più)</span>}</Label>
             <div className="admin-modal-scroll mt-2 grid max-h-44 gap-2 overflow-y-auto sm:grid-cols-2">
-              {services.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => {
-                    setServiceId(s.id);
-                    setTime('');
-                  }}
-                  className={cn(
-                    'rounded-lg border p-3 text-left transition hover:border-gold/50',
-                    serviceId === s.id ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
-                  )}
-                >
-                  <p className="text-sm font-medium">{s.name}</p>
-                  <p className="text-xs text-gold">
-                    {formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}
-                  </p>
-                </button>
-              ))}
+              {services.map((s) => {
+                const isSelected = selectedServiceIds.includes(s.id);
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      if (isEdit) {
+                        setSelectedServiceIds([s.id]);
+                      } else {
+                        setSelectedServiceIds((prev) => {
+                          if (prev.includes(s.id)) {
+                            if (prev.length === 1) return prev;
+                            return prev.filter((id) => id !== s.id);
+                          } else {
+                            return [...prev, s.id];
+                          }
+                        });
+                      }
+                      setTime('');
+                    }}
+                    className={cn(
+                      'flex items-center justify-between rounded-lg border p-3 text-left transition hover:border-gold/50',
+                      isSelected ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
+                    )}
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-white">{s.name}</p>
+                      <p className="text-xs text-gold">
+                        {formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}
+                      </p>
+                    </div>
+                    {!isEdit && (
+                      <div className={cn(
+                        'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ml-2',
+                        isSelected ? 'border-gold bg-gold text-black' : 'border-white/30'
+                      )}>
+                        {isSelected && (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="h-3 w-3">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+            {!isEdit && selectedServiceIds.length > 1 && (
+              <p className="mt-1.5 text-xs text-gold">
+                Selezionati: {selectedServiceIds.map(id => services.find(s => s.id === id)?.name).filter(Boolean).join(' + ')} (Durata totale: {formatDuration(totalServicesDuration)})
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="admin-barber">Barbiere</Label>
@@ -391,14 +447,31 @@ export function AdminAppointmentForm({
             <div className="mt-2">
               <MonthDatePicker
                 dates={availableDates}
-                selectedDate={date}
+                selectedDate={date || null}
+                selectedDates={!isEdit ? selectedDates : undefined}
                 onSelectDate={(nextDate) => {
-                  setDate(nextDate);
+                  setSelectedDates([nextDate]);
                   setTime('');
                 }}
+                onToggleDate={!isEdit && !isRecurring ? (nextDate) => {
+                  setSelectedDates((prev) => {
+                    if (prev.includes(nextDate)) {
+                      if (prev.length === 1) return prev;
+                      return prev.filter((d) => d !== nextDate);
+                    } else {
+                      return [...prev, nextDate].sort();
+                    }
+                  });
+                  setTime('');
+                } : undefined}
                 loading={loadingDates}
               />
             </div>
+            {!isEdit && selectedDates.length > 1 && (
+              <p className="mt-1.5 text-xs text-gold">
+                Hai selezionato {selectedDates.length} date: {selectedDates.map(d => format(parseISO(d), 'dd/MM')).join(', ')}
+              </p>
+            )}
           </div>
           <div>
             <Label>Orario *</Label>
@@ -443,7 +516,7 @@ export function AdminAppointmentForm({
               required
             />
             <p className="mt-1 text-xs text-white/40">
-              Durata standard per {selectedService?.name}: {selectedService?.duration_minutes} min. Modificala per liberare lo slot.
+              Durata standard per {selectedServiceIds.length > 1 ? 'i servizi selezionati' : selectedService?.name}: {totalServicesDuration} min. Modificala per liberare lo slot.
             </p>
           </div>
           <div>
@@ -458,7 +531,7 @@ export function AdminAppointmentForm({
             />
           </div>
 
-          {!isEdit && (
+          {!isEdit && selectedDates.length <= 1 && (
             <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 space-y-3">
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input

@@ -238,23 +238,7 @@ export function BookingWizard({
     setPromoSource(null);
   }
 
-  async function selectSlot(t: string) {
-    if (selectedServices.length === 0 || !date) return;
-
-    setLoadingSlots(true);
-    const { slots: freshSlots } = await getAvailableSlots(
-      barberId,
-      date,
-      totalDuration
-    );
-    setSlots(freshSlots);
-    setLoadingSlots(false);
-
-    if (!freshSlots.includes(t)) {
-      setTime(null);
-      return;
-    }
-
+  function selectSlot(t: string) {
     setTime(t);
     setStep(3);
   }

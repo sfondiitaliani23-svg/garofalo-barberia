@@ -9,11 +9,13 @@ import { filterDatesByMonth, groupDatesByMonth } from '@/lib/utils/booking-month
 interface MonthDatePickerProps {
   dates: string[];
   selectedDate: string | null;
+  selectedDates?: string[];
   onSelectDate: (date: string) => void;
+  onToggleDate?: (date: string) => void;
   loading?: boolean;
 }
 
-export function MonthDatePicker({ dates, selectedDate, onSelectDate, loading }: MonthDatePickerProps) {
+export function MonthDatePicker({ dates, selectedDate, selectedDates, onSelectDate, onToggleDate, loading }: MonthDatePickerProps) {
   const monthOptions = useMemo(() => groupDatesByMonth(dates), [dates]);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 
@@ -53,7 +55,13 @@ export function MonthDatePicker({ dates, selectedDate, onSelectDate, loading }: 
                 onClick={() => {
                   setSelectedMonth(month.value);
                   const firstInMonth = filterDatesByMonth(dates, month.value)[0];
-                  if (firstInMonth) onSelectDate(firstInMonth);
+                  if (firstInMonth) {
+                    if (onToggleDate) {
+                      onToggleDate(firstInMonth);
+                    } else {
+                      onSelectDate(firstInMonth);
+                    }
+                  }
                 }}
                 className={cn(
                   'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition',
@@ -72,22 +80,31 @@ export function MonthDatePicker({ dates, selectedDate, onSelectDate, loading }: 
       <div>
         <p className="mb-2 text-xs font-medium uppercase tracking-wider text-white/40">Giorno</p>
         <div className="flex gap-2 overflow-x-auto pb-2">
-          {visibleDates.map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => onSelectDate(d)}
-              className={cn(
-                'flex-shrink-0 rounded-lg border px-4 py-3 text-center transition',
-                selectedDate === d ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
-              )}
-            >
-              <span className="block text-xs uppercase text-white/50">
-                {format(parseISO(d), 'EEE', { locale: it })}
-              </span>
-              <span className="block font-semibold">{format(parseISO(d), 'd MMM', { locale: it })}</span>
-            </button>
-          ))}
+          {visibleDates.map((d) => {
+            const isSelected = selectedDates ? selectedDates.includes(d) : selectedDate === d;
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={() => {
+                  if (onToggleDate) {
+                    onToggleDate(d);
+                  } else {
+                    onSelectDate(d);
+                  }
+                }}
+                className={cn(
+                  'flex-shrink-0 rounded-lg border px-4 py-3 text-center transition',
+                  isSelected ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
+                )}
+              >
+                <span className="block text-xs uppercase text-white/50">
+                  {format(parseISO(d), 'EEE', { locale: it })}
+                </span>
+                <span className="block font-semibold">{format(parseISO(d), 'd MMM', { locale: it })}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
