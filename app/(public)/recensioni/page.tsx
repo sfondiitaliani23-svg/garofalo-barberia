@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Star, ArrowLeft, MessageSquare } from 'lucide-react';
 import { getApprovedReviews } from '@/lib/actions/reviews';
-import { REVIEWS } from '@/lib/data/homepage';
+
 import { AnimatedDivider } from '@/components/home/AnimatedDivider';
 
 export const metadata = { title: 'Tutte le recensioni · Garofalo Barberia' };
@@ -21,15 +21,7 @@ export default async function TutteLeRecensioniPage() {
     }) : null
   }));
 
-  const allReviews = [
-    ...formattedDbReviews,
-    ...REVIEWS.map((r) => ({
-      text: r.text,
-      author: r.author,
-      rating: 5,
-      date: null
-    }))
-  ];
+  const allReviews = formattedDbReviews;
 
   return (
     <section className="py-16 min-h-[85vh] bg-black text-white">

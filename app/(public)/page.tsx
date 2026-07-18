@@ -6,7 +6,7 @@ import { HomeClientEffects } from '@/components/home/HomeClientEffects';
 import { PerfumeCardsGrid } from '@/components/home/PerfumeCardsGrid';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
 import { HomeTicker } from '@/components/home/HomeTicker';
-import { PHOTO_STRIP, PRICE_LIST, REVIEWS } from '@/lib/data/homepage';
+import { PHOTO_STRIP, PRICE_LIST } from '@/lib/data/homepage';
 import { getApprovedReviews } from '@/lib/actions/reviews';
 import './home.css';
 
@@ -20,10 +20,7 @@ export default async function HomePage() {
     rating: r.rating
   }));
   
-  const allReviews = [
-    ...formattedDbReviews,
-    ...REVIEWS.map(r => ({ text: r.text, author: r.author, rating: 5 }))
-  ].slice(0, 3);
+  const allReviews = formattedDbReviews.slice(0, 3);
 
   return (
     <div className="home-page">
