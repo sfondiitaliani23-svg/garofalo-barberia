@@ -65,7 +65,7 @@ export default async function TutteLeRecensioniPage() {
             {allReviews.map((review, idx) => (
               <div
                 key={`${review.author}-${idx}`}
-                className="flex flex-col justify-between p-6 sm:p-8 rounded-2xl border border-white/10 bg-white/[0.02] shadow-xl hover:shadow-[0_4px_22px_rgba(205,154,79,0.55)] hover:border-gold hover:bg-gradient-to-br hover:from-[#cd9a4f] hover:to-[#8f6520] transition-all duration-300 relative group overflow-hidden hover:-translate-y-0.5 cursor-default"
+                className="review-card-shine flex flex-col justify-between p-6 sm:p-8 rounded-2xl border border-white/10 bg-white/[0.02] shadow-xl hover:shadow-[0_4px_22px_rgba(205,154,79,0.55)] hover:border-gold hover:bg-gradient-to-br hover:from-[#cd9a4f] hover:to-[#8f6520] transition-all duration-300 relative group overflow-hidden hover:-translate-y-0.5 cursor-default"
               >
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gold/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 

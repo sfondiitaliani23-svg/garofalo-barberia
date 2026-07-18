@@ -255,3 +255,32 @@ body {
 .eliseo-chat-messages::-webkit-scrollbar-thumb:hover {
   background: rgba(205, 154, 79, 0.8);
 }
+
+/* Effetto lucido riflettente su hover (glossy sheen sweep) */
+.review-card-lux, .review-card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.review-card-lux::after, .review-card-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+  transition: none;
+}
+
+.review-card-lux:hover::after, .review-card-shine:hover::after {
+  left: 150%;
+  transition: left 0.75s ease-in-out;
+}
