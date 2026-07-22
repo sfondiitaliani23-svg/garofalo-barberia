@@ -555,8 +555,14 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
       </section>
 
       {barberModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto admin-modal-scroll rounded-xl border border-white/15 bg-[#111] p-6 shadow-2xl">
+        <div
+          onClick={() => setBarberModalOpen(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto admin-modal-scroll rounded-xl border border-white/15 bg-[#111] p-6 shadow-2xl"
+          >
             <div className="mb-6 flex items-center justify-between">
               <h2 className="font-display text-xl uppercase text-gold">
                 {editingBarber ? 'Modifica barbiere' : 'Nuovo barbiere'}

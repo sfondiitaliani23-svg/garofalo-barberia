@@ -184,7 +184,10 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   };
 
   return (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+    >
       <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 cursor-default"
