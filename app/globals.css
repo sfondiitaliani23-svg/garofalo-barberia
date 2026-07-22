@@ -4,8 +4,8 @@
   --color-gold: #cd9a4f;
   --color-gold-light: #ffb949;
   --color-gold-dark: #c88c23;
-  --font-display: 'Rye', Georgia, serif;
-  --font-sans: 'Montserrat', system-ui, sans-serif;
+  --font-display: var(--font-display), 'Rye', Georgia, serif;
+  --font-sans: var(--font-sans), 'Montserrat', system-ui, sans-serif;
 }
 
 html {

@@ -19,7 +19,8 @@ export async function getApprovedReviews() {
       .from('reviews')
       .select('comment, customer_name, rating, created_at')
       .eq('authorized_by_customer', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(20);
 
     if (error) {
       console.error('Errore durante il recupero delle recensioni:', error);

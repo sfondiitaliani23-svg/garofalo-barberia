@@ -1,8 +1,37 @@
 import type { Metadata } from 'next';
+import { Montserrat, Rye, Oswald, Bitter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
+
+const montserrat = Montserrat({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const rye = Rye({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-display',
+  display: 'swap',
+});
+
+const oswald = Oswald({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-oswald',
+  display: 'swap',
+});
+
+const bitter = Bitter({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-bitter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -23,15 +52,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="it">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Rye&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="it"
+      className={`${montserrat.variable} ${rye.variable} ${oswald.variable} ${bitter.variable}`}
+    >
       <body>
         <LoadingScreen />
         {children}
