@@ -23,6 +23,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
 
   // Form fields
   const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('10:00');
   const [barberId, setBarberId] = useState('');
@@ -98,6 +99,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
 
       const parsed = parseVoiceText(transcript);
       if (parsed.customerName) setCustomerName(parsed.customerName);
+      if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone);
       if (parsed.dateStr) setDate(parsed.dateStr);
       if (parsed.timeStr) setTime(parsed.timeStr);
 
@@ -146,7 +148,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
         date,
         time,
         customerName: customerName.trim(),
-        customerPhone: '',
+        customerPhone: customerPhone.trim(),
         recurrenceWeeks: isRecurring ? recurrenceWeeks : 1,
       });
 
@@ -172,11 +174,8 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   };
 
   return (
-    <div 
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 cursor-pointer"
-    >
-      <div 
+    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 cursor-default"
       >
@@ -195,145 +194,167 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
 
         <div className="admin-modal-scroll flex-1 overflow-y-auto min-h-0 pr-1 space-y-4 my-4">
           {/* Sezione Riconoscimento Vocale */}
-        <div className="mt-5 rounded-lg border border-white/5 bg-white/[0.02] p-4 text-center">
-          <button
-            type="button"
-            onClick={startVoiceInput}
-            className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full transition-all ${
-              isListening
-                ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-600/30'
-                : 'bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25'
-            }`}
-          >
-            <Mic size={24} className={isListening ? 'animate-bounce' : ''} />
-          </button>
-          <p className="mt-2 text-xs font-semibold text-white/70">
-            {isListening ? 'Sto ascoltando... Parla ora' : 'Usa il riconoscimento vocale'}
-          </p>
-          <p className="mt-1 text-[11px] text-white/40 max-w-[280px] mx-auto leading-relaxed">
-            Clicca e dì ad esempio: <span className="italic text-gold/70">"Mario Rossi domani alle 15:30"</span>
-          </p>
-          {speechText && (
-            <div className="mt-3 rounded border border-gold/10 bg-gold/5 p-2 text-left">
-              <span className="text-[10px] uppercase font-bold text-gold/50 block">Testo Rilevato:</span>
-              <p className="text-xs text-white/80 italic">"{speechText}"</p>
-            </div>
-          )}
-        </div>
-
-        {/* Form Fields */}
-        <div className="mt-5 space-y-4">
-          <div>
-            <Label htmlFor="inst-name" className="text-xs text-white/60">Nome e Cognome del Cliente *</Label>
-            <Input
-              id="inst-name"
-              type="text"
-              placeholder="Es. Mario Rossi"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="inst-date" className="text-xs text-white/60">Data *</Label>
-              <Input
-                id="inst-date"
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
-              />
-            </div>
-            <div>
-              <Label htmlFor="inst-time" className="text-xs text-white/60">Orario *</Label>
-              <Input
-                id="inst-time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="inst-barber" className="text-xs text-white/60">Barbiere</Label>
-              <select
-                id="inst-barber"
-                value={barberId}
-                onChange={(e) => setBarberId(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
-              >
-                {barbers.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs text-white/60">Servizi (seleziona uno o più)</Label>
-              <div className="admin-modal-scroll mt-1 max-h-36 overflow-y-auto border border-white/10 bg-black/40 rounded-md p-2 space-y-1.5">
-                {services.map((s) => {
-                  const isSelected = selectedServiceIds.includes(s.id);
-                  return (
-                    <label key={s.id} className="flex items-center gap-2.5 cursor-pointer hover:bg-white/5 p-1 rounded transition select-none">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => {
-                          setSelectedServiceIds(prev => 
-                            prev.includes(s.id) 
-                              ? prev.filter(id => id !== s.id) 
-                              : [...prev, s.id]
-                          );
-                        }}
-                        className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-4 w-4"
-                      />
-                      <span className="text-xs text-white/80">{s.name}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Recurrence fields */}
-          <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 space-y-3">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-4 w-4"
-              />
-              <span className="text-sm font-medium text-white/90">Prenotazione ricorrente</span>
-            </label>
-            
-            {isRecurring && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                <Label htmlFor="inst-recurrence-weeks" className="text-xs text-white/60">
-                  Ripeti ogni settimana per:
-                </Label>
-                <select
-                  id="inst-recurrence-weeks"
-                  value={recurrenceWeeks}
-                  onChange={(e) => setRecurrenceWeeks(Number(e.target.value))}
-                  className="block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
-                >
-                  <option value={2}>2 settimane (2 appuntamenti)</option>
-                  <option value={4}>4 settimane (4 appuntamenti)</option>
-                  <option value={6}>6 settimane (6 appuntamenti)</option>
-                  <option value={8}>8 settimane (8 appuntamenti)</option>
-                  <option value={12}>12 settimane (12 appuntamenti)</option>
-                </select>
+          <div className="mt-2 rounded-lg border border-white/5 bg-white/[0.02] p-4 text-center">
+            <button
+              type="button"
+              onClick={startVoiceInput}
+              className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full transition-all ${
+                isListening
+                  ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-600/30'
+                  : 'bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25'
+              }`}
+            >
+              <Mic size={24} className={isListening ? 'animate-bounce' : ''} />
+            </button>
+            <p className="mt-2 text-xs font-semibold text-white/70">
+              {isListening ? 'Sto ascoltando... Parla ora' : 'Usa il riconoscimento vocale'}
+            </p>
+            <p className="mt-1 text-[11px] text-white/40 max-w-[280px] mx-auto leading-relaxed">
+              Clicca e dì ad esempio: <span className="italic text-gold/70">"Mario Rossi 3201234567 domani alle 15:30"</span>
+            </p>
+            {speechText && (
+              <div className="mt-3 rounded border border-gold/10 bg-gold/5 p-2 text-left">
+                <span className="text-[10px] uppercase font-bold text-gold/50 block">Testo Rilevato:</span>
+                <p className="text-xs text-white/80 italic">"{speechText}"</p>
               </div>
             )}
           </div>
-        </div>
+
+          {/* Form Fields */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="inst-name" className="text-xs text-white/60">Nome e Cognome *</Label>
+                <Input
+                  id="inst-name"
+                  type="text"
+                  placeholder="Es. Mario Rossi"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="inst-phone" className="text-xs text-white/60">Telefono (opzionale)</Label>
+                <Input
+                  id="inst-phone"
+                  type="tel"
+                  placeholder="Es. 320 123 4567"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="inst-date" className="text-xs text-white/60">Data *</Label>
+                <Input
+                  id="inst-date"
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
+                />
+              </div>
+              <div>
+                <Label htmlFor="inst-time" className="text-xs text-white/60">Orario *</Label>
+                <Input
+                  id="inst-time"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="inst-barber" className="text-xs text-white/60">Barbiere</Label>
+                <select
+                  id="inst-barber"
+                  value={barberId}
+                  onChange={(e) => setBarberId(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
+                >
+                  {barbers.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs text-white/60">Servizi (seleziona uno o più)</Label>
+                <div className="admin-modal-scroll mt-1 max-h-36 overflow-y-auto rounded-md border border-white/10 bg-black/40 p-2 space-y-1">
+                  {services.map((s) => {
+                    const checked = selectedServiceIds.includes(s.id);
+                    return (
+                      <label
+                        key={s.id}
+                        className={`flex items-center gap-2 rounded px-2 py-1.5 text-xs cursor-pointer transition ${
+                          checked ? 'bg-gold/15 text-gold font-medium' : 'text-white/80 hover:bg-white/5'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => {
+                            if (checked) {
+                              if (selectedServiceIds.length > 1) {
+                                setSelectedServiceIds(selectedServiceIds.filter((id) => id !== s.id));
+                              }
+                            } else {
+                              setSelectedServiceIds([...selectedServiceIds, s.id]);
+                            }
+                          }}
+                          className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-3.5 w-3.5"
+                        />
+                        <span>{s.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Recurrence fields */}
+            <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-4 w-4"
+                />
+                <span className="text-sm font-medium text-white/90">Prenotazione ricorrente</span>
+              </label>
+              
+              {isRecurring && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <Label htmlFor="inst-recurrence-weeks" className="text-xs text-white/60">
+                    Ripeti ogni settimana per:
+                  </Label>
+                  <select
+                    id="inst-recurrence-weeks"
+                    value={recurrenceWeeks}
+                    onChange={(e) => setRecurrenceWeeks(Number(e.target.value))}
+                    className="block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
+                  >
+                    <option value={2}>2 settimane (2 appuntamenti)</option>
+                    <option value={4}>4 settimane (4 appuntamenti)</option>
+                    <option value={6}>6 settimane (6 appuntamenti)</option>
+                    <option value={8}>8 settimane (8 appuntamenti)</option>
+                    <option value={12}>12 settimane (12 appuntamenti)</option>
+                  </select>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Buttons */}
@@ -366,6 +387,14 @@ function parseVoiceText(text: string) {
   let dateStr = '';
   let timeStr = '';
   let customerName = '';
+  let customerPhone = '';
+
+  // Phone number parsing
+  const phoneRegex = /(?:\+?39\s*)?(?:3\d{2}[\s.-]?\d{6,7}|\d{9,10})/;
+  const phoneMatch = text.match(phoneRegex);
+  if (phoneMatch) {
+    customerPhone = phoneMatch[0].replace(/\s+/g, '');
+  }
 
   // 1. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
   const timeRegex = /(\d{1,2})[:.](\d{2})/;
@@ -431,8 +460,9 @@ function parseVoiceText(text: string) {
     dateStr = formatLocalDate(today);
   }
 
-  // 3. Name parsing - clean text of date/time info and prepositions
+  // 3. Name parsing - clean text of date/time/phone info and prepositions
   let cleanText = text;
+  if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], '');
   if (timeMatch) cleanText = cleanText.replace(timeMatch[0], '');
   cleanText = cleanText.replace(/(?:alle|ore)\s+\d{1,2}(?:\s*[:.]\s*\d{2})?/gi, '');
   cleanText = cleanText.replace(/(oggi|domani|dopodomani)/gi, '');
@@ -462,7 +492,7 @@ function parseVoiceText(text: string) {
     customerName = nameWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   }
 
-  return { dateStr, timeStr, customerName };
+  return { dateStr, timeStr, customerName, customerPhone };
 }
 
 function formatLocalDate(date: Date) {
