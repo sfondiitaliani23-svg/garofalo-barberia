@@ -11,14 +11,25 @@ function isContentVisible(item: SiteContent, now = Date.now()) {
 }
 
 export async function getActiveSiteBanners(): Promise<SiteContent[]> {
-  const supabase = await createClient();
-  if (!supabase) return [];
+  try {
+    const supabase = await createClient();
+    if (!supabase) return [];
 
-  const { data } = await supabase
-    .from('site_content')
-    .select('*')
-    .eq('is_active', true)
-    .order('key');
+    const fetchPromise = supabase
+      .from('site_content')
+      .select('*')
+      .eq('is_active', true)
+      .order('key');
 
-  return (data ?? []).filter((item) => isContentVisible(item as SiteContent));
+    const timeoutPromise = new Promise<{ data: null }>((resolve) =>
+      setTimeout(() => resolve({ data: null }), 600)
+    );
+
+    const res = await Promise.race([fetchPromise, timeoutPromise]);
+    const data = res && 'data' in res ? res.data : null;
+
+    return (data ?? []).filter((item) => isContentVisible(item as SiteContent));
+  } catch {
+    return [];
+  }
 }
