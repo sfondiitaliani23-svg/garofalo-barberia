@@ -187,7 +187,7 @@ export async function getAdminWeekAppointments(weekStartDate: string, barberId?:
   return getAdminAppointments(weekStart.toISOString(), weekEnd.toISOString(), barberId);
 }
 
-export async function getUpcomingAdminAppointments(limit = 200) {
+export async function getUpcomingAdminAppointments(limit = 300) {
   await requireAdmin();
   const supabase = await createClient();
   if (!supabase) return [];
@@ -195,9 +195,8 @@ export async function getUpcomingAdminAppointments(limit = 200) {
   const { data } = await supabase
     .from('appointments')
     .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
-    .eq('status', 'confirmed')
-    .gte('starts_at', new Date().toISOString())
-    .order('starts_at', { ascending: true })
+    .in('status', ['confirmed', 'completed', 'cancelled'])
+    .order('starts_at', { ascending: false })
     .limit(limit);
 
   return data ?? [];

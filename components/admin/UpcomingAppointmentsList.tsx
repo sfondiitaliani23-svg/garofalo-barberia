@@ -130,17 +130,41 @@ export function UpcomingAppointmentsList({
             const dateLabel = formatShopDateLong(startsAt);
             const timeLabel = formatShopTimeFromDate(startsAt);
             const isPending = pendingId === appointment.id;
+            const isCompleted = appointment.status === 'completed';
+            const isCancelled = appointment.status === 'cancelled';
+
+            const cardBgClass = isCompleted
+              ? 'border-emerald-500/30 bg-[#0a1610]'
+              : isCancelled
+              ? 'border-red-500/20 bg-[#170b0b] opacity-75'
+              : 'border-white/10 bg-[#111]';
 
             return (
               <article
                 key={appointment.id}
-                className="rounded-xl border border-white/10 bg-[#111] p-4 sm:p-5"
+                className={`rounded-xl border p-4 sm:p-5 transition ${cardBgClass}`}
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-white">{appointment.customer_name}</p>
-                      <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-xs font-medium text-gold">
+                      <p className="font-medium text-white text-base">{appointment.customer_name}</p>
+                      
+                      {/* Status Badge */}
+                      {isCompleted ? (
+                        <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                          ✓ Completato
+                        </span>
+                      ) : isCancelled ? (
+                        <span className="rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[11px] font-bold text-red-400 uppercase tracking-wider">
+                          Disdetto
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-gold/20 border border-gold/40 px-2.5 py-0.5 text-[11px] font-bold text-gold uppercase tracking-wider">
+                          Attiva
+                        </span>
+                      )}
+
+                      <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-medium text-white/80">
                         {dateLabel} · {timeLabel}
                       </span>
                     </div>

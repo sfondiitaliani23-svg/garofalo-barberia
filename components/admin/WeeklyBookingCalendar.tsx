@@ -203,22 +203,49 @@ export function WeeklyBookingCalendar({
                           {list.map((apt: CalendarAppointment) => {
                             const service = apt.service as { name: string } | null;
                             const barber = apt.barber as { name: string } | null;
+                            const isCompleted = apt.status === 'completed';
+                            const isCancelled = apt.status === 'cancelled';
+
+                            const cardClass = isCompleted
+                              ? 'border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25'
+                              : isCancelled
+                              ? 'border-red-500/30 bg-red-500/10 opacity-60 line-through'
+                              : 'border-gold/40 bg-gold/10 hover:bg-gold/20';
+
+                            const headerColor = isCompleted
+                              ? 'text-emerald-400'
+                              : isCancelled
+                              ? 'text-red-400'
+                              : 'text-gold';
+
                             return (
                               <button
                                 key={apt.id}
                                 type="button"
                                 onClick={() => openEdit(apt)}
-                                className="flex w-full flex-col rounded-lg border border-gold/40 bg-gold/10 p-2 text-left transition hover:bg-gold/20"
+                                className={`flex w-full flex-col rounded-lg border p-2 text-left transition ${cardClass}`}
                               >
-                                <span className="text-[10px] font-bold text-gold flex items-center justify-between gap-1 w-full">
-                                  <span>{time}</span>
+                                <span className={`text-[10px] font-bold flex items-center justify-between gap-1 w-full ${headerColor}`}>
+                                  <span className="flex items-center gap-1">
+                                    {isCompleted && <span>✓</span>}
+                                    {time}
+                                  </span>
                                   {barberId === 'all' && (
-                                    <span className="bg-gold/20 text-gold px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wide truncate max-w-[80px]">
+                                    <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wide truncate max-w-[80px] ${
+                                      isCompleted
+                                        ? 'bg-emerald-500/20 text-emerald-300'
+                                        : isCancelled
+                                        ? 'bg-red-500/20 text-red-300'
+                                        : 'bg-gold/20 text-gold'
+                                    }`}>
                                       {barber?.name}
                                     </span>
                                   )}
                                 </span>
-                                <span className="truncate text-xs font-semibold text-white mt-1">{apt.customer_name}</span>
+                                <span className="truncate text-xs font-semibold text-white mt-1">
+                                  {apt.customer_name}
+                                  {isCompleted && <span className="ml-1 text-[10px] text-emerald-400 font-normal">(Completato)</span>}
+                                </span>
                                 <span className="truncate text-[10px] text-white/50">{service?.name}</span>
                                 {apt.customer_phone && (
                                   <span className="truncate text-[10px] text-white/40">{apt.customer_phone}</span>
