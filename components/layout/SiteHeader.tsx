@@ -10,15 +10,22 @@ const navLeft = [
   { href: '/', label: 'Home' },
   { href: '/chi-siamo', label: 'Chi siamo' },
   { href: '/servizi', label: 'Servizi' },
+  { href: '/galleria', label: 'Galleria' },
 ];
 
 const navRight = [
-  { href: '/galleria', label: 'Galleria' },
   { href: '/recensioni', label: 'Recensioni' },
   { href: '/contatti', label: 'Contatti' },
 ];
 
-const allNavLinks = [...navLeft, ...navRight];
+const allNavLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/chi-siamo', label: 'Chi siamo' },
+  { href: '/servizi', label: 'Servizi' },
+  { href: '/galleria', label: 'Galleria' },
+  { href: '/recensioni', label: 'Recensioni' },
+  { href: '/contatti', label: 'Contatti' },
+];
 
 interface SiteHeaderProps {
   isLoggedIn?: boolean;
@@ -54,26 +61,26 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
             : 'bg-black/80 backdrop-blur-sm border-b border-white/5'
         }`}
       >
-        <div className="container-lux flex h-16 items-center">
+        <div className="container-lux flex h-16 items-center justify-between lg:grid lg:grid-cols-[1fr_auto_1fr]">
 
-          {/* ── Navigazione sinistra (Desktop) ─────────────────────────────── */}
+          {/* ── Navigazione sinistra (Desktop - 4 elementi) ───────────────── */}
           <nav
             aria-label="Navigazione principale sinistra"
-            className="hidden lg:flex items-center gap-7 flex-1"
+            className="hidden lg:flex items-center justify-end gap-3 xl:gap-7 pr-4 xl:pr-8"
           >
             {navLeft.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-gold-light"
+                className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 transition-colors hover:text-gold-light whitespace-nowrap"
               >
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          {/* ── Logo Centrato ───────────────────────────────────────────────── */}
-          <div className="flex-1 lg:flex-none flex justify-start lg:justify-center">
+          {/* ── Logo Centrato (Desktop) / Sinistra (Mobile) ───────────────── */}
+          <div className="flex items-center justify-start lg:justify-center px-2">
             <Link
               href="/"
               className="relative z-[151] flex shrink-0 items-center"
@@ -86,7 +93,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
                 alt={SITE_CONFIG.name}
                 width={180}
                 height={58}
-                className="hidden lg:block h-[54px] w-auto max-w-[180px] object-contain"
+                className="hidden lg:block h-[50px] w-auto max-w-[165px] object-contain"
                 style={{ mixBlendMode: 'screen' }}
                 priority
               />
@@ -103,16 +110,16 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
             </Link>
           </div>
 
-          {/* ── Navigazione destra (Desktop) ────────────────────────────────── */}
+          {/* ── Navigazione destra (Desktop - 4 elementi) ─────────────────── */}
           <nav
             aria-label="Navigazione principale destra"
-            className="hidden lg:flex items-center gap-7 flex-1 justify-end"
+            className="hidden lg:flex items-center justify-start gap-3 xl:gap-7 pl-4 xl:pl-8"
           >
             {navRight.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-gold-light"
+                className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 transition-colors hover:text-gold-light whitespace-nowrap"
               >
                 {link.label}
               </Link>
@@ -121,7 +128,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
               <Link
                 href="/area-cliente/dashboard"
                 prefetch
-                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gold transition-colors hover:text-gold-light"
+                className="text-[11px] font-semibold uppercase tracking-[0.14em] text-gold transition-colors hover:text-gold-light whitespace-nowrap"
               >
                 {accountLabel}
               </Link>
@@ -129,14 +136,14 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
               <Link
                 href="/login"
                 prefetch
-                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-gold-light"
+                className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 transition-colors hover:text-gold-light whitespace-nowrap"
               >
                 Accedi
               </Link>
             )}
             <Link
               href="/prenota"
-              className="btn-primary text-[10px] tracking-[0.15em] uppercase py-2.5 px-5"
+              className="btn-primary text-[10px] tracking-[0.15em] uppercase py-2 px-4.5 whitespace-nowrap shrink-0 ml-1"
             >
               Prenota
             </Link>
