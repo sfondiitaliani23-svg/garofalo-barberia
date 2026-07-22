@@ -97,12 +97,15 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
       const transcript = event.results[0][0].transcript;
       setSpeechText(transcript);
 
-      const parsed = parseVoiceText(transcript, barbers);
+      const parsed = parseVoiceText(transcript, barbers, services);
       if (parsed.customerName) setCustomerName(parsed.customerName);
       if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone);
       if (parsed.dateStr) setDate(parsed.dateStr);
       if (parsed.timeStr) setTime(parsed.timeStr);
       if (parsed.barberId) setBarberId(parsed.barberId);
+      if (parsed.serviceIds && parsed.serviceIds.length > 0) {
+        setSelectedServiceIds(parsed.serviceIds);
+      }
 
       toast.success('Voce riconosciuta ed elaborata!');
     };
@@ -383,7 +386,11 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
 }
 
 // NLP parser for vocal text
-function parseVoiceText(text: string, barbersList: { id: string; name: string }[] = []) {
+function parseVoiceText(
+  text: string,
+  barbersList: { id: string; name: string }[] = [],
+  servicesList: { id: string; name: string }[] = []
+) {
   let dateText = text.toLowerCase();
   dateText = dateText.replace(/\bprimo\b/gi, '1');
   dateText = dateText.replace(/\b1[°º]\b/g, '1');
@@ -393,6 +400,8 @@ function parseVoiceText(text: string, barbersList: { id: string; name: string }[
   let customerName = '';
   let customerPhone = '';
   let barberId = '';
+  let matchedServiceIds: string[] = [];
+  let matchedServicePhrases: string[] = [];
 
   // 1. Phone number parsing
   const phoneRegex = /(?:\+?39\s*)?(?:3\d{2}[\s.-]?\d{6,7}|\d{9,10})/;
@@ -418,7 +427,40 @@ function parseVoiceText(text: string, barbersList: { id: string; name: string }[
     }
   }
 
-  // 3. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
+  // 3. Service matching
+  if (servicesList && servicesList.length > 0) {
+    for (const s of servicesList) {
+      const sName = s.name.toLowerCase();
+      const cleanSName = sName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const sRegex = new RegExp(`(?:servizio|per|con)?\\s*\\b(${cleanSName})\\b`, 'i');
+      const sMatch = dateText.match(sRegex);
+      if (sMatch) {
+        if (!matchedServiceIds.includes(s.id)) {
+          matchedServiceIds.push(s.id);
+          matchedServicePhrases.push(sMatch[0]);
+        }
+      }
+    }
+
+    if (matchedServiceIds.length === 0) {
+      for (const s of servicesList) {
+        const sName = s.name.toLowerCase();
+        const mainWords = sName.split(/[\s\/+]+/).filter((w) => w.length > 3 && !['con', 'per', 'del', 'della'].includes(w));
+        for (const mw of mainWords) {
+          const mwRegex = new RegExp(`\\b${mw}\\b`, 'i');
+          const mwMatch = dateText.match(mwRegex);
+          if (mwMatch) {
+            if (!matchedServiceIds.includes(s.id)) {
+              matchedServiceIds.push(s.id);
+              matchedServicePhrases.push(mwMatch[0]);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 4. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
   const timeRegex = /(\d{1,2})[:.](\d{2})/;
   const timeMatch = dateText.match(timeRegex);
   if (timeMatch) {
@@ -434,7 +476,7 @@ function parseVoiceText(text: string, barbersList: { id: string; name: string }[
     }
   }
 
-  // 4. Date parsing
+  // 5. Date parsing
   const today = new Date();
   let matchedDatePhrase = '';
 
@@ -489,32 +531,32 @@ function parseVoiceText(text: string, barbersList: { id: string; name: string }[
     dateStr = formatLocalDate(today);
   }
 
-  // 5. Name parsing - strip date/time/phone/barber phrases
-  let cleanText = text;
+  // 6. Name parsing - strip date/time/phone/barber/service phrases
+  let cleanText = dateText;
   if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], ' ');
   if (timeMatch) cleanText = cleanText.replace(timeMatch[0], ' ');
-  if (matchedDatePhrase) cleanText = cleanText.replace(new RegExp(matchedDatePhrase, 'gi'), ' ');
-  if (matchedBarberPhrase) cleanText = cleanText.replace(new RegExp(matchedBarberPhrase, 'gi'), ' ');
+  if (matchedDatePhrase) cleanText = cleanText.replace(new RegExp(matchedDatePhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
+  if (matchedBarberPhrase) cleanText = cleanText.replace(new RegExp(matchedBarberPhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
+  matchedServicePhrases.forEach((sp) => {
+    cleanText = cleanText.replace(new RegExp(sp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
+  });
 
-  // Strip common date words, prepositions & barber names
-  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d|con|da|barbiere)\b/gi, ' ');
+  // Strip common date words, prepositions & barber & service names
+  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d|con|da|barbiere|servizio|taglio|shampoo|barba|colore|rasata|lama|modellata|forbici)\b/gi, ' ');
+
   barbersList.forEach((b) => {
     const fn = b.name.split(' ')[0];
     cleanText = cleanText.replace(new RegExp(`\\b${b.name}\\b`, 'gi'), ' ');
     cleanText = cleanText.replace(new RegExp(`\\b${fn}\\b`, 'gi'), ' ');
   });
 
-  const months = [
-    'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
-    'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
-  ];
-  months.forEach((m) => {
-    cleanText = cleanText.replace(new RegExp(`\\b${m}\\b`, 'gi'), ' ');
+  servicesList.forEach((s) => {
+    cleanText = cleanText.replace(new RegExp(s.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
   });
 
   const stopWords = [
     'prenota', 'prenotazione', 'per', 'a', 'da', 'di', 'il', 'la', 'i', 'gli',
-    'le', 'un', 'una', 'uno', 'ore', 'ora', 'alle', 'del', 'dello', 'della', 'con'
+    'le', 'un', 'una', 'uno', 'ore', 'ora', 'alle', 'del', 'dello', 'della', 'con', 'e'
   ];
 
   const words = cleanText.split(/\s+/);
@@ -527,7 +569,7 @@ function parseVoiceText(text: string, barbersList: { id: string; name: string }[
     customerName = nameWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   }
 
-  return { dateStr, timeStr, customerName, customerPhone, barberId };
+  return { dateStr, timeStr, customerName, customerPhone, barberId, serviceIds: matchedServiceIds };
 }
 
 function formatLocalDate(date: Date) {
