@@ -7,87 +7,67 @@ export function ImageProtection() {
   const pathname = usePathname();
 
   useEffect(() => {
-    // 1. Funzione di blocco tasto destro (contextmenu) per tutela privacy
-    const handleContextMenu = (e: MouseEvent) => {
-      // Se l'utente si trova nella Galleria dell'Area Cliente, permettiamo l'interazione per il download autorizzato
-      if (pathname?.startsWith('/area-cliente/galleria')) {
-        return;
-      }
+    const isCustomerGallery = pathname?.startsWith('/area-cliente/galleria');
 
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
+    // 1. Blocco del menu contestuale (tasto destro)
+    const blockContextMenu = (e: MouseEvent) => {
+      if (isCustomerGallery) return;
 
-      const isImageOrMedia =
-        target.tagName === 'IMG' ||
-        target.tagName === 'VIDEO' ||
-        target.tagName === 'PICTURE' ||
-        target.tagName === 'CANVAS' ||
-        target.tagName === 'SVG' ||
-        !!target.querySelector('img') ||
-        !!target.closest('img') ||
-        !!target.closest('.framed-photo-wrap') ||
-        !!target.closest('.service-card-luxury') ||
-        !!target.closest('.photo-strip-wrap') ||
-        !!target.closest('.galleria-card') ||
-        !!target.closest('.perfume-card-front') ||
-        !!target.closest('[data-protected-image]');
-
-      if (isImageOrMedia) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
+      // Su tutte le pagine pubbliche, blocca tassativamente il tasto destro
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
     };
 
-    // 2. Funzione di blocco drag and drop / trascinamento immagini
-    const handleDragStart = (e: DragEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-
-      if (
-        target.tagName === 'IMG' ||
-        target.tagName === 'VIDEO' ||
-        target.tagName === 'PICTURE' ||
-        !!target.closest('img')
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
+    // 2. Blocco del trascinamento (drag and drop)
+    const blockDrag = (e: DragEvent) => {
+      if (isCustomerGallery) return;
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
     };
 
-    // Usiamo il 'capture phase' (true) per intercettare l'evento prima di qualsiasi altro componente
-    window.addEventListener('contextmenu', handleContextMenu, true);
-    window.addEventListener('dragstart', handleDragStart, true);
-    document.addEventListener('contextmenu', handleContextMenu, true);
-    document.addEventListener('dragstart', handleDragStart, true);
+    // Assegnazione globale diretta
+    window.oncontextmenu = blockContextMenu;
+    window.ondragstart = blockDrag;
+    document.oncontextmenu = blockContextMenu;
+    document.ondragstart = blockDrag;
 
-    // 3. Setta draggable="false" ed elimina menu contestuali nativi direttamente sugli elementi img nel DOM
-    const disableImgDrag = () => {
-      const images = document.querySelectorAll('img');
+    window.addEventListener('contextmenu', blockContextMenu, true);
+    window.addEventListener('dragstart', blockDrag, true);
+    document.addEventListener('contextmenu', blockContextMenu, true);
+    document.addEventListener('dragstart', blockDrag, true);
+
+    // 3. Applicazione attributi rigidi su tutte le immagini del DOM
+    const protectAllImages = () => {
+      const images = document.querySelectorAll('img, picture, video');
       images.forEach((img) => {
-        if (!img.hasAttribute('data-protected')) {
-          img.setAttribute('draggable', 'false');
-          img.setAttribute('data-protected', 'true');
-          img.oncontextmenu = (e) => {
-            if (!pathname?.startsWith('/area-cliente/galleria')) {
-              e.preventDefault();
-              return false;
-            }
-          };
+        img.setAttribute('draggable', 'false');
+        img.setAttribute('oncontextmenu', 'return false;');
+        if (!isCustomerGallery) {
+          (img as HTMLElement).style.pointerEvents = 'none';
+        } else {
+          (img as HTMLElement).style.pointerEvents = 'auto';
         }
+        (img as HTMLElement).style.userSelect = 'none';
+        (img as HTMLElement).style.setProperty('-webkit-user-drag', 'none');
+        (img as HTMLElement).style.setProperty('-webkit-touch-callout', 'none');
       });
     };
 
-    disableImgDrag();
-    const observer = new MutationObserver(disableImgDrag);
+    protectAllImages();
+    const observer = new MutationObserver(protectAllImages);
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
-      window.removeEventListener('contextmenu', handleContextMenu, true);
-      window.removeEventListener('dragstart', handleDragStart, true);
-      document.removeEventListener('contextmenu', handleContextMenu, true);
-      document.removeEventListener('dragstart', handleDragStart, true);
+      window.oncontextmenu = null;
+      window.ondragstart = null;
+      document.oncontextmenu = null;
+      document.ondragstart = null;
+      window.removeEventListener('contextmenu', blockContextMenu, true);
+      window.removeEventListener('dragstart', blockDrag, true);
+      document.removeEventListener('contextmenu', blockContextMenu, true);
+      document.removeEventListener('dragstart', blockDrag, true);
       observer.disconnect();
     };
   }, [pathname]);

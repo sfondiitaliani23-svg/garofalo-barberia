@@ -36,7 +36,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 customer-gallery-authorized">
       {photos.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-[#0e0e0e] p-12 text-center text-white/50">
           <p className="font-medium">Nessuna foto ancora presente nella tua galleria.</p>
