@@ -4,8 +4,19 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { PERFUMES } from '@/lib/data/homepage';
+export interface PerfumeNote {
+  label: string;
+  value: string;
+}
 
-type Perfume = (typeof PERFUMES)[number];
+export interface Perfume {
+  name: string;
+  image: string;
+  lead: string;
+  body: string;
+  notes: readonly PerfumeNote[] | PerfumeNote[];
+  footer?: string | null;
+}
 
 const FLIGHT_MS = 650;
 const FLIGHT_EASING = 'cubic-bezier(0.4, 0.2, 0.2, 1)';
@@ -59,7 +70,8 @@ function PerfumeCardFace({ perfume }: { perfume: Perfume }) {
   );
 }
 
-export function PerfumeCardsGrid() {
+export function PerfumeCardsGrid({ items }: { items?: Perfume[] }) {
+  const displayPerfumes = items && items.length > 0 ? items : (PERFUMES as unknown as Perfume[]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [canHover, setCanHover] = useState(false);
   const [flippedMobile, setFlippedMobile] = useState<number | null>(null);
@@ -163,7 +175,7 @@ export function PerfumeCardsGrid() {
     return () => document.removeEventListener('click', onDocClick);
   }, [canHover]);
 
-  const activePerfume = activeIndex !== null ? PERFUMES[activeIndex] : null;
+  const activePerfume = activeIndex !== null ? displayPerfumes[activeIndex] : null;
   const flightRect = flightFrom ? (flightTo ? getTargetRect() : flightFrom) : null;
 
   const flyingStyle: CSSProperties | undefined = flightRect
@@ -199,7 +211,7 @@ export function PerfumeCardsGrid() {
       {spotlightPortal}
 
       <div className="services-grid perfumes-grid">
-        {PERFUMES.map((perfume, index) => {
+        {displayPerfumes.map((perfume, index) => {
           const isActive = activeIndex === index;
           const isFlippedMobile = flippedMobile === index;
 

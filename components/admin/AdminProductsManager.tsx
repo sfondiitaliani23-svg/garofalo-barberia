@@ -436,8 +436,57 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                 </div>
               </div>
               <div>
-                <Label htmlFor="product-image">URL immagine</Label>
-                <Input id="product-image" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="/assets/..." className="mt-1" />
+                <Label htmlFor="product-image">URL Immagine / Foto Prodotto</Label>
+                <div className="mt-1.5 flex items-center gap-3">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black/40 flex items-center justify-center">
+                    {imageUrl ? (
+                      <img src={imageUrl} alt="Anteprima" className="h-full w-full object-cover" />
+                    ) : (
+                      <Package size={20} className="text-white/30" />
+                    )}
+                  </div>
+                  <Input
+                    id="product-image"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Es. /assets/sostituisci-immagini/homepage/4-1.jpg"
+                    className="flex-1"
+                  />
+                </div>
+                {/* Selettore rapido foto ufficiali Mood */}
+                <div className="mt-2 space-y-1">
+                  <p className="text-[11px] font-medium text-white/40 uppercase tracking-wider">Foto rapide ufficiali Mood:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-1.jpg')}
+                      className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
+                    >
+                      📸 Mood Velvet
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-2.jpg')}
+                      className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
+                    >
+                      📸 Mood Fancy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-3.jpg')}
+                      className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
+                    >
+                      📸 Mood Imperious
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-4.jpg')}
+                      className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
+                    >
+                      📸 Mood Aroma
+                    </button>
+                  </div>
+                </div>
               </div>
               <div>
                 <Label htmlFor="product-description">Descrizione</Label>
@@ -495,9 +544,15 @@ const ProductRow = memo(function ProductRow({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#111] px-4 py-3">
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-lg bg-gold/15 p-2 text-gold">
-          <Package size={16} />
-        </div>
+        {product.image_url ? (
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gold/30 bg-black">
+            <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          <div className="mt-0.5 rounded-lg bg-gold/15 p-2.5 text-gold shrink-0">
+            <Package size={18} />
+          </div>
+        )}
         <div>
           <p className="font-medium">
             {product.name}

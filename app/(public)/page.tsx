@@ -6,8 +6,9 @@ import { HomeClientEffects } from '@/components/home/HomeClientEffects';
 import { PerfumeCardsGrid } from '@/components/home/PerfumeCardsGrid';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
 import { HomeTicker } from '@/components/home/HomeTicker';
-import { PHOTO_STRIP, PRICE_LIST } from '@/lib/data/homepage';
+import { PHOTO_STRIP, PRICE_LIST, PERFUMES } from '@/lib/data/homepage';
 import { getApprovedReviews } from '@/lib/actions/reviews';
+import { createClient } from '@/lib/supabase/server';
 import './home.css';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,21 @@ export default async function HomePage() {
     author: r.customer_name,
     rating: r.rating
   }));
+
+  const supabase = await createClient();
+  const dbProducts = supabase ? (await supabase.from('products').select('*').eq('is_active', true).order('sort_order').limit(4)).data ?? [] : [];
+
+  const perfumesForGrid = dbProducts.length > 0 ? dbProducts.map((p, idx) => {
+    const defaultFallback = PERFUMES[idx] || PERFUMES[0];
+    return {
+      name: p.name,
+      image: p.image_url || defaultFallback.image,
+      lead: p.description || defaultFallback.lead,
+      body: p.brand ? `Profumo ${p.brand} - ${p.price_cents ? (p.price_cents / 100).toFixed(2) + '€' : 'Disponibile in salone'}` : defaultFallback.body,
+      notes: defaultFallback.notes ? Array.from(defaultFallback.notes) : [],
+      footer: p.name ? `Profumo ${p.name}` : null,
+    };
+  }) : undefined;
   
   const allReviews = formattedDbReviews.slice(0, 3);
 
@@ -152,7 +168,7 @@ export default async function HomePage() {
             <AnimatedDivider />
             <p className="section-lead mx-auto text-center">Scopri la collezione di fragranze che stiamo portando in barberia.</p>
           </div>
-          <PerfumeCardsGrid />
+          <PerfumeCardsGrid items={perfumesForGrid} />
           <div className="text-center mt-10">
             <Link href="/contatti" className="btn-outline">Vieni a scoprirli in negozio</Link>
           </div>
