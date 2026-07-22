@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { X, Pencil, XCircle } from 'lucide-react';
+import { X, Pencil, XCircle, Mic } from 'lucide-react';
 import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -109,6 +109,57 @@ export function AdminAppointmentForm({
   const [mounted, setMounted] = useState(false);
   const [pending, startTransition] = useTransition();
   const modalScrollRef = useRef<HTMLDivElement>(null);
+
+  // Speech Recognition state
+  const [isListening, setIsListening] = useState(false);
+  const [speechText, setSpeechText] = useState('');
+
+  const startVoiceInput = () => {
+    if (typeof window === 'undefined') return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      toast.error('Il riconoscimento vocale non è supportato su questo browser. Prova con Google Chrome.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'it-IT';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setSpeechText('');
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSpeechText(transcript);
+
+      const parsed = parseVoiceText(transcript);
+      if (parsed.customerName) setCustomerName(parsed.customerName);
+      if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone);
+      if (parsed.dateStr) setSelectedDates([parsed.dateStr]);
+      if (parsed.timeStr) setTime(parsed.timeStr);
+
+      toast.success('Voce riconosciuta ed elaborata!');
+    };
+
+    recognition.onerror = (e: any) => {
+      console.error(e);
+      toast.error('Errore nel riconoscimento vocale.');
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -375,6 +426,33 @@ export function AdminAppointmentForm({
         </div>
 
         <div ref={modalScrollRef} className="admin-modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
+          {/* Sezione Riconoscimento Vocale */}
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 text-center">
+            <button
+              type="button"
+              onClick={startVoiceInput}
+              className={`mx-auto flex h-13 w-13 items-center justify-center rounded-full transition-all ${
+                isListening
+                  ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-600/30'
+                  : 'bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25'
+              }`}
+            >
+              <Mic size={22} className={isListening ? 'animate-bounce' : ''} />
+            </button>
+            <p className="mt-2 text-xs font-semibold text-white/80">
+              {isListening ? 'Sto ascoltando... Parla ora' : 'Usa il riconoscimento vocale'}
+            </p>
+            <p className="mt-1 text-[11px] text-white/40 max-w-[290px] mx-auto leading-relaxed">
+              Clicca e dì ad esempio: <span className="italic text-gold/80">"Mario Rossi 3201234567 domani alle 15:30"</span>
+            </p>
+            {speechText && (
+              <div className="mt-3 rounded border border-gold/20 bg-gold/10 p-2 text-left">
+                <span className="text-[10px] uppercase font-bold text-gold/70 block">Testo Rilevato:</span>
+                <p className="text-xs text-white/90 italic">"{speechText}"</p>
+              </div>
+            )}
+          </div>
+
           <div>
             <Label htmlFor="admin-name">Nome cliente *</Label>
             <Input
@@ -686,4 +764,125 @@ export function AdminAppointmentForm({
   );
 
   return createPortal(modal, document.body);
+}
+
+// NLP parser for vocal text
+function parseVoiceText(text: string) {
+  const lowercase = text.toLowerCase();
+  let dateStr = '';
+  let timeStr = '';
+  let customerName = '';
+  let customerPhone = '';
+
+  // Phone number parsing
+  const phoneRegex = /(?:\+?39\s*)?(?:3\d{2}[\s.-]?\d{6,7}|\d{9,10})/;
+  const phoneMatch = text.match(phoneRegex);
+  if (phoneMatch) {
+    customerPhone = phoneMatch[0].replace(/\s+/g, '');
+  }
+
+  // 1. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
+  const timeRegex = /(\d{1,2})[:.](\d{2})/;
+  const timeMatch = lowercase.match(timeRegex);
+  if (timeMatch) {
+    const hh = timeMatch[1].padStart(2, '0');
+    const mm = timeMatch[2];
+    timeStr = `${hh}:${mm}`;
+  } else {
+    const hourRegex = /(?:alle|ore)\s+(\d{1,2})/;
+    const hourMatch = lowercase.match(hourRegex);
+    if (hourMatch) {
+      const hh = hourMatch[1].padStart(2, '0');
+      timeStr = `${hh}:00`;
+    }
+  }
+
+  // 2. Date parsing (oggi, domani, dopodomani, dd/mm, dd mese)
+  const today = new Date();
+  if (lowercase.includes('oggi')) {
+    dateStr = formatLocalDate(today);
+  } else if (lowercase.includes('domani')) {
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    dateStr = formatLocalDate(tomorrow);
+  } else if (lowercase.includes('dopodomani')) {
+    const dopodomani = new Date(today);
+    dopodomani.setDate(dopodomani.getDate() + 2);
+    dateStr = formatLocalDate(dopodomani);
+  } else {
+    // Check 15/07 or 15-07
+    const numDateRegex = /(\d{1,2})[\/-](\d{1,2})/;
+    const numDateMatch = lowercase.match(numDateRegex);
+    if (numDateMatch) {
+      const day = numDateMatch[1].padStart(2, '0');
+      const month = numDateMatch[2].padStart(2, '0');
+      const year = today.getFullYear();
+      dateStr = `${year}-${month}-${day}`;
+    } else {
+      // Check word date e.g. "15 luglio"
+      const months = [
+        'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+        'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
+      ];
+      for (let i = 0; i < months.length; i++) {
+        if (lowercase.includes(months[i])) {
+          const dayRegex = new RegExp(`(\\d{1,2})\\s+(?:di\\s+)?${months[i]}`);
+          const dayMatch = lowercase.match(dayRegex);
+          if (dayMatch) {
+            const day = dayMatch[1].padStart(2, '0');
+            const month = String(i + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            dateStr = `${year}-${month}-${day}`;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Default to today if no date recognized
+  if (!dateStr) {
+    dateStr = formatLocalDate(today);
+  }
+
+  // 3. Name parsing - clean text of date/time/phone info and prepositions
+  let cleanText = text;
+  if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], '');
+  if (timeMatch) cleanText = cleanText.replace(timeMatch[0], '');
+  cleanText = cleanText.replace(/(?:alle|ore)\s+\d{1,2}(?:\s*[:.]\s*\d{2})?/gi, '');
+  cleanText = cleanText.replace(/(oggi|domani|dopodomani)/gi, '');
+
+  const months = [
+    'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+    'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
+  ];
+  months.forEach((m) => {
+    const r = new RegExp(`\\d{1,2}\\s+(?:di\\s+)?${m}`, 'gi');
+    cleanText = cleanText.replace(r, '');
+  });
+  cleanText = cleanText.replace(/\d{1,2}[\/-]\d{1,2}(?:[\/-]\d{2,4})?/gi, '');
+
+  const stopWords = [
+    'prenota', 'prenotazione', 'per', 'a', 'da', 'di', 'il', 'la', 'i', 'gli',
+    'le', 'un', 'una', 'uno', 'ore', 'ora', 'alle', 'del', 'dello', 'della', 'con'
+  ];
+
+  const words = cleanText.split(/\s+/);
+  const nameWords = words.filter((w) => {
+    const lw = w.toLowerCase().replace(/[^a-zàèìòù]/g, '');
+    return lw.length > 0 && !stopWords.includes(lw);
+  });
+
+  if (nameWords.length > 0) {
+    customerName = nameWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  }
+
+  return { dateStr, timeStr, customerName, customerPhone };
+}
+
+function formatLocalDate(date: Date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
 }
