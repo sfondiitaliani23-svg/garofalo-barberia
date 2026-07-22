@@ -10,8 +10,18 @@ export function LoadingScreen() {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    // Se già mostrato in questa sessione, non mostrare per una navigazione istantanea
-    if (sessionStorage.getItem('gbf_loader_shown')) {
+    // Se la pagina viene ricaricata (F5/Reload) o se ci troviamo sulla Homepage ('/'),
+    // la schermata di caricamento deve SEMPRE essere mostrata.
+    const isReload =
+      typeof window !== 'undefined' &&
+      window.performance &&
+      window.performance.getEntriesByType('navigation')?.length > 0 &&
+      (window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload';
+
+    const isHomepage = typeof window !== 'undefined' && window.location.pathname === '/';
+
+    // Salta la schermata di caricamento solo per le transizioni tra sottopagine nello stesso tab
+    if (sessionStorage.getItem('gbf_loader_shown') && !isReload && !isHomepage) {
       return;
     }
 
