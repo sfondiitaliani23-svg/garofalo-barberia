@@ -7,35 +7,31 @@ export function LoadingScreen() {
   const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Se già mostrato in questa sessione, nascondi subito
-    if (sessionStorage.getItem('gbf_loader_shown')) {
-      if (loaderRef.current) loaderRef.current.style.display = 'none';
-      return;
-    }
-
-    // Avvia la barra di progresso
-    requestAnimationFrame(() => {
+    // Avvia la barra di progresso con leggero delay per consentire il render
+    const barTimer = setTimeout(() => {
       if (barRef.current) {
-        setTimeout(() => {
-          if (barRef.current) barRef.current.style.width = '100%';
-        }, 50);
+        barRef.current.style.width = '100%';
       }
-    });
+    }, 80);
 
-    // Fade out dopo 2.2s
-    const timer = setTimeout(() => {
+    // Mantiene lo schermo di caricamento visibile per 2.8 secondi prima di iniziare il fade out
+    const fadeTimer = setTimeout(() => {
       const loader = loaderRef.current;
       if (loader) {
         loader.style.opacity = '0';
         loader.style.pointerEvents = 'none';
+        
+        // Rimuove completamente dal DOM dopo la transizione di fade out (800ms)
         setTimeout(() => {
           if (loader) loader.style.display = 'none';
-        }, 620);
+        }, 800);
       }
-      sessionStorage.setItem('gbf_loader_shown', '1');
-    }, 2200);
+    }, 2800);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(barTimer);
+      clearTimeout(fadeTimer);
+    };
   }, []);
 
   return (
@@ -51,7 +47,7 @@ export function LoadingScreen() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        transition: 'opacity 0.6s ease',
+        transition: 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       <div
@@ -60,7 +56,7 @@ export function LoadingScreen() {
           flexDirection: 'column',
           alignItems: 'center',
           gap: '24px',
-          animation: 'gbfLoaderFadeUp 0.8s ease forwards',
+          animation: 'gbfLoaderFadeUp 0.9s ease forwards',
         }}
       >
         {/* Logo SVG Barberia Garofalo */}
@@ -68,9 +64,9 @@ export function LoadingScreen() {
           viewBox="0 0 260 90"
           xmlns="http://www.w3.org/2000/svg"
           style={{
-            width: '240px',
+            width: '250px',
             height: 'auto',
-            filter: 'drop-shadow(0 0 20px rgba(205, 154, 79, 0.4))',
+            filter: 'drop-shadow(0 0 24px rgba(205, 154, 79, 0.45))',
           }}
         >
           <defs>
@@ -151,10 +147,10 @@ export function LoadingScreen() {
         {/* Barra di progresso */}
         <div
           style={{
-            width: '200px',
-            height: '1.5px',
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '2px',
+            width: '210px',
+            height: '2px',
+            background: 'rgba(255,255,255,0.12)',
+            borderRadius: '3px',
             overflow: 'hidden',
           }}
         >
@@ -164,8 +160,8 @@ export function LoadingScreen() {
               height: '100%',
               width: '0%',
               background: 'linear-gradient(90deg, #cd9a4f, #ffb949, #cd9a4f)',
-              borderRadius: '2px',
-              transition: 'width 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)',
+              borderRadius: '3px',
+              transition: 'width 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)',
             }}
           />
         </div>
@@ -175,9 +171,9 @@ export function LoadingScreen() {
           style={{
             fontFamily: "'Montserrat', 'Helvetica Neue', sans-serif",
             fontSize: '10px',
-            fontWeight: 400,
-            letterSpacing: '6px',
-            color: 'rgba(205, 154, 79, 0.6)',
+            fontWeight: 500,
+            letterSpacing: '7px',
+            color: 'rgba(205, 154, 79, 0.7)',
             textTransform: 'uppercase',
             margin: 0,
           }}
@@ -188,7 +184,7 @@ export function LoadingScreen() {
 
       <style>{`
         @keyframes gbfLoaderFadeUp {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(20px); }
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
