@@ -139,11 +139,12 @@ export function AdminAppointmentForm({
       const transcript = event.results[0][0].transcript;
       setSpeechText(transcript);
 
-      const parsed = parseVoiceText(transcript);
+      const parsed = parseVoiceText(transcript, barbers);
       if (parsed.customerName) setCustomerName(parsed.customerName);
       if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone);
       if (parsed.dateStr) setSelectedDates([parsed.dateStr]);
       if (parsed.timeStr) setTime(parsed.timeStr);
+      if (parsed.barberId) setBarberId(parsed.barberId);
 
       toast.success('Voce riconosciuta ed elaborata!');
     };
@@ -767,7 +768,7 @@ export function AdminAppointmentForm({
 }
 
 // NLP parser for vocal text
-function parseVoiceText(text: string) {
+function parseVoiceText(text: string, barbersList: { id: string; name: string }[] = []) {
   let dateText = text.toLowerCase();
   dateText = dateText.replace(/\bprimo\b/gi, '1');
   dateText = dateText.replace(/\b1[°º]\b/g, '1');
@@ -776,15 +777,33 @@ function parseVoiceText(text: string) {
   let timeStr = '';
   let customerName = '';
   let customerPhone = '';
+  let barberId = '';
 
-  // Phone number parsing
+  // 1. Phone number parsing
   const phoneRegex = /(?:\+?39\s*)?(?:3\d{2}[\s.-]?\d{6,7}|\d{9,10})/;
   const phoneMatch = text.match(phoneRegex);
   if (phoneMatch) {
     customerPhone = phoneMatch[0].replace(/\s+/g, '');
   }
 
-  // 1. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
+  // 2. Barber matching
+  let matchedBarberPhrase = '';
+  if (barbersList && barbersList.length > 0) {
+    for (const b of barbersList) {
+      const fullName = b.name.toLowerCase();
+      const firstName = fullName.split(' ')[0];
+
+      const barberRegex = new RegExp(`(?:con|da|barbiere)?\\s*\\b(${fullName}|${firstName})\\b`, 'i');
+      const bMatch = dateText.match(barberRegex);
+      if (bMatch) {
+        barberId = b.id;
+        matchedBarberPhrase = bMatch[0];
+        break;
+      }
+    }
+  }
+
+  // 3. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
   const timeRegex = /(\d{1,2})[:.](\d{2})/;
   const timeMatch = dateText.match(timeRegex);
   if (timeMatch) {
@@ -800,7 +819,7 @@ function parseVoiceText(text: string) {
     }
   }
 
-  // 2. Date parsing
+  // 4. Date parsing
   const today = new Date();
   let matchedDatePhrase = '';
 
@@ -855,14 +874,21 @@ function parseVoiceText(text: string) {
     dateStr = formatLocalDate(today);
   }
 
-  // 3. Name parsing - strip date/time/phone phrases
+  // 5. Name parsing - strip date/time/phone/barber phrases
   let cleanText = text;
   if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], ' ');
   if (timeMatch) cleanText = cleanText.replace(timeMatch[0], ' ');
   if (matchedDatePhrase) cleanText = cleanText.replace(new RegExp(matchedDatePhrase, 'gi'), ' ');
+  if (matchedBarberPhrase) cleanText = cleanText.replace(new RegExp(matchedBarberPhrase, 'gi'), ' ');
 
-  // Strip common date words & prepositions
-  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d)\b/gi, ' ');
+  // Strip common date words, prepositions & barber names
+  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d|con|da|barbiere)\b/gi, ' ');
+  barbersList.forEach((b) => {
+    const fn = b.name.split(' ')[0];
+    cleanText = cleanText.replace(new RegExp(`\\b${b.name}\\b`, 'gi'), ' ');
+    cleanText = cleanText.replace(new RegExp(`\\b${fn}\\b`, 'gi'), ' ');
+  });
+
   const months = [
     'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
     'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
@@ -886,7 +912,7 @@ function parseVoiceText(text: string) {
     customerName = nameWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   }
 
-  return { dateStr, timeStr, customerName, customerPhone };
+  return { dateStr, timeStr, customerName, customerPhone, barberId };
 }
 
 function formatLocalDate(date: Date) {
