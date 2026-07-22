@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import './globals.css';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
+import { ImageProtection } from '@/components/layout/ImageProtection';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body>
         <LoadingScreen />
+        <ImageProtection />
         {children}
         <Toaster theme="dark" position="top-center" richColors className="!z-[200]" />
       </body>

@@ -31,6 +31,19 @@ body {
   overflow-x: hidden;
 }
 
+/* Protezione globale privacy immagini: disabilita selezione e trascinamento delle foto */
+img, video, picture, canvas {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
+
 .font-display {
   font-family: var(--font-display);
 }
