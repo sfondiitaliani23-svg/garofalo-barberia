@@ -1,7 +1,8 @@
-import { addDays, differenceInMinutes, format, parseISO, startOfWeek } from 'date-fns';
+import { addDays, addMinutes, differenceInMinutes, format, parseISO, startOfWeek } from 'date-fns';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { isShopDateFullyBlocked, type TimeOffRow } from '@/lib/utils/barber-absence';
 import { getDayClosingTime as getClosingForDay, isSlotWithinShopHours } from '@/lib/utils/shop-hours';
+import { getShopDateString, getShopTimeString, parseBookingDateTime } from '@/lib/utils/booking-datetime';
 
 export const WORKING_DAY_OFFSETS = [1, 2, 3, 4, 5]; // Mar–Sab dalla settimana che inizia lunedì
 
@@ -121,17 +122,29 @@ export function buildWeekGrid(
         continue;
       }
 
+      // Trova gli appuntamenti che iniziano in questo slot o lo coprono nel fuso del salone
       const aptsAtSlot = confirmed.filter((a) => {
-        const aptDate = format(parseISO(a.starts_at), 'yyyy-MM-dd');
-        const aptTime = format(parseISO(a.starts_at), 'HH:mm');
-        return aptDate === key && aptTime === time;
+        const dStart = new Date(a.starts_at);
+        const aptDate = getShopDateString(dStart);
+        const aptTime = getShopTimeString(dStart);
+
+        if (aptDate !== key) return false;
+
+        // Se l'orario di inizio corrisponde direttamente al time dello slot
+        if (aptTime === time) return true;
+
+        // Se l'appuntamento inizia tra questo slot e il successivo (es. 10:15 in uno slot da 10:00-10:30)
+        const slotStart = parseBookingDateTime(key, time);
+        const slotEnd = addMinutes(slotStart, SITE_CONFIG.slotIntervalMinutes);
+        const dEnd = new Date(a.ends_at);
+        return dStart < slotEnd && dEnd > slotStart;
       });
 
       if (aptsAtSlot.length > 0) {
         let maxSpan = 1;
         for (const apt of aptsAtSlot) {
-          const starts = parseISO(apt.starts_at);
-          const ends = parseISO(apt.ends_at);
+          const starts = new Date(apt.starts_at);
+          const ends = new Date(apt.ends_at);
           const actualDuration = differenceInMinutes(ends, starts);
           const span = durationToRowSpan(actualDuration);
           if (span > maxSpan) maxSpan = span;

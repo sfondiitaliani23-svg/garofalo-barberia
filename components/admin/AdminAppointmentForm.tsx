@@ -21,6 +21,7 @@ import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { formatPrice, formatDuration } from '@/lib/utils';
+import { getShopDateString, getShopTimeString } from '@/lib/utils/booking-datetime';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import type { Barber, Service } from '@/types/database';
@@ -59,14 +60,14 @@ export function AdminAppointmentForm({
   const selectedService = services.find((s) => s.id === selectedServiceIds[0]);
   const [selectedDates, setSelectedDates] = useState<string[]>(() => {
     if (appointment) {
-      return [format(parseISO(appointment.starts_at), 'yyyy-MM-dd')];
+      return [getShopDateString(new Date(appointment.starts_at))];
     }
-    return initialDate ? [initialDate] : [format(new Date(), 'yyyy-MM-dd')];
+    return initialDate ? [initialDate] : [getShopDateString(new Date())];
   });
   const date = selectedDates[0] || '';
   const [time, setTime] = useState(
     appointment
-      ? format(parseISO(appointment.starts_at), 'HH:mm')
+      ? getShopTimeString(new Date(appointment.starts_at))
       : initialTime ?? '09:00'
   );
   const [customerName, setCustomerName] = useState(appointment?.customer_name ?? '');
@@ -186,7 +187,7 @@ export function AdminAppointmentForm({
 
     const extraDates = new Set(dates);
     if (appointment) {
-      extraDates.add(format(parseISO(appointment.starts_at), 'yyyy-MM-dd'));
+      extraDates.add(getShopDateString(new Date(appointment.starts_at)));
     }
     if (initialDate) {
       extraDates.add(initialDate);
@@ -206,7 +207,7 @@ export function AdminAppointmentForm({
 
   useEffect(() => {
     if (!isEdit || !appointment || !date) return;
-    const appointmentDate = format(parseISO(appointment.starts_at), 'yyyy-MM-dd');
+    const appointmentDate = getShopDateString(new Date(appointment.starts_at));
     if (date !== appointmentDate) return;
     setSlots((current) => (current.includes(time) ? current : [time, ...current].sort()));
   }, [appointment, date, isEdit, time]);
@@ -241,7 +242,7 @@ export function AdminAppointmentForm({
     }
 
     const name = appointment.customer_name;
-    const originalTime = format(parseISO(appointment.starts_at), 'HH:mm');
+    const originalTime = getShopTimeString(new Date(appointment.starts_at));
     const msg = `Ciao ${name}! Ti scriviamo da Garofalo Barberia. Volevamo avvisarti che si è liberato un posto prima, all'incirca per le ${notificationTime}. Se ti fa comodo anticipare il tuo appuntamento delle ${originalTime}, rispondi a questo messaggio! Grazie.`;
 
     const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
