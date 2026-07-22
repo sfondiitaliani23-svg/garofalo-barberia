@@ -13,72 +13,56 @@ export function ImageProtection() {
 
     const showPrivacyNotice = () => {
       const now = Date.now();
-      if (now - lastToastTimeRef.current > 2500) {
+      if (now - lastToastTimeRef.current > 2000) {
         lastToastTimeRef.current = now;
-        toast.warning('🔒 Immagine Protetta da Privacy', {
-          description: 'Per questioni di privacy e diritto d’autore, non è possibile scaricare o interagire con questa immagine.',
+        toast.warning('🔒 Immagine e Contenuti Protetti da Privacy', {
+          description:
+            'Per questioni di riservatezza e diritto d’autore, non è possibile scaricare, copiare o salvare le immagini del sito.',
           duration: 3500,
         });
       }
     };
 
-    // 1. Blocco del menu contestuale (tasto destro) con notifica informativa
+    // 1. Blocco assoluto e incondizionato di qualsiasi tasto destro sul sito pubblico
     const blockContextMenu = (e: MouseEvent) => {
       if (isCustomerGallery) return;
 
-      const target = e.target as HTMLElement | null;
-      const isImageRelated =
-        target &&
-        (target.tagName === 'IMG' ||
-          target.tagName === 'VIDEO' ||
-          target.tagName === 'PICTURE' ||
-          target.tagName === 'CANVAS' ||
-          target.tagName === 'SVG' ||
-          !!target.querySelector('img') ||
-          !!target.closest('img') ||
-          !!target.closest('.framed-photo-wrap') ||
-          !!target.closest('.service-card-luxury') ||
-          !!target.closest('.photo-strip-wrap') ||
-          !!target.closest('.galleria-card') ||
-          !!target.closest('.perfume-card-front') ||
-          !!target.closest('[data-protected-image]'));
-
-      if (isImageRelated) {
-        e.preventDefault();
-        e.stopPropagation();
-        showPrivacyNotice();
-        return false;
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
       }
+      showPrivacyNotice();
+      return false;
     };
 
-    // 2. Blocco del trascinamento (drag and drop) con notifica informativa
+    // 2. Blocco assoluto e incondizionato del drag & drop sul sito pubblico
     const blockDrag = (e: DragEvent) => {
       if (isCustomerGallery) return;
 
-      const target = e.target as HTMLElement | null;
-      const isImageRelated =
-        target &&
-        (target.tagName === 'IMG' ||
-          target.tagName === 'VIDEO' ||
-          target.tagName === 'PICTURE' ||
-          !!target.closest('img'));
-
-      if (isImageRelated) {
-        e.preventDefault();
-        e.stopPropagation();
-        showPrivacyNotice();
-        return false;
+      e.preventDefault();
+      e.stopPropagation();
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
       }
+      showPrivacyNotice();
+      return false;
     };
+
+    // Binding nativo diretto per massima compatibilità con tutti i browser
+    window.oncontextmenu = blockContextMenu;
+    window.ondragstart = blockDrag;
+    document.oncontextmenu = blockContextMenu;
+    document.ondragstart = blockDrag;
 
     window.addEventListener('contextmenu', blockContextMenu, true);
     window.addEventListener('dragstart', blockDrag, true);
     document.addEventListener('contextmenu', blockContextMenu, true);
     document.addEventListener('dragstart', blockDrag, true);
 
-    // 3. Applicazione attributi e tooltip informativi su tutte le foto
+    // 3. Applicazione attributi rigidi su tutte le immagini del DOM
     const protectAllImages = () => {
-      const images = document.querySelectorAll('img, picture, video');
+      const images = document.querySelectorAll('img, picture, video, canvas, svg');
       images.forEach((img) => {
         img.setAttribute('draggable', 'false');
         img.setAttribute('oncontextmenu', 'return false;');
@@ -101,6 +85,10 @@ export function ImageProtection() {
     observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
+      window.oncontextmenu = null;
+      window.ondragstart = null;
+      document.oncontextmenu = null;
+      document.ondragstart = null;
       window.removeEventListener('contextmenu', blockContextMenu, true);
       window.removeEventListener('dragstart', blockDrag, true);
       document.removeEventListener('contextmenu', blockContextMenu, true);
