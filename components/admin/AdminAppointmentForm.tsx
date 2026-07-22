@@ -232,20 +232,19 @@ export function AdminAppointmentForm({
   }
 
   const handleSendAnticipateNotification = () => {
-    if (!appointment) return;
-    const phone = appointment.customer_phone.trim();
-    if (!phone) {
-      toast.error('Il cliente non ha un numero di telefono associato.');
+    const targetPhone = (customerPhone || appointment?.customer_phone || '').trim();
+    if (!targetPhone) {
+      toast.error('Il cliente non ha un numero di telefono associato. Inseriscilo nel campo Telefono.');
       return;
     }
 
-    let formattedPhone = phone.replace(/\s+/g, '').replace(/[-+]/g, '');
+    let formattedPhone = targetPhone.replace(/\s+/g, '').replace(/[-+]/g, '');
     if (!formattedPhone.startsWith('39') && formattedPhone.length === 10) {
       formattedPhone = '39' + formattedPhone;
     }
 
-    const name = appointment.customer_name;
-    const originalTime = getShopTimeString(new Date(appointment.starts_at));
+    const name = customerName || appointment?.customer_name || 'Cliente';
+    const originalTime = appointment ? getShopTimeString(new Date(appointment.starts_at)) : time;
     const msg = `Ciao ${name}! Ti scriviamo da Garofalo Barberia. Volevamo avvisarti che si è liberato un posto prima, all'incirca per le ${notificationTime}. Se ti fa comodo anticipare il tuo appuntamento delle ${originalTime}, rispondi a questo messaggio! Grazie.`;
 
     const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
