@@ -1,5 +1,12 @@
 # Garofalo Barberia - Project Customizations and Rules
 
+## 🚀 Regola Tassativa Post-Modifica (Auto Fix, Commit, Push & Deploy)
+
+Dopo OGNI singola modifica al codice (file React, CSS, TypeScript, componenti, ecc.):
+1. **Verifica & Fix**: Esegui immediatamente il controllo dei tipi (`npx tsc --noEmit`) e risolvi tutti gli eventuali errori di compilazione.
+2. **Git Commit & Push**: Aggiungi i file modificati (`git add .`), fai il commit con un messaggio chiaro e descrittivo (`git commit -m "..."`) ed effettua il push sul ramo principale (`git push origin master:main`).
+3. **Deploy Forzato Vercel**: Lancia subito il deploy di produzione per forzare l'aggiornamento live su Vercel (`npx vercel --prod --yes`).
+
 ## 🎨 Regole di Progettazione Interfacce Utente (UI) e Modal
 
 ### 1. Struttura dei Modal e Gestione dello Scroll
