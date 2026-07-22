@@ -383,7 +383,10 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
 
 // NLP parser for vocal text
 function parseVoiceText(text: string) {
-  const lowercase = text.toLowerCase();
+  let dateText = text.toLowerCase();
+  dateText = dateText.replace(/\bprimo\b/gi, '1');
+  dateText = dateText.replace(/\b1[°º]\b/g, '1');
+
   let dateStr = '';
   let timeStr = '';
   let customerName = '';
@@ -398,56 +401,64 @@ function parseVoiceText(text: string) {
 
   // 1. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
   const timeRegex = /(\d{1,2})[:.](\d{2})/;
-  const timeMatch = lowercase.match(timeRegex);
+  const timeMatch = dateText.match(timeRegex);
   if (timeMatch) {
     const hh = timeMatch[1].padStart(2, '0');
     const mm = timeMatch[2];
     timeStr = `${hh}:${mm}`;
   } else {
     const hourRegex = /(?:alle|ore)\s+(\d{1,2})/;
-    const hourMatch = lowercase.match(hourRegex);
+    const hourMatch = dateText.match(hourRegex);
     if (hourMatch) {
       const hh = hourMatch[1].padStart(2, '0');
       timeStr = `${hh}:00`;
     }
   }
 
-  // 2. Date parsing (oggi, domani, dopodomani, dd/mm, dd mese)
+  // 2. Date parsing
   const today = new Date();
-  if (lowercase.includes('oggi')) {
+  let matchedDatePhrase = '';
+
+  if (dateText.includes('oggi')) {
     dateStr = formatLocalDate(today);
-  } else if (lowercase.includes('domani')) {
+    matchedDatePhrase = 'oggi';
+  } else if (dateText.includes('domani')) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     dateStr = formatLocalDate(tomorrow);
-  } else if (lowercase.includes('dopodomani')) {
+    matchedDatePhrase = 'domani';
+  } else if (dateText.includes('dopodomani')) {
     const dopodomani = new Date(today);
     dopodomani.setDate(dopodomani.getDate() + 2);
     dateStr = formatLocalDate(dopodomani);
+    matchedDatePhrase = 'dopodomani';
   } else {
-    // Check 15/07 or 15-07
-    const numDateRegex = /(\d{1,2})[\/-](\d{1,2})/;
-    const numDateMatch = lowercase.match(numDateRegex);
+    // Numeric date format 15/07 or 15-07 or 15/07/2026
+    const numDateRegex = /(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?/;
+    const numDateMatch = dateText.match(numDateRegex);
     if (numDateMatch) {
       const day = numDateMatch[1].padStart(2, '0');
       const month = numDateMatch[2].padStart(2, '0');
-      const year = today.getFullYear();
+      const year = numDateMatch[3] ? (numDateMatch[3].length === 2 ? `20${numDateMatch[3]}` : numDateMatch[3]) : today.getFullYear();
       dateStr = `${year}-${month}-${day}`;
+      matchedDatePhrase = numDateMatch[0];
     } else {
-      // Check word date e.g. "15 luglio"
+      // Word date e.g. "1 settembre 2026", "del 1 settembre", "primo settembre 2026"
       const months = [
         'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
         'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
       ];
       for (let i = 0; i < months.length; i++) {
-        if (lowercase.includes(months[i])) {
-          const dayRegex = new RegExp(`(\\d{1,2})\\s+(?:di\\s+)?${months[i]}`);
-          const dayMatch = lowercase.match(dayRegex);
-          if (dayMatch) {
-            const day = dayMatch[1].padStart(2, '0');
+        if (dateText.includes(months[i])) {
+          const monthName = months[i];
+          const wordDateRegex = new RegExp(`(?:del\\s+|di\\s+)?(\\d{1,2})\\s+(?:di\\s+)?${monthName}(?:\\s+(?:del\\s+)?(\\d{4}))?`, 'i');
+          const wordDateMatch = dateText.match(wordDateRegex);
+          if (wordDateMatch) {
+            const day = wordDateMatch[1].padStart(2, '0');
             const month = String(i + 1).padStart(2, '0');
-            const year = today.getFullYear();
+            const year = wordDateMatch[2] || today.getFullYear();
             dateStr = `${year}-${month}-${day}`;
+            matchedDatePhrase = wordDateMatch[0];
             break;
           }
         }
@@ -455,27 +466,25 @@ function parseVoiceText(text: string) {
     }
   }
 
-  // Default to today if no date recognized
   if (!dateStr) {
     dateStr = formatLocalDate(today);
   }
 
-  // 3. Name parsing - clean text of date/time/phone info and prepositions
+  // 3. Name parsing - strip date/time/phone phrases
   let cleanText = text;
-  if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], '');
-  if (timeMatch) cleanText = cleanText.replace(timeMatch[0], '');
-  cleanText = cleanText.replace(/(?:alle|ore)\s+\d{1,2}(?:\s*[:.]\s*\d{2})?/gi, '');
-  cleanText = cleanText.replace(/(oggi|domani|dopodomani)/gi, '');
+  if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], ' ');
+  if (timeMatch) cleanText = cleanText.replace(timeMatch[0], ' ');
+  if (matchedDatePhrase) cleanText = cleanText.replace(new RegExp(matchedDatePhrase, 'gi'), ' ');
 
+  // Strip common date words & prepositions
+  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d)\b/gi, ' ');
   const months = [
     'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
     'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
   ];
   months.forEach((m) => {
-    const r = new RegExp(`\\d{1,2}\\s+(?:di\\s+)?${m}`, 'gi');
-    cleanText = cleanText.replace(r, '');
+    cleanText = cleanText.replace(new RegExp(`\\b${m}\\b`, 'gi'), ' ');
   });
-  cleanText = cleanText.replace(/\d{1,2}[\/-]\d{1,2}(?:[\/-]\d{2,4})?/gi, '');
 
   const stopWords = [
     'prenota', 'prenotazione', 'per', 'a', 'da', 'di', 'il', 'la', 'i', 'gli',
