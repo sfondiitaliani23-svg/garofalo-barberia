@@ -465,17 +465,7 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                 </div>
               </div>
               <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="product-image">URL Immagine / Foto Prodotto</Label>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1 text-[11px] font-medium text-gold hover:underline"
-                  >
-                    <Upload size={12} />
-                    Sfoglia galleria dispositivo
-                  </button>
-                </div>
+                <Label htmlFor="product-image">URL Immagine / Foto Prodotto</Label>
 
                 <input
                   ref={fileInputRef}
@@ -507,24 +497,13 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                     )}
                   </div>
 
-                  <div className="flex-1 space-y-1.5">
-                    <Input
-                      id="product-image"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="Es. /assets/sostituisci-immagini/homepage/4-1.jpg oppure carica foto"
-                      className="w-full"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="flex items-center gap-1.5 rounded border border-white/20 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/80 hover:bg-gold/20 hover:text-gold hover:border-gold/40 transition-colors"
-                    >
-                      <Upload size={12} className="text-gold" />
-                      {isUploading ? 'Caricamento...' : 'Seleziona da Galleria PC / Telefono'}
-                    </button>
-                  </div>
+                  <Input
+                    id="product-image"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder="Es. /assets/sostituisci-immagini/homepage/4-1.jpg"
+                    className="flex-1"
+                  />
                 </div>
                 {/* Selettore rapido foto ufficiali Mood */}
                 <div className="mt-2 space-y-1">
