@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect, useCallback } from 'react';
+import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { format, parseISO, differenceInMinutes } from 'date-fns';
@@ -108,10 +108,17 @@ export function AdminAppointmentForm({
   const [loadingDates, setLoadingDates] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pending, startTransition] = useTransition();
+  const modalScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted && modalScrollRef.current) {
+      modalScrollRef.current.scrollTop = 0;
+    }
+  }, [mounted, appointment]);
 
   // Carica tutti i servizi della combo associati a questo appuntamento in modifica
   useEffect(() => {
@@ -368,7 +375,7 @@ export function AdminAppointmentForm({
           </button>
         </div>
 
-        <div className="admin-modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
+        <div ref={modalScrollRef} className="admin-modal-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4">
           <div>
             <Label htmlFor="admin-name">Nome cliente *</Label>
             <Input
@@ -597,6 +604,19 @@ export function AdminAppointmentForm({
                   </span>
                   Avviso per anticipo orario
                 </h4>
+                
+                {/* Info Cliente e Telefono */}
+                <div className="flex items-center justify-between rounded-lg border border-white/10 bg-black/50 p-2.5 text-xs">
+                  <div>
+                    <span className="block text-[10px] font-medium uppercase text-white/50">Cliente</span>
+                    <span className="font-bold text-white">{customerName || appointment.customer_name || 'Nome non specificato'}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-[10px] font-medium uppercase text-white/50">Telefono WhatsApp</span>
+                    <span className="font-mono font-semibold text-gold">{customerPhone || appointment.customer_phone || 'Nessun numero'}</span>
+                  </div>
+                </div>
+
                 <p className="text-xs text-white/60">
                   Invia un messaggio precompilato su WhatsApp a questo cliente informandolo che si è liberato uno slot a causa di una disdetta o di un servizio concluso prima.
                 </p>
