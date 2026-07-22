@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Calendar, MessageSquare, Maximize2 } from 'lucide-react';
+import { X, Calendar, MessageSquare, Maximize2, Download } from 'lucide-react';
 
 interface Photo {
   id: string;
@@ -16,6 +16,24 @@ interface CustomerGalleryViewerProps {
 
 export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
   const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
+
+  const handleDownload = async (e: React.MouseEvent, photoUrl: string, id: string) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(photoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `taglio-barberia-garofalo-${id.slice(0, 8)}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      window.open(photoUrl, '_blank');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -51,15 +69,27 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
 
               {/* Details Footer */}
               <div className="p-4 space-y-2 bg-[#0a0a0a]">
-                <div className="flex items-center gap-2 text-[10px] text-gold font-bold uppercase tracking-wider">
-                  <Calendar size={12} />
-                  <span>
-                    {new Date(photo.created_at).toLocaleDateString('it-IT', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[10px] text-gold font-bold uppercase tracking-wider">
+                    <Calendar size={12} />
+                    <span>
+                      {new Date(photo.created_at).toLocaleDateString('it-IT', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => handleDownload(e, photo.photo_url, photo.id)}
+                    className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-1 text-[11px] font-semibold text-gold border border-gold/30 transition hover:bg-gold/25"
+                    title="Scarica foto sul tuo dispositivo"
+                  >
+                    <Download size={12} />
+                    <span>Scarica</span>
+                  </button>
                 </div>
                 {photo.caption ? (
                   <p className="text-sm font-medium text-white/80 line-clamp-2">
@@ -105,24 +135,35 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
             </div>
 
             {/* Metadata Footer */}
-            <div className="p-5 border-t border-white/10 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-gold font-bold uppercase tracking-wider">
-                <Calendar size={14} />
-                <span>
-                  Caricata il:{' '}
-                  {new Date(activePhoto.created_at).toLocaleDateString('it-IT', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
-                </span>
-              </div>
-              {activePhoto.caption && (
-                <div className="flex items-start gap-2.5 pt-1">
-                  <MessageSquare size={16} className="text-white/40 mt-0.5 shrink-0" />
-                  <p className="text-sm text-white/90 leading-relaxed">{activePhoto.caption}</p>
+            <div className="p-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs text-gold font-bold uppercase tracking-wider">
+                  <Calendar size={14} />
+                  <span>
+                    Caricata il:{' '}
+                    {new Date(activePhoto.created_at).toLocaleDateString('it-IT', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </span>
                 </div>
-              )}
+                {activePhoto.caption && (
+                  <div className="flex items-start gap-2.5 pt-1">
+                    <MessageSquare size={16} className="text-white/40 mt-0.5 shrink-0" />
+                    <p className="text-sm text-white/90 leading-relaxed">{activePhoto.caption}</p>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => handleDownload(e, activePhoto.photo_url, activePhoto.id)}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gold px-5 py-2.5 text-xs font-bold text-black transition hover:bg-gold-light shrink-0 shadow-md shadow-gold/20"
+              >
+                <Download size={15} />
+                <span>Scarica foto originale</span>
+              </button>
             </div>
           </div>
         </div>
