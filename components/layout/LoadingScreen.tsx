@@ -111,7 +111,7 @@ export function LoadingScreen() {
             margin: 0,
           }}
         >
-          DAL 2010
+          DAL 2025
         </p>
       </div>
 
