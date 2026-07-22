@@ -106,6 +106,12 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
       if (parsed.serviceIds && parsed.serviceIds.length > 0) {
         setSelectedServiceIds(parsed.serviceIds);
       }
+      if (parsed.isRecurring !== undefined) {
+        setIsRecurring(parsed.isRecurring);
+      }
+      if (parsed.recurrenceWeeks) {
+        setRecurrenceWeeks(parsed.recurrenceWeeks);
+      }
 
       toast.success('Voce riconosciuta ed elaborata!');
     };
@@ -400,17 +406,36 @@ function parseVoiceText(
   let customerName = '';
   let customerPhone = '';
   let barberId = '';
+  let isRecurring = false;
+  let recurrenceWeeks = 4;
   let matchedServiceIds: string[] = [];
   let matchedServicePhrases: string[] = [];
 
-  // 1. Phone number parsing
+  // 1. Recurring detection
+  const recurringKeywords = ['ricorrente', 'prenotazione ricorrente', 'ripeti', 'ogni settimana', 'settimane', 'mese', 'mesi'];
+  if (recurringKeywords.some((k) => dateText.includes(k))) {
+    isRecurring = true;
+
+    const weeksMatch = dateText.match(/(\d{1,2})\s*settiman/i);
+    if (weeksMatch) {
+      recurrenceWeeks = parseInt(weeksMatch[1]);
+    } else if (dateText.includes('un mese') || dateText.includes('1 mese')) {
+      recurrenceWeeks = 4;
+    } else if (dateText.includes('due mesi') || dateText.includes('2 mesi')) {
+      recurrenceWeeks = 8;
+    } else if (dateText.includes('tre mesi') || dateText.includes('3 mesi')) {
+      recurrenceWeeks = 12;
+    }
+  }
+
+  // 2. Phone number parsing
   const phoneRegex = /(?:\+?39\s*)?(?:3\d{2}[\s.-]?\d{6,7}|\d{9,10})/;
   const phoneMatch = text.match(phoneRegex);
   if (phoneMatch) {
     customerPhone = phoneMatch[0].replace(/\s+/g, '');
   }
 
-  // 2. Barber matching
+  // 3. Barber matching
   let matchedBarberPhrase = '';
   if (barbersList && barbersList.length > 0) {
     for (const b of barbersList) {
@@ -427,7 +452,7 @@ function parseVoiceText(
     }
   }
 
-  // 3. Service matching
+  // 4. Service matching
   if (servicesList && servicesList.length > 0) {
     for (const s of servicesList) {
       const sName = s.name.toLowerCase();
@@ -460,7 +485,7 @@ function parseVoiceText(
     }
   }
 
-  // 4. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
+  // 5. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
   const timeRegex = /(\d{1,2})[:.](\d{2})/;
   const timeMatch = dateText.match(timeRegex);
   if (timeMatch) {
@@ -476,7 +501,7 @@ function parseVoiceText(
     }
   }
 
-  // 5. Date parsing
+  // 6. Date parsing
   const today = new Date();
   let matchedDatePhrase = '';
 
@@ -531,7 +556,7 @@ function parseVoiceText(
     dateStr = formatLocalDate(today);
   }
 
-  // 6. Name parsing - strip date/time/phone/barber/service phrases
+  // 7. Name parsing - strip date/time/phone/barber/service/recurring phrases
   let cleanText = dateText;
   if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], ' ');
   if (timeMatch) cleanText = cleanText.replace(timeMatch[0], ' ');
@@ -541,8 +566,8 @@ function parseVoiceText(
     cleanText = cleanText.replace(new RegExp(sp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
   });
 
-  // Strip common date words, prepositions & barber & service names
-  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d|con|da|barbiere|servizio|taglio|shampoo|barba|colore|rasata|lama|modellata|forbici)\b/gi, ' ');
+  // Strip common date, recurring & preposition words
+  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d|con|da|barbiere|servizio|taglio|shampoo|barba|colore|rasata|lama|modellata|forbici|prenotazione|ricorrente|ripeti|settimana|settimane|mese|mesi)\b/gi, ' ');
 
   barbersList.forEach((b) => {
     const fn = b.name.split(' ')[0];
@@ -556,7 +581,7 @@ function parseVoiceText(
 
   const stopWords = [
     'prenota', 'prenotazione', 'per', 'a', 'da', 'di', 'il', 'la', 'i', 'gli',
-    'le', 'un', 'una', 'uno', 'ore', 'ora', 'alle', 'del', 'dello', 'della', 'con', 'e'
+    'le', 'un', 'una', 'uno', 'ore', 'ora', 'alle', 'del', 'dello', 'della', 'con', 'e', 'ogni'
   ];
 
   const words = cleanText.split(/\s+/);
@@ -569,7 +594,7 @@ function parseVoiceText(
     customerName = nameWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   }
 
-  return { dateStr, timeStr, customerName, customerPhone, barberId, serviceIds: matchedServiceIds };
+  return { dateStr, timeStr, customerName, customerPhone, barberId, serviceIds: matchedServiceIds, isRecurring, recurrenceWeeks };
 }
 
 function formatLocalDate(date: Date) {
