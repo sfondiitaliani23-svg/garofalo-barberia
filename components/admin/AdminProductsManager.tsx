@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, X, Package, Minus, AlertTriangle } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Package, Minus, AlertTriangle, Upload, Camera, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -89,6 +89,35 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
   const [stockRevision, setStockRevision] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 12 * 1024 * 1024) {
+      toast.error("L'immagine selezionata supera il limite di 12MB");
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setImageUrl(result);
+        toast.success('Foto caricata con successo dalla galleria!');
+      }
+      setIsUploading(false);
+    };
+    reader.onerror = () => {
+      toast.error('Errore nella lettura dell’immagine');
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const originalStock = useRef<Map<string, number>>(
     new Map(products.map((product) => [product.id, product.stock_quantity]))
@@ -436,22 +465,66 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                 </div>
               </div>
               <div>
-                <Label htmlFor="product-image">URL Immagine / Foto Prodotto</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="product-image">URL Immagine / Foto Prodotto</Label>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1 text-[11px] font-medium text-gold hover:underline"
+                  >
+                    <Upload size={12} />
+                    Sfoglia galleria dispositivo
+                  </button>
+                </div>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+
                 <div className="mt-1.5 flex items-center gap-3">
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-white/20 bg-black/40 flex items-center justify-center">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Clicca per scegliere un'immagine dalla galleria del tuo dispositivo"
+                    className="group relative h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-gold/50 bg-black/60 transition-all hover:border-gold hover:scale-105 flex items-center justify-center shadow-lg"
+                  >
                     {imageUrl ? (
-                      <img src={imageUrl} alt="Anteprima" className="h-full w-full object-cover" />
+                      <>
+                        <img src={imageUrl} alt="Anteprima" className="h-full w-full object-cover" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 opacity-0 transition-opacity group-hover:opacity-100 text-white text-[10px] font-semibold text-center p-1">
+                          <Camera size={16} className="text-gold mb-0.5" />
+                          Cambia
+                        </div>
+                      </>
                     ) : (
-                      <Package size={20} className="text-white/30" />
+                      <div className="flex flex-col items-center justify-center text-white/50 group-hover:text-gold transition-colors text-center p-1">
+                        <Upload size={18} className="text-gold mb-0.5" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-gold">Carica</span>
+                      </div>
                     )}
                   </div>
-                  <Input
-                    id="product-image"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="Es. /assets/sostituisci-immagini/homepage/4-1.jpg"
-                    className="flex-1"
-                  />
+
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      id="product-image"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="Es. /assets/sostituisci-immagini/homepage/4-1.jpg oppure carica foto"
+                      className="w-full"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                      className="flex items-center gap-1.5 rounded border border-white/20 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-white/80 hover:bg-gold/20 hover:text-gold hover:border-gold/40 transition-colors"
+                    >
+                      <Upload size={12} className="text-gold" />
+                      {isUploading ? 'Caricamento...' : 'Seleziona da Galleria PC / Telefono'}
+                    </button>
+                  </div>
                 </div>
                 {/* Selettore rapido foto ufficiali Mood */}
                 <div className="mt-2 space-y-1">
