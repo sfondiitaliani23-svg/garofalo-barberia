@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
+import { SITE_CONFIG } from '@/lib/site-config';
 
 export function LoadingScreen() {
   const loaderRef = useRef<HTMLDivElement>(null);
@@ -14,13 +16,13 @@ export function LoadingScreen() {
       }
     }, 80);
 
-    // Mantiene lo schermo di caricamento visibile per 2.8 secondi prima di iniziare il fade out
+    // Mantiene lo schermo di caricamento visibile per 2.8 secondi prima del fade out
     const fadeTimer = setTimeout(() => {
       const loader = loaderRef.current;
       if (loader) {
         loader.style.opacity = '0';
         loader.style.pointerEvents = 'none';
-        
+
         // Rimuove completamente dal DOM dopo la transizione di fade out (800ms)
         setTimeout(() => {
           if (loader) loader.style.display = 'none';
@@ -59,90 +61,21 @@ export function LoadingScreen() {
           animation: 'gbfLoaderFadeUp 0.9s ease forwards',
         }}
       >
-        {/* Logo SVG Barberia Garofalo */}
-        <svg
-          viewBox="0 0 260 90"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            width: '250px',
-            height: 'auto',
-            filter: 'drop-shadow(0 0 24px rgba(205, 154, 79, 0.45))',
-          }}
-        >
-          <defs>
-            <linearGradient id="gbf-gold-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#cd9a4f" />
-              <stop offset="50%" stopColor="#ffb949" />
-              <stop offset="100%" stopColor="#cd9a4f" />
-            </linearGradient>
-          </defs>
-          {/* Simbolo forbici stilizzato a sinistra */}
-          <g transform="translate(8, 12)">
-            {/* Lama superiore */}
-            <path
-              d="M4 4 L32 24 L28 28 L0 8 Z"
-              fill="url(#gbf-gold-grad)"
-              rx="1"
-            />
-            {/* Lama inferiore */}
-            <path
-              d="M4 52 L32 32 L28 28 L0 48 Z"
-              fill="url(#gbf-gold-grad)"
-              rx="1"
-            />
-            {/* Perno centrale */}
-            <circle cx="28" cy="28" r="4" fill="url(#gbf-gold-grad)" />
-          </g>
-          {/* Testo BARBERIA */}
-          <text
-            x="56"
-            y="36"
-            fontFamily="'Oswald', 'Montserrat', sans-serif"
-            fontSize="13"
-            fontWeight="600"
-            fill="url(#gbf-gold-grad)"
-            letterSpacing="6"
-            textAnchor="start"
-          >
-            BARBERIA
-          </text>
-          {/* Testo GAROFALO */}
-          <text
-            x="54"
-            y="60"
-            fontFamily="'Rye', Georgia, serif"
-            fontSize="28"
-            fontWeight="700"
-            fill="url(#gbf-gold-grad)"
-            letterSpacing="4"
-            textAnchor="start"
-          >
-            GAROFALO
-          </text>
-          {/* Linea decorativa */}
-          <line
-            x1="56"
-            y1="68"
-            x2="240"
-            y2="68"
-            stroke="url(#gbf-gold-grad)"
-            strokeWidth="0.8"
-            opacity="0.5"
+        {/* Logo Ufficiale Barberia Garofalo */}
+        <div style={{ position: 'relative', width: '220px', height: '140px' }}>
+          <Image
+            src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
+            alt={SITE_CONFIG.name}
+            width={220}
+            height={140}
+            priority
+            className="w-auto h-full object-contain"
+            style={{
+              mixBlendMode: 'screen',
+              filter: 'drop-shadow(0 0 24px rgba(205, 154, 79, 0.5))',
+            }}
           />
-          {/* Sottotitolo */}
-          <text
-            x="56"
-            y="80"
-            fontFamily="'Montserrat', sans-serif"
-            fontSize="9"
-            fontWeight="400"
-            fill="#cd9a4f"
-            letterSpacing="5"
-            opacity="0.7"
-          >
-            FOGGIA
-          </text>
-        </svg>
+        </div>
 
         {/* Barra di progresso */}
         <div
