@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
-import { parseBookingDateTime, getShopDateString } from '@/lib/utils/booking-datetime';
+import { parseBookingDateTime, getShopDateString, getShopTimeString } from '@/lib/utils/booking-datetime';
 import {
   type AdminDayScheduleInput,
   defaultPeriodsForDay,
@@ -289,6 +289,26 @@ export async function createAdminAppointment(input: AdminAppointmentInput): Prom
         ? `${comboLabel} ${input.notes.trim()}`
         : comboLabel;
 
+      // Pre-check di sovrapposizione per messaggi di errore chiari con nome del cliente esistente
+      const { data: overlapping } = await supabase
+        .from('appointments')
+        .select('customer_name, starts_at, ends_at')
+        .eq('barber_id', input.barberId)
+        .eq('status', 'confirmed')
+        .lt('starts_at', currentEndsAt.toISOString())
+        .gt('ends_at', currentStartsAt.toISOString())
+        .limit(1);
+
+      if (overlapping && overlapping.length > 0) {
+        const existingApt = overlapping[0];
+        const existingName = existingApt.customer_name || 'un altro cliente';
+        const existingStart = getShopTimeString(new Date(existingApt.starts_at));
+        const existingEnd = getShopTimeString(new Date(existingApt.ends_at));
+        hasError = true;
+        errorMsg = `Orario occupato (${dateStr}): c'è già una prenotazione per "${existingName}" dalle ${existingStart} alle ${existingEnd}.`;
+        break;
+      }
+
       const { data: appointment, error } = await supabase
         .from('appointments')
         .insert({
@@ -308,7 +328,7 @@ export async function createAdminAppointment(input: AdminAppointmentInput): Prom
       if (error) {
         hasError = true;
         errorMsg = error.code === '23P01'
-          ? 'Questo orario è già occupato.'
+          ? 'Questo orario è già occupato da un altro appuntamento.'
           : 'Errore durante la prenotazione del servizio ' + s.name;
         console.error('createAdminAppointment loop insert failed', dateStr, error);
         break;
