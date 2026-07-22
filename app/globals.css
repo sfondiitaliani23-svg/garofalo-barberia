@@ -31,9 +31,8 @@ body {
   overflow-x: hidden;
 }
 
-/* Protezione globale privacy immagini: disabilita selezione, menu contestuale, pointer-events e trascinamento delle foto */
+/* Protezione globale privacy immagini: disabilita selezione, menu contestuale e trascinamento delle foto */
 img, video, picture, canvas, svg, [data-protected-image] {
-  pointer-events: none !important;
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
