@@ -307,7 +307,7 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
                   </button>
                 </div>
 
-                <div className="max-h-60 overflow-y-auto rounded-lg border border-white/5 bg-[#161616]/60 p-2 divide-y divide-white/5">
+                <div className="max-h-60 overflow-y-auto admin-modal-scroll rounded-lg border border-white/5 bg-[#161616]/60 p-2 divide-y divide-white/5">
                   {selectedFiles.map((file, idx) => (
                     <div key={idx} className="py-2.5 flex items-start justify-between gap-4 px-2 first:pt-1 last:pb-1">
                       <div className="flex items-center gap-3 min-w-0">

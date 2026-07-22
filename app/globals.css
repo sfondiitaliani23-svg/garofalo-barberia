@@ -226,28 +226,59 @@ img, video, picture, canvas, svg, [data-protected-image] {
   filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.4));
 }
 
+/* Scrollbar di sistema dorata luxury universale per TUTTI gli elementi del sito presenti e futuri */
+* {
+  color-scheme: dark;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(205, 154, 79, 0.5) rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(205, 154, 79, 0.5);
+  border-radius: 9999px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(205, 154, 79, 0.85);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .admin-modal-scroll {
   color-scheme: dark;
   scrollbar-width: thin;
-  scrollbar-color: rgba(205, 154, 79, 0.45) rgba(255, 255, 255, 0.06);
+  scrollbar-color: rgba(205, 154, 79, 0.5) rgba(255, 255, 255, 0.06);
 }
 
 .admin-modal-scroll::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
 }
 
 .admin-modal-scroll::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  border-radius: 9999px;
 }
 
 .admin-modal-scroll::-webkit-scrollbar-thumb {
-  background: rgba(205, 154, 79, 0.45);
-  border-radius: 4px;
+  background: rgba(205, 154, 79, 0.5);
+  border-radius: 9999px;
 }
 
 .admin-modal-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(205, 154, 79, 0.65);
+  background: rgba(205, 154, 79, 0.85);
 }
 
 .eliseo-chat-messages {
