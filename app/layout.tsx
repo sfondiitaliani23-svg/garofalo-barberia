@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { LoadingScreen } from '@/components/layout/LoadingScreen';
 
 export const metadata: Metadata = {
   title: {
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <LoadingScreen />
         {children}
         <Toaster theme="dark" position="top-center" richColors className="!z-[200]" />
       </body>

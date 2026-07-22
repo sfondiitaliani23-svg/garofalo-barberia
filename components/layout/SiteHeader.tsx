@@ -6,13 +6,19 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { SITE_CONFIG } from '@/lib/site-config';
 
-const navLinks = [
+const navLeft = [
   { href: '/', label: 'Home' },
   { href: '/chi-siamo', label: 'Chi siamo' },
   { href: '/servizi', label: 'Servizi' },
+];
+
+const navRight = [
   { href: '/galleria', label: 'Galleria' },
+  { href: '/recensioni', label: 'Recensioni' },
   { href: '/contatti', label: 'Contatti' },
 ];
+
+const allNavLinks = [...navLeft, ...navRight];
 
 interface SiteHeaderProps {
   isLoggedIn?: boolean;
@@ -21,7 +27,15 @@ interface SiteHeaderProps {
 
 export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const accountLabel = userLabel ? `Ciao, ${userLabel}` : 'Area cliente';
+
+  // Sticky scroll effect
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Blocca lo scroll del body quando il drawer è aperto
   useEffect(() => {
@@ -33,57 +47,106 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-[100] border-b border-white/10 bg-black/95 backdrop-blur">
-        <div className="container-lux flex h-16 items-center justify-between gap-4">
+      <header
+        className={`sticky top-0 z-[100] transition-all duration-300 ${
+          scrolled
+            ? 'bg-black/98 backdrop-blur-md border-b border-white/10 shadow-[0_4px_32px_rgba(0,0,0,0.6)]'
+            : 'bg-black/80 backdrop-blur-sm border-b border-white/5'
+        }`}
+      >
+        <div className="container-lux flex h-16 items-center">
 
-          {/* Logo */}
-          <Link href="/" className="relative z-[151] flex shrink-0 items-center" onClick={close}>
-            {/* Desktop */}
-            <Image
-              src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
-              alt={SITE_CONFIG.name}
-              width={180}
-              height={58}
-              className="hidden lg:block h-[58px] w-auto max-w-[180px] object-contain"
-              style={{ mixBlendMode: 'screen' }}
-              priority
-            />
-            {/* Mobile */}
-            <Image
-              src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
-              alt={SITE_CONFIG.name}
-              width={46}
-              height={46}
-              className="block lg:hidden h-[46px] w-auto max-w-[46px] object-contain"
-              style={{ mixBlendMode: 'screen' }}
-              priority
-            />
-          </Link>
+          {/* ── Navigazione sinistra (Desktop) ─────────────────────────────── */}
+          <nav
+            aria-label="Navigazione principale sinistra"
+            className="hidden lg:flex items-center gap-7 flex-1"
+          >
+            {navLeft.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-gold-light"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-          {/* Navigazione Desktop */}
-          <nav className="relative z-[101] hidden items-center gap-6 lg:flex">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="text-sm text-white/70 transition hover:text-gold-light">
+          {/* ── Logo Centrato ───────────────────────────────────────────────── */}
+          <div className="flex-1 lg:flex-none flex justify-start lg:justify-center">
+            <Link
+              href="/"
+              className="relative z-[151] flex shrink-0 items-center"
+              onClick={close}
+              aria-label={SITE_CONFIG.name}
+            >
+              {/* Desktop */}
+              <Image
+                src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
+                alt={SITE_CONFIG.name}
+                width={180}
+                height={58}
+                className="hidden lg:block h-[54px] w-auto max-w-[180px] object-contain"
+                style={{ mixBlendMode: 'screen' }}
+                priority
+              />
+              {/* Mobile */}
+              <Image
+                src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
+                alt={SITE_CONFIG.name}
+                width={46}
+                height={46}
+                className="block lg:hidden h-[44px] w-auto max-w-[44px] object-contain"
+                style={{ mixBlendMode: 'screen' }}
+                priority
+              />
+            </Link>
+          </div>
+
+          {/* ── Navigazione destra (Desktop) ────────────────────────────────── */}
+          <nav
+            aria-label="Navigazione principale destra"
+            className="hidden lg:flex items-center gap-7 flex-1 justify-end"
+          >
+            {navRight.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-gold-light"
+              >
                 {link.label}
               </Link>
             ))}
             {isLoggedIn ? (
-              <Link href="/area-cliente/dashboard" prefetch className="text-sm text-gold transition hover:text-gold-light">
+              <Link
+                href="/area-cliente/dashboard"
+                prefetch
+                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-gold transition-colors hover:text-gold-light"
+              >
                 {accountLabel}
               </Link>
             ) : (
-              <Link href="/login" prefetch className="text-sm text-white/70 transition hover:text-gold-light">
+              <Link
+                href="/login"
+                prefetch
+                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60 transition-colors hover:text-gold-light"
+              >
                 Accedi
               </Link>
             )}
-            <Link href="/prenota" className="btn-primary text-xs">Prenota</Link>
+            <Link
+              href="/prenota"
+              className="btn-primary text-[10px] tracking-[0.15em] uppercase py-2.5 px-5"
+            >
+              Prenota
+            </Link>
           </nav>
 
-          {/* Bottone hamburger Mobile */}
+          {/* ── Bottone hamburger Mobile ─────────────────────────────────────── */}
           <button
             type="button"
             className="relative z-[151] lg:hidden flex flex-col items-center justify-center border border-white/20 hover:border-gold rounded-lg w-12 h-14 bg-black/50 text-white p-1 transition-all duration-200"
-            onClick={() => setOpen(o => !o)}
+            onClick={() => setOpen((o) => !o)}
             aria-label={open ? 'Chiudi menu' : 'Apri menu'}
             aria-expanded={open}
           >
@@ -104,9 +167,9 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
         </div>
       </header>
 
-      {/* ── DRAWER: scorre da destra verso sinistra ───────────────────────── */}
+      {/* ── DRAWER mobile ──────────────────────────────────────────────────── */}
 
-      {/* Backdrop semi-trasparente — chiude al click */}
+      {/* Backdrop */}
       <div
         className={`fixed inset-0 z-[149] bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -117,7 +180,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
 
       {/* Pannello drawer */}
       <div
-        className={`fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col lg:hidden shadow-[−8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col lg:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-label="Menu di navigazione"
@@ -143,11 +206,11 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
 
         {/* Voci di menu */}
         <nav className="flex flex-col flex-1 overflow-y-auto py-4">
-          {navLinks.map((link) => (
+          {allNavLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="flex items-center gap-3 px-6 py-4 text-sm font-semibold uppercase tracking-widest text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
+              className="flex items-center gap-3 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
               onClick={close}
             >
               {link.label}
@@ -158,7 +221,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
           {isLoggedIn ? (
             <Link
               href="/area-cliente/dashboard"
-              className="flex items-center gap-3 px-6 py-4 text-sm font-semibold uppercase tracking-widest text-gold border-b border-white/5 hover:text-gold-light hover:bg-white/[0.03] transition-all"
+              className="flex items-center gap-3 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-gold border-b border-white/5 hover:text-gold-light hover:bg-white/[0.03] transition-all"
               onClick={close}
             >
               {accountLabel}
@@ -166,7 +229,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
           ) : (
             <Link
               href="/login"
-              className="flex items-center gap-3 px-6 py-4 text-sm font-semibold uppercase tracking-widest text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
+              className="flex items-center gap-3 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
               onClick={close}
             >
               Accedi
@@ -178,7 +241,7 @@ export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
         <div className="px-5 py-6 border-t border-white/8">
           <Link
             href="/prenota"
-            className="btn-primary w-full text-center uppercase tracking-widest text-xs py-4 font-bold block"
+            className="btn-primary w-full text-center uppercase tracking-[0.15em] text-[10px] py-4 font-bold block"
             onClick={close}
           >
             Prenota ora
