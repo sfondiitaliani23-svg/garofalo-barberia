@@ -97,14 +97,10 @@ export function AdminAppointmentForm({
   const [recurrenceWeeks, setRecurrenceWeeks] = useState(4);
   const [slots, setSlots] = useState<string[]>([]);
   const [notificationTime, setNotificationTime] = useState(() => {
-    const now = new Date();
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'Europe/Rome',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-    return formatter.format(now);
+    if (appointment) {
+      return getShopTimeString(new Date(appointment.starts_at));
+    }
+    return '10:00';
   });
   const [slotsUnavailable, setSlotsUnavailable] = useState(false);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
@@ -626,7 +622,7 @@ export function AdminAppointmentForm({
               </div>
 
               <p className="text-center text-xs text-white/40">
-                Attuale: {format(parseISO(appointment.starts_at), "EEEE d MMMM 'alle' HH:mm", { locale: it })}
+                Attuale: {getShopDateString(new Date(appointment.starts_at))} alle {getShopTimeString(new Date(appointment.starts_at))}
               </p>
             </>
           )}
