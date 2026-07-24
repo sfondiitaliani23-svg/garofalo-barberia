@@ -391,3 +391,211 @@
   height: 22px;
   object-fit: contain;
 }
+
+/* ── BOOKING QR CARD ─────────────────────────────────────────────────── */
+
+.public-page .booking-qr-section {
+  margin-top: 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.public-page .booking-qr-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+/* Singola card portachiave */
+.public-page .booking-qr-card {
+  position: relative;
+  width: 200px;
+  min-height: 270px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 60%, #1c1a14 100%);
+  border: 1.5px solid rgba(197, 168, 89, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(197, 168, 89, 0.08),
+    0 8px 40px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(197, 168, 89, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.25rem 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.public-page .booking-qr-card:hover {
+  transform: translateY(-4px) rotate(-1deg);
+  box-shadow:
+    0 0 0 1px rgba(197, 168, 89, 0.2),
+    0 16px 56px rgba(0, 0, 0, 0.8),
+    0 0 24px rgba(197, 168, 89, 0.08),
+    inset 0 1px 0 rgba(197, 168, 89, 0.2);
+}
+
+/* Foro portachiave in cima */
+.public-page .qr-keychain-hole {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #000;
+  border: 2px solid rgba(197, 168, 89, 0.5);
+  box-shadow:
+    0 0 0 3px #0d0d0d,
+    0 2px 8px rgba(0, 0, 0, 0.8);
+  z-index: 2;
+}
+
+/* FRONTE - Logo */
+.public-page .qr-card-front,
+.public-page .qr-card-back {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.public-page .qr-logo-wrap {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 2px solid rgba(197, 168, 89, 0.4);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(197, 168, 89, 0.05);
+  box-shadow: 0 0 16px rgba(197, 168, 89, 0.12);
+  margin-bottom: 0.25rem;
+}
+
+.public-page .qr-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.public-page .qr-brand-name {
+  font-family: 'Rye', Georgia, serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: #c5a859;
+  line-height: 1.3;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.public-page .qr-divider {
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(197, 168, 89, 0.4), transparent);
+  margin: 0.25rem auto;
+}
+
+.public-page .qr-tagline {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* RETRO - QR Code */
+.public-page .qr-scan-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: rgba(197, 168, 89, 0.7);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.public-page .qr-code-wrap {
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  border: 1px solid rgba(197, 168, 89, 0.2);
+  line-height: 0;
+}
+
+.public-page .qr-scan-sub {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.02em;
+  margin: 0;
+  line-height: 1.35;
+  max-width: 140px;
+  text-align: center;
+}
+
+.public-page .qr-url-text {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(197, 168, 89, 0.6);
+  margin: 0;
+}
+
+/* Freccia tra le due card */
+.public-page .qr-arrow {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* Testo CTA sotto */
+.public-page .qr-cta-text {
+  max-width: 480px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.6;
+  margin: 0 auto 1.5rem;
+}
+
+/* Bottone diretto */
+.public-page .qr-direct-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #c5a859 0%, #a07f3a 100%);
+  color: #000;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 20px rgba(197, 168, 89, 0.3);
+}
+
+.public-page .qr-direct-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+/* Responsive: su mobile la freccia va sotto */
+@media (max-width: 520px) {
+  .public-page .booking-qr-wrapper {
+    flex-direction: column;
+  }
+
+  .public-page .qr-arrow {
+    transform: rotate(90deg);
+  }
+}

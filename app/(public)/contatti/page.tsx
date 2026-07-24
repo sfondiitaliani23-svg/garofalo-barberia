@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { ContactForm } from '@/components/contatti/ContactForm';
 import { InstagramFeed } from '@/components/contatti/InstagramFeed';
+import { BookingQRCard } from '@/components/contatti/BookingQRCard';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
 import '../public-pages.css';
 
@@ -125,6 +126,11 @@ export default function ContattiPage() {
 
           <div className="mt-12">
             <ContactForm />
+          </div>
+
+          {/* ── QR CODE PRENOTAZIONE ─────────────────────────────────── */}
+          <div className="mt-16 border-t border-white/10 pt-16">
+            <BookingQRCard />
           </div>
         </div>
       </section>
