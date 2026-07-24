@@ -28,7 +28,6 @@ export function BookingQRCard() {
               width={120}
               height={120}
               className="qr-logo-img"
-              style={{ mixBlendMode: 'screen' }}
             />
             <p className="qr-brand-name">BARBERIA<br />GAROFALO</p>
             <div className="qr-divider" />

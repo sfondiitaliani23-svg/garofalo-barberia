@@ -472,6 +472,8 @@
   max-width: 120px;
   object-fit: contain;
   display: block;
+  /* Tinta oro uguale agli altri font della card */
+  filter: sepia(1) saturate(2.5) hue-rotate(5deg) brightness(0.88);
 }
 
 .public-page .qr-brand-name {
@@ -495,7 +497,7 @@
 .public-page .qr-tagline {
   font-size: 0.72rem;
   letter-spacing: 0.12em;
-  color: rgba(255, 255, 255, 0.4);
+  color: #c5a859;
   text-transform: uppercase;
   margin: 0;
 }
