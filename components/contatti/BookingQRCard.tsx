@@ -22,15 +22,14 @@ export function BookingQRCard() {
 
           {/* Lato FRONTE: Logo */}
           <div className="qr-card-front">
-            <div className="qr-logo-wrap">
-              <Image
-                src="/assets/logo.png"
-                alt="Barberia Garofalo"
-                width={90}
-                height={90}
-                className="qr-logo-img"
-              />
-            </div>
+            <Image
+              src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
+              alt="Barberia Garofalo"
+              width={120}
+              height={120}
+              className="qr-logo-img"
+              style={{ mixBlendMode: 'screen' }}
+            />
             <p className="qr-brand-name">BARBERIA<br />GAROFALO</p>
             <div className="qr-divider" />
             <p className="qr-tagline">Foggia · dal 2025</p>
