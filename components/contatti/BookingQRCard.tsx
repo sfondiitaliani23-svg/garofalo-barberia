@@ -3,7 +3,7 @@
 import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
 
-const BOOKING_URL = 'https://barberiagarofalo.it/prenota';
+const BOOKING_URL = 'https://barberiagarofalo.it/login';
 
 export function BookingQRCard() {
   return (
@@ -11,7 +11,7 @@ export function BookingQRCard() {
       {/* Eyebrow */}
       <div className="eyebrow mb-6">
         <div className="eyebrow-line" />
-        <span className="eyebrow-text">Prenota con un click</span>
+        <span className="eyebrow-text">Accedi con un click</span>
       </div>
 
       <div className="booking-qr-wrapper">
@@ -74,25 +74,25 @@ export function BookingQRCard() {
                 }}
               />
             </div>
-            <p className="qr-scan-sub">per prenotare il tuo appuntamento</p>
+            <p className="qr-scan-sub">per accedere alla tua area personale</p>
             <div className="qr-divider" />
-            <p className="qr-url-text">barberiagarofalo.it/prenota</p>
+            <p className="qr-url-text">barberiagarofalo.it/login</p>
           </div>
         </div>
       </div>
 
       {/* CTA testo sotto */}
       <p className="qr-cta-text">
-        Inquadra il QR con la fotocamera del tuo smartphone e prenota direttamente online — senza telefonate.
+        Inquadra il QR con la fotocamera del tuo smartphone e accedi direttamente alla tua area personale — senza digitare nulla.
       </p>
 
       {/* Bottone diretto */}
       <a
         href={BOOKING_URL}
         className="qr-direct-btn"
-        aria-label="Prenota ora online"
+        aria-label="Accedi ora"
       >
-        Prenota ora online
+        Accedi ora
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
