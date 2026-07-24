@@ -76,6 +76,8 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
             </p>
           </CardContent>
         </Card>
+        {/* Incasso nascosto per riservatezza — impostare a true per riabilitare */}
+        {false && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-white/60">Incasso stimato</CardTitle>
@@ -87,6 +89,7 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
             </p>
           </CardContent>
         </Card>
+        )}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm text-white/60">
@@ -145,7 +148,6 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
                   value={service.count}
                   maxValue={maxServiceCount}
                   shareTotal={totalServiceBookings}
-                  detail={`Incasso stimato ${formatPrice(service.revenueCents)}`}
                 />
               ))
             ) : (

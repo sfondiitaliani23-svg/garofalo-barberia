@@ -316,6 +316,7 @@ export function PremiumDashboard({
           icon={Calendar}
           sparklineData={metrics.appointments.sparkline}
         />
+        {/* KPI Incasso nascosta per riservatezza — decommentare se necessario
         <KpiCard
           title={revenueTitle}
           value={formatPrice(metrics.revenue.currentVal)}
@@ -323,6 +324,7 @@ export function PremiumDashboard({
           icon={DollarSign}
           sparklineData={metrics.revenue.sparkline}
         />
+        */}
         <KpiCard
           title={visitsTitle}
           value={metrics.visits.currentVal}
