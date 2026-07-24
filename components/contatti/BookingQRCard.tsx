@@ -62,15 +62,7 @@ export function BookingQRCard() {
                 size={140}
                 bgColor="transparent"
                 fgColor="#c5a859"
-                level="H"
-                imageSettings={{
-                  src: '/assets/logo.png',
-                  x: undefined,
-                  y: undefined,
-                  height: 28,
-                  width: 28,
-                  excavate: true,
-                }}
+                level="M"
               />
             </div>
             <p className="qr-scan-sub">per accedere alla tua area personale</p>
