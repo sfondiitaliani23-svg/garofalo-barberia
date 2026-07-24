@@ -33,7 +33,7 @@ export function BookingQRCard() {
             </div>
             <p className="qr-brand-name">BARBERIA<br />GAROFALO</p>
             <div className="qr-divider" />
-            <p className="qr-tagline">Foggia · dal 1996</p>
+            <p className="qr-tagline">Foggia · dal 2025</p>
           </div>
         </div>
 
