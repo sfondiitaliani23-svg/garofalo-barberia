@@ -3,7 +3,7 @@
 import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
 
-const BOOKING_URL = 'https://barberiagarofalo.it/login';
+const BOOKING_URL = 'https://barberiagarofalo.it/login'; // v2 — no logo nel QR
 
 export function BookingQRCard() {
   return (
