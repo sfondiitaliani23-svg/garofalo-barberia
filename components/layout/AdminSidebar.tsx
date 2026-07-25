@@ -17,7 +17,8 @@ import {
   Package,
   Menu,
   X,
-  LogOut
+  LogOut,
+  MessageSquareWarning,
 } from 'lucide-react';
 
 const links = [
@@ -30,6 +31,7 @@ const links = [
   { href: '/admin/inventario', label: 'Inventario', icon: Package },
   { href: '/admin/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/admin/staff', label: 'Gestione team', icon: UserCog },
+  { href: '/admin/segnalazioni', label: 'Segnalaci il problema', icon: MessageSquareWarning },
 ];
 
 export function AdminSidebar() {
