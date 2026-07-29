@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -63,6 +63,7 @@ export function UpcomingAppointmentsList({
 }: UpcomingAppointmentsListProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [onlyActive, setOnlyActive] = useState(true);
   const [sortType, setSortType] = useState<SortType>('date');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [typeOpen, setTypeOpen] = useState(false);
@@ -77,7 +78,10 @@ export function UpcomingAppointmentsList({
   const query = normalize(search);
 
   const filtered = useMemo(() => {
-    const base = appointments.filter((a) => matchesQuery(a, query));
+    const base = appointments.filter((a) => {
+      if (onlyActive && a.status !== 'confirmed') return false;
+      return matchesQuery(a, query);
+    });
     return [...base].sort((a, b) => {
       let cmp = 0;
       if (sortType === 'date') {
@@ -92,7 +96,7 @@ export function UpcomingAppointmentsList({
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [appointments, query, sortType, sortDir]);
+  }, [appointments, query, onlyActive, sortType, sortDir]);
 
   function openEdit(appointment: CalendarAppointment) {
     setSelectedAppointment(appointment);
@@ -153,6 +157,36 @@ export function UpcomingAppointmentsList({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+
+          {/* Pillola toggle Solo Attive */}
+          <button
+            id="btn-toggle-active"
+            type="button"
+            role="switch"
+            aria-checked={onlyActive}
+            onClick={() => setOnlyActive((v) => !v)}
+            className="flex items-center gap-2.5 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:border-gold/40 hover:bg-white/10 focus:outline-none"
+          >
+            <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${onlyActive ? 'text-gold' : 'text-white/40'}`}>
+              Solo attive
+            </span>
+            {/* Track */}
+            <span
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-300 ${
+                onlyActive ? 'bg-gold' : 'bg-white/20'
+              }`}
+            >
+              {/* Thumb */}
+              <span
+                className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+                  onlyActive ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                }`}
+              />
+            </span>
+            <span className={`text-[11px] font-bold uppercase tracking-wider transition-colors ${onlyActive ? 'text-white/30' : 'text-white/60'}`}>
+              Tutte
+            </span>
+          </button>
 
           {/* Bottone Tipo Ordine */}
           <div className="relative" ref={typeRef}>
