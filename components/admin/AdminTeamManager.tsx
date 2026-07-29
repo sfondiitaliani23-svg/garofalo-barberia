@@ -594,7 +594,8 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
               const startTime = format(startDate, 'HH:mm');
               const endTime = format(endDate, 'HH:mm');
               const isSameDay = format(startDate, 'yyyy-MM-dd') === format(endDate, 'yyyy-MM-dd');
-              const hasCustomTime = startTime !== '00:00' || (endTime !== '23:59' && endTime !== '00:00');
+              const durationHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+              const isHalfDay = isSameDay && durationHours < 16;
 
               return (
                 <div
@@ -604,7 +605,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium text-white">{resolveBarberName(entry)}</p>
-                      {hasCustomTime && (
+                      {isHalfDay && (
                         <span className="rounded-full border border-gold/40 bg-gold/15 px-2.5 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider">
                           Mezza giornata ({startTime} – {endTime})
                         </span>
