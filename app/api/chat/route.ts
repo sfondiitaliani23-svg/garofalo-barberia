@@ -24,7 +24,7 @@ const INTENTS: Intent[] = [
   {
     patterns: ['orar', 'quand aprite', 'apert', 'aprit', 'chius', 'chiud', 'a che ora', 'weekend', 'sabato', 'domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'festiv'],
     response: () =>
-      `⏰ **Orari del salone:**\n\n• **Lunedì:** Chiuso\n• **Martedì – Venerdì:** 09:00–13:00 e 14:00–19:30\n• **Sabato:** 09:00–13:00 e 14:00–18:00\n• **Domenica:** Chiuso`,
+      `⏰ **Orari del salone:**\n\n• **Lunedì:** Chiuso\n• **Martedì – Venerdì:** 08:30–13:00 e 15:30–20:30\n• **Sabato:** 08:30–13:30 e 14:30–20:00\n• **Domenica:** Chiuso`,
   },
 
   // ── PRICES ────────────────────────────────────────────────────────────────
@@ -316,7 +316,7 @@ function detectIntent(message: string, isFriendMode: boolean, history: any[]): {
   
   // Hours
   if (['orar', 'quand aprite', 'apert', 'aprit', 'chius', 'chiud', 'a che ora', 'weekend', 'sabato', 'domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'festiv'].some(p => lower.includes(p))) {
-    const hoursReply = `⏰ **Orari del salone:**\n\n• **Lunedì:** Chiuso\n• **Martedì – Venerdì:** 09:00–13:00 e 14:00–19:30\n• **Sabato:** 09:00–13:00 e 14:00–18:00\n• **Domenica:** Chiuso`;
+    const hoursReply = `⏰ **Orari del salone:**\n\n• **Lunedì:** Chiuso\n• **Martedì – Venerdì:** 08:30–13:00 e 15:30–20:30\n• **Sabato:** 08:30–13:30 e 14:30–20:00\n• **Domenica:** Chiuso`;
     if (isFriendMode) {
       return {
         replies: [hoursReply, "Comunque, tornando alla nostra chiacchierata... dove eravamo rimasti? 😄"],

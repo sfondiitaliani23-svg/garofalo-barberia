@@ -52,7 +52,7 @@ const FAQ_DATA: FAQItem[] = [
     id: '7',
     category: 'contatti',
     question: 'Quali sono gli orari di apertura e dove vi trovate?',
-    answer: 'Siamo a Foggia in Viale Ignazio D\'Addedda, 236. Siamo aperti dal Martedì al Venerdì dalle 09:00 alle 13:00 e dalle 14:00 alle 19:30, e il Sabato dalle 09:00 alle 13:00 e dalle 14:00 alle 18:00. Lunedì e Domenica siamo chiusi.',
+    answer: 'Siamo a Foggia in Viale Ignazio D\'Addedda, 236. Siamo aperti dal Martedì al Venerdì dalle 08:30 alle 13:00 e dalle 15:30 alle 20:30, e il Sabato dalle 08:30 alle 13:30 e dalle 14:30 alle 20:00. Lunedì e Domenica siamo chiusi.',
   },
   {
     id: '8',
