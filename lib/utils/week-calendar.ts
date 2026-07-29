@@ -1,6 +1,6 @@
 import { addDays, addMinutes, differenceInMinutes, format, parseISO, startOfWeek } from 'date-fns';
 import { SITE_CONFIG } from '@/lib/site-config';
-import { isShopDateFullyBlocked, type TimeOffRow } from '@/lib/utils/barber-absence';
+import { filterTimeOffForBarber, isShopDateFullyBlocked, type TimeOffRow } from '@/lib/utils/barber-absence';
 import { getDayClosingTime as getClosingForDay, isSlotWithinShopHours } from '@/lib/utils/shop-hours';
 import { getShopDateString, getShopTimeString, parseBookingDateTime } from '@/lib/utils/booking-datetime';
 
@@ -122,6 +122,11 @@ export function buildWeekGrid(
         continue;
       }
 
+      if (isSlotBlockedByTimeOff(key, time, barberId, timeOff)) {
+        row.push({ type: 'unavailable', day });
+        continue;
+      }
+
       // Trova gli appuntamenti che iniziano in questo slot o lo coprono nel fuso del salone
       const aptsAtSlot = confirmed.filter((a) => {
         const dStart = new Date(a.starts_at);
@@ -172,4 +177,22 @@ export function buildWeekGrid(
   });
 
   return rows;
+}
+
+export function isSlotBlockedByTimeOff(
+  dateStr: string,
+  timeStr: string,
+  barberId: string,
+  timeOff: TimeOffRow[]
+): boolean {
+  const slotStart = parseBookingDateTime(dateStr, timeStr);
+  const slotEnd = addMinutes(slotStart, SITE_CONFIG.slotIntervalMinutes);
+  const isAll = barberId === 'all';
+
+  return timeOff.some((block) => {
+    if (!isAll && block.barber_id && block.barber_id !== barberId) return false;
+    const blockStart = new Date(block.start_at);
+    const blockEnd = new Date(block.end_at);
+    return slotStart < blockEnd && slotEnd > blockStart;
+  });
 }

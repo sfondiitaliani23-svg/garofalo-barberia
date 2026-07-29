@@ -670,6 +670,8 @@ export interface AdminTimeOffInput {
   startDate: string;
   endDate: string;
   reason?: string;
+  startTime?: string | null;
+  endTime?: string | null;
 }
 
 const DEFAULT_WEEKLY_SCHEDULE: AdminDayScheduleInput[] = [2, 3, 4, 5, 6].map((dayOfWeek) =>
@@ -851,8 +853,11 @@ export async function saveAdminTimeOff(input: AdminTimeOffInput) {
     return { ok: false, error: 'Inserisci data inizio e fine' };
   }
 
-  const startsAt = parseISO(`${input.startDate}T00:00:00`);
-  const endsAt = parseISO(`${input.endDate}T23:59:59`);
+  const startTimeStr = input.startTime ? `${input.startTime}:00` : '00:00:00';
+  const endTimeStr = input.endTime ? `${input.endTime}:59` : '23:59:59';
+
+  const startsAt = parseISO(`${input.startDate}T${startTimeStr}`);
+  const endsAt = parseISO(`${input.endDate}T${endTimeStr}`);
 
   if (endsAt < startsAt) {
     return { ok: false, error: 'La data di fine deve essere dopo l\'inizio' };
