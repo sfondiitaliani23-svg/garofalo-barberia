@@ -196,7 +196,7 @@ export async function getUpcomingAdminAppointments(limit = 300) {
     .from('appointments')
     .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
     .in('status', ['confirmed', 'completed', 'cancelled'])
-    .order('starts_at', { ascending: false })
+    .order('starts_at', { ascending: true })
     .limit(limit);
 
   return data ?? [];
