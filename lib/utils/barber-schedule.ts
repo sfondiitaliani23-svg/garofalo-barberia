@@ -23,7 +23,7 @@ export function defaultPeriodsForDay(dayOfWeek: number): AdminDayScheduleInput {
   if (dayOfWeek === 6) {
     return {
       dayOfWeek,
-      morning: { enabled: true, startTime: '08:30', endTime: '13:30' },
+      morning: { enabled: true, startTime: '08:30', endTime: '14:00' },
       afternoon: { enabled: true, startTime: '14:30', endTime: '20:00' },
     };
   }
