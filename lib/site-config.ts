@@ -31,16 +31,16 @@ export const SITE_CONFIG = {
   ],
   hours: [
     { day: 'Lunedì', time: 'Chiuso' },
-    { day: 'Martedì – Sabato', time: '08:30 – 13:00 · 15:30 – 20:30' },
+    { day: 'Martedì – Sabato', time: '08:30 – 13:00 · 14:00 – 20:30' },
     { day: 'Domenica', time: 'Chiuso' },
   ],
   detailedHours: [
     { day: 'Lunedì', time: 'Chiuso' },
-    { day: 'Martedì', time: '08:30 – 13:00 · 15:30 – 20:30' },
-    { day: 'Mercoledì', time: '08:30 – 13:00 · 15:30 – 20:30' },
-    { day: 'Giovedì', time: '08:30 – 13:00 · 15:30 – 20:30' },
-    { day: 'Venerdì', time: '08:30 – 13:00 · 15:30 – 20:30' },
-    { day: 'Sabato', time: '08:30 – 13:00 · 15:30 – 20:30' },
+    { day: 'Martedì', time: '08:30 – 13:00 · 14:00 – 20:30' },
+    { day: 'Mercoledì', time: '08:30 – 13:00 · 14:00 – 20:30' },
+    { day: 'Giovedì', time: '08:30 – 13:00 · 14:00 – 20:30' },
+    { day: 'Venerdì', time: '08:30 – 13:00 · 14:00 – 20:30' },
+    { day: 'Sabato', time: '08:30 – 13:00 · 14:00 – 20:30' },
     { day: 'Domenica', time: 'Chiuso' },
   ],
 } as const;

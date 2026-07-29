@@ -96,50 +96,8 @@ function getBookingNotificationEmail(): string | undefined {
 }
 
 export async function sendAdminBookingEmail(data: BookingNotificationData) {
-  const notificationEmail = getBookingNotificationEmail();
-  if (!resend || !notificationEmail) return { ok: false, reason: 'not_configured' };
-
-  const { dateStr, timeStr, price, phone } = formatBookingDetails(data);
-  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni`;
-  const subject = `Nuova prenotazione — ${data.customerName} — ${dateStr} ${timeStr}`;
-  const text =
-    `Nuova prenotazione online\n\n` +
-    `Cliente: ${data.customerName} (${phone})\n` +
-    `Servizio: ${data.serviceName} — ${price}\n` +
-    `Barbiere: ${data.barberName}\n` +
-    `Data: ${dateStr} alle ${timeStr}\n` +
-    (data.notes ? `Note: ${data.notes}\n` : '') +
-    `\nCalendario admin: ${adminUrl}`;
-
-  try {
-    const { error } = await resend.emails.send(
-      buildTransactionalEmail({
-        to: notificationEmail,
-        subject,
-        text,
-        html: renderAdminBookingEmailHtml({
-          customerName: data.customerName,
-          phone,
-          serviceName: data.serviceName,
-          price,
-          barberName: data.barberName,
-          dateStr,
-          timeStr,
-          notes: data.notes,
-        }),
-      })
-    );
-
-    if (error) {
-      console.error('Email notification failed:', error);
-      return { ok: false, reason: 'send_failed' };
-    }
-
-    return { ok: true };
-  } catch (error) {
-    console.error('Email notification failed:', error);
-    return { ok: false, reason: 'send_failed' };
-  }
+  // E-mail di conferma prenotazione disabilitate su richiesta del proprietario
+  return { ok: true, reason: 'disabled' as const };
 }
 
 export async function sendAdminBookingWeb3Forms(data: BookingNotificationData) {

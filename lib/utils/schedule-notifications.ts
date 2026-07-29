@@ -144,30 +144,8 @@ export async function sendScheduleChangeEmails(
   emails: string[],
   payload: { subject: string; heading: string; lines: string[] }
 ) {
-  if (!resend || emails.length === 0) {
-    return { ok: false, sent: 0, total: emails.length, reason: 'not_configured' as const };
-  }
-
-  const html = buildScheduleEmailHtml(payload.heading, payload.lines);
-  const text = `${payload.heading}\n\n${payload.lines.join('\n')}\n\nGarofalo Barberia — ${SITE_CONFIG.address}`;
-  let sent = 0;
-
-  const results = await Promise.all(
-    emails.map(async (email) => {
-      const { error } = await resend.emails.send(
-        buildTransactionalEmail({
-          to: email,
-          subject: payload.subject,
-          text,
-          html,
-        })
-      );
-      return !error;
-    })
-  );
-
-  sent = results.filter(Boolean).length;
-  return { ok: sent > 0, sent, total: emails.length };
+  // E-mail di cambio orario ai clienti disabilitate su richiesta del proprietario
+  return { ok: true, sent: 0, total: emails.length, reason: 'disabled' as const };
 }
 
 export async function notifyCustomersBarberScheduleChanges(

@@ -44,7 +44,7 @@ export function isSlotWithinShopHours(day: Date, time: string): boolean {
   const closing = getDayClosingTime(day.getDay());
   if (time >= closing) return false;
 
-  if (time >= '13:00' && time < '15:30') return false;
+  if (time >= '13:00' && time < '14:00') return false;
 
   return true;
 }
