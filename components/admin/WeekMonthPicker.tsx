@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   addMonths,
   eachDayOfInterval,
@@ -29,6 +29,7 @@ interface WeekMonthPickerProps {
 
 export function WeekMonthPicker({ weekStart, weekLabel }: WeekMonthPickerProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(weekStart));
@@ -68,8 +69,10 @@ export function WeekMonthPicker({ weekStart, weekLabel }: WeekMonthPickerProps) 
   function goToWeek(date: Date) {
     const nextWeek = getWeekStart(date);
     setOpen(false);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('week', format(nextWeek, 'yyyy-MM-dd'));
     startTransition(() => {
-      router.push(`/admin/prenotazioni?week=${format(nextWeek, 'yyyy-MM-dd')}`);
+      router.push(`/admin/prenotazioni?${params.toString()}`);
     });
   }
 

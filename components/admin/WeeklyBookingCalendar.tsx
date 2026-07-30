@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -40,11 +40,22 @@ export function WeeklyBookingCalendar({
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
   const weekStart = new Date(weekStartIso);
-  const [barberId, setBarberId] = useState(initialBarberId ?? barbers[0]?.id ?? '');
+  const [barberId, setBarberId] = useState(
+    searchParams.get('barber') ?? initialBarberId ?? barbers[0]?.id ?? ''
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<CalendarAppointment | null>(null);
   const [prefillDate, setPrefillDate] = useState<string | undefined>();
   const [prefillTime, setPrefillTime] = useState<string | undefined>();
+
+  useEffect(() => {
+    const urlBarber = searchParams.get('barber');
+    if (urlBarber) {
+      setBarberId(urlBarber);
+    } else if (initialBarberId) {
+      setBarberId(initialBarberId);
+    }
+  }, [initialBarberId, searchParams]);
 
   const days = useMemo(() => getWorkingDays(weekStart), [weekStart]);
   const timeSlots = useMemo(() => generateCalendarTimeSlots(), []);

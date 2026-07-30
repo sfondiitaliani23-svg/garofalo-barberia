@@ -183,8 +183,9 @@ export async function getAdminAppointments(from: string, to: string, barberId?: 
 
 export async function getAdminWeekAppointments(weekStartDate: string, barberId?: string) {
   const weekStart = startOfWeek(parseISO(weekStartDate), { weekStartsOn: 1 });
-  const weekEnd = addDays(weekStart, 7);
-  return getAdminAppointments(weekStart.toISOString(), weekEnd.toISOString(), barberId);
+  const fromDate = addDays(weekStart, -1);
+  const toDate = addDays(weekStart, 8);
+  return getAdminAppointments(fromDate.toISOString(), toDate.toISOString(), barberId);
 }
 
 export async function getUpcomingAdminAppointments(limit = 300) {

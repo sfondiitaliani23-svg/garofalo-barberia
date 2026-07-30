@@ -14,19 +14,17 @@ export default async function AdminPrenotazioniPage({
   const params = await searchParams;
   const weekStart = params.week ? getWeekStart(parseISO(params.week)) : getWeekStart();
 
-  const [barbers, services, teamData] = await Promise.all([
+  const [barbers, services, teamData, appointments] = await Promise.all([
     getBarbers(),
     getServices(),
     getAdminTeamData(),
+    getAdminWeekAppointments(weekStart.toISOString(), 'all'),
   ]);
+
   const selectedBarberId =
     params.barber === 'all' || (params.barber && barbers.some((barber) => barber.id === params.barber))
       ? params.barber
       : barbers[0]?.id;
-
-  const appointments = selectedBarberId
-    ? await getAdminWeekAppointments(weekStart.toISOString(), selectedBarberId)
-    : [];
 
   return (
     <div>
