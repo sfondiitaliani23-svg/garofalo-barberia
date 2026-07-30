@@ -1,7 +1,7 @@
 'use server';
 
 import { addDays, endOfDay, format, parseISO } from 'date-fns';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { getShopDayBounds, getShopDayOfWeek, parseBookingDateTime } from '@/lib/utils/booking-datetime';
@@ -114,7 +114,7 @@ async function fetchBookingContext(
   candidateDates: string[],
   excludeAppointmentId?: string | null
 ): Promise<BookingContext | null> {
-  const supabase = await createClient();
+  const supabase = (await createServiceClient()) ?? (await createClient());
   if (!supabase) return null;
 
   let barberIds: string[];
@@ -356,7 +356,7 @@ export async function getBarbersBookingAvailability(
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = (await createServiceClient()) ?? (await createClient());
     if (!supabase) return [];
 
     const { data: barbers } = await supabase
