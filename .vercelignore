@@ -1,7 +1,11 @@
 .next
+.tools
 node_modules
 BARBERIA GAROFALO BACKUPS
 VIDEO LANCIO REAL SITO
 video lancio  fake sito
+*.exe
+*.zip
+*.tar.gz
 *.mp4
 *.mov

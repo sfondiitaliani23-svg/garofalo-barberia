@@ -1,4 +1,4 @@
-import { getShopDayBounds } from '@/lib/utils/booking-datetime';
+import { getShopDayBounds, getShopDayOfWeek } from '@/lib/utils/booking-datetime';
 
 export type TimeOffRow = {
   barber_id: string | null;
@@ -60,8 +60,8 @@ export function hasAnyBookableDayBySchedule(
   }
 
   for (const dateStr of candidateDates) {
-    const date = new Date(`${dateStr}T12:00:00`);
-    if (!availabilityDays.has(date.getDay())) continue;
+    const dayOfWeek = getShopDayOfWeek(dateStr);
+    if (!availabilityDays.has(dayOfWeek)) continue;
 
     if (!isShopDateFullyBlocked(dateStr, barberId, timeOff)) {
       return { canBook: true };

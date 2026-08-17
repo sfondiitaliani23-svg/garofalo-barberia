@@ -13,7 +13,9 @@ import {
   getAvailableDates,
   getAvailableSlots,
   getBarbersBookingAvailability,
+  getBarberRank,
   type BarberBookingStatus,
+  type SlotDetail,
 } from '@/lib/actions/availability';
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
@@ -25,7 +27,7 @@ import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
 import { SITE_CONFIG } from '@/lib/site-config';
-import { Calendar, CheckCircle2, Clock, MapPin, CreditCard, Star, ArrowRight, User } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, CreditCard, Star, User, Sparkles, AlertCircle } from 'lucide-react';
 
 interface BookingWizardProps {
   services: Service[];
@@ -59,7 +61,7 @@ interface BookingConfirmation {
 
 export function BookingWizard({
   services,
-  barbers,
+  barbers: rawBarbers,
   defaultName = '',
   defaultPhone = '',
   defaultEmail = '',
@@ -67,10 +69,28 @@ export function BookingWizard({
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
-  const [barberId, setBarberId] = useState<string | null>(null);
+
+  // Ordina i barbieri: 1. Luigi Garofalo, 2. Francesco Costantino, 3. Vittorio Morlino
+  const barbers = useMemo(() => {
+    return [...rawBarbers].sort((a, b) => {
+      const rankA = getBarberRank(a.name);
+      const rankB = getBarberRank(b.name);
+      if (rankA !== rankB) return rankA - rankB;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+  }, [rawBarbers]);
+
+  // Luigi Garofalo è il barbiere predefinito
+  const luigiBarber = useMemo(() => {
+    return barbers.find((b) => getBarberRank(b.name) === 1) ?? barbers[0] ?? null;
+  }, [barbers]);
+
+  const [barberId, setBarberId] = useState<string | null>(() => luigiBarber?.id ?? null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
+  const [slotsDetail, setSlotsDetail] = useState<SlotDetail[]>([]);
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
   const [slotsUnavailable, setSlotsUnavailable] = useState(false);
   const [dates, setDates] = useState<string[]>([]);
   const [name, setName] = useState(defaultName);
@@ -114,13 +134,7 @@ export function BookingWizard({
     const statuses = await getBarbersBookingAvailability(totalDuration);
     setBarberStatuses(statuses);
     setLoadingBarberStatuses(false);
-
-    if (barberId && statuses.some((status) => status.barberId === barberId && !status.canBook)) {
-      setBarberId(null);
-      setDate(null);
-      setTime(null);
-    }
-  }, [barberId, selectedServices.length, totalDuration]);
+  }, [selectedServices.length, totalDuration]);
 
   const loadDates = useCallback(async () => {
     if (selectedServices.length === 0) return;
@@ -138,13 +152,15 @@ export function BookingWizard({
   const loadSlots = useCallback(async () => {
     if (selectedServices.length === 0 || !date) return;
     setLoadingSlots(true);
-    const { slots: s, unavailable } = await getAvailableSlots(
+    const res = await getAvailableSlots(
       barberId,
       date,
       totalDuration
     );
-    setSlots(s);
-    setSlotsUnavailable(Boolean(unavailable));
+    setSlots(res.slots ?? []);
+    setSlotsDetail(res.slotsDetail ?? []);
+    setFallbackNotice(res.fallbackNotice ?? null);
+    setSlotsUnavailable(Boolean(res.unavailable));
     setLoadingSlots(false);
   }, [selectedServices.length, totalDuration, barberId, date]);
 
@@ -161,7 +177,9 @@ export function BookingWizard({
   }, [step, selectedServices.length, barberId, loadDates]);
 
   useEffect(() => {
-    if (step === 2 && date && selectedServices.length > 0) loadSlots();
+    if (step === 2 && date && selectedServices.length > 0) {
+      loadSlots();
+    }
   }, [step, date, selectedServices.length, barberId, loadSlots]);
 
   const loadAutoPromotion = useCallback(async () => {
@@ -240,8 +258,22 @@ export function BookingWizard({
 
   function selectSlot(t: string) {
     setTime(t);
-    setStep(3);
   }
+
+  // Dettagli dell'operatore assegnato per lo slot selezionato
+  const selectedSlotInfo = useMemo(() => {
+    if (!time) return null;
+    return slotsDetail.find((s) => s.time === time) ?? null;
+  }, [slotsDetail, time]);
+
+  const assignedBarberName = useMemo(() => {
+    if (selectedSlotInfo) return selectedSlotInfo.barberName;
+    if (barberId) {
+      const b = barbers.find((item) => item.id === barberId);
+      if (b) return b.name;
+    }
+    return luigiBarber?.name ?? 'Luigi Garofalo';
+  }, [selectedSlotInfo, barberId, barbers, luigiBarber]);
 
   function handleSubmit() {
     if (selectedServiceIds.length === 0 || !date || !time || !name.trim() || !phone.trim()) {
@@ -249,11 +281,13 @@ export function BookingWizard({
       return;
     }
 
+    const effectiveBarberId = selectedSlotInfo?.barberId ?? barberId ?? luigiBarber?.id ?? null;
+
     startTransition(async () => {
       try {
         const result = await createAppointment({
           serviceIds: selectedServiceIds,
-          barberId,
+          barberId: effectiveBarberId,
           date,
           time,
           customerName: name,
@@ -283,9 +317,7 @@ export function BookingWizard({
         setConfirmation({
           appointmentId: result.appointmentId,
           serviceName: result.serviceName ?? selectedServices.map((s) => s.name).join(' + '),
-          barberName:
-            result.barberName ??
-            (barberId ? barbers.find((b) => b.id === barberId)?.name ?? 'Barbiere' : 'Primo disponibile'),
+          barberName: result.barberName ?? assignedBarberName,
           date: date!,
           time: time!,
           customerName: name,
@@ -390,9 +422,9 @@ export function BookingWizard({
                   <div key={service.id} className="flex justify-between items-start gap-4">
                     <div>
                       <h4 className="font-semibold text-white text-base">{service.name}</h4>
-                      <div className="flex items-center gap-1.5 text-sm text-white/50 mt-1">
-                        <User className="h-3.5 w-3.5 text-gold/70" />
-                        <span>Con {confirmation.barberName}</span>
+                      <div className="flex items-center gap-1.5 text-sm text-white/70 mt-1">
+                        <User className="h-3.5 w-3.5 text-gold" />
+                        <span>Operatore: <strong className="text-white">{confirmation.barberName}</strong></span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-white/40 mt-0.5">
                         <Clock className="h-3 w-3" />
@@ -548,38 +580,45 @@ export function BookingWizard({
           {step === 2 && selectedServices.length > 0 && (
             <div className="space-y-6">
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-gold">Con chi vuoi prenotare?</h3>
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gold">Con chi vuoi prenotare?</h3>
+                  <span className="text-xs text-white/40">Operatore predefinito: Luigi Garofalo</span>
+                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {loadingBarberStatuses && (
                     <p className="text-sm text-white/50 sm:col-span-2">Verifica disponibilità team...</p>
                   )}
                   {barbers.map((b) => {
-                    const status = barberStatusMap.get(b.id);
-                    const unavailable = status ? !status.canBook : false;
+                    const isLuigi = getBarberRank(b.name) === 1;
+                    const isSelected = barberId === b.id;
 
                     return (
                       <button
                         key={b.id}
                         type="button"
-                        disabled={unavailable}
                         onClick={() => {
-                          if (unavailable) return;
                           setBarberId(b.id);
                           setTime(null);
                         }}
                         className={cn(
-                          'flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition',
-                          unavailable && 'cursor-not-allowed opacity-55',
-                          !unavailable && barberId === b.id
-                            ? 'border-gold bg-gold/10'
-                            : 'border-white/15 bg-[#1a1a1a]',
-                          !unavailable && barberId !== b.id && 'hover:border-gold/50'
+                          'relative flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition',
+                          isSelected
+                            ? 'border-gold bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
+                            : 'border-white/15 bg-[#1a1a1a] hover:border-gold/50'
                         )}
                       >
                         <div>
-                          <p className="font-medium text-white">{b.name}</p>
-                          <p className={cn('text-sm', unavailable ? 'text-white/45' : 'text-gold')}>
-                            {unavailable ? status?.reason ?? 'In ferie o non disponibile' : formatBarberRole(b.role)}
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-white">{b.name}</p>
+                            {isLuigi && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider">
+                                <Sparkles className="h-3 w-3" />
+                                Titolare · Consigliato
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gold mt-0.5">
+                            {formatBarberRole(b.role)}
                           </p>
                         </div>
                         {b.image_url && (
@@ -588,7 +627,7 @@ export function BookingWizard({
                             alt={b.name}
                             width={60}
                             height={78}
-                            className="h-[68px] w-[52px] rounded object-cover object-top"
+                            className="h-[68px] w-[52px] rounded object-cover object-top shrink-0"
                           />
                         )}
                       </button>
@@ -596,14 +635,17 @@ export function BookingWizard({
                   })}
                   <button
                     type="button"
-                    onClick={() => { setBarberId(null); setTime(null); }}
+                    onClick={() => {
+                      setBarberId(null);
+                      setTime(null);
+                    }}
                     className={cn(
                       'rounded-lg border p-4 text-left transition sm:col-span-2',
-                      barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
+                      barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/40'
                     )}
                   >
-                    <p className="font-medium text-white">Nessuna preferenza</p>
-                    <p className="text-sm text-white/50">Il primo barbiere disponibile</p>
+                    <p className="font-medium text-white">Nessuna preferenza (Primo disponibile)</p>
+                    <p className="text-sm text-white/50">Priorità a Luigi Garofalo con disponibilità automatica di Francesco e Vittorio</p>
                   </button>
                 </div>
               </div>
@@ -619,28 +661,105 @@ export function BookingWizard({
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-gold">Orari disponibili</h3>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-gold">Orari disponibili</h3>
+                  {date && (
+                    <span className="text-xs text-white/50">
+                      {format(parseISO(date), "EEEE d MMMM", { locale: it })}
+                    </span>
+                  )}
+                </div>
+
+                {/* Banner di avviso fallback se Luigi è al completo */}
+                {fallbackNotice && (
+                  <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3.5 text-sm text-amber-200">
+                    <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-amber-300">Luigi non è disponibile in questa data</p>
+                      <p className="text-xs text-white/80 mt-0.5 leading-relaxed">
+                        Ti proponiamo gli orari liberi con i collaboratori esperti del salone (<strong>Francesco</strong> e <strong>Vittorio</strong>).
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {loadingSlots ? (
                   <p className="text-sm text-white/50">Caricamento orari...</p>
                 ) : slotsUnavailable && date ? (
                   <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} />
                 ) : slots.length === 0 ? (
-                  <p className="text-sm text-white/50">Nessun orario libero per questo giorno. Scegli un altro giorno.</p>
+                  <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-center">
+                    <p className="text-sm text-white/70">Nessun orario libero per questo giorno.</p>
+                    <p className="text-xs text-white/40 mt-1">Seleziona un&apos;altra data dal calendario in alto.</p>
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-                    {slots.map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        onClick={() => selectSlot(t)}
-                        className={cn(
-                          'rounded-lg border py-2.5 text-sm font-medium transition hover:border-gold hover:bg-gold/10',
-                          time === t ? 'border-gold bg-gold text-black' : 'border-white/15 bg-[#1a1a1a]'
-                        )}
-                      >
-                        {t}
-                      </button>
-                    ))}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+                      {slots.map((t) => {
+                        const detail = slotsDetail.find((s) => s.time === t);
+                        const isSelected = time === t;
+                        const isFallback = detail?.isFallback;
+
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => selectSlot(t)}
+                            className={cn(
+                              'flex flex-col items-center justify-center rounded-lg border py-2.5 px-2 text-center transition hover:border-gold hover:bg-gold/10',
+                              isSelected ? 'border-gold bg-gold text-black font-bold shadow-md' : 'border-white/15 bg-[#1a1a1a]'
+                            )}
+                          >
+                            <span className={cn('text-sm font-semibold', isSelected ? 'text-black' : 'text-white')}>
+                              {t}
+                            </span>
+                            {detail?.barberName && (
+                              <span
+                                className={cn(
+                                  'text-[10px] mt-0.5 truncate max-w-full block',
+                                  isSelected
+                                    ? 'text-black/80 font-medium'
+                                    : isFallback
+                                    ? 'text-amber-400/90 font-medium'
+                                    : 'text-white/40'
+                                )}
+                              >
+                                {detail.barberName.split(' ')[0]}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Riepilogo immediato slot selezionato */}
+                    {time && (
+                      <div className="rounded-lg border border-gold/30 bg-gold/10 p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-in fade-in">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/20 text-gold text-sm font-bold">
+                            ✂️
+                          </div>
+                          <div>
+                            <p className="text-xs text-white/60">Orario e Operatore selezionati:</p>
+                            <p className="text-sm font-bold text-white">
+                              {time} — Con <span className="text-gold">{assignedBarberName}</span>
+                              {selectedSlotInfo?.isFallback && (
+                                <span className="ml-2 inline-block rounded bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-300">
+                                  Collaboratore
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => setStep(3)}
+                          className="w-full sm:w-auto font-bold shrink-0"
+                        >
+                          Continua alla conferma
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -649,7 +768,7 @@ export function BookingWizard({
 
           {step === 3 && selectedServices.length > 0 && date && time && (
             <div className="space-y-4">
-              <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-sm space-y-1">
+              <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-sm space-y-2">
                 <p><strong>Servizi selezionati:</strong> {selectedServices.map(s => s.name).join(' + ')}</p>
                 <p><strong>Durata totale:</strong> {formatDuration(totalDuration)}</p>
                 {appliedPromotion && appliedPromotion.discountCents > 0 ? (
@@ -668,8 +787,23 @@ export function BookingWizard({
                   <p><strong>Prezzo complessivo:</strong> {formatPrice(totalOriginalPrice)}</p>
                 )}
                 <p><strong>Data:</strong> {format(parseISO(date), "EEEE d MMMM yyyy", { locale: it })} alle {time}</p>
-                <p><strong>Barbiere:</strong> {barberId ? barbers.find((b) => b.id === barberId)?.name : 'Primo disponibile'}</p>
+                <div className="pt-1 border-t border-white/10 flex items-center justify-between">
+                  <div>
+                    <span className="text-white/60">Operatore: </span>
+                    <strong className="text-gold text-base">{assignedBarberName}</strong>
+                    {selectedSlotInfo?.isFallback ? (
+                      <span className="ml-2 inline-block rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-bold text-amber-300">
+                        Collaboratore
+                      </span>
+                    ) : (
+                      <span className="ml-2 inline-block rounded bg-gold/20 px-2 py-0.5 text-[11px] font-bold text-gold">
+                        Titolare
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
+
               <div>
                 <Label htmlFor="promo-code">Codice promozionale (opzionale)</Label>
                 <div className="mt-1 flex flex-col gap-2 sm:flex-row">
@@ -759,7 +893,7 @@ export function BookingWizard({
                   else if (step === 2 && time) setStep(3);
                 }}
                 className={cn(
-                  'w-full max-w-full min-w-0 md:ml-auto md:w-auto',
+                  'w-full max-w-full min-w-0 md:ml-auto md:w-auto font-bold',
                   (step === 1 ? selectedServiceIds.length === 0 : (step === 2 && !time)) && 'opacity-50'
                 )}
               >
@@ -769,7 +903,7 @@ export function BookingWizard({
               <Button
                 onClick={handleSubmit}
                 disabled={pending}
-                className="h-auto min-h-11 w-full max-w-full min-w-0 whitespace-normal px-4 py-2.5 text-center text-sm leading-snug"
+                className="h-auto min-h-11 w-full max-w-full min-w-0 whitespace-normal px-4 py-2.5 text-center text-sm font-bold leading-snug"
               >
                 {pending ? 'Conferma in corso...' : 'Conferma prenotazione'}
               </Button>

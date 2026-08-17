@@ -73,7 +73,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
       barberId = await resolveBarberForSlot(input.date, input.time, totalDuration);
       if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario per tutti i servizi scelti.' };
     } else {
-      const { slots, error } = await getAvailableSlots(
+      const { slots, slotsDetail, error } = await getAvailableSlots(
         barberId,
         input.date,
         totalDuration
@@ -86,6 +86,12 @@ export async function createAppointment(input: CreateAppointmentInput) {
             error ??
             'Il barbiere selezionato non è disponibile per l\'intera durata dei servizi scelti.',
         };
+      }
+
+      // Se l'orario corrisponde a un collaboratore di fallback (es. Luigi occupato, slot di Francesco/Vittorio)
+      const matchingSlot = slotsDetail?.find((s) => s.time === input.time);
+      if (matchingSlot?.barberId && matchingSlot.barberId !== barberId) {
+        barberId = matchingSlot.barberId;
       }
     }
 
@@ -385,7 +391,15 @@ export async function getBarbers() {
       .select('*')
       .eq('is_active', true)
       .order('sort_order');
-    if (data && data.length > 0) return data;
+    if (data && data.length > 0) {
+      const { getBarberRank } = await import('@/lib/actions/availability');
+      return [...data].sort((a, b) => {
+        const rankA = getBarberRank(a.name);
+        const rankB = getBarberRank(b.name);
+        if (rankA !== rankB) return rankA - rankB;
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      });
+    }
   } catch {
     // Supabase non configurato
   }
