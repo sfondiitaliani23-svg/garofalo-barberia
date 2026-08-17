@@ -19,6 +19,15 @@ export const SCHEDULE_PERIOD_LABELS: Record<SchedulePeriod, string> = {
   afternoon: 'Pomeriggio',
 };
 
+export function getBarberRank(name?: string | null): number {
+  if (!name) return 99;
+  const lower = name.toLowerCase();
+  if (lower.includes('luigi')) return 1;
+  if (lower.includes('francesco')) return 2;
+  if (lower.includes('vittorio')) return 3;
+  return 10;
+}
+
 export function defaultPeriodsForDay(dayOfWeek: number): AdminDayScheduleInput {
   if (dayOfWeek === 6) {
     return {

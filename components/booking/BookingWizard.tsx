@@ -13,10 +13,10 @@ import {
   getAvailableDates,
   getAvailableSlots,
   getBarbersBookingAvailability,
-  getBarberRank,
   type BarberBookingStatus,
   type SlotDetail,
 } from '@/lib/actions/availability';
+import { getBarberRank } from '@/lib/utils/barber-schedule';
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';

@@ -392,7 +392,7 @@ export async function getBarbers() {
       .eq('is_active', true)
       .order('sort_order');
     if (data && data.length > 0) {
-      const { getBarberRank } = await import('@/lib/actions/availability');
+      const { getBarberRank } = await import('@/lib/utils/barber-schedule');
       return [...data].sort((a, b) => {
         const rankA = getBarberRank(a.name);
         const rankB = getBarberRank(b.name);

@@ -14,6 +14,7 @@ import {
 import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
 import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
+import { getBarberRank } from '@/lib/utils/barber-schedule';
 
 export type BarberBookingStatus = {
   barberId: string;
@@ -49,15 +50,6 @@ type AvailabilityRow = {
   is_available: boolean;
   period?: string | null;
 };
-
-export function getBarberRank(name?: string | null): number {
-  if (!name) return 99;
-  const lower = name.toLowerCase();
-  if (lower.includes('luigi')) return 1;
-  if (lower.includes('francesco')) return 2;
-  if (lower.includes('vittorio')) return 3;
-  return 10;
-}
 
 function isLegacyContinuousSchedule(dayAvailability: AvailabilityRow[]): boolean {
   const morning = dayAvailability.find((row) => row.period === 'morning');
