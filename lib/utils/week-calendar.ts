@@ -91,7 +91,7 @@ export function buildWeekGrid(
   );
 
   const confirmed = appointments.filter(
-    (apt) => (isAll || apt.barber_id === barberId) && apt.status === 'confirmed'
+    (apt) => (isAll || apt.barber_id === barberId) && (apt.status === 'confirmed' || apt.status === 'completed')
   );
 
   const covered = new Map<string, Set<string>>();
@@ -112,7 +112,7 @@ export function buildWeekGrid(
         continue;
       }
 
-      // Trova gli appuntamenti che iniziano in questo slot o lo coprono nel fuso del salone
+      // Trova gli appuntamenti che iniziano in questo slot
       const aptsAtSlot = confirmed.filter((a) => {
         const dStart = new Date(a.starts_at);
         const aptDate = getShopDateString(dStart);
@@ -123,26 +123,39 @@ export function buildWeekGrid(
         // Se l'orario di inizio corrisponde direttamente al time dello slot
         if (aptTime === time) return true;
 
-        // Se l'appuntamento inizia tra questo slot e il successivo (es. 10:15 in uno slot da 10:00-10:30)
+        // Se l'appuntamento inizia nell'intervallo di questo slot (es. 10:15 in uno slot da 10:00-10:30)
         const slotStart = parseBookingDateTime(key, time);
         const slotEnd = addMinutes(slotStart, SITE_CONFIG.slotIntervalMinutes);
-        const dEnd = new Date(a.ends_at);
-        return dStart < slotEnd && dEnd > slotStart;
+        return dStart >= slotStart && dStart < slotEnd;
       });
 
       if (aptsAtSlot.length > 0) {
         let maxSpan = 1;
-        for (const apt of aptsAtSlot) {
-          const starts = new Date(apt.starts_at);
-          const ends = new Date(apt.ends_at);
-          const actualDuration = differenceInMinutes(ends, starts);
-          const span = durationToRowSpan(actualDuration);
-          if (span > maxSpan) maxSpan = span;
-        }
+        if (!isAll) {
+          for (const apt of aptsAtSlot) {
+            const starts = new Date(apt.starts_at);
+            const ends = new Date(apt.ends_at);
+            const actualDuration = differenceInMinutes(ends, starts);
+            const span = durationToRowSpan(actualDuration);
+            if (span > maxSpan) maxSpan = span;
+          }
 
-        for (let i = 0; i < maxSpan; i++) {
-          const slotTime = timeSlots[timeSlots.indexOf(time) + i];
-          if (slotTime) dayCovered.add(slotTime);
+          if (maxSpan > 1) {
+            for (let i = 1; i < maxSpan; i++) {
+              const nextIndex = timeSlots.indexOf(time) + i;
+              const slotTime = timeSlots[nextIndex];
+              if (slotTime) {
+                // Non coprire se c'è un'altra prenotazione che inizia lì
+                const hasAptNext = confirmed.some((a) => {
+                  const d = new Date(a.starts_at);
+                  return getShopDateString(d) === key && getShopTimeString(d) === slotTime;
+                });
+                if (!hasAptNext) {
+                  dayCovered.add(slotTime);
+                }
+              }
+            }
+          }
         }
 
         row.push({ 
@@ -150,7 +163,7 @@ export function buildWeekGrid(
           day, 
           appointment: aptsAtSlot[0], 
           appointmentsList: aptsAtSlot, 
-          rowSpan: maxSpan 
+          rowSpan: isAll ? 1 : maxSpan 
         } as any);
         continue;
       }

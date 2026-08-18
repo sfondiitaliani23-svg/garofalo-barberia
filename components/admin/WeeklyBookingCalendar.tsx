@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { format } from 'date-fns';
+import { differenceInMinutes, format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
 import { WeekMonthPicker } from '@/components/admin/WeekMonthPicker';
+import { getShopTimeString } from '@/lib/utils/booking-datetime';
 
 import {
   buildWeekGrid,
@@ -229,6 +230,11 @@ export function WeeklyBookingCalendar({
                               ? 'text-red-400'
                               : 'text-gold';
 
+                            const starts = new Date(apt.starts_at);
+                            const ends = new Date(apt.ends_at);
+                            const startStr = getShopTimeString(starts);
+                            const durationMins = differenceInMinutes(ends, starts);
+
                             return (
                               <button
                                 key={apt.id}
@@ -239,7 +245,10 @@ export function WeeklyBookingCalendar({
                                 <span className={`text-[10px] font-bold flex items-center justify-between gap-1 w-full ${headerColor}`}>
                                   <span className="flex items-center gap-1">
                                     {isCompleted && <span>✓</span>}
-                                    {time}
+                                    {startStr}
+                                    {durationMins > 30 && (
+                                      <span className="text-[9px] opacity-75 font-normal">({durationMins}m)</span>
+                                    )}
                                   </span>
                                   {barberId === 'all' && (
                                     <span className={`px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wide truncate max-w-[80px] ${
