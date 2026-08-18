@@ -91,7 +91,7 @@ export function buildWeekGrid(
   );
 
   const confirmed = appointments.filter(
-    (apt) => (isAll || apt.barber_id === barberId) && (apt.status === 'confirmed' || apt.status === 'completed')
+    (apt) => (isAll || apt.barber_id === barberId) && apt.status === 'confirmed'
   );
 
   const covered = new Map<string, Set<string>>();
