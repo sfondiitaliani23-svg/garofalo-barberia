@@ -14,15 +14,21 @@ import './home.css';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const dbReviews = await getApprovedReviews();
-  const formattedDbReviews = dbReviews.map(r => ({
+  const supabase = await createClient();
+  const [dbReviews, productsResult] = await Promise.all([
+    getApprovedReviews(),
+    supabase
+      ? supabase.from('products').select('*').eq('is_active', true).order('sort_order').limit(4)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const formattedDbReviews = dbReviews.map((r) => ({
     text: r.comment,
     author: r.customer_name,
-    rating: r.rating
+    rating: r.rating,
   }));
 
-  const supabase = await createClient();
-  const dbProducts = supabase ? (await supabase.from('products').select('*').eq('is_active', true).order('sort_order').limit(4)).data ?? [] : [];
+  const dbProducts = productsResult.data ?? [];
 
   const perfumesForGrid = dbProducts.length > 0 ? dbProducts.map((p, idx) => {
     const defaultFallback = PERFUMES[idx] || PERFUMES[0];

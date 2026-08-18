@@ -1,7 +1,9 @@
+import dynamicImport from 'next/dynamic';
 import { CustomerSidebar } from '@/components/layout/CustomerSidebar';
-import { ScrollToTop } from '@/components/layout/ScrollToTop';
-import { EliseoChat } from '@/components/layout/EliseoChat';
 import { getProfile } from '@/lib/auth';
+
+const ScrollToTop = dynamicImport(() => import('@/components/layout/ScrollToTop').then((m) => m.ScrollToTop), { ssr: false });
+const EliseoChat = dynamicImport(() => import('@/components/layout/EliseoChat').then((m) => m.EliseoChat), { ssr: false });
 
 export const dynamic = 'force-dynamic';
 

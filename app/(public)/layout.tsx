@@ -1,14 +1,16 @@
+import dynamicImport from 'next/dynamic';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteBanners } from '@/components/layout/SiteBanners';
-import { CookieConsent } from '@/components/layout/CookieConsent';
-import { WhatsAppFloat } from '@/components/layout/WhatsAppFloat';
-import { ScrollToTop } from '@/components/layout/ScrollToTop';
-import { EliseoChat } from '@/components/layout/EliseoChat';
-import { VisitorTracker } from '@/components/analytics/VisitorTracker';
 import { getActiveSiteBanners } from '@/lib/actions/content';
 import { getProfile, getSession } from '@/lib/auth';
 import './public-pages.css';
+
+const CookieConsent = dynamicImport(() => import('@/components/layout/CookieConsent').then((m) => m.CookieConsent), { ssr: false });
+const WhatsAppFloat = dynamicImport(() => import('@/components/layout/WhatsAppFloat').then((m) => m.WhatsAppFloat), { ssr: false });
+const ScrollToTop = dynamicImport(() => import('@/components/layout/ScrollToTop').then((m) => m.ScrollToTop), { ssr: false });
+const EliseoChat = dynamicImport(() => import('@/components/layout/EliseoChat').then((m) => m.EliseoChat), { ssr: false });
+const VisitorTracker = dynamicImport(() => import('@/components/analytics/VisitorTracker').then((m) => m.VisitorTracker), { ssr: false });
 
 export const dynamic = 'force-dynamic';
 
