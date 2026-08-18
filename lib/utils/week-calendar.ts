@@ -112,21 +112,6 @@ export function buildWeekGrid(
         continue;
       }
 
-      if (blockedDays.has(key)) {
-        row.push({ type: 'unavailable', day });
-        continue;
-      }
-
-      if (!isSlotWithinHours(day, time)) {
-        row.push({ type: 'closed', day });
-        continue;
-      }
-
-      if (isSlotBlockedByTimeOff(key, time, barberId, timeOff)) {
-        row.push({ type: 'unavailable', day });
-        continue;
-      }
-
       // Trova gli appuntamenti che iniziano in questo slot o lo coprono nel fuso del salone
       const aptsAtSlot = confirmed.filter((a) => {
         const dStart = new Date(a.starts_at);
@@ -170,6 +155,21 @@ export function buildWeekGrid(
         continue;
       }
 
+      if (blockedDays.has(key)) {
+        row.push({ type: 'unavailable', day });
+        continue;
+      }
+
+      if (!isSlotWithinHours(day, time)) {
+        row.push({ type: 'closed', day });
+        continue;
+      }
+
+      if (isSlotBlockedByTimeOff(key, time, barberId, timeOff, barbers)) {
+        row.push({ type: 'unavailable', day });
+        continue;
+      }
+
       row.push({ type: 'empty', day, time });
     }
 
@@ -183,16 +183,38 @@ export function isSlotBlockedByTimeOff(
   dateStr: string,
   timeStr: string,
   barberId: string,
-  timeOff: TimeOffRow[]
+  timeOff: TimeOffRow[],
+  barbers: { id: string }[] = []
 ): boolean {
   const slotStart = parseBookingDateTime(dateStr, timeStr);
   const slotEnd = addMinutes(slotStart, SITE_CONFIG.slotIntervalMinutes);
-  const isAll = barberId === 'all';
 
-  return timeOff.some((block) => {
-    if (!isAll && block.barber_id && block.barber_id !== barberId) return false;
+  const isBarberBlocked = (bId: string) => {
+    return timeOff.some((block) => {
+      if (block.barber_id !== null && block.barber_id !== undefined && block.barber_id !== bId) {
+        return false;
+      }
+      const blockStart = new Date(block.start_at);
+      const blockEnd = new Date(block.end_at);
+      return slotStart < blockEnd && slotEnd > blockStart;
+    });
+  };
+
+  // Se c'è un blocco globale per l'intero salone (barber_id è null o undefined)
+  const isGlobalBlocked = timeOff.some((block) => {
+    if (block.barber_id !== null && block.barber_id !== undefined) return false;
     const blockStart = new Date(block.start_at);
     const blockEnd = new Date(block.end_at);
     return slotStart < blockEnd && slotEnd > blockStart;
   });
+
+  if (isGlobalBlocked) return true;
+
+  if (barberId === 'all') {
+    if (barbers.length === 0) return false;
+    // In vista "Tutti i barbieri", lo slot è bloccato solo se TUTTI i barbieri sono assenti/bloccati
+    return barbers.every((b) => isBarberBlocked(b.id));
+  }
+
+  return isBarberBlocked(barberId);
 }

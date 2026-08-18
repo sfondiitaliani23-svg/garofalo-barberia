@@ -21,6 +21,12 @@ build/
 # Env
 .env
 .env.local
+dist/
+build/
+
+# Env
+.env
+.env.local
 .env.*.local
 
 # Logs
@@ -30,3 +36,11 @@ logs/
 # OS
 Thumbs.db
 .DS_Store
+
+# Backups & Large Media
+BARBERIA GAROFALO BACKUPS/
+video lancio  fake sito/
+VIDEO LANCIO REAL SITO/
+scratch/
+*.zip
+*.mp4
