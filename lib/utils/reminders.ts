@@ -24,45 +24,20 @@ export interface ReminderAppointment {
   service?: { name: string; price_cents?: number; duration_minutes?: number } | { name: string; price_cents?: number; duration_minutes?: number }[] | null;
 }
 
-export interface ReminderPayload {
-  customerName: string;
-  customerPhone: string;
-  serviceName: string;
-  barberName: string;
-  startsAt: Date;
-}
+import {
+  type ReminderPayload,
+  buildWhatsAppReminderMessage,
+  getWhatsAppReminderUrl,
+} from '@/lib/utils/whatsapp-reminders';
+
+export type { ReminderPayload };
+export { buildWhatsAppReminderMessage, getWhatsAppReminderUrl };
 
 export interface ReminderGroup {
   ids: string[];
   primary: ReminderAppointment;
   serviceNames: string;
   barberName: string;
-}
-
-/**
- * Genera il messaggio WhatsApp di promemoria formattato per il cliente.
- */
-export function buildWhatsAppReminderMessage(data: ReminderPayload): string {
-  const { dateStr, timeStr } = formatShopBookingDateTime(data.startsAt);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://barberiagarofalo.it';
-
-  return (
-    `💈 *Garofalo Barberia — Promemoria Appuntamento*\n\n` +
-    `Ciao *${data.customerName}*! Ti ricordiamo il tuo appuntamento:\n\n` +
-    `✂️ *Servizio:* ${data.serviceName}\n` +
-    `👤 *Barbiere:* ${data.barberName}\n` +
-    `📅 *Data:* ${dateStr}\n` +
-    `⏰ *Orario:* ${timeStr}\n` +
-    `📍 *Indirizzo:* ${SITE_CONFIG.address}\n\n` +
-    `Per visualizzare o gestire la prenotazione:\n${siteUrl}/area-cliente/appuntamenti\n\n` +
-    `A presto!`
-  );
-}
-
-export function getWhatsAppReminderUrl(data: ReminderPayload): string {
-  const normalized = normalizeItalianPhone(data.customerPhone) || data.customerPhone.replace(/\D/g, '');
-  const message = encodeURIComponent(buildWhatsAppReminderMessage(data));
-  return `https://wa.me/${normalized}?text=${message}`;
 }
 
 // ---------------------------------------------------------------------------

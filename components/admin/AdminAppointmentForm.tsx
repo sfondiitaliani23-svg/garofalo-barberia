@@ -23,7 +23,7 @@ import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid'
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { formatPrice, formatDuration } from '@/lib/utils';
 import { getShopDateString, getShopTimeString, formatShopTimeFromDate, parseBookingDateTime } from '@/lib/utils/booking-datetime';
-import { getWhatsAppReminderUrl } from '@/lib/utils/reminders';
+import { getWhatsAppReminderUrl } from '@/lib/utils/whatsapp-reminders';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import type { Barber, Service } from '@/types/database';

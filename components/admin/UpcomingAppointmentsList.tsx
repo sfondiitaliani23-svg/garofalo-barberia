@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { adminCancelAppointment, markAppointmentReminderSent } from '@/lib/actions/admin';
 import { formatShopDateLong, formatShopTimeFromDate } from '@/lib/utils/booking-datetime';
-import { getWhatsAppReminderUrl } from '@/lib/utils/reminders';
+import { getWhatsAppReminderUrl } from '@/lib/utils/whatsapp-reminders';
 import { formatDuration, formatPrice } from '@/lib/utils';
 import type { CalendarAppointment } from '@/lib/utils/week-calendar';
 import type { Barber, Service } from '@/types/database';
