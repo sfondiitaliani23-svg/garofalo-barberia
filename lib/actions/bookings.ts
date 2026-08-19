@@ -11,6 +11,7 @@ import { notifyAdminBookingCancellation, notifyAdminNewBooking } from '@/lib/uti
 import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appointments';
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
+import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
 
 export interface CreateAppointmentInput {
   serviceId?: string; // Mantieni per retrocompatibilità
@@ -189,6 +190,12 @@ export async function createAppointment(input: CreateAppointmentInput) {
       console.error('createAppointment notification failed:', notifyError);
     }
 
+    try {
+      await sendImmediateWhatsAppReminderIfEligible(insertedIds);
+    } catch (remError) {
+      console.error('createAppointment immediate reminder failed:', remError);
+    }
+
     revalidatePath('/admin/prenotazioni');
     revalidatePath('/area-cliente/appuntamenti');
 
@@ -340,6 +347,12 @@ export async function rescheduleAppointment(appointmentId: string, date: string,
       return { ok: false, error: 'Questo orario è appena stato prenotato. Scegline un altro.' };
     }
     return { ok: false, error: 'Errore durante la modifica. Riprova.' };
+  }
+
+  try {
+    await sendImmediateWhatsAppReminderIfEligible([appointmentId]);
+  } catch (remError) {
+    console.error('rescheduleAppointment immediate reminder failed:', remError);
   }
 
   revalidatePath('/area-cliente/appuntamenti');

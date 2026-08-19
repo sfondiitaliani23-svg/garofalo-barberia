@@ -16,6 +16,7 @@ import {
   notifyCustomersBarberScheduleChanges,
   notifyCustomersSalonClosure,
 } from '@/lib/utils/schedule-notifications';
+import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
 
 export interface AdminAppointmentInput {
   serviceId?: string; // Retrocompatibilità
@@ -361,6 +362,12 @@ export async function createAdminAppointment(input: AdminAppointmentInput): Prom
       } catch (notifyError) {
         console.error('createAdminAppointment notification failed for date', dateStr, notifyError);
       }
+
+      try {
+        await sendImmediateWhatsAppReminderIfEligible(insertedIds);
+      } catch (remError) {
+        console.error('createAdminAppointment immediate reminder failed for date', dateStr, remError);
+      }
     }
   }
 
@@ -483,6 +490,12 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
 
     insertedIds.push(appointment.id);
     currentStartsAt = currentEndsAt;
+  }
+
+  try {
+    await sendImmediateWhatsAppReminderIfEligible(insertedIds);
+  } catch (remError) {
+    console.error('updateAdminAppointment immediate reminder failed:', remError);
   }
 
   revalidateAppointmentPaths();
