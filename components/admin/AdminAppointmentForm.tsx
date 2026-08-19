@@ -16,12 +16,14 @@ import {
   updateAdminAppointment,
   adminCancelAppointment,
   updateAppointmentStatus,
+  markAppointmentReminderSent,
 } from '@/lib/actions/admin';
 import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability';
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { formatPrice, formatDuration } from '@/lib/utils';
-import { getShopDateString, getShopTimeString } from '@/lib/utils/booking-datetime';
+import { getShopDateString, getShopTimeString, formatShopTimeFromDate, parseBookingDateTime } from '@/lib/utils/booking-datetime';
+import { getWhatsAppReminderUrl } from '@/lib/utils/reminders';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import type { Barber, Service } from '@/types/database';
@@ -319,6 +321,45 @@ export function AdminAppointmentForm({
     const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
     toast.success('Apertura WhatsApp in corso...');
+  };
+
+  const handleSendReminderNotification = async () => {
+    const targetPhone = (customerPhone || appointment?.customer_phone || '').trim();
+    if (!targetPhone) {
+      toast.error('Nessun numero di telefono per questo cliente');
+      return;
+    }
+    const appointmentDate = date || (appointment ? getShopDateString(new Date(appointment.starts_at)) : '');
+    const appointmentTime = time || (appointment ? getShopTimeString(new Date(appointment.starts_at)) : '');
+    if (!appointmentDate || !appointmentTime) {
+      toast.error('Data e ora non valide');
+      return;
+    }
+    const startsAt = parseBookingDateTime(appointmentDate, appointmentTime);
+
+    const sName = selectedServiceIds
+      .map((id) => services.find((s) => s.id === id)?.name)
+      .filter(Boolean)
+      .join(' + ') || (selectedService?.name ?? 'Servizio');
+
+    const url = getWhatsAppReminderUrl({
+      customerName: customerName || 'Cliente',
+      customerPhone: targetPhone,
+      serviceName: sName,
+      barberName: selectedBarber?.name ?? 'Barbiere',
+      startsAt,
+    });
+    window.open(url, '_blank');
+
+    if (appointment?.id) {
+      const res = await markAppointmentReminderSent(appointment.id);
+      if (res.ok) {
+        toast.success('Promemoria aperto e registrato come inviato!');
+        onSaved();
+      }
+    } else {
+      toast.success('Apertura WhatsApp in corso...');
+    }
   };
 
   const handleSave = useCallback(() => {
@@ -691,6 +732,46 @@ export function AdminAppointmentForm({
 
           {isEdit && appointment && (
             <>
+              {/* Sezione Promemoria WhatsApp */}
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3 mt-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+                    <span>📲</span>
+                    Promemoria WhatsApp
+                  </h4>
+                  {appointment.reminder_whatsapp_sent_at ? (
+                    <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                      Inviato ({formatShopTimeFromDate(new Date(appointment.reminder_whatsapp_sent_at))})
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-white/10 border border-white/20 px-2 py-0.5 text-[10px] font-medium text-white/60">
+                      In attesa (ore 22:30)
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-white/70 leading-relaxed">
+                  {appointment.reminder_whatsapp_sent_at
+                    ? `Il promemoria WhatsApp è già stato inviato il ${getShopDateString(new Date(appointment.reminder_whatsapp_sent_at))} alle ${getShopTimeString(new Date(appointment.reminder_whatsapp_sent_at))}.`
+                    : 'Il promemoria verrà inviato automaticamente la sera prima alle 22:30. Puoi anche inviarlo manualmente subito su WhatsApp con il messaggio precompilato.'}
+                </p>
+
+                {customerPhone && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSendReminderNotification}
+                    className="w-full gap-2 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/70"
+                  >
+                    <span>📲</span>
+                    {appointment.reminder_whatsapp_sent_at
+                      ? 'Re-invia Promemoria su WhatsApp'
+                      : 'Invia Promemoria su WhatsApp Adesso'}
+                  </Button>
+                )}
+              </div>
+
               <div className="rounded-lg border border-gold/20 bg-gold/5 p-4 space-y-3 mt-4">
                 <h4 className="text-sm font-semibold text-gold uppercase tracking-wider flex items-center gap-2">
                   <span className="relative flex h-2 w-2">

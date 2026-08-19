@@ -16,6 +16,7 @@ export interface CalendarAppointment {
   notes: string | null;
   barber_id: string;
   service_id: string;
+  reminder_whatsapp_sent_at?: string | null;
   barber?: { name: string } | null;
   service?: { name: string; duration_minutes: number; price_cents: number } | null;
 }

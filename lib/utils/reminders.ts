@@ -59,6 +59,12 @@ export function buildWhatsAppReminderMessage(data: ReminderPayload): string {
   );
 }
 
+export function getWhatsAppReminderUrl(data: ReminderPayload): string {
+  const normalized = normalizeItalianPhone(data.customerPhone) || data.customerPhone.replace(/\D/g, '');
+  const message = encodeURIComponent(buildWhatsAppReminderMessage(data));
+  return `https://wa.me/${normalized}?text=${message}`;
+}
+
 // ---------------------------------------------------------------------------
 // Provider WhatsApp (Green API, Meta Cloud API, Twilio)
 // ---------------------------------------------------------------------------

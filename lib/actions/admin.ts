@@ -1205,3 +1205,20 @@ export async function adjustProductStock(productId: string, delta: number) {
   return setProductStock(productId, product.stock_quantity + delta);
 }
 
+export async function markAppointmentReminderSent(appointmentId: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const nowIso = new Date().toISOString();
+  const { error } = await supabase
+    .from('appointments')
+    .update({ reminder_whatsapp_sent_at: nowIso })
+    .eq('id', appointmentId);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidateAppointmentPaths();
+  return { ok: true, sentAt: nowIso };
+}
+

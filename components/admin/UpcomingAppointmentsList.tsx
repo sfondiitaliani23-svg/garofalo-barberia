@@ -3,13 +3,14 @@
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseISO } from 'date-fns';
-import { ArrowDownAZ, ArrowUpDown, CalendarDays, ChevronDown, Pencil, Search, Trash2, User } from 'lucide-react';
+import { ArrowDownAZ, ArrowUpDown, CalendarDays, ChevronDown, MessageCircle, Pencil, Search, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { adminCancelAppointment } from '@/lib/actions/admin';
+import { adminCancelAppointment, markAppointmentReminderSent } from '@/lib/actions/admin';
 import { formatShopDateLong, formatShopTimeFromDate } from '@/lib/utils/booking-datetime';
+import { getWhatsAppReminderUrl } from '@/lib/utils/reminders';
 import { formatDuration, formatPrice } from '@/lib/utils';
 import type { CalendarAppointment } from '@/lib/utils/week-calendar';
 import type { Barber, Service } from '@/types/database';
@@ -123,6 +124,26 @@ export function UpcomingAppointmentsList({
     }
     toast.success('Prenotazione cancellata');
     startTransition(() => router.refresh());
+  }
+
+  async function handleSendManualWhatsApp(appointment: CalendarAppointment) {
+    if (!appointment.customer_phone) {
+      toast.error('Nessun numero di telefono per questo cliente');
+      return;
+    }
+    const url = getWhatsAppReminderUrl({
+      customerName: appointment.customer_name,
+      customerPhone: appointment.customer_phone,
+      serviceName: appointment.service?.name ?? 'Servizio',
+      barberName: appointment.barber?.name ?? 'Barbiere',
+      startsAt: parseISO(appointment.starts_at),
+    });
+    window.open(url, '_blank');
+    const res = await markAppointmentReminderSent(appointment.id);
+    if (res.ok) {
+      toast.success('Promemoria WhatsApp aperto e registrato come inviato!');
+      startTransition(() => router.refresh());
+    }
   }
 
   const sortTypeOptions: { value: SortType; label: string }[] = [
@@ -369,9 +390,36 @@ export function UpcomingAppointmentsList({
                     {appointment.notes && (
                       <p className="text-sm text-white/45">Note: {appointment.notes}</p>
                     )}
+
+                    <div className="pt-1">
+                      {appointment.reminder_whatsapp_sent_at ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          📲 Promemoria WhatsApp inviato ({formatShopTimeFromDate(parseISO(appointment.reminder_whatsapp_sent_at))})
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/50">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" />
+                          ⏳ Promemoria WhatsApp in attesa (ore 22:30)
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex shrink-0 gap-2">
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    {appointment.customer_phone && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/70"
+                        onClick={() => handleSendManualWhatsApp(appointment)}
+                        title="Invia o apri promemoria WhatsApp"
+                      >
+                        <MessageCircle size={14} />
+                        WhatsApp
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       variant="outline"
