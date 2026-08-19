@@ -343,11 +343,14 @@ export function WeeklyBookingCalendar({
         <AdminAppointmentForm
           barbers={barbers}
           services={services}
-          barberId={barberId === 'all' ? barbers[0].id : barberId}
+          barberId={selectedAppointment?.barber_id || (barberId === 'all' ? (barbers[0]?.id ?? '') : barberId)}
           appointment={selectedAppointment}
           initialDate={prefillDate}
           initialTime={prefillTime}
-          onClose={() => setModalOpen(false)}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedAppointment(null);
+          }}
           onSaved={handleSaved}
         />
       )}

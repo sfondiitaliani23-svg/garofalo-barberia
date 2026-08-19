@@ -49,8 +49,16 @@ export function AdminAppointmentForm({
   onSaved,
 }: AdminAppointmentFormProps) {
   const isEdit = Boolean(appointment);
-  const [barberId, setBarberId] = useState(defaultBarberId);
+  const [barberId, setBarberId] = useState(
+    appointment?.barber_id || defaultBarberId || barbers[0]?.id || ''
+  );
   const selectedBarber = barbers.find((b) => b.id === barberId);
+
+  useEffect(() => {
+    if (appointment?.barber_id) {
+      setBarberId(appointment.barber_id);
+    }
+  }, [appointment?.barber_id]);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(() => {
     if (appointment?.service_id) {
       return [appointment.service_id];
@@ -538,7 +546,7 @@ export function AdminAppointmentForm({
             <Label htmlFor="admin-barber">Barbiere</Label>
             {isEdit ? (
               <p className="mt-1 rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2.5 text-sm text-white">
-                {selectedBarber?.name ?? '—'}
+                {selectedBarber?.name ?? appointment?.barber?.name ?? '—'}
               </p>
             ) : (
               <select
