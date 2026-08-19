@@ -50,8 +50,9 @@ async function sendGreenApiWhatsApp(phone: string, body: string) {
   if (!instanceId || !token) return { ok: false, reason: 'not_configured' as const };
 
   try {
+    const host = process.env.GREEN_API_URL || `https://${instanceId.slice(0, 4)}.api.greenapi.com`;
     const response = await fetch(
-      `https://api.green-api.com/waInstance${instanceId}/sendMessage/${token}`,
+      `${host.replace(/\/$/, '')}/waInstance${instanceId}/sendMessage/${token}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
