@@ -397,6 +397,11 @@ export function UpcomingAppointmentsList({
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                           📲 Promemoria WhatsApp inviato ({formatShopTimeFromDate(parseISO(appointment.reminder_whatsapp_sent_at))})
                         </span>
+                      ) : !appointment.customer_phone ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-2 py-0.5 text-[11px] text-amber-400/80">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                          ⚠️ Nessun numero di telefono registrato
+                        </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/50">
                           <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" />
