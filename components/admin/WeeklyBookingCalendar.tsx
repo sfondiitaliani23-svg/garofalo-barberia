@@ -267,9 +267,15 @@ export function WeeklyBookingCalendar({
                                     {apt.customer_name}
                                     {isCompleted && <span className="ml-1 text-[10px] text-emerald-400 font-normal">(Completato)</span>}
                                   </span>
-                                  {apt.reminder_whatsapp_sent_at && (
-                                    <span className="shrink-0 text-[11px]" title="Promemoria WhatsApp inviato">📲</span>
-                                  )}
+                                  {apt.reminder_whatsapp_sent_at ? (
+                                    <span className="shrink-0 rounded bg-emerald-500/20 border border-emerald-500/40 px-1 py-0.5 text-[9px] font-bold text-emerald-300 flex items-center gap-0.5" title="Cliente avvisato su WhatsApp">
+                                      ✅ Avvisato
+                                    </span>
+                                  ) : apt.customer_phone ? (
+                                    <span className="shrink-0 rounded bg-amber-500/20 border border-amber-500/30 px-1 py-0.5 text-[9px] font-bold text-amber-300 flex items-center gap-0.5" title="Da avvisare su WhatsApp">
+                                      ⏳ Da avvisare
+                                    </span>
+                                  ) : null}
                                 </span>
                                 <span className="truncate text-[10px] text-white/50">{service?.name}</span>
                                 {apt.customer_phone && (

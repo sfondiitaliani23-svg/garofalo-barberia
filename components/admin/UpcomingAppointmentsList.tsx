@@ -3,34 +3,57 @@
 import { useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { parseISO } from 'date-fns';
-import { ArrowDownAZ, ArrowUpDown, CalendarDays, ChevronDown, MessageCircle, Pencil, Search, Trash2, User } from 'lucide-react';
+import {
+  CalendarAppointment,
+} from '@/lib/utils/week-calendar';
+import {
+  formatShopDateLong,
+  formatShopTimeFromDate,
+} from '@/lib/utils/booking-datetime';
+import {
+  Pencil,
+  Trash2,
+  Search,
+  ArrowDownAZ,
+  ArrowUpDown,
+  ChevronDown,
+  MessageCircle,
+  CheckCheck,
+  Clock,
+  AlertCircle,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { adminCancelAppointment, markAppointmentReminderSent } from '@/lib/actions/admin';
-import { formatShopDateLong, formatShopTimeFromDate } from '@/lib/utils/booking-datetime';
 import { getWhatsAppReminderUrl } from '@/lib/utils/whatsapp-reminders';
-import { formatDuration, formatPrice } from '@/lib/utils';
-import type { CalendarAppointment } from '@/lib/utils/week-calendar';
+import { formatPrice, formatDuration } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
 
 type SortType = 'date' | 'alphabetical' | 'genre';
 type SortDir = 'asc' | 'desc';
+type ReminderFilter = 'all' | 'pending' | 'sent' | 'no_phone';
 
 const SORT_TYPE_LABELS: Record<SortType, string> = {
   date: 'Per data',
-  alphabetical: 'Alfabetico',
+  alphabetical: 'Alfabetico (A -> Z)',
   genre: 'Per genere',
 };
 
-const GENRE_ORDER: Record<string, number> = { Uomo: 0, Ragazzo: 1, Bimbo: 2 };
+const GENRE_ORDER: Record<string, number> = {
+  UOMO: 0,
+  RAGAZZO: 1,
+  BIMBO: 2,
+};
 
-function detectGenre(serviceName: string | undefined): 'Bimbo' | 'Ragazzo' | 'Uomo' {
-  const name = (serviceName ?? '').toLowerCase();
-  if (name.includes('baby') || name.includes('bimbo') || name.includes('bambino')) return 'Bimbo';
-  if (name.includes('ragazzo') || name.includes('junior')) return 'Ragazzo';
-  return 'Uomo';
+function detectGenre(serviceName?: string): string {
+  if (!serviceName) return 'UOMO';
+  const lower = serviceName.toLowerCase();
+  if (lower.includes('bimbo') || lower.includes('bambin')) return 'BIMBO';
+  if (lower.includes('ragazzo') || lower.includes('junior')) return 'RAGAZZO';
+  return 'UOMO';
 }
 
 interface UpcomingAppointmentsListProps {
@@ -65,6 +88,7 @@ export function UpcomingAppointmentsList({
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [onlyActive, setOnlyActive] = useState(true);
+  const [reminderFilter, setReminderFilter] = useState<ReminderFilter>('all');
   const [sortType, setSortType] = useState<SortType>('date');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [typeOpen, setTypeOpen] = useState(false);
@@ -78,9 +102,24 @@ export function UpcomingAppointmentsList({
 
   const query = normalize(search);
 
+  // Conteggi statistici sui promemoria
+  const counts = useMemo(() => {
+    const active = appointments.filter((a) => (onlyActive ? a.status === 'confirmed' : true));
+    const sent = active.filter((a) => !!a.reminder_whatsapp_sent_at).length;
+    const pending = active.filter((a) => !a.reminder_whatsapp_sent_at && !!a.customer_phone).length;
+    const noPhone = active.filter((a) => !a.customer_phone).length;
+    return { total: active.length, sent, pending, noPhone };
+  }, [appointments, onlyActive]);
+
   const filtered = useMemo(() => {
     const base = appointments.filter((a) => {
       if (onlyActive && a.status !== 'confirmed') return false;
+
+      // Filtro per stato promemoria
+      if (reminderFilter === 'pending' && (!!a.reminder_whatsapp_sent_at || !a.customer_phone)) return false;
+      if (reminderFilter === 'sent' && !a.reminder_whatsapp_sent_at) return false;
+      if (reminderFilter === 'no_phone' && !!a.customer_phone) return false;
+
       return matchesQuery(a, query);
     });
     return [...base].sort((a, b) => {
@@ -97,7 +136,7 @@ export function UpcomingAppointmentsList({
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [appointments, query, onlyActive, sortType, sortDir]);
+  }, [appointments, query, onlyActive, reminderFilter, sortType, sortDir]);
 
   function openEdit(appointment: CalendarAppointment) {
     setSelectedAppointment(appointment);
@@ -312,14 +351,76 @@ export function UpcomingAppointmentsList({
             />
           </div>
         </div>
+        {/* Filtro Promemoria e Contatori */}
+        <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-white/10">
+          <span className="text-xs font-semibold text-white/50 uppercase tracking-wider mr-1">Promemoria WhatsApp:</span>
+
+          <button
+            type="button"
+            onClick={() => setReminderFilter('all')}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition border ${
+              reminderFilter === 'all'
+                ? 'border-gold bg-gold/20 text-gold'
+                : 'border-white/10 bg-white/5 text-white/60 hover:text-white'
+            }`}
+          >
+            Tutti ({counts.total})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setReminderFilter('pending')}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition border ${
+              reminderFilter === 'pending'
+                ? 'border-amber-500 bg-amber-500/20 text-amber-300 shadow-md shadow-amber-950/40'
+                : 'border-amber-500/30 bg-amber-500/10 text-amber-400/90 hover:bg-amber-500/20'
+            }`}
+          >
+            <Clock size={12} />
+            ⏳ Da Avvisare ({counts.pending})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setReminderFilter('sent')}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition border ${
+              reminderFilter === 'sent'
+                ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-md shadow-emerald-950/40'
+                : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400/90 hover:bg-emerald-500/20'
+            }`}
+          >
+            <CheckCheck size={14} className="text-emerald-400" />
+            ✅ Avvisati ({counts.sent})
+          </button>
+
+          {counts.noPhone > 0 && (
+            <button
+              type="button"
+              onClick={() => setReminderFilter('no_phone')}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition border ${
+                reminderFilter === 'no_phone'
+                  ? 'border-white/40 bg-white/20 text-white'
+                  : 'border-white/10 bg-white/5 text-white/40 hover:text-white/70'
+              }`}
+            >
+              <AlertCircle size={12} />
+              ⚠️ Senza Tel ({counts.noPhone})
+            </button>
+          )}
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-8 rounded-xl border border-white/10 bg-[#111] px-4 py-8 text-center text-sm text-white/50">
-          {appointments.length === 0
-            ? 'Nessuna prenotazione futura al momento.'
-            : 'Nessun risultato per la ricerca.'}
-        </p>
+        <div className="mt-8 rounded-xl border border-white/10 bg-[#111] px-4 py-8 text-center text-sm text-white/50">
+          {reminderFilter === 'pending' && counts.pending === 0 ? (
+            <div className="space-y-1">
+              <p className="text-base font-bold text-emerald-400">🎉 Ottimo lavoro! Tutti i clienti sono stati avvisati.</p>
+              <p className="text-xs text-white/50">Non ci sono altre prenotazioni in attesa di promemoria.</p>
+            </div>
+          ) : (
+            <p>{appointments.length === 0 ? 'Nessuna prenotazione futura al momento.' : 'Nessun risultato per i filtri selezionati.'}</p>
+          )}
+        </div>
       ) : (
         <div className="mt-6 space-y-3">
           {filtered.map((appointment) => {
@@ -330,12 +431,21 @@ export function UpcomingAppointmentsList({
             const isCompleted = appointment.status === 'completed';
             const isCancelled = appointment.status === 'cancelled';
             const genre = detectGenre(appointment.service?.name);
+            const isNotified = !!appointment.reminder_whatsapp_sent_at;
+            const hasPhone = !!appointment.customer_phone;
 
-            const cardBgClass = isCompleted
-              ? 'border-emerald-500/30 bg-[#0a1610]'
-              : isCancelled
-              ? 'border-red-500/20 bg-[#170b0b] opacity-75'
-              : 'border-white/10 bg-[#111]';
+            let cardBorderClass = 'border-white/10 bg-[#111]';
+            if (isCompleted) {
+              cardBorderClass = 'border-emerald-500/30 bg-[#0a1610]';
+            } else if (isCancelled) {
+              cardBorderClass = 'border-red-500/20 bg-[#170b0b] opacity-75';
+            } else if (isNotified) {
+              cardBorderClass = 'border-l-4 border-l-emerald-500 border-emerald-500/20 bg-[#0c1510]';
+            } else if (hasPhone) {
+              cardBorderClass = 'border-l-4 border-l-amber-500 border-amber-500/25 bg-[#17130a]';
+            } else {
+              cardBorderClass = 'border-l-4 border-l-white/20 border-white/10 bg-[#111]';
+            }
 
             const genreStyle =
               genre === 'Bimbo'
@@ -347,19 +457,19 @@ export function UpcomingAppointmentsList({
             return (
               <article
                 key={appointment.id}
-                className={`rounded-xl border p-4 sm:p-5 transition ${cardBgClass}`}
+                className={`rounded-xl border p-4 sm:p-5 transition ${cardBorderClass}`}
               >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 space-y-2">
+                  <div className="min-w-0 space-y-2.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-white text-base">{appointment.customer_name}</p>
+                      <p className="font-bold text-white text-base">{appointment.customer_name}</p>
 
                       <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${genreStyle}`}>
                         {genre}
                       </span>
 
                       {isCompleted ? (
-                        <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                        <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400 uppercase tracking-wider">
                           Completato
                         </span>
                       ) : isCancelled ? (
@@ -378,51 +488,69 @@ export function UpcomingAppointmentsList({
                     </div>
 
                     <p className="text-sm text-white/70">
-                      <span className="text-gold">{appointment.service?.name ?? 'Servizio'}</span>
+                      <span className="text-gold font-medium">{appointment.service?.name ?? 'Servizio'}</span>
                       {appointment.service
                         ? ` . ${formatDuration(appointment.service.duration_minutes)} . ${formatPrice(appointment.service.price_cents)}`
                         : ''}
                     </p>
                     <p className="text-sm text-white/50">
                       Barbiere: {appointment.barber?.name ?? '-'}
-                      {appointment.customer_phone ? ` . Tel. ${appointment.customer_phone}` : ''}
+                      {appointment.customer_phone ? (
+                        <span className="text-white/80 font-medium"> . Tel. {appointment.customer_phone}</span>
+                      ) : (
+                        <span className="text-amber-400/80 font-medium"> . ⚠️ Nessun recapito telefonico</span>
+                      )}
                     </p>
                     {appointment.notes && (
                       <p className="text-sm text-white/45">Note: {appointment.notes}</p>
                     )}
 
+                    {/* Badge Notifica EVIDENTE con Spunta */}
                     <div className="pt-1">
-                      {appointment.reminder_whatsapp_sent_at ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          📲 Promemoria WhatsApp inviato ({formatShopTimeFromDate(parseISO(appointment.reminder_whatsapp_sent_at))})
+                      {isNotified ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-bold text-emerald-300 shadow-sm">
+                          <CheckCheck size={15} className="text-emerald-400" />
+                          ✅ CLIENTE AVVISATO SU WHATSAPP ({formatShopTimeFromDate(parseISO(appointment.reminder_whatsapp_sent_at!))})
                         </span>
-                      ) : !appointment.customer_phone ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-2 py-0.5 text-[11px] text-amber-400/80">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                          ⚠️ Nessun numero di telefono registrato
+                      ) : !hasPhone ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-semibold text-amber-400">
+                          <AlertCircle size={14} />
+                          ⚠️ IMPOSSIBILE AVVISARE: Telefono mancante
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/50">
-                          <span className="h-1.5 w-1.5 rounded-full bg-amber-400/80" />
-                          ⏳ Promemoria WhatsApp in attesa (ore 22:30)
+                        <span className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/15 px-2.5 py-1 text-xs font-bold text-amber-300">
+                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
+                          ⏳ DA AVVISARE (Promemoria non ancora inviato)
                         </span>
                       )}
                     </div>
                   </div>
 
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    {appointment.customer_phone && (
+                    {hasPhone && (
                       <Button
                         type="button"
-                        variant="outline"
                         size="sm"
-                        className="gap-1.5 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/70"
+                        variant={isNotified ? 'outline' : 'default'}
+                        className={`gap-1.5 text-xs font-bold transition ${
+                          isNotified
+                            ? 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10 hover:border-emerald-500/70'
+                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/60'
+                        }`}
                         onClick={() => handleSendManualWhatsApp(appointment)}
-                        title="Invia o apri promemoria WhatsApp"
+                        title={isNotified ? 'Re-invia o apri chat WhatsApp' : 'Invia promemoria WhatsApp al cliente'}
                       >
-                        <MessageCircle size={14} />
-                        WhatsApp
+                        {isNotified ? (
+                          <>
+                            <CheckCheck size={14} className="text-emerald-400" />
+                            Avvisato (Re-invia)
+                          </>
+                        ) : (
+                          <>
+                            <MessageCircle size={14} />
+                            Invia WhatsApp
+                          </>
+                        )}
                       </Button>
                     )}
                     <Button
