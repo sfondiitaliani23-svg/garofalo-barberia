@@ -30,6 +30,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { WhatsAppStatusWidget } from '@/components/admin/WhatsAppStatusWidget';
 
 // Definiamo i tipi per gli appuntamenti in arrivo
 interface CalendarAppointment {
@@ -268,6 +269,9 @@ export function PremiumDashboard({
 
   return (
     <div className="space-y-6">
+      {/* ── STATO CONNESIONE WHATSAPP REMINDER ─────────────── */}
+      <WhatsAppStatusWidget />
+
       {/* ── SELETTORE PERIODO ────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5 pb-4">
         <div>
