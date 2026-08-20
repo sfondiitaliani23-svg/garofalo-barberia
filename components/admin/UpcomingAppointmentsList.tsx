@@ -615,10 +615,11 @@ export function UpcomingAppointmentsList({
       {modalOpen && selectedAppointment && (
         <AdminAppointmentForm
           appointment={selectedAppointment}
+          barberId={selectedAppointment.barber_id ?? barbers[0]?.id ?? ''}
           barbers={barbers}
           services={services}
           onSaved={handleSaved}
-          onCancel={() => {
+          onClose={() => {
             setModalOpen(false);
             setSelectedAppointment(null);
           }}
