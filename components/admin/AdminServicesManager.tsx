@@ -10,6 +10,7 @@ import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import { saveAdminService, deleteAdminService } from '@/lib/actions/admin';
 import { formatPrice, formatDuration } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { isServiceAdminOnly } from '@/lib/data/services';
 import type { Service, ServiceCategory } from '@/types/database';
 
 const CATEGORIES: { value: ServiceCategory; label: string }[] = [
@@ -312,11 +313,22 @@ function ServiceRow({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#111] px-4 py-3">
       <div>
-        <p className="font-medium">
-          {service.name}
-          {inactive && <span className="ml-2 text-xs text-white/40">(disattivato)</span>}
-        </p>
-        <p className="text-xs text-white/40">
+        <div className="flex items-center gap-2">
+          <p className="font-medium">
+            {service.name}
+            {inactive && <span className="ml-2 text-xs text-white/40">(disattivato)</span>}
+          </p>
+          {isServiceAdminOnly(service.name) ? (
+            <span className="inline-block rounded bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 text-[10px] font-bold text-amber-300">
+              🔒 Solo Staff / Admin
+            </span>
+          ) : (
+            <span className="inline-block rounded bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">
+              🌐 Prenotabile Online
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-white/40 mt-0.5">
           {service.category} · {formatDuration(service.duration_minutes)}
         </p>
       </div>

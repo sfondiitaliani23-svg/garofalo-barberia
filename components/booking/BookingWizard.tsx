@@ -17,6 +17,7 @@ import {
   type SlotDetail,
 } from '@/lib/actions/availability';
 import { getBarberRank, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
+import { isServicePubliclyBookable } from '@/lib/data/services';
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';
@@ -60,7 +61,7 @@ interface BookingConfirmation {
 }
 
 export function BookingWizard({
-  services,
+  services: rawServices,
   barbers: rawBarbers,
   defaultName = '',
   defaultPhone = '',
@@ -69,6 +70,11 @@ export function BookingWizard({
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+
+  // Filtra i servizi prenotabili pubblicamente (esclude Taglio e shampoo e Taglio baby per il pubblico)
+  const services = useMemo(() => {
+    return rawServices.filter((s) => isServicePubliclyBookable(s.name));
+  }, [rawServices]);
 
   // Filtra ed ordina i soli barbieri prenotabili pubblicamente (es. Francesco Costantino)
   const barbers = useMemo(() => {

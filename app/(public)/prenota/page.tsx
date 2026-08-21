@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function PrenotaPage() {
   const [services, barbers, profile] = await Promise.all([
-    getServices(),
+    getServices({ onlyPublic: true }),
     getBarbers({ onlyPublic: true }),
     getProfile(),
   ]);

@@ -13,6 +13,7 @@ import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
 import { isBarberAdminOnly, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
+import { isServiceAdminOnly, isServicePubliclyBookable } from '@/lib/data/services';
 
 export interface CreateAppointmentInput {
   serviceId?: string; // Mantieni per retrocompatibilità
@@ -68,6 +69,17 @@ export async function createAppointment(input: CreateAppointmentInput) {
       .filter((s): s is typeof services[number] => !!s);
 
     const isAdmin = profile?.role === 'admin';
+
+    // Se l'utente non è admin, verifica che nessuno dei servizi scelti sia bloccato (es. Taglio e shampoo, Taglio baby)
+    if (!isAdmin) {
+      const blockedService = orderedServices.find((s) => !isServicePubliclyBookable(s.name));
+      if (blockedService) {
+        return {
+          ok: false,
+          error: `Il servizio "${blockedService.name}" è riservato alla prenotazione diretta in salone. Seleziona un trattamento barba/styling o contatta direttamente la barberia al 320 188 6277.`,
+        };
+      }
+    }
 
     // Calcola la durata totale combinata di tutti i servizi
     const totalDuration = orderedServices.reduce((acc, s) => acc + s.duration_minutes, 0);
@@ -406,7 +418,7 @@ export async function getAppointmentForCustomer(appointmentId: string) {
   return apt;
 }
 
-export async function getServices() {
+export async function getServices(options?: { onlyPublic?: boolean }) {
   try {
     const supabase = await createClient();
     if (!supabase) throw new Error('no supabase');
@@ -415,12 +427,24 @@ export async function getServices() {
       .select('*')
       .eq('is_active', true)
       .order('sort_order');
-    if (data && data.length > 0) return data;
+    if (data && data.length > 0) {
+      const { isServicePubliclyBookable } = await import('@/lib/data/services');
+      let result = [...data];
+      if (options?.onlyPublic) {
+        result = result.filter((s) => isServicePubliclyBookable(s.name));
+      }
+      return result;
+    }
   } catch {
     // Supabase non configurato
   }
   const { FALLBACK_SERVICES } = await import('@/lib/data/fallback');
-  return FALLBACK_SERVICES;
+  const { isServicePubliclyBookable } = await import('@/lib/data/services');
+  let fallback = [...FALLBACK_SERVICES];
+  if (options?.onlyPublic) {
+    fallback = fallback.filter((s) => isServicePubliclyBookable(s.name));
+  }
+  return fallback;
 }
 
 export async function getBarbers(options?: { onlyPublic?: boolean }) {
