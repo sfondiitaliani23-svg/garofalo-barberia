@@ -100,7 +100,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
         if (explicitBarber && isBarberAdminOnly(explicitBarber.name)) {
           return {
             ok: false,
-            error: 'Le prenotazioni online per Luigi e Vittorio sono riservate. Prenota con un collaboratore disponibile o contatta il salone.',
+            error: 'Le prenotazioni online per questo operatore sono momentaneamente riservate. Prenota con Luigi Garofalo o contatta direttamente il salone al 320 188 6277.',
           };
         }
       }
