@@ -16,8 +16,15 @@ export const BABY_NOTE =
   'Sappiamo che portare un bambino dal barbiere può essere un\'avventura. Qui prendiamo tutto il tempo necessario: niente fretta, niente pressione. Se è la prima volta, scrivilo nelle note quando prenoti.';
 
 /**
- * Tutti i servizi del listino (Taglio e shampoo, Taglio baby, Barba, Styling) sono regolarmente prenotabili online.
+ * Restituisce true se il servizio è un taglio (Taglio e shampoo, Taglio baby).
+ * Per questi servizi la prenotazione online pubblica è affidata a Luigi Garofalo.
  */
+export function isCutService(serviceNameOrCategory?: string | null): boolean {
+  if (!serviceNameOrCategory) return false;
+  const lower = serviceNameOrCategory.toLowerCase().trim();
+  return lower.includes('taglio') || lower.includes('baby');
+}
+
 export function isServiceAdminOnly(serviceName?: string | null): boolean {
   return false;
 }

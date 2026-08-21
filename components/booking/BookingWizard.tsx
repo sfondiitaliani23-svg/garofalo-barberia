@@ -16,8 +16,8 @@ import {
   type BarberBookingStatus,
   type SlotDetail,
 } from '@/lib/actions/availability';
-import { getBarberRank, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
-import { isServicePubliclyBookable } from '@/lib/data/services';
+import { getBarberRank } from '@/lib/utils/barber-schedule';
+import { isCutService } from '@/lib/data/services';
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';
@@ -71,22 +71,33 @@ export function BookingWizard({
   const [step, setStep] = useState(1);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
-  // Filtra i servizi prenotabili pubblicamente (esclude Taglio e shampoo e Taglio baby per il pubblico)
-  const services = useMemo(() => {
-    return rawServices.filter((s) => isServicePubliclyBookable(s.name));
-  }, [rawServices]);
+  // Tutti i servizi del listino (Taglio, Baby, Barba, Styling)
+  const services = rawServices;
 
-  // Filtra ed ordina i soli barbieri prenotabili pubblicamente (es. Francesco Costantino)
+  const selectedServices = useMemo(
+    () => selectedServiceIds.map((id) => services.find((s) => s.id === id)).filter((s): s is Service => !!s),
+    [selectedServiceIds, services]
+  );
+
+  // Verifica se la selezione attuale include un servizio di taglio (Taglio e shampoo o Taglio baby)
+  const hasCutService = useMemo(
+    () => selectedServices.some((s) => isCutService(s.name) || isCutService(s.category)),
+    [selectedServices]
+  );
+
+  // Se è stato scelto il taglio -> solo Luigi Garofalo
+  // Se sono stati scelti solo trattamenti barba/styling -> Luigi Garofalo, Vittorio Morlino, Francesco Costantino
   const barbers = useMemo(() => {
-    return [...rawBarbers]
-      .filter((b) => isBarberPubliclyBookable(b.name))
-      .sort((a, b) => {
-        const rankA = getBarberRank(a.name);
-        const rankB = getBarberRank(b.name);
-        if (rankA !== rankB) return rankA - rankB;
-        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
-      });
-  }, [rawBarbers]);
+    if (hasCutService) {
+      return rawBarbers.filter((b) => b.name.toLowerCase().includes('luigi'));
+    }
+    return [...rawBarbers].sort((a, b) => {
+      const rankA = getBarberRank(a.name);
+      const rankB = getBarberRank(b.name);
+      if (rankA !== rankB) return rankA - rankB;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+  }, [hasCutService, rawBarbers]);
 
   // Primo barbiere pubblico disponibile
   const defaultBarber = useMemo(() => {
@@ -94,6 +105,14 @@ export function BookingWizard({
   }, [barbers]);
 
   const [barberId, setBarberId] = useState<string | null>(() => defaultBarber?.id ?? null);
+
+  // Se cambiano i servizi e il barbiere selezionato non è più valido (es. selezionato taglio con altro operatore)
+  useEffect(() => {
+    if (hasCutService && barberId && !barbers.some((b) => b.id === barberId)) {
+      setBarberId(defaultBarber?.id ?? null);
+    }
+  }, [hasCutService, barberId, barbers, defaultBarber]);
+
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
@@ -116,11 +135,6 @@ export function BookingWizard({
   const [loadingBarberStatuses, setLoadingBarberStatuses] = useState(false);
   const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null);
 
-  const selectedServices = useMemo(
-    () => selectedServiceIds.map((id) => services.find((s) => s.id === id)).filter((s): s is Service => !!s),
-    [selectedServiceIds, services]
-  );
-
   const totalDuration = useMemo(
     () => selectedServices.reduce((acc, s) => acc + s.duration_minutes, 0),
     [selectedServices]
@@ -139,15 +153,15 @@ export function BookingWizard({
   const loadBarberStatuses = useCallback(async () => {
     if (selectedServices.length === 0) return;
     setLoadingBarberStatuses(true);
-    const statuses = await getBarbersBookingAvailability(totalDuration);
+    const statuses = await getBarbersBookingAvailability(totalDuration, false, hasCutService);
     setBarberStatuses(statuses);
     setLoadingBarberStatuses(false);
-  }, [selectedServices.length, totalDuration]);
+  }, [selectedServices.length, totalDuration, hasCutService]);
 
   const loadDates = useCallback(async () => {
     if (selectedServices.length === 0) return;
     setLoadingDates(true);
-    const result = await getAvailableDates(totalDuration, barberId);
+    const result = await getAvailableDates(totalDuration, barberId, undefined, false, hasCutService);
     setDates(result);
     setDate((current) => {
       if (result.length === 0) return null;
@@ -155,7 +169,7 @@ export function BookingWizard({
       return result[0];
     });
     setLoadingDates(false);
-  }, [selectedServices.length, totalDuration, barberId]);
+  }, [selectedServices.length, totalDuration, barberId, hasCutService]);
 
   const loadSlots = useCallback(async () => {
     if (selectedServices.length === 0 || !date) return;
@@ -163,14 +177,17 @@ export function BookingWizard({
     const res = await getAvailableSlots(
       barberId,
       date,
-      totalDuration
+      totalDuration,
+      undefined,
+      false,
+      hasCutService
     );
     setSlots(res.slots ?? []);
     setSlotsDetail(res.slotsDetail ?? []);
     setFallbackNotice(res.fallbackNotice ?? null);
     setSlotsUnavailable(Boolean(res.unavailable));
     setLoadingSlots(false);
-  }, [selectedServices.length, totalDuration, barberId, date]);
+  }, [selectedServices.length, totalDuration, barberId, date, hasCutService]);
 
   useEffect(() => {
     if (step === 2 && selectedServices.length > 0) {
@@ -589,11 +606,28 @@ export function BookingWizard({
             <div className="space-y-6">
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gold">Con chi vuoi prenotare?</h3>
+                  <h3 className="text-sm font-semibold text-gold">
+                    {hasCutService ? 'Operatore per il taglio' : 'Con chi vuoi effettuare il trattamento?'}
+                  </h3>
                   {defaultBarber && (
-                    <span className="text-xs text-white/40">Operatore: {defaultBarber.name}</span>
+                    <span className="text-xs text-white/40">
+                      {hasCutService ? 'Affidato a: ' + defaultBarber.name : 'Seleziona il tuo barbiere'}
+                    </span>
                   )}
                 </div>
+
+                {hasCutService && (
+                  <p className="mb-3 text-xs text-white/60">
+                    I servizi di taglio sono gestiti direttamente dal titolare <strong>Luigi Garofalo</strong>.
+                  </p>
+                )}
+
+                {!hasCutService && (
+                  <p className="mb-3 text-xs text-white/60">
+                    Scegli con quale professionista del salone effettuare il servizio barba/styling:
+                  </p>
+                )}
+
                 <div className="grid gap-3 sm:grid-cols-2">
                   {loadingBarberStatuses && (
                     <p className="text-sm text-white/50 sm:col-span-2">Verifica disponibilità team...</p>
@@ -621,7 +655,7 @@ export function BookingWizard({
                             <p className="font-medium text-white">{b.name}</p>
                             <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider">
                               <Sparkles className="h-3 w-3" />
-                              Staff Ufficiale
+                              Staff
                             </span>
                           </div>
                           <p className="text-sm text-gold mt-0.5">
@@ -640,20 +674,22 @@ export function BookingWizard({
                       </button>
                     );
                   })}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBarberId(null);
-                      setTime(null);
-                    }}
-                    className={cn(
-                      'rounded-lg border p-4 text-left transition sm:col-span-2',
-                      barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/40'
-                    )}
-                  >
-                    <p className="font-medium text-white">Nessuna preferenza (Primo disponibile)</p>
-                    <p className="text-sm text-white/50">Assegnazione automatica tra gli orari liberi con i barbieri del salone</p>
-                  </button>
+                  {!hasCutService && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBarberId(null);
+                        setTime(null);
+                      }}
+                      className={cn(
+                        'rounded-lg border p-4 text-left transition sm:col-span-2',
+                        barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/40'
+                      )}
+                    >
+                      <p className="font-medium text-white">Nessuna preferenza (Primo disponibile)</p>
+                      <p className="text-sm text-white/50">Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco</p>
+                    </button>
+                  )}
                 </div>
               </div>
 

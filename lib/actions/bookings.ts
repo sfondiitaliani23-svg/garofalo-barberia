@@ -12,8 +12,8 @@ import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appoin
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
-import { isBarberAdminOnly, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
-import { isServiceAdminOnly, isServicePubliclyBookable } from '@/lib/data/services';
+import { isBarberAllowedForCut, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
+import { isCutService } from '@/lib/data/services';
 
 export interface CreateAppointmentInput {
   serviceId?: string; // Mantieni per retrocompatibilità
@@ -69,38 +69,28 @@ export async function createAppointment(input: CreateAppointmentInput) {
       .filter((s): s is typeof services[number] => !!s);
 
     const isAdmin = profile?.role === 'admin';
-
-    // Se l'utente non è admin, verifica che nessuno dei servizi scelti sia bloccato (es. Taglio e shampoo, Taglio baby)
-    if (!isAdmin) {
-      const blockedService = orderedServices.find((s) => !isServicePubliclyBookable(s.name));
-      if (blockedService) {
-        return {
-          ok: false,
-          error: `Il servizio "${blockedService.name}" è riservato alla prenotazione diretta in salone. Seleziona un trattamento barba/styling o contatta direttamente la barberia al 320 188 6277.`,
-        };
-      }
-    }
+    const hasCutService = orderedServices.some((s) => isCutService(s.name) || isCutService(s.category));
 
     // Calcola la durata totale combinata di tutti i servizi
     const totalDuration = orderedServices.reduce((acc, s) => acc + s.duration_minutes, 0);
 
     let barberId = input.barberId;
     if (!barberId) {
-      barberId = await resolveBarberForSlot(input.date, input.time, totalDuration, isAdmin);
+      barberId = await resolveBarberForSlot(input.date, input.time, totalDuration, isAdmin, hasCutService);
       if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario per tutti i servizi scelti.' };
     } else {
-      // Se l'utente non è admin, verifica che il barbiere selezionato non sia riservato
-      if (!isAdmin) {
+      // Se l'utente non è admin e la prenotazione contiene un taglio, verifica che sia Luigi Garofalo
+      if (!isAdmin && hasCutService) {
         const { data: explicitBarber } = await supabase
           .from('barbers')
           .select('name')
           .eq('id', barberId)
           .single();
 
-        if (explicitBarber && isBarberAdminOnly(explicitBarber.name)) {
+        if (explicitBarber && !isBarberAllowedForCut(explicitBarber.name)) {
           return {
             ok: false,
-            error: 'Le prenotazioni online per questo operatore sono momentaneamente riservate. Prenota con Luigi Garofalo o contatta direttamente il salone al 320 188 6277.',
+            error: 'I servizi di taglio sono gestiti da Luigi Garofalo. Seleziona Luigi Garofalo per completare la prenotazione del taglio.',
           };
         }
       }
@@ -110,7 +100,8 @@ export async function createAppointment(input: CreateAppointmentInput) {
         input.date,
         totalDuration,
         undefined,
-        isAdmin
+        isAdmin,
+        hasCutService
       );
 
       if (!slots.includes(input.time)) {
@@ -136,10 +127,10 @@ export async function createAppointment(input: CreateAppointmentInput) {
       .eq('id', barberId)
       .single();
 
-    if (!isAdmin && barber && isBarberAdminOnly(barber.name)) {
+    if (!isAdmin && hasCutService && barber && !isBarberAllowedForCut(barber.name)) {
       return {
         ok: false,
-        error: 'Le prenotazioni online per questo operatore sono riservate.',
+        error: 'I servizi di taglio sono gestiti da Luigi Garofalo. Seleziona Luigi Garofalo per completare la prenotazione del taglio.',
       };
     }
 

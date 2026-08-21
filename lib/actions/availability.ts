@@ -14,7 +14,7 @@ import {
 import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
 import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
-import { getBarberRank, isBarberAdminOnly, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
+import { getBarberRank, isBarberAdminOnly, isBarberPubliclyBookable, isBarberAllowedForCut } from '@/lib/utils/barber-schedule';
 
 export type BarberBookingStatus = {
   barberId: string;
@@ -151,7 +151,8 @@ async function fetchBookingContext(
   barberId: string | null,
   candidateDates: string[],
   excludeAppointmentId?: string | null,
-  forAdmin = false
+  forAdmin = false,
+  hasCutService = false
 ): Promise<BookingContext | null> {
   const supabase = (await createServiceClient()) ?? (await createClient());
   if (!supabase) return null;
@@ -165,15 +166,18 @@ async function fetchBookingContext(
   if (barbers.length === 0) return null;
 
   if (!forAdmin) {
-    // Per utenti esterni (non admin), escludi i barbieri riservati (Luigi e Vittorio)
-    if (barberId) {
-      const explicit = barbers.find((b) => b.id === barberId);
-      if (explicit && isBarberAdminOnly(explicit.name)) {
-        return null;
+    // Se la prenotazione contiene un servizio di taglio (Taglio e shampoo o Taglio baby),
+    // per il pubblico è assegnato e consentito solo Luigi Garofalo.
+    if (hasCutService) {
+      if (barberId) {
+        const explicit = barbers.find((b) => b.id === barberId);
+        if (explicit && !isBarberAllowedForCut(explicit.name)) {
+          return null;
+        }
       }
+      barbers = barbers.filter((b) => isBarberAllowedForCut(b.name));
+      if (barbers.length === 0) return null;
     }
-    barbers = barbers.filter((b) => isBarberPubliclyBookable(b.name));
-    if (barbers.length === 0) return null;
   }
 
   // Ordina per priorità:
@@ -344,7 +348,8 @@ export async function getAvailableSlots(
   dateStr: string,
   durationMinutes: number,
   excludeAppointmentId?: string | null,
-  forAdmin = false
+  forAdmin = false,
+  hasCutService = false
 ): Promise<AvailableSlotsResult> {
   if (!isSupabaseConfigured()) {
     return getFallbackSlots(dateStr, durationMinutes);
@@ -352,7 +357,7 @@ export async function getAvailableSlots(
 
   try {
     const candidates = [dateStr];
-    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId, forAdmin);
+    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId, forAdmin, hasCutService);
     if (!context) {
       if (!forAdmin && barberId) {
         return {
@@ -506,12 +511,13 @@ export async function resolveBarberForSlot(
   dateStr: string,
   timeStr: string,
   durationMinutes: number,
-  forAdmin = false
+  forAdmin = false,
+  hasCutService = false
 ): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
 
   const candidates = [dateStr];
-  const context = await fetchBookingContext(null, candidates, undefined, forAdmin);
+  const context = await fetchBookingContext(null, candidates, undefined, forAdmin, hasCutService);
   if (!context) return null;
 
   const orderedBarbers = Array.from(context.barberDetails.values()).sort((a, b) => {
@@ -533,7 +539,8 @@ export async function getAvailableDates(
   durationMinutes: number,
   barberId: string | null = null,
   excludeAppointmentId?: string | null,
-  forAdmin = false
+  forAdmin = false,
+  hasCutService = false
 ): Promise<string[]> {
   const candidates = getBookingCandidateDates();
   if (candidates.length === 0) return [];
@@ -543,7 +550,7 @@ export async function getAvailableDates(
   }
 
   try {
-    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId, forAdmin);
+    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId, forAdmin, hasCutService);
     if (!context) return candidates;
 
     const allBarbers = Array.from(context.barberDetails.values());
@@ -573,7 +580,8 @@ export async function getAvailableDates(
 
 export async function getBarbersBookingAvailability(
   durationMinutes: number,
-  forAdmin = false
+  forAdmin = false,
+  hasCutService = false
 ): Promise<BarberBookingStatus[]> {
   if (!isSupabaseConfigured()) {
     return [];
@@ -591,23 +599,22 @@ export async function getBarbersBookingAvailability(
 
     if (!barbers?.length) return [];
 
-    // Se richiesta da un utente pubblico, segnala subito Luigi e Vittorio come non prenotabili online
     const candidates = getBookingCandidateDates();
-    const context = await fetchBookingContext(null, candidates, undefined, forAdmin);
+    const context = await fetchBookingContext(null, candidates, undefined, forAdmin, hasCutService);
     if (!context) {
       return barbers.map((barber) => ({
         barberId: barber.id,
-        canBook: forAdmin || isBarberPubliclyBookable(barber.name),
-        reason: (!forAdmin && isBarberAdminOnly(barber.name)) ? 'Prenotabile solo dallo staff' : undefined,
+        canBook: forAdmin || (hasCutService ? isBarberAllowedForCut(barber.name) : true),
+        reason: (!forAdmin && hasCutService && !isBarberAllowedForCut(barber.name)) ? 'Riservato a Luigi Garofalo' : undefined,
       }));
     }
 
     return barbers.map((barber) => {
-      if (!forAdmin && isBarberAdminOnly(barber.name)) {
+      if (!forAdmin && hasCutService && !isBarberAllowedForCut(barber.name)) {
         return {
           barberId: barber.id,
           canBook: false,
-          reason: 'Prenotabile solo dallo staff',
+          reason: 'Riservato a Luigi Garofalo',
         };
       }
 

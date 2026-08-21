@@ -19,16 +19,17 @@ export const SCHEDULE_PERIOD_LABELS: Record<SchedulePeriod, string> = {
   afternoon: 'Pomeriggio',
 };
 
-export function isBarberAdminOnly(name?: string | null): boolean {
+export function isBarberAllowedForCut(name?: string | null): boolean {
   if (!name) return false;
-  const lower = name.toLowerCase();
-  // Francesco Costantino e Vittorio Morlino sono riservati alla gestione interna dello staff/admin
-  // Per Luigi Garofalo le prenotazioni online rimangono attive
-  return lower.includes('francesco') || lower.includes('vittorio');
+  return name.toLowerCase().includes('luigi');
+}
+
+export function isBarberAdminOnly(name?: string | null): boolean {
+  return false;
 }
 
 export function isBarberPubliclyBookable(name?: string | null): boolean {
-  return !isBarberAdminOnly(name);
+  return true;
 }
 
 export function getBarberRank(name?: string | null): number {
