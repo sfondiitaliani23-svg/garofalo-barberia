@@ -16,15 +16,12 @@ export const BABY_NOTE =
   'Sappiamo che portare un bambino dal barbiere può essere un\'avventura. Qui prendiamo tutto il tempo necessario: niente fretta, niente pressione. Se è la prima volta, scrivilo nelle note quando prenoti.';
 
 /**
- * Restituisce true se il servizio è riservato alla gestione interna (Admin / Staff).
- * Taglio e shampoo e Taglio baby sono bloccati per le prenotazioni online esterne.
+ * Tutti i servizi del listino (Taglio e shampoo, Taglio baby, Barba, Styling) sono regolarmente prenotabili online.
  */
 export function isServiceAdminOnly(serviceName?: string | null): boolean {
-  if (!serviceName) return false;
-  const lower = serviceName.toLowerCase().trim();
-  return lower.includes('taglio') || lower.includes('baby');
+  return false;
 }
 
 export function isServicePubliclyBookable(serviceName?: string | null): boolean {
-  return !isServiceAdminOnly(serviceName);
+  return true;
 }
