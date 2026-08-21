@@ -19,6 +19,17 @@ export const SCHEDULE_PERIOD_LABELS: Record<SchedulePeriod, string> = {
   afternoon: 'Pomeriggio',
 };
 
+export function isBarberAdminOnly(name?: string | null): boolean {
+  if (!name) return false;
+  const lower = name.toLowerCase();
+  // Luigi Garofalo e Vittorio Morlino sono riservati esclusivamente alla gestione interna dello staff/admin
+  return lower.includes('luigi') || lower.includes('vittorio');
+}
+
+export function isBarberPubliclyBookable(name?: string | null): boolean {
+  return !isBarberAdminOnly(name);
+}
+
 export function getBarberRank(name?: string | null): number {
   if (!name) return 99;
   const lower = name.toLowerCase();

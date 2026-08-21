@@ -12,6 +12,7 @@ import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appoin
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
+import { isBarberAdminOnly, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
 
 export interface CreateAppointmentInput {
   serviceId?: string; // Mantieni per retrocompatibilità
@@ -66,18 +67,38 @@ export async function createAppointment(input: CreateAppointmentInput) {
       .map((id) => services.find((s) => s.id === id))
       .filter((s): s is typeof services[number] => !!s);
 
+    const isAdmin = profile?.role === 'admin';
+
     // Calcola la durata totale combinata di tutti i servizi
     const totalDuration = orderedServices.reduce((acc, s) => acc + s.duration_minutes, 0);
 
     let barberId = input.barberId;
     if (!barberId) {
-      barberId = await resolveBarberForSlot(input.date, input.time, totalDuration);
+      barberId = await resolveBarberForSlot(input.date, input.time, totalDuration, isAdmin);
       if (!barberId) return { ok: false, error: 'Nessun barbiere disponibile in questo orario per tutti i servizi scelti.' };
     } else {
+      // Se l'utente non è admin, verifica che il barbiere selezionato non sia riservato
+      if (!isAdmin) {
+        const { data: explicitBarber } = await supabase
+          .from('barbers')
+          .select('name')
+          .eq('id', barberId)
+          .single();
+
+        if (explicitBarber && isBarberAdminOnly(explicitBarber.name)) {
+          return {
+            ok: false,
+            error: 'Le prenotazioni online per Luigi e Vittorio sono riservate. Prenota con un collaboratore disponibile o contatta il salone.',
+          };
+        }
+      }
+
       const { slots, slotsDetail, error } = await getAvailableSlots(
         barberId,
         input.date,
-        totalDuration
+        totalDuration,
+        undefined,
+        isAdmin
       );
 
       if (!slots.includes(input.time)) {
@@ -89,7 +110,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
         };
       }
 
-      // Se l'orario corrisponde a un collaboratore di fallback (es. Luigi occupato, slot di Francesco/Vittorio)
+      // Se l'orario corrisponde a un collaboratore di fallback
       const matchingSlot = slotsDetail?.find((s) => s.time === input.time);
       if (matchingSlot?.barberId && matchingSlot.barberId !== barberId) {
         barberId = matchingSlot.barberId;
@@ -102,6 +123,13 @@ export async function createAppointment(input: CreateAppointmentInput) {
       .select('name')
       .eq('id', barberId)
       .single();
+
+    if (!isAdmin && barber && isBarberAdminOnly(barber.name)) {
+      return {
+        ok: false,
+        error: 'Le prenotazioni online per questo operatore sono riservate.',
+      };
+    }
 
     const customerEmail =
       input.customerEmail?.trim() ||
@@ -395,7 +423,7 @@ export async function getServices() {
   return FALLBACK_SERVICES;
 }
 
-export async function getBarbers() {
+export async function getBarbers(options?: { onlyPublic?: boolean }) {
   try {
     const supabase = await createClient();
     if (!supabase) throw new Error('no supabase');
@@ -405,8 +433,12 @@ export async function getBarbers() {
       .eq('is_active', true)
       .order('sort_order');
     if (data && data.length > 0) {
-      const { getBarberRank } = await import('@/lib/utils/barber-schedule');
-      return [...data].sort((a, b) => {
+      const { getBarberRank, isBarberPubliclyBookable } = await import('@/lib/utils/barber-schedule');
+      let result = [...data];
+      if (options?.onlyPublic) {
+        result = result.filter((b) => isBarberPubliclyBookable(b.name));
+      }
+      return result.sort((a, b) => {
         const rankA = getBarberRank(a.name);
         const rankB = getBarberRank(b.name);
         if (rankA !== rankB) return rankA - rankB;
@@ -417,5 +449,15 @@ export async function getBarbers() {
     // Supabase non configurato
   }
   const { FALLBACK_BARBERS } = await import('@/lib/data/fallback');
-  return FALLBACK_BARBERS;
+  const { isBarberPubliclyBookable, getBarberRank } = await import('@/lib/utils/barber-schedule');
+  let fallback = [...FALLBACK_BARBERS];
+  if (options?.onlyPublic) {
+    fallback = fallback.filter((b) => isBarberPubliclyBookable(b.name));
+  }
+  return fallback.sort((a, b) => {
+    const rankA = getBarberRank(a.name);
+    const rankB = getBarberRank(b.name);
+    if (rankA !== rankB) return rankA - rankB;
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  });
 }

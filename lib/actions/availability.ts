@@ -14,7 +14,7 @@ import {
 import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
 import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
-import { getBarberRank } from '@/lib/utils/barber-schedule';
+import { getBarberRank, isBarberAdminOnly, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
 
 export type BarberBookingStatus = {
   barberId: string;
@@ -150,7 +150,8 @@ function getBookingCandidateDates(): string[] {
 async function fetchBookingContext(
   barberId: string | null,
   candidateDates: string[],
-  excludeAppointmentId?: string | null
+  excludeAppointmentId?: string | null,
+  forAdmin = false
 ): Promise<BookingContext | null> {
   const supabase = (await createServiceClient()) ?? (await createClient());
   if (!supabase) return null;
@@ -160,10 +161,24 @@ async function fetchBookingContext(
     .select('id, name, role, sort_order')
     .eq('is_active', true);
 
-  const barbers = (allBarbersData ?? []) as BarberRecord[];
+  let barbers = (allBarbersData ?? []) as BarberRecord[];
   if (barbers.length === 0) return null;
 
-  // Ordina per priorità: Luigi (1), Francesco (2), Vittorio (3)
+  if (!forAdmin) {
+    // Per utenti esterni (non admin), escludi i barbieri riservati (Luigi e Vittorio)
+    if (barberId) {
+      const explicit = barbers.find((b) => b.id === barberId);
+      if (explicit && isBarberAdminOnly(explicit.name)) {
+        return null;
+      }
+    }
+    barbers = barbers.filter((b) => isBarberPubliclyBookable(b.name));
+    if (barbers.length === 0) return null;
+  }
+
+  // Ordina per priorità:
+  // Admin: Luigi (1), Francesco (2), Vittorio (3)
+  // Pubblico: Francesco (2), e poi eventuali altri collaboratori
   barbers.sort((a, b) => {
     const rankA = getBarberRank(a.name);
     const rankB = getBarberRank(b.name);
@@ -175,7 +190,7 @@ async function fetchBookingContext(
 
   let barberIds: string[];
   if (barberId) {
-    barberIds = [barberId];
+    barberIds = barbers.some((b) => b.id === barberId) ? [barberId] : [];
   } else {
     barberIds = barbers.map((b) => b.id);
   }
@@ -187,7 +202,7 @@ async function fetchBookingContext(
   const rangeStart = getShopDayBounds(firstDate).dayStart.toISOString();
   const rangeEnd = getShopDayBounds(lastDate).dayEnd.toISOString();
 
-  // Recupera la disponibilità di tutti i barbieri attivi per supportare il fallback
+  // Recupera la disponibilità dei barbieri attivi per il contesto
   const allActiveBarberIds = barbers.map((b) => b.id);
 
   const [availabilityRes, appointmentsRes, timeOffRes] = await Promise.all([
@@ -252,6 +267,11 @@ function computeSlotsForBarber(
   context: BookingContext,
   forAdmin = false
 ): string[] {
+  const barber = context.barberDetails.get(barberId);
+  if (!forAdmin && barber && !isBarberPubliclyBookable(barber.name)) {
+    return [];
+  }
+
   const dayOfWeek = getShopDayOfWeek(dateStr);
   if (dayOfWeek === 0 || dayOfWeek === 1) return [];
 
@@ -278,13 +298,16 @@ function computeSlotsForBarber(
   );
   const timeOff = filterTimeOffForBarber(context.timeOff, barberId);
 
+  // Per gli admin permettiamo intervalli da 15 minuti; per il pubblico intervalli standard di 30 minuti
+  const slotInterval = forAdmin ? 15 : SITE_CONFIG.slotIntervalMinutes;
+
   for (const period of periods) {
     const slots = generateSlots(
       dateStr,
       period.start,
       period.end,
       durationMinutes,
-      SITE_CONFIG.slotIntervalMinutes
+      slotInterval
     );
 
     const available = filterAvailableSlots(slots, appointments, timeOff);
@@ -329,10 +352,19 @@ export async function getAvailableSlots(
 
   try {
     const candidates = [dateStr];
-    const context = await fetchBookingContext(null, candidates, excludeAppointmentId);
-    if (!context) return getFallbackSlots(dateStr, durationMinutes);
+    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId, forAdmin);
+    if (!context) {
+      if (!forAdmin && barberId) {
+        return {
+          slots: [],
+          slotsDetail: [],
+          error: 'Le prenotazioni online per questo operatore sono riservate. Prenota con un collaboratore disponibile.',
+        };
+      }
+      return getFallbackSlots(dateStr, durationMinutes);
+    }
 
-    // Identifica i barbieri ordinati per priorità: 1. Luigi, 2. Francesco, 3. Vittorio
+    // Barbieri ordinati per priorità
     const allBarbers = Array.from(context.barberDetails.values()).sort((a, b) => {
       const rankA = getBarberRank(a.name);
       const rankB = getBarberRank(b.name);
@@ -340,9 +372,17 @@ export async function getAvailableSlots(
       return (a.sort_order ?? 0) - (b.sort_order ?? 0);
     });
 
-    const luigi = allBarbers.find((b) => getBarberRank(b.name) === 1);
-    const primaryBarberId = luigi?.id ?? allBarbers[0]?.id;
-    const primaryBarberName = luigi?.name ?? allBarbers[0]?.name ?? 'Luigi Garofalo';
+    if (allBarbers.length === 0) {
+      return {
+        slots: [],
+        slotsDetail: [],
+        unavailable: true,
+      };
+    }
+
+    const primaryBarber = allBarbers[0];
+    const primaryBarberId = primaryBarber.id;
+    const primaryBarberName = primaryBarber.name;
 
     // Calcola gli slot per ciascun barbiere in modo indipendente
     const slotsByBarber = new Map<string, string[]>();
@@ -350,7 +390,7 @@ export async function getAvailableSlots(
       slotsByBarber.set(b.id, computeSlotsForBarber(b.id, dateStr, durationMinutes, context, forAdmin));
     }
 
-    // Se l'utente ha selezionato un barbiere specifico diverso da Luigi (es. Francesco o Vittorio direttamente)
+    // Se l'utente ha selezionato un barbiere specifico diverso dal primario
     if (barberId && barberId !== primaryBarberId) {
       const explicitBarber = context.barberDetails.get(barberId);
       const bSlots = slotsByBarber.get(barberId) ?? [];
@@ -371,11 +411,10 @@ export async function getAvailableSlots(
       };
     }
 
-    // Modalità PREDEFINITA (Luigi selezionato o nessuna preferenza):
-    // Priorità assoluta a Luigi, con fallback automatico su Francesco e poi Vittorio
-    const luigiSlots = primaryBarberId ? (slotsByBarber.get(primaryBarberId) ?? []) : [];
-    const luigiSlotsSet = new Set(luigiSlots);
-    const isPrimaryAvailableOnDay = luigiSlots.length > 0;
+    // Modalità PREDEFINITA (primo operatore o nessuna preferenza)
+    const primarySlots = primaryBarberId ? (slotsByBarber.get(primaryBarberId) ?? []) : [];
+    const primarySlotsSet = new Set(primarySlots);
+    const isPrimaryAvailableOnDay = primarySlots.length > 0;
 
     // Genera l'insieme combinato di tutti gli orari possibili per il giorno
     const allPossibleTimes = new Set<string>();
@@ -388,8 +427,8 @@ export async function getAvailableSlots(
     let hasFallbackSlot = false;
 
     for (const time of sortedTimes) {
-      // 1. Se Luigi è libero a quest'ora -> Assegna Luigi
-      if (primaryBarberId && luigiSlotsSet.has(time)) {
+      // 1. Se il barbiere primario è libero a quest'ora -> Assegna lui
+      if (primaryBarberId && primarySlotsSet.has(time)) {
         slotsDetail.push({
           time,
           barberId: primaryBarberId,
@@ -400,7 +439,7 @@ export async function getAvailableSlots(
         continue;
       }
 
-      // 2. Se Luigi non è libero -> Fallback su Francesco, poi Vittorio
+      // 2. Se non è libero -> Fallback sugli altri collaboratori disponibili nel contesto
       let assigned = false;
       for (const fallbackBarber of allBarbers) {
         if (fallbackBarber.id === primaryBarberId) continue;
@@ -423,8 +462,8 @@ export async function getAvailableSlots(
     const finalSlotTimes = slotsDetail.map((s) => s.time);
 
     let fallbackNotice: string | null = null;
-    if (!isPrimaryAvailableOnDay && finalSlotTimes.length > 0) {
-      fallbackNotice = `Luigi non è disponibile per questa data. Ecco gli orari disponibili con i collaboratori Francesco e Vittorio:`;
+    if (!isPrimaryAvailableOnDay && finalSlotTimes.length > 0 && allBarbers.length > 1) {
+      fallbackNotice = `${primaryBarberName} non è disponibile per questa data. Ecco gli orari liberi con i colleghi del team:`;
     }
 
     if (finalSlotTimes.length === 0) {
@@ -466,15 +505,15 @@ export async function getAvailableSlots(
 export async function resolveBarberForSlot(
   dateStr: string,
   timeStr: string,
-  durationMinutes: number
+  durationMinutes: number,
+  forAdmin = false
 ): Promise<string | null> {
   if (!isSupabaseConfigured()) return null;
 
   const candidates = [dateStr];
-  const context = await fetchBookingContext(null, candidates);
+  const context = await fetchBookingContext(null, candidates, undefined, forAdmin);
   if (!context) return null;
 
-  // Ordina per priorità: Luigi (1), Francesco (2), Vittorio (3)
   const orderedBarbers = Array.from(context.barberDetails.values()).sort((a, b) => {
     const rankA = getBarberRank(a.name);
     const rankB = getBarberRank(b.name);
@@ -483,7 +522,7 @@ export async function resolveBarberForSlot(
   });
 
   for (const barber of orderedBarbers) {
-    const slots = computeSlotsForBarber(barber.id, dateStr, durationMinutes, context);
+    const slots = computeSlotsForBarber(barber.id, dateStr, durationMinutes, context, forAdmin);
     if (slots.includes(timeStr)) return barber.id;
   }
 
@@ -493,7 +532,8 @@ export async function resolveBarberForSlot(
 export async function getAvailableDates(
   durationMinutes: number,
   barberId: string | null = null,
-  excludeAppointmentId?: string | null
+  excludeAppointmentId?: string | null,
+  forAdmin = false
 ): Promise<string[]> {
   const candidates = getBookingCandidateDates();
   if (candidates.length === 0) return [];
@@ -503,25 +543,27 @@ export async function getAvailableDates(
   }
 
   try {
-    const context = await fetchBookingContext(null, candidates, excludeAppointmentId);
+    const context = await fetchBookingContext(barberId, candidates, excludeAppointmentId, forAdmin);
     if (!context) return candidates;
 
     const allBarbers = Array.from(context.barberDetails.values());
-    const luigi = allBarbers.find((b) => getBarberRank(b.name) === 1);
-    const primaryBarberId = luigi?.id ?? allBarbers[0]?.id;
+    if (allBarbers.length === 0) return [];
+
+    const primaryBarber = allBarbers[0];
+    const primaryBarberId = primaryBarber?.id;
 
     // Se un barbiere specifico non-primario è richiesto, filtra per lui
     if (barberId && barberId !== primaryBarberId) {
       return candidates.filter((dateStr) => {
-        const slots = computeSlotsForBarber(barberId, dateStr, durationMinutes, context);
+        const slots = computeSlotsForBarber(barberId, dateStr, durationMinutes, context, forAdmin);
         return slots.length > 0;
       });
     }
 
-    // Modalità default (Luigi o qualsiasi): se Luigi o un fallback ha slot, la data è valida
+    // Modalità default: se almeno un barbiere disponibile ha slot, la data è valida
     const targetBarberIds = allBarbers.map((b) => b.id);
     return candidates.filter((dateStr) => {
-      const slots = computeSlotsFromContext(targetBarberIds, dateStr, durationMinutes, context);
+      const slots = computeSlotsFromContext(targetBarberIds, dateStr, durationMinutes, context, forAdmin);
       return slots.length > 0;
     });
   } catch {
@@ -530,7 +572,8 @@ export async function getAvailableDates(
 }
 
 export async function getBarbersBookingAvailability(
-  durationMinutes: number
+  durationMinutes: number,
+  forAdmin = false
 ): Promise<BarberBookingStatus[]> {
   if (!isSupabaseConfigured()) {
     return [];
@@ -548,17 +591,29 @@ export async function getBarbersBookingAvailability(
 
     if (!barbers?.length) return [];
 
+    // Se richiesta da un utente pubblico, segnala subito Luigi e Vittorio come non prenotabili online
     const candidates = getBookingCandidateDates();
-    const context = await fetchBookingContext(null, candidates);
+    const context = await fetchBookingContext(null, candidates, undefined, forAdmin);
     if (!context) {
-      return barbers.map((barber) => ({ barberId: barber.id, canBook: true }));
+      return barbers.map((barber) => ({
+        barberId: barber.id,
+        canBook: forAdmin || isBarberPubliclyBookable(barber.name),
+        reason: (!forAdmin && isBarberAdminOnly(barber.name)) ? 'Prenotabile solo dallo staff' : undefined,
+      }));
     }
 
     return barbers.map((barber) => {
+      if (!forAdmin && isBarberAdminOnly(barber.name)) {
+        return {
+          barberId: barber.id,
+          canBook: false,
+          reason: 'Prenotabile solo dallo staff',
+        };
+      }
+
       const availabilityRows = context.availabilityByBarber.get(barber.id) ?? [];
       const availabilityDays = new Set(availabilityRows.map((row) => row.day_of_week));
 
-      // Se non ha righe personalizzate, è disponibile nei giorni standard del salone (2..6)
       if (availabilityDays.size === 0) {
         [2, 3, 4, 5, 6].forEach((d) => availabilityDays.add(d));
       }
@@ -579,7 +634,7 @@ export async function getBarbersBookingAvailability(
       }
 
       const hasSlots = candidates.some((dateStr) => {
-        const slots = computeSlotsForBarber(barber.id, dateStr, durationMinutes, context);
+        const slots = computeSlotsForBarber(barber.id, dateStr, durationMinutes, context, forAdmin);
         return slots.length > 0;
       });
 

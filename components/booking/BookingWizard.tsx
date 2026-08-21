@@ -16,7 +16,7 @@ import {
   type BarberBookingStatus,
   type SlotDetail,
 } from '@/lib/actions/availability';
-import { getBarberRank } from '@/lib/utils/barber-schedule';
+import { getBarberRank, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';
@@ -70,22 +70,24 @@ export function BookingWizard({
   const [step, setStep] = useState(1);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
-  // Ordina i barbieri: 1. Luigi Garofalo, 2. Francesco Costantino, 3. Vittorio Morlino
+  // Filtra ed ordina i soli barbieri prenotabili pubblicamente (es. Francesco Costantino)
   const barbers = useMemo(() => {
-    return [...rawBarbers].sort((a, b) => {
-      const rankA = getBarberRank(a.name);
-      const rankB = getBarberRank(b.name);
-      if (rankA !== rankB) return rankA - rankB;
-      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
-    });
+    return [...rawBarbers]
+      .filter((b) => isBarberPubliclyBookable(b.name))
+      .sort((a, b) => {
+        const rankA = getBarberRank(a.name);
+        const rankB = getBarberRank(b.name);
+        if (rankA !== rankB) return rankA - rankB;
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      });
   }, [rawBarbers]);
 
-  // Luigi Garofalo è il barbiere predefinito
-  const luigiBarber = useMemo(() => {
-    return barbers.find((b) => getBarberRank(b.name) === 1) ?? barbers[0] ?? null;
+  // Primo barbiere pubblico disponibile
+  const defaultBarber = useMemo(() => {
+    return barbers[0] ?? null;
   }, [barbers]);
 
-  const [barberId, setBarberId] = useState<string | null>(() => luigiBarber?.id ?? null);
+  const [barberId, setBarberId] = useState<string | null>(() => defaultBarber?.id ?? null);
   const [date, setDate] = useState<string | null>(null);
   const [time, setTime] = useState<string | null>(null);
   const [slots, setSlots] = useState<string[]>([]);
@@ -272,8 +274,8 @@ export function BookingWizard({
       const b = barbers.find((item) => item.id === barberId);
       if (b) return b.name;
     }
-    return luigiBarber?.name ?? 'Luigi Garofalo';
-  }, [selectedSlotInfo, barberId, barbers, luigiBarber]);
+    return defaultBarber?.name ?? 'Collaboratore di sala';
+  }, [selectedSlotInfo, barberId, barbers, defaultBarber]);
 
   function handleSubmit() {
     if (selectedServiceIds.length === 0 || !date || !time || !name.trim() || !phone.trim()) {
@@ -281,7 +283,7 @@ export function BookingWizard({
       return;
     }
 
-    const effectiveBarberId = selectedSlotInfo?.barberId ?? barberId ?? luigiBarber?.id ?? null;
+    const effectiveBarberId = selectedSlotInfo?.barberId ?? barberId ?? defaultBarber?.id ?? null;
 
     startTransition(async () => {
       try {
@@ -582,14 +584,15 @@ export function BookingWizard({
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gold">Con chi vuoi prenotare?</h3>
-                  <span className="text-xs text-white/40">Operatore predefinito: Luigi Garofalo</span>
+                  {defaultBarber && (
+                    <span className="text-xs text-white/40">Operatore: {defaultBarber.name}</span>
+                  )}
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {loadingBarberStatuses && (
                     <p className="text-sm text-white/50 sm:col-span-2">Verifica disponibilità team...</p>
                   )}
                   {barbers.map((b) => {
-                    const isLuigi = getBarberRank(b.name) === 1;
                     const isSelected = barberId === b.id;
 
                     return (
@@ -610,12 +613,10 @@ export function BookingWizard({
                         <div>
                           <div className="flex items-center gap-2">
                             <p className="font-medium text-white">{b.name}</p>
-                            {isLuigi && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider">
-                                <Sparkles className="h-3 w-3" />
-                                Titolare · Consigliato
-                              </span>
-                            )}
+                            <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider">
+                              <Sparkles className="h-3 w-3" />
+                              Staff Ufficiale
+                            </span>
                           </div>
                           <p className="text-sm text-gold mt-0.5">
                             {formatBarberRole(b.role)}
@@ -645,7 +646,7 @@ export function BookingWizard({
                     )}
                   >
                     <p className="font-medium text-white">Nessuna preferenza (Primo disponibile)</p>
-                    <p className="text-sm text-white/50">Priorità a Luigi Garofalo con disponibilità automatica di Francesco e Vittorio</p>
+                    <p className="text-sm text-white/50">Assegnazione automatica tra gli orari liberi con i barbieri del salone</p>
                   </button>
                 </div>
               </div>

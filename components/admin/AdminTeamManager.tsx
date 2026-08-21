@@ -22,6 +22,7 @@ import {
   buildBarberSchedule,
   defaultPeriodsForDay,
   isDayOpen,
+  isBarberAdminOnly,
   SCHEDULE_PERIOD_LABELS,
   type AdminPeriodInput,
   type SchedulePeriod,
@@ -922,6 +923,15 @@ function BarberCard({
               {inactive && <span className="ml-2 text-xs text-white/40">(disattivo)</span>}
             </p>
             <p className="text-xs text-gold">{barber.role}</p>
+            {isBarberAdminOnly(barber.name) ? (
+              <span className="inline-block rounded bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 mt-1">
+                🔒 Solo Staff / Admin
+              </span>
+            ) : (
+              <span className="inline-block rounded bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 mt-1">
+                🌐 Prenotabile Online
+              </span>
+            )}
           </div>
         </div>
       </button>

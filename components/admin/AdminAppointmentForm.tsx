@@ -256,7 +256,8 @@ export function AdminAppointmentForm({
     const dates = await getAvailableDates(
       customDuration,
       barberId,
-      appointment?.id ?? null
+      appointment?.id ?? null,
+      true
     );
 
     const extraDates = new Set(dates);
@@ -636,7 +637,19 @@ export function AdminAppointmentForm({
             )}
           </div>
           <div>
-            <Label>Orario *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="admin-time-input">Orario *</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-white/50">Orario manuale:</span>
+                <Input
+                  id="admin-time-input"
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="h-8 w-28 text-xs border-white/20 bg-black/60 font-mono text-gold focus:border-gold"
+                />
+              </div>
+            </div>
             {loadingSlots ? (
               <p className="mt-2 text-sm text-white/50">Caricamento orari...</p>
             ) : slotsUnavailable ? (
@@ -644,17 +657,19 @@ export function AdminAppointmentForm({
                 <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} className="grid-cols-4" />
               </div>
             ) : slots.length === 0 ? (
-              <p className="mt-2 text-sm text-white/50">Nessun orario libero in questa data.</p>
+              <div className="mt-2 rounded-md border border-white/10 bg-[#1a1a1a] p-3 text-center">
+                <p className="text-xs text-white/50">Nessuno slot standard calcolato. Puoi comunque inserire un orario manuale in alto a destra.</p>
+              </div>
             ) : (
-              <div className="mt-2 grid grid-cols-4 gap-2">
+              <div className="admin-modal-scroll mt-2 max-h-48 overflow-y-auto pr-1 grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                 {slots.map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setTime(t)}
                     className={cn(
-                      'rounded-lg border py-2 text-sm font-medium transition',
-                      time === t ? 'border-gold bg-gold text-black' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/50'
+                      'rounded-md border py-1.5 px-1 text-xs font-medium transition text-center',
+                      time === t ? 'border-gold bg-gold text-black font-bold shadow-sm' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/50 text-white'
                     )}
                   >
                     {t}

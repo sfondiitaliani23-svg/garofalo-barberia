@@ -12,6 +12,7 @@ import { getAvailableDates, getAvailableSlots } from '@/lib/actions/availability
 import { formatPrice } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
+import { isBarberAdminOnly } from '@/lib/utils/barber-schedule';
 
 interface RescheduleFormProps {
   appointmentId: string;
