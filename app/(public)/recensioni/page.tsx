@@ -5,7 +5,7 @@ import { getApprovedReviews } from '@/lib/actions/reviews';
 import { AnimatedDivider } from '@/components/home/AnimatedDivider';
 
 export const metadata = { title: 'Tutte le recensioni · Garofalo Barberia' };
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function TutteLeRecensioniPage() {
   const dbReviews = await getApprovedReviews();

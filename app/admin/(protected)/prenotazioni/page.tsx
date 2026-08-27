@@ -1,6 +1,6 @@
 import { parseISO } from 'date-fns';
 import { WeeklyBookingCalendar } from '@/components/admin/WeeklyBookingCalendar';
-import { getAdminTeamData, getAdminWeekAppointments } from '@/lib/actions/admin';
+import { getAdminTimeOffForWeek, getAdminWeekAppointments } from '@/lib/actions/admin';
 import { getBarbers, getServices } from '@/lib/actions/bookings';
 import { getWeekStart } from '@/lib/utils/week-calendar';
 
@@ -13,12 +13,14 @@ export default async function AdminPrenotazioniPage({
 }) {
   const params = await searchParams;
   const weekStart = params.week ? getWeekStart(parseISO(params.week)) : getWeekStart();
+  const weekStartIso = weekStart.toISOString();
 
-  const [barbers, services, teamData, appointments] = await Promise.all([
+  // Esecuzione parallela altamente ottimizzata: carica solo i dati strettamente necessari per la settimana
+  const [barbers, services, timeOff, appointments] = await Promise.all([
     getBarbers(),
     getServices(),
-    getAdminTeamData(),
-    getAdminWeekAppointments(weekStart.toISOString(), 'all'),
+    getAdminTimeOffForWeek(weekStartIso),
+    getAdminWeekAppointments(weekStartIso, 'all'),
   ]);
 
   const selectedBarberId =
@@ -38,8 +40,8 @@ export default async function AdminPrenotazioniPage({
           barbers={barbers}
           services={services}
           appointments={appointments}
-          timeOff={teamData.timeOff}
-          weekStartIso={weekStart.toISOString()}
+          timeOff={timeOff}
+          weekStartIso={weekStartIso}
           initialBarberId={selectedBarberId}
         />
       </div>

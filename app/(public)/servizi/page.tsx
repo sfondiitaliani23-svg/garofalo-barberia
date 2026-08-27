@@ -8,6 +8,7 @@ import type { Service, ServiceCategory } from '@/types/database';
 import '../public-pages.css';
 
 export const metadata = { title: 'Servizi' };
+export const revalidate = 120;
 
 function groupServices(services: Service[]) {
   return CATEGORY_ORDER.map((category) => ({

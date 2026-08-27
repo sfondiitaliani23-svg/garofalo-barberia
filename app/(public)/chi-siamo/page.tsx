@@ -4,6 +4,7 @@ import { formatBarberRole } from '@/lib/utils';
 import './chi-siamo.css';
 
 export const metadata = { title: 'Chi siamo' };
+export const revalidate = 300;
 
 const TEAM_DISPLAY_ORDER = ['Vittorio Morlino', 'Luigi Garofalo', 'Francesco Costantino'];
 

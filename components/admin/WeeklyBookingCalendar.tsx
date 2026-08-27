@@ -70,9 +70,9 @@ export function WeeklyBookingCalendar({
     setBarberId(nextBarberId);
     const params = new URLSearchParams(searchParams.toString());
     params.set('barber', nextBarberId);
-    startTransition(() => {
-      router.replace(`/admin/prenotazioni?${params.toString()}`);
-    });
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `/admin/prenotazioni?${params.toString()}`);
+    }
   }
 
   function openCreate(day: Date, time: string) {

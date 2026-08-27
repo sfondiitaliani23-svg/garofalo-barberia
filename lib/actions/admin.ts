@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
-import { parseBookingDateTime, getShopDateString, getShopTimeString } from '@/lib/utils/booking-datetime';
+import { parseBookingDateTime, getShopDateString, getShopTimeString, getShopDayBounds } from '@/lib/utils/booking-datetime';
 import {
   type AdminDayScheduleInput,
   defaultPeriodsForDay,
@@ -189,7 +189,45 @@ export async function getAdminWeekAppointments(weekStartDate: string, barberId?:
   return getAdminAppointments(fromDate.toISOString(), toDate.toISOString(), barberId);
 }
 
-export async function getUpcomingAdminAppointments(limit = 300) {
+export async function getUpcomingAdminAppointments(limit = 1500) {
+  await requireAdmin();
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const todayStr = getShopDateString(new Date());
+  const { dayStart } = getShopDayBounds(todayStr);
+
+  const { data } = await supabase
+    .from('appointments')
+    .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
+    .in('status', ['confirmed', 'completed', 'cancelled'])
+    .gte('starts_at', dayStart.toISOString())
+    .order('starts_at', { ascending: true })
+    .limit(limit);
+
+  return data ?? [];
+}
+
+export async function getPastAdminAppointments(limit = 500) {
+  await requireAdmin();
+  const supabase = await createClient();
+  if (!supabase) return [];
+
+  const todayStr = getShopDateString(new Date());
+  const { dayStart } = getShopDayBounds(todayStr);
+
+  const { data } = await supabase
+    .from('appointments')
+    .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
+    .in('status', ['confirmed', 'completed', 'cancelled'])
+    .lt('starts_at', dayStart.toISOString())
+    .order('starts_at', { ascending: false })
+    .limit(limit);
+
+  return data ?? [];
+}
+
+export async function getAllAdminAppointments(limit = 2000) {
   await requireAdmin();
   const supabase = await createClient();
   if (!supabase) return [];
@@ -198,7 +236,7 @@ export async function getUpcomingAdminAppointments(limit = 300) {
     .from('appointments')
     .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
     .in('status', ['confirmed', 'completed', 'cancelled'])
-    .order('starts_at', { ascending: true })
+    .order('starts_at', { ascending: false })
     .limit(limit);
 
   return data ?? [];
@@ -209,17 +247,18 @@ export async function getYesterdayAdminAppointments(limit = 200) {
   const supabase = await createClient();
   if (!supabase) return [];
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const todayStr = getShopDateString(new Date());
+  const { dayStart: todayStart } = getShopDayBounds(todayStr);
+  const yesterdayDate = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayStr = getShopDateString(yesterdayDate);
+  const { dayStart: yesterdayStart } = getShopDayBounds(yesterdayStr);
 
   const { data } = await supabase
     .from('appointments')
     .select('*, barber:barbers(name), service:services(name, price_cents, duration_minutes)')
     .in('status', ['confirmed', 'completed'])
-    .gte('starts_at', yesterday.toISOString())
-    .lt('starts_at', today.toISOString())
+    .gte('starts_at', yesterdayStart.toISOString())
+    .lt('starts_at', todayStart.toISOString())
     .order('starts_at', { ascending: true })
     .limit(limit);
 
@@ -691,6 +730,26 @@ export interface AdminTimeOffInput {
 const DEFAULT_WEEKLY_SCHEDULE: AdminDayScheduleInput[] = [2, 3, 4, 5, 6].map((dayOfWeek) =>
   defaultPeriodsForDay(dayOfWeek)
 );
+
+
+export async function getAdminTimeOffForWeek(weekStartDate: string) {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return [];
+
+  const weekStart = startOfWeek(parseISO(weekStartDate), { weekStartsOn: 1 });
+  const fromDate = addDays(weekStart, -2).toISOString();
+  const toDate = addDays(weekStart, 9).toISOString();
+
+  const { data } = await supabase
+    .from('barber_time_off')
+    .select('*, barber:barbers(name)')
+    .lte('start_at', toDate)
+    .gte('end_at', fromDate)
+    .order('start_at', { ascending: false });
+
+  return data ?? [];
+}
 
 export async function getAdminTeamData() {
   await requireAdmin();

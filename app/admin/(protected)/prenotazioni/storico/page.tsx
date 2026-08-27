@@ -6,22 +6,23 @@ import type { CalendarAppointment } from '@/lib/utils/week-calendar';
 export const metadata = { title: 'Storico Prenotazioni Admin' };
 
 export default async function AdminStoricoPrenotazioniPage() {
-  const [appointments, barbers, services] = await Promise.all([
-    getUpcomingAdminAppointments(),
+  // Caricamento rapido e snello: le prossime prenotazioni sono immediatamente pronte
+  const [upcoming, barbers, services] = await Promise.all([
+    getUpcomingAdminAppointments(400),
     getBarbers(),
     getServices(),
   ]);
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Storico Prenotazioni</h1>
+      <h1 className="font-display text-3xl uppercase">Storico & Prossime Prenotazioni</h1>
       <p className="mt-1 text-white/50">
-        Elenco delle prossime prenotazioni — modifica o rimuovi rapidamente senza usare il calendario
+        Gestisci le prossime prenotazioni da oggi in poi o consulta lo storico passato completo
       </p>
 
       <div className="mt-8">
         <UpcomingAppointmentsList
-          appointments={appointments as CalendarAppointment[]}
+          upcomingAppointments={upcoming as CalendarAppointment[]}
           barbers={barbers}
           services={services}
         />

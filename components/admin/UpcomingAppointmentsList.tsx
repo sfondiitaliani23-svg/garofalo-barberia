@@ -29,7 +29,7 @@ import { toast } from 'sonner';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { adminCancelAppointment, markAppointmentReminderSent } from '@/lib/actions/admin';
+import { adminCancelAppointment, markAppointmentReminderSent, getPastAdminAppointments } from '@/lib/actions/admin';
 import { getWhatsAppReminderUrl } from '@/lib/utils/whatsapp-reminders';
 import { formatPrice, formatDuration } from '@/lib/utils';
 import type { Barber, Service } from '@/types/database';
@@ -83,16 +83,47 @@ function matchesQuery(appointment: CalendarAppointment, query: string): boolean 
 }
 
 interface UpcomingAppointmentsListProps {
-  appointments: CalendarAppointment[];
+  appointments?: CalendarAppointment[];
+  upcomingAppointments?: CalendarAppointment[];
+  pastAppointments?: CalendarAppointment[];
   barbers: Barber[];
   services: Service[];
 }
 
 export function UpcomingAppointmentsList({
-  appointments,
+  appointments: legacyAppointments,
+  upcomingAppointments,
+  pastAppointments,
   barbers,
   services,
 }: UpcomingAppointmentsListProps) {
+  const [viewTab, setViewTab] = useState<'upcoming' | 'past' | 'all'>('upcoming');
+  const [loadedPast, setLoadedPast] = useState<CalendarAppointment[]>(pastAppointments ?? []);
+  const [loadingPast, setLoadingPast] = useState(false);
+
+  const handleTabChange = async (tab: 'upcoming' | 'past' | 'all') => {
+    setViewTab(tab);
+    if ((tab === 'past' || tab === 'all') && loadedPast.length === 0 && !loadingPast) {
+      setLoadingPast(true);
+      try {
+        const past = await getPastAdminAppointments(200);
+        setLoadedPast(past as CalendarAppointment[]);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingPast(false);
+      }
+    }
+  };
+
+  const appointments = useMemo(() => {
+    if (upcomingAppointments || pastAppointments || loadedPast) {
+      if (viewTab === 'upcoming') return upcomingAppointments ?? [];
+      if (viewTab === 'past') return loadedPast;
+      return [...(upcomingAppointments ?? []), ...loadedPast];
+    }
+    return legacyAppointments ?? [];
+  }, [legacyAppointments, upcomingAppointments, pastAppointments, loadedPast, viewTab]);
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [onlyActive, setOnlyActive] = useState(true);
@@ -219,9 +250,48 @@ export function UpcomingAppointmentsList({
         {/* RIGA 1: Intestazione & Toggle Stato Attive */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-white/5">
           <div>
-            <h2 className="font-display text-2xl uppercase tracking-wide text-gold">
-              Prossime Prenotazioni
-            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="font-display text-2xl uppercase tracking-wide text-gold">
+                {viewTab === 'upcoming' ? 'Prossime Prenotazioni' : viewTab === 'past' ? 'Storico Passato' : 'Tutte le Prenotazioni'}
+              </h2>
+              {(upcomingAppointments || pastAppointments) && (
+                <div className="inline-flex rounded-lg border border-white/10 bg-black/60 p-1">
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('upcoming')}
+                    className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                      viewTab === 'upcoming'
+                        ? 'bg-gold text-black shadow'
+                        : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    Prossime ({upcomingAppointments?.length ?? 0})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('past')}
+                    className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                      viewTab === 'past'
+                        ? 'bg-gold text-black shadow'
+                        : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    Passate {loadingPast ? '...' : (loadedPast.length > 0 ? `(${loadedPast.length})` : '')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('all')}
+                    className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                      viewTab === 'all'
+                        ? 'bg-gold text-black shadow'
+                        : 'text-white/60 hover:text-white'
+                    }`}
+                  >
+                    Tutte
+                  </button>
+                </div>
+              )}
+            </div>
             <p className="text-xs text-white/50 mt-0.5">
               {query
                 ? `${filtered.length} di ${appointments.length} appuntamenti trovati`
