@@ -10,7 +10,7 @@ import type { Promotion } from '@/types/database';
 
 export async function getActivePromotions(): Promise<Promotion[]> {
   try {
-    const supabase = await createClient();
+    const supabase = await createServiceClient();
     if (!supabase) return [];
 
     const { data } = await supabase

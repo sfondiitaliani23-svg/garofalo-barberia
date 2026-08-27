@@ -1,10 +1,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 
 export async function getCustomerPhotos(customerId: string) {
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
   const { data, error } = await supabase
     .from('customer_photos')
@@ -20,7 +20,7 @@ export async function getCustomerPhotos(customerId: string) {
 }
 
 export async function addCustomerPhoto(customerId: string, photoUrl: string, caption?: string) {
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) throw new Error('Database non configurato');
 
   // Verifica che l'utente connesso sia admin
@@ -57,7 +57,7 @@ export async function addCustomerPhoto(customerId: string, photoUrl: string, cap
 }
 
 export async function deleteCustomerPhoto(photoId: string, customerId: string) {
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) throw new Error('Database non configurato');
 
   // Verifica che l'utente connesso sia admin

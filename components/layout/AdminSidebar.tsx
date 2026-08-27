@@ -94,6 +94,7 @@ export function AdminSidebar() {
               <Link
                 key={href}
                 href={href}
+                prefetch={true}
                 className={cn(
                   'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition',
                   isActive ? 'bg-gold/15 text-gold' : 'text-white/60 hover:bg-white/5 hover:text-white'
@@ -121,6 +122,7 @@ export function AdminSidebar() {
             <Link
               key={href}
               href={href}
+              prefetch={true}
               onClick={closeMenu}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors',
@@ -191,6 +193,7 @@ export function AdminSidebar() {
                   <Link
                     key={href}
                     href={href}
+                    prefetch={true}
                     onClick={closeMenu}
                     className={cn(
                       'flex items-center gap-3.5 rounded-xl px-4 py-3 text-base font-semibold transition',

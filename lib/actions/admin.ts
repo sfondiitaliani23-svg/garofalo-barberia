@@ -53,7 +53,7 @@ function revalidateAppointmentPaths() {
 
 export async function getAdminStats() {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return { appointmentsToday: 0, revenueToday: 0, revenueWeek: 0, totalCustomers: 0, appointmentsHistory: [], revenueHistory: [], customersHistory: [] };
 
   const today = new Date();
@@ -229,7 +229,7 @@ export async function getPastAdminAppointments(limit = 500) {
 
 export async function getAllAdminAppointments(limit = 2000) {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   const { data } = await supabase
@@ -559,7 +559,7 @@ export async function adminCancelAppointment(appointmentId: string) {
 
 export async function updateAppointmentStatus(id: string, status: string) {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return { ok: false, error: 'Database non configurato' };
 
   const { error } = await supabase
@@ -574,7 +574,7 @@ export async function updateAppointmentStatus(id: string, status: string) {
 
 export async function getCustomers() {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   const { data } = await supabase
@@ -611,7 +611,7 @@ const SERVICE_CATEGORIES = ['taglio', 'barba', 'styling', 'baby'] as const;
 
 export async function getAdminServices() {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   const { data } = await supabase
@@ -993,7 +993,7 @@ function revalidatePromotionPaths() {
 
 export async function getAdminPromotions() {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return { promotions: [], services: [] };
 
   const [{ data: promotions }, { data: services }] = await Promise.all([
@@ -1112,7 +1112,7 @@ const PRODUCT_CATEGORIES = ['perfume', 'cosmetic', 'accessory', 'other'] as cons
 
 export async function getAdminProducts() {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   const { data } = await supabase
