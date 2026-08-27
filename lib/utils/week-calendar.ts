@@ -91,12 +91,41 @@ export function buildWeekGrid(
       .map((day) => dateKey(day))
   );
 
+  // Pre-filtra e pre-calcola le proprietà temporali UNA SOLA VOLTA per tutti gli appuntamenti
   const confirmed = appointments.filter(
     (apt) => (isAll || apt.barber_id === barberId) && apt.status === 'confirmed'
   );
 
-  const covered = new Map<string, Set<string>>();
+  // Mappa O(1) degli appuntamenti per [dateKey]: velocissima senza ricalcolare date ripetutamente
+  const aptsByDate = new Map<string, {
+    apt: CalendarAppointment;
+    startStr: string;
+    dStart: Date;
+    dEnd: Date;
+    durationMins: number;
+  }[]>();
 
+  for (const day of days) {
+    aptsByDate.set(dateKey(day), []);
+  }
+
+  for (const apt of confirmed) {
+    const dStart = new Date(apt.starts_at);
+    const dEnd = new Date(apt.ends_at);
+    const key = getShopDateString(dStart);
+    const list = aptsByDate.get(key);
+    if (list) {
+      list.push({
+        apt,
+        startStr: getShopTimeString(dStart),
+        dStart,
+        dEnd,
+        durationMins: differenceInMinutes(dEnd, dStart),
+      });
+    }
+  }
+
+  const covered = new Map<string, Set<string>>();
   for (const day of days) {
     covered.set(dateKey(day), new Set());
   }
@@ -113,31 +142,22 @@ export function buildWeekGrid(
         continue;
       }
 
-      // Trova gli appuntamenti che iniziano in questo slot
-      const aptsAtSlot = confirmed.filter((a) => {
-        const dStart = new Date(a.starts_at);
-        const aptDate = getShopDateString(dStart);
-        const aptTime = getShopTimeString(dStart);
+      const dayApts = aptsByDate.get(key) ?? [];
 
-        if (aptDate !== key) return false;
-
-        // Se l'orario di inizio corrisponde direttamente al time dello slot
-        if (aptTime === time) return true;
-
-        // Se l'appuntamento inizia nell'intervallo di questo slot (es. 10:15 in uno slot da 10:00-10:30)
+      // Ricerca rapida in memoria locale del giorno specifico
+      const aptsAtSlot = dayApts.filter((item) => {
+        if (item.startStr === time) return true;
+        // Fallback per slot con orari non standard (es. 10:15)
         const slotStart = parseBookingDateTime(key, time);
         const slotEnd = addMinutes(slotStart, SITE_CONFIG.slotIntervalMinutes);
-        return dStart >= slotStart && dStart < slotEnd;
+        return item.dStart >= slotStart && item.dStart < slotEnd;
       });
 
       if (aptsAtSlot.length > 0) {
         let maxSpan = 1;
         if (!isAll) {
-          for (const apt of aptsAtSlot) {
-            const starts = new Date(apt.starts_at);
-            const ends = new Date(apt.ends_at);
-            const actualDuration = differenceInMinutes(ends, starts);
-            const span = durationToRowSpan(actualDuration);
+          for (const item of aptsAtSlot) {
+            const span = durationToRowSpan(item.durationMins);
             if (span > maxSpan) maxSpan = span;
           }
 
@@ -146,11 +166,7 @@ export function buildWeekGrid(
               const nextIndex = timeSlots.indexOf(time) + i;
               const slotTime = timeSlots[nextIndex];
               if (slotTime) {
-                // Non coprire se c'è un'altra prenotazione che inizia lì
-                const hasAptNext = confirmed.some((a) => {
-                  const d = new Date(a.starts_at);
-                  return getShopDateString(d) === key && getShopTimeString(d) === slotTime;
-                });
+                const hasAptNext = dayApts.some((a) => a.startStr === slotTime);
                 if (!hasAptNext) {
                   dayCovered.add(slotTime);
                 }
@@ -159,13 +175,15 @@ export function buildWeekGrid(
           }
         }
 
-        row.push({ 
-          type: 'appointment', 
-          day, 
-          appointment: aptsAtSlot[0], 
-          appointmentsList: aptsAtSlot, 
-          rowSpan: isAll ? 1 : maxSpan 
-        } as any);
+        const aptList = aptsAtSlot.map((item) => item.apt);
+        const cell: GridCell = {
+          type: 'appointment',
+          day,
+          appointment: aptList[0],
+          rowSpan: maxSpan,
+        };
+        (cell as any).appointmentsList = aptList;
+        row.push(cell);
         continue;
       }
 
@@ -176,11 +194,6 @@ export function buildWeekGrid(
 
       if (!isSlotWithinHours(day, time)) {
         row.push({ type: 'closed', day });
-        continue;
-      }
-
-      if (isSlotBlockedByTimeOff(key, time, barberId, timeOff, barbers)) {
-        row.push({ type: 'unavailable', day });
         continue;
       }
 

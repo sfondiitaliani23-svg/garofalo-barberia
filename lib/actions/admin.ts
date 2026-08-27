@@ -166,7 +166,7 @@ export async function getAdminStats() {
 
 export async function getAdminAppointments(from: string, to: string, barberId?: string) {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   let query = supabase
@@ -191,7 +191,7 @@ export async function getAdminWeekAppointments(weekStartDate: string, barberId?:
 
 export async function getUpcomingAdminAppointments(limit = 1500) {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   const todayStr = getShopDateString(new Date());
@@ -210,7 +210,7 @@ export async function getUpcomingAdminAppointments(limit = 1500) {
 
 export async function getPastAdminAppointments(limit = 500) {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   const todayStr = getShopDateString(new Date());
@@ -244,7 +244,7 @@ export async function getAllAdminAppointments(limit = 2000) {
 
 export async function getYesterdayAdminAppointments(limit = 200) {
   await requireAdmin();
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   if (!supabase) return [];
 
   const todayStr = getShopDateString(new Date());
