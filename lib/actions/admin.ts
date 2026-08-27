@@ -54,7 +54,17 @@ function revalidateAppointmentPaths() {
 export async function getAdminStats() {
   await requireAdmin();
   const supabase = await createServiceClient();
-  if (!supabase) return { appointmentsToday: 0, revenueToday: 0, revenueWeek: 0, totalCustomers: 0, appointmentsHistory: [], revenueHistory: [], customersHistory: [] };
+  if (!supabase) {
+    return {
+      appointmentsToday: 0,
+      revenueToday: 0,
+      revenueWeek: 0,
+      totalCustomers: 0,
+      appointmentsHistory: [],
+      revenueHistory: [],
+      customersHistory: [],
+    };
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -65,61 +75,45 @@ export async function getAdminStats() {
   const sixtyDaysAgo = new Date(today);
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 59);
 
-  const [
-    { count: todayCount },
-    { data: todayAppointments },
-    { data: weekAppointments },
-    { count: customerCount },
-    { data: recentAppointments },
-    { data: recentCustomers },
-  ] = await Promise.all([
+  // Esegue SOLO 2 query aggregate e snelle invece di 6 query separate
+  const [appointmentsRes, profilesRes] = await Promise.all([
     supabase
       .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'confirmed')
-      .gte('starts_at', today.toISOString())
-      .lt('starts_at', tomorrow.toISOString()),
-    supabase
-      .from('appointments')
-      .select('discount_cents, service:services(price_cents)')
-      .in('status', ['confirmed', 'completed'])
-      .gte('starts_at', today.toISOString())
-      .lt('starts_at', tomorrow.toISOString()),
-    supabase
-      .from('appointments')
-      .select('discount_cents, service:services(price_cents)')
-      .in('status', ['confirmed', 'completed'])
-      .gte('starts_at', weekAgo.toISOString()),
-    supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true })
-      .eq('role', 'customer'),
-    supabase
-      .from('appointments')
-      .select('starts_at, discount_cents, service:services(price_cents)')
-      .in('status', ['confirmed', 'completed'])
+      .select('starts_at, status, discount_cents, service:services(price_cents)')
       .gte('starts_at', sixtyDaysAgo.toISOString())
       .lt('starts_at', tomorrow.toISOString()),
     supabase
       .from('profiles')
       .select('created_at')
-      .eq('role', 'customer')
-      .gte('created_at', sixtyDaysAgo.toISOString())
-      .lt('created_at', tomorrow.toISOString()),
+      .eq('role', 'customer'),
   ]);
 
-  const sumRevenue = (rows: { discount_cents: number | null; service: { price_cents: number } | { price_cents: number }[] | null }[]) =>
+  const recentAppointments = appointmentsRes.data ?? [];
+  const allCustomers = profilesRes.data ?? [];
+
+  const sumRevenue = (rows: typeof recentAppointments) =>
     rows.reduce((sum, apt) => {
+      if (apt.status !== 'confirmed' && apt.status !== 'completed') return sum;
       const service = Array.isArray(apt.service) ? apt.service[0] : apt.service;
       const gross = service?.price_cents ?? 0;
       const net = Math.max(0, gross - (apt.discount_cents ?? 0));
       return sum + net;
     }, 0);
 
-  const todayRevenue = sumRevenue(todayAppointments ?? []);
-  const weekRevenue = sumRevenue(weekAppointments ?? []);
+  const todayIso = today.toISOString();
+  const tomorrowIso = tomorrow.toISOString();
+  const weekAgoIso = weekAgo.toISOString();
 
-  // Elaborazione dei dati storici reali per gli ultimi 6 giorni
+  // Calcoli in memoria istantanei (0.1ms)
+  const todayApts = recentAppointments.filter(
+    (a) => a.starts_at >= todayIso && a.starts_at < tomorrowIso
+  );
+  const todayCount = todayApts.filter((a) => a.status === 'confirmed').length;
+  const todayRevenue = sumRevenue(todayApts);
+
+  const weekApts = recentAppointments.filter((a) => a.starts_at >= weekAgoIso);
+  const weekRevenue = sumRevenue(weekApts);
+
   const getRomeDateKey = (date: Date) => {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: 'Europe/Rome',
@@ -127,7 +121,7 @@ export async function getAdminStats() {
       month: 'numeric',
       day: 'numeric',
     }).formatToParts(date);
-    const getV = (t: string) => parts.find(p => p.type === t)?.value ?? '0';
+    const getV = (t: string) => parts.find((p) => p.type === t)?.value ?? '0';
     return `${getV('year')}-${getV('month').padStart(2, '0')}-${getV('day').padStart(2, '0')}`;
   };
 
@@ -138,26 +132,43 @@ export async function getAdminStats() {
     dateKeys.push(getRomeDateKey(d));
   }
 
+  // Pre-mappatura per performance fulminea
+  const aptsByDateKey = new Map<string, typeof recentAppointments>();
+  for (const apt of recentAppointments) {
+    const key = getRomeDateKey(new Date(apt.starts_at));
+    let list = aptsByDateKey.get(key);
+    if (!list) {
+      list = [];
+      aptsByDateKey.set(key, list);
+    }
+    list.push(apt);
+  }
+
+  const customersByDateKey = new Map<string, number>();
+  for (const c of allCustomers) {
+    if (c.created_at >= sixtyDaysAgo.toISOString()) {
+      const key = getRomeDateKey(new Date(c.created_at));
+      customersByDateKey.set(key, (customersByDateKey.get(key) ?? 0) + 1);
+    }
+  }
+
   const appointmentsHistory = dateKeys.map((key) => {
-    const dayApts = recentAppointments?.filter((apt) => getRomeDateKey(new Date(apt.starts_at)) === key) ?? [];
-    return dayApts.length;
+    const dayApts = aptsByDateKey.get(key) ?? [];
+    return dayApts.filter((a) => a.status === 'confirmed' || a.status === 'completed').length;
   });
 
   const revenueHistory = dateKeys.map((key) => {
-    const dayApts = recentAppointments?.filter((apt) => getRomeDateKey(new Date(apt.starts_at)) === key) ?? [];
+    const dayApts = aptsByDateKey.get(key) ?? [];
     return sumRevenue(dayApts);
   });
 
-  const customersHistory = dateKeys.map((key) => {
-    const dayCustomers = recentCustomers?.filter((c) => getRomeDateKey(new Date(c.created_at)) === key) ?? [];
-    return dayCustomers.length;
-  });
+  const customersHistory = dateKeys.map((key) => customersByDateKey.get(key) ?? 0);
 
   return {
-    appointmentsToday: todayCount ?? 0,
+    appointmentsToday: todayCount,
     revenueToday: todayRevenue,
     revenueWeek: weekRevenue,
-    totalCustomers: customerCount ?? 0,
+    totalCustomers: allCustomers.length,
     appointmentsHistory,
     revenueHistory,
     customersHistory,

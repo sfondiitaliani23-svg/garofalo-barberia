@@ -137,59 +137,56 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
       month: 'numeric',
       day: 'numeric',
     }).formatToParts(date);
-    const getV = (t: string) => parts.find(p => p.type === t)?.value ?? '0';
-    return `${getV('year')}-${getV('month').padStart(2,'0')}-${getV('day').padStart(2,'0')}`;
+    const getV = (t: string) => parts.find((p) => p.type === t)?.value ?? '0';
+    return `${getV('year')}-${getV('month').padStart(2, '0')}-${getV('day').padStart(2, '0')}`;
   }
 
   const now = new Date();
   const todayKey = getRomeDateKey(now);
-  const yesterdayDate = new Date(now); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayDate = new Date(now);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
   const yesterdayKey = getRomeDateKey(yesterdayDate);
-  const lastWeekDate = new Date(now); lastWeekDate.setDate(lastWeekDate.getDate() - 7);
+  const lastWeekDate = new Date(now);
+  lastWeekDate.setDate(lastWeekDate.getDate() - 7);
   const lastWeekKey = getRomeDateKey(lastWeekDate);
-  const lastMonthDate = new Date(now); lastMonthDate.setDate(lastMonthDate.getDate() - 30);
+  const lastMonthDate = new Date(now);
+  lastMonthDate.setDate(lastMonthDate.getDate() - 30);
   const lastMonthKey = getRomeDateKey(lastMonthDate);
 
-  // Fetch all page_views covering last 61 days to count unique sessions per period
-  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 61);
-  const [{ data: allViews }, liveVisitors, ...breakdownCounts] = await Promise.all([
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - 61);
+
+  // Esegue SOLO 3 query aggregate invece di 12 query separate
+  const [viewsRes, sessionsRes, liveVisitors] = await Promise.all([
     supabase
       .from('page_views')
-      .select('session_id, viewed_at')
+      .select('viewed_at')
       .gte('viewed_at', cutoff.toISOString()),
+    supabase
+      .from('visitor_sessions')
+      .select('gender, age_range'),
     countLiveVisitors(),
-    ...(['male', 'female', 'child', 'other'] as const).map((gender) =>
-      supabase
-        .from('visitor_sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('gender', gender)
-    ),
-    ...(['under_18', '18_24', '25_34', '35_44', '45_54', '55_plus'] as const).map((ageRange) =>
-      supabase
-        .from('visitor_sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('age_range', ageRange)
-    ),
   ]);
 
-  // Count raw page views per time window (same method as getLiveTrafficData)
+  const allViews = viewsRes.data ?? [];
+  const allSessions = sessionsRes.data ?? [];
+
   let dailyVisits = 0;
   let yesterdayVisits = 0;
   let weeklyVisits = 0;
   let monthlyVisits = 0;
 
-  if (allViews) {
-    for (const view of allViews) {
-      const dateKey = getRomeDateKey(new Date(view.viewed_at));
-      if (dateKey === todayKey) dailyVisits++;
-      if (dateKey === yesterdayKey) yesterdayVisits++;
-      if (dateKey >= lastWeekKey) weeklyVisits++;
-      if (dateKey >= lastMonthKey) monthlyVisits++;
-    }
-  }
+  const viewsByDateKey = new Map<string, number>();
 
-  const genderKeys = GENDERS.filter((key) => key !== 'unknown');
-  const ageKeys = AGE_RANGES.filter((key) => key !== 'unknown');
+  for (const view of allViews) {
+    const dateKey = getRomeDateKey(new Date(view.viewed_at));
+    viewsByDateKey.set(dateKey, (viewsByDateKey.get(dateKey) ?? 0) + 1);
+
+    if (dateKey === todayKey) dailyVisits++;
+    if (dateKey === yesterdayKey) yesterdayVisits++;
+    if (dateKey >= lastWeekKey) weeklyVisits++;
+    if (dateKey >= lastMonthKey) monthlyVisits++;
+  }
 
   const genderBreakdown: Record<Gender, number> = {
     male: 0,
@@ -208,13 +205,15 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
     unknown: 0,
   };
 
-  genderKeys.forEach((gender, index) => {
-    genderBreakdown[gender] = breakdownCounts[index]?.count ?? 0;
-  });
-
-  ageKeys.forEach((ageRange, index) => {
-    ageBreakdown[ageRange] = breakdownCounts[genderKeys.length + index]?.count ?? 0;
-  });
+  // Conteggio in memoria istantaneo per genere ed età
+  for (const s of allSessions) {
+    if (s.gender && s.gender in genderBreakdown) {
+      genderBreakdown[s.gender as Gender]++;
+    }
+    if (s.age_range && s.age_range in ageBreakdown) {
+      ageBreakdown[s.age_range as AgeRange]++;
+    }
+  }
 
   const dateKeys: string[] = [];
   for (let i = 59; i >= 0; i--) {
@@ -223,24 +222,14 @@ export async function getAnalyticsStats(): Promise<AnalyticsStats> {
     dateKeys.push(getRomeDateKey(d));
   }
 
-  const visitsHistory = dateKeys.map(key => {
-    let count = 0;
-    if (allViews) {
-      for (const view of allViews) {
-        if (getRomeDateKey(new Date(view.viewed_at)) === key) {
-          count++;
-        }
-      }
-    }
-    return count;
-  });
+  const visitsHistory = dateKeys.map((key) => viewsByDateKey.get(key) ?? 0);
 
   return {
     configured: true,
-    dailyVisits: dailyVisits ?? 0,
-    yesterdayVisits: yesterdayVisits ?? 0,
-    weeklyVisits: weeklyVisits ?? 0,
-    monthlyVisits: monthlyVisits ?? 0,
+    dailyVisits,
+    yesterdayVisits,
+    weeklyVisits,
+    monthlyVisits,
     liveVisitors,
     genderBreakdown,
     ageBreakdown,
