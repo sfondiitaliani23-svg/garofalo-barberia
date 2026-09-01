@@ -16,7 +16,7 @@ import {
   notifyCustomersBarberScheduleChanges,
   notifyCustomersSalonClosure,
 } from '@/lib/utils/schedule-notifications';
-import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
+// I promemoria WhatsApp istantanei non vengono inviati automaticamente dall'admin.
 
 export interface AdminAppointmentInput {
   serviceId?: string; // Retrocompatibilità
@@ -412,12 +412,8 @@ export async function createAdminAppointment(input: AdminAppointmentInput): Prom
       } catch (notifyError) {
         console.error('createAdminAppointment notification failed for date', dateStr, notifyError);
       }
-
-      try {
-        await sendImmediateWhatsAppReminderIfEligible(insertedIds);
-      } catch (remError) {
-        console.error('createAdminAppointment immediate reminder failed for date', dateStr, remError);
-      }
+      // Nota: i promemoria WhatsApp per le prenotazioni admin NON vengono inviati automaticamente.
+      // L'admin può inviarli manualmente dalla dashboard.
     }
   }
 
@@ -542,11 +538,8 @@ export async function updateAdminAppointment(appointmentId: string, input: Admin
     currentStartsAt = currentEndsAt;
   }
 
-  try {
-    await sendImmediateWhatsAppReminderIfEligible(insertedIds);
-  } catch (remError) {
-    console.error('updateAdminAppointment immediate reminder failed:', remError);
-  }
+  // Nota: i promemoria WhatsApp per le prenotazioni admin NON vengono inviati automaticamente.
+  // L'admin può inviarli manualmente dalla dashboard.
 
   revalidateAppointmentPaths();
   return { ok: true };
