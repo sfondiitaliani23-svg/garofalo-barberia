@@ -4,9 +4,8 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { signInWithEmail } from '@/lib/actions/auth';
+import { signInWithEmail, requestPasswordReset } from '@/lib/actions/auth';
 import { OAuthLoginButtons } from '@/components/auth/OAuthLoginButtons';
-import { getWhatsAppLink } from '@/lib/site-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,11 +42,35 @@ function LoginFormInner({
   }, [qrSessionId]);
 
   // State per i flussi di accesso aggiuntivi (Shopify-style)
-  const [authMethod, setAuthMethod] = useState<'email' | 'whatsapp' | 'passkey'>('email');
+  const [authMethod, setAuthMethod] = useState<'email' | 'whatsapp' | 'passkey' | 'forgot-password'>('email');
   const [whatsAppStep, setWhatsAppStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // State per reimpostazione password
+  const emailParam = searchParams.get('email') ?? '';
+  const [emailValue, setEmailValue] = useState(emailParam);
+  const [resetEmail, setResetEmail] = useState(emailParam);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+
+  const isCredentialError = Boolean(
+    error && (
+      error.toLowerCase().includes('credential') ||
+      error.toLowerCase().includes('credenziali') ||
+      error.toLowerCase().includes('invalid') ||
+      error.toLowerCase().includes('password')
+    )
+  );
+
+  useEffect(() => {
+    if (emailParam) {
+      setEmailValue(emailParam);
+      setResetEmail(emailParam);
+    }
+  }, [emailParam]);
 
   // Generazione della sessione QR per Desktop
   useEffect(() => {
@@ -113,9 +136,36 @@ function LoginFormInner({
 
   useEffect(() => {
     if (error) {
-      toast.error(safeDecodeURIComponent(error));
+      toast.error(
+        isCredentialError
+          ? 'Credenziali non corrette. Verifica email e password.'
+          : safeDecodeURIComponent(error)
+      );
     }
-  }, [error]);
+  }, [error, isCredentialError]);
+
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail || !resetEmail.includes('@')) {
+      setResetError('Inserisci un indirizzo email valido');
+      return;
+    }
+    setResetLoading(true);
+    setResetError(null);
+    try {
+      const res = await requestPasswordReset(resetEmail);
+      if (res.error) {
+        setResetError(res.error);
+      } else {
+        setResetSuccess(true);
+        toast.success('Email di reimpostazione inviata!');
+      }
+    } catch {
+      setResetError('Errore durante l\'invio della richiesta. Riprova più tardi.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   if (!mounted) {
     return (
@@ -264,11 +314,35 @@ function LoginFormInner({
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {error && (
+        {isCredentialError ? (
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 space-y-2.5 text-xs">
+            <div className="flex items-center gap-2 text-red-300 font-medium">
+              <svg className="h-4 w-4 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>Credenziali non corrette. Email o password errata.</span>
+            </div>
+            <div className="pt-2 flex items-center justify-between border-t border-red-500/20 text-[11px]">
+              <span className="text-white/70">Hai dimenticato la password?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setResetEmail(emailValue || emailParam);
+                  setResetError(null);
+                  setResetSuccess(false);
+                  setAuthMethod('forgot-password');
+                }}
+                className="text-gold hover:text-gold-light hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                Reimposta password →
+              </button>
+            </div>
+          </div>
+        ) : error ? (
           <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
             {safeDecodeURIComponent(error)}
           </p>
-        )}
+        ) : null}
 
         {/* 1. FLUSSO EMAIL CLASSICO */}
         {authMethod === 'email' && (
@@ -284,11 +358,30 @@ function LoginFormInner({
                   type="email" 
                   required 
                   autoComplete="email" 
+                  value={emailValue}
+                  onChange={(e) => {
+                    setEmailValue(e.target.value);
+                    setResetEmail(e.target.value);
+                  }}
                   className="mt-1 bg-[#1a1a1a] border-white/10 text-white placeholder-white/30 focus:border-gold/50" 
                 />
               </div>
               <div>
-                <Label htmlFor="password" className="text-xs text-white/70">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs text-white/70">Password</Label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetEmail(emailValue || emailParam);
+                      setResetError(null);
+                      setResetSuccess(false);
+                      setAuthMethod('forgot-password');
+                    }}
+                    className="text-xs text-gold/80 hover:text-gold hover:underline transition-colors cursor-pointer"
+                  >
+                    Password dimenticata?
+                  </button>
+                </div>
                 <Input
                   id="password"
                   name="password"
@@ -310,6 +403,90 @@ function LoginFormInner({
               onPasskeyClick={handlePasskeySignIn}
             />
           </>
+        )}
+
+        {/* 1.1 FLUSSO REIMPOSTA PASSWORD */}
+        {authMethod === 'forgot-password' && (
+          <div className="space-y-4 py-1">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
+                Reimposta la tua password
+              </h3>
+              <p className="text-xs text-white/60">
+                Inserisci l&apos;email del tuo account. Ti invieremo un link per impostare una nuova password.
+              </p>
+            </div>
+
+            {resetSuccess ? (
+              <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 space-y-3 text-center">
+                <div className="h-10 w-10 rounded-full bg-gold/20 text-gold flex items-center justify-center mx-auto">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white">Email inviata con successo!</p>
+                  <p className="text-[11px] text-white/70 mt-1">
+                    Abbiamo inviato un link a <strong className="text-gold">{resetEmail}</strong>. Controlla la tua casella di posta (inclusa la cartella spam) per reimpostare la password.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setResetSuccess(false);
+                    setAuthMethod('email');
+                  }}
+                  className="w-full bg-gold hover:bg-gold-light text-black py-4 font-semibold text-xs border-none"
+                >
+                  Torna all&apos;accesso
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleRequestReset} className="space-y-4">
+                {resetError && (
+                  <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                    {resetError}
+                  </p>
+                )}
+                <div>
+                  <Label htmlFor="reset-email" className="text-xs text-white/70">Email dell&apos;account</Label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    placeholder="nome@esempio.it"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="mt-1 bg-[#1a1a1a] border-white/10 text-white placeholder-white/30 focus:border-gold/50"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full bg-gold hover:bg-gold-light text-black py-5 font-semibold transition-all duration-300 border-none"
+                >
+                  {resetLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" /> Invio in corso...
+                    </span>
+                  ) : (
+                    'Invia link di reimpostazione'
+                  )}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetError(null);
+                    setAuthMethod('email');
+                  }}
+                  className="text-xs text-gold hover:underline block mx-auto mt-2"
+                >
+                  ← Torna all&apos;accesso con password
+                </button>
+              </form>
+            )}
+          </div>
         )}
 
         {/* 2. FLUSSO WHATSAPP OTP */}

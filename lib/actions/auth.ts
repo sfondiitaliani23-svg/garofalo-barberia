@@ -22,7 +22,7 @@ export async function signInWithEmail(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const loginPath = redirectTo.startsWith('/admin') ? '/admin/login' : '/login';
-    redirect(`${loginPath}?error=${encodeURIComponent(error.message)}`);
+    redirect(`${loginPath}?error=${encodeURIComponent(error.message)}&email=${encodeURIComponent(email)}`);
   }
 
   if (data?.user) {
@@ -198,6 +198,47 @@ export async function signInWithQrTokens(accessToken: string, refreshToken: stri
 
   await setCustomerSessionExpiryCookie();
 
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
+
+export async function requestPasswordReset(email: string): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  if (!supabase) return { error: 'Database non configurato.' };
+
+  const cleanEmail = email?.trim();
+  if (!cleanEmail || !cleanEmail.includes('@')) {
+    return { error: 'Inserisci un indirizzo email valido.' };
+  }
+
+  const origin = await getSiteOrigin();
+  const callbackUrl = `${origin}/auth/callback?next=/reimposta-password`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+    redirectTo: callbackUrl,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  return { ok: true };
+}
+
+export async function updateUserPassword(password: string): Promise<{ ok?: boolean; error?: string }> {
+  const supabase = await createClient();
+  if (!supabase) return { error: 'Database non configurato.' };
+
+  if (!password || password.length < 6) {
+    return { error: 'La password deve contenere almeno 6 caratteri.' };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    return { error: error.message };
+  }
+
+  await setCustomerSessionExpiryCookie();
   revalidatePath('/', 'layout');
   return { ok: true };
 }
