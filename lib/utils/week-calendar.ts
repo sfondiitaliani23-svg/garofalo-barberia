@@ -110,8 +110,11 @@ export function buildWeekGrid(
   }
 
   for (const apt of confirmed) {
+    if (!apt?.starts_at || !apt?.ends_at) continue;
     const dStart = new Date(apt.starts_at);
     const dEnd = new Date(apt.ends_at);
+    if (isNaN(dStart.getTime()) || isNaN(dEnd.getTime())) continue;
+
     const key = getShopDateString(dStart);
     const list = aptsByDate.get(key);
     if (list) {

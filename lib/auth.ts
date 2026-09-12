@@ -1,5 +1,6 @@
 import { cache } from 'react';
-import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import type { Profile, UserRole } from '@/types/database';
 
 export const getSession = cache(async () => {
@@ -22,13 +23,30 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
     .eq('id', user.id)
     .single();
 
-  return data as Profile | null;
+  if (data) return data as Profile;
+
+  // Fallback con service client se RLS anonima non ha ancora sincronizzato i permessi
+  const serviceClient = await createServiceClient();
+  if (serviceClient) {
+    const { data: serviceProfile } = await serviceClient
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    if (serviceProfile) return serviceProfile as Profile;
+  }
+
+  return null;
 });
 
 export const requireRole = cache(async (role: UserRole) => {
   const profile = await getProfile();
   if (!profile || profile.role !== role) {
-    throw new Error('Unauthorized');
+    if (role === 'admin') {
+      redirect('/admin/login');
+    } else {
+      redirect('/login');
+    }
   }
   return profile;
 });

@@ -6,21 +6,32 @@ import { getWeekStart } from '@/lib/utils/week-calendar';
 
 export const metadata = { title: 'Prenotazioni Admin' };
 
+function resolveWeekStart(weekParam?: string): Date {
+  if (!weekParam || typeof weekParam !== 'string') return getWeekStart();
+  try {
+    const parsed = parseISO(weekParam);
+    if (Number.isNaN(parsed.getTime())) return getWeekStart();
+    return getWeekStart(parsed);
+  } catch {
+    return getWeekStart();
+  }
+}
+
 export default async function AdminPrenotazioniPage({
   searchParams,
 }: {
   searchParams: Promise<{ week?: string; barber?: string }>;
 }) {
   const params = await searchParams;
-  const weekStart = params.week ? getWeekStart(parseISO(params.week)) : getWeekStart();
+  const weekStart = resolveWeekStart(params.week);
   const weekStartIso = weekStart.toISOString();
 
   // Esecuzione parallela altamente ottimizzata: carica solo i dati strettamente necessari per la settimana
   const [barbers, services, timeOff, appointments] = await Promise.all([
-    getBarbers(),
-    getServices(),
-    getAdminTimeOffForWeek(weekStartIso),
-    getAdminWeekAppointments(weekStartIso, 'all'),
+    getBarbers().catch(() => []),
+    getServices().catch(() => []),
+    getAdminTimeOffForWeek(weekStartIso).catch(() => []),
+    getAdminWeekAppointments(weekStartIso, 'all').catch(() => []),
   ]);
 
   const selectedBarberId =
