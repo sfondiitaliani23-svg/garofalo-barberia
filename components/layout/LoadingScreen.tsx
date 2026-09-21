@@ -10,31 +10,21 @@ export function LoadingScreen() {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    // Se la pagina viene ricaricata (F5/Reload) o se ci troviamo sulla Homepage ('/'),
-    // la schermata di caricamento deve SEMPRE essere mostrata.
-    const isReload =
-      typeof window !== 'undefined' &&
-      window.performance &&
-      window.performance.getEntriesByType('navigation')?.length > 0 &&
-      (window.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming)?.type === 'reload';
-
-    const isHomepage = typeof window !== 'undefined' && window.location.pathname === '/';
-
-    // Salta la schermata di caricamento solo per le transizioni tra sottopagine nello stesso tab
-    if (sessionStorage.getItem('gbf_loader_shown') && !isReload && !isHomepage) {
+    // Se la schermata di caricamento è già stata mostrata in questa sessione, non bloccare la navigazione
+    if (sessionStorage.getItem('gbf_loader_shown')) {
       return;
     }
 
     setShouldRender(true);
 
-    // Avvia la barra di progresso
+    // Avvia immediatamente la barra di progresso
     const barTimer = setTimeout(() => {
       if (barRef.current) {
         barRef.current.style.width = '100%';
       }
-    }, 40);
+    }, 20);
 
-    // Fade out rapido dopo 1.0s per un'esperienza fluida e scattante
+    // Fade out fluido e ultra-scattante dopo 450ms
     const fadeTimer = setTimeout(() => {
       const loader = loaderRef.current;
       if (loader) {
@@ -42,10 +32,10 @@ export function LoadingScreen() {
         loader.style.pointerEvents = 'none';
         setTimeout(() => {
           setShouldRender(false);
-        }, 400);
+        }, 250);
       }
       sessionStorage.setItem('gbf_loader_shown', '1');
-    }, 1000);
+    }, 450);
 
     return () => {
       clearTimeout(barTimer);

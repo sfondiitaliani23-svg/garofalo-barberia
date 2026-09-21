@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { SITE_CONFIG } from '@/lib/site-config';
 
+import { createClient } from '@/lib/supabase/client';
+
 const navLeft = [
   { href: '/', label: 'Home' },
   { href: '/chi-siamo', label: 'Chi siamo' },
@@ -32,9 +34,25 @@ interface SiteHeaderProps {
   userLabel?: string | null;
 }
 
-export function SiteHeader({ isLoggedIn = false, userLabel }: SiteHeaderProps) {
+export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: initialUserLabel }: SiteHeaderProps) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
+  const [userLabel, setUserLabel] = useState<string | null>(initialUserLabel ?? null);
+
+  useEffect(() => {
+    if (initialLoggedIn) return;
+    const supabase = createClient();
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setIsLoggedIn(true);
+        const name = session.user.user_metadata?.full_name?.split(' ')[0];
+        if (name) setUserLabel(name);
+      }
+    });
+  }, [initialLoggedIn]);
+
   const accountLabel = userLabel ? `Ciao, ${userLabel}` : 'Area cliente';
 
   // Sticky scroll effect

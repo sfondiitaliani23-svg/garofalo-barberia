@@ -8,27 +8,44 @@ import { NewsletterForm } from '@/components/home/NewsletterForm';
 import { HomeTicker } from '@/components/home/HomeTicker';
 import { PHOTO_STRIP, PRICE_LIST, PERFUMES } from '@/lib/data/homepage';
 import { getApprovedReviews } from '@/lib/actions/reviews';
-import { createClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
+import { createServiceClient } from '@/lib/supabase/server';
 import './home.css';
 
 export const revalidate = 120;
 
+const getCachedHomepageProducts = unstable_cache(
+  async () => {
+    try {
+      const client = (await createServiceClient()) ?? (
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          ? (await import('@supabase/supabase-js')).createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            )
+          : null
+      );
+      if (!client) return [];
+      const { data } = await client
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order')
+        .limit(4);
+      return data ?? [];
+    } catch {
+      return [];
+    }
+  },
+  ['homepage-products-list'],
+  { revalidate: 300, tags: ['products'] }
+);
+
 export default async function HomePage() {
-  const supabase = await createClient();
-  const [dbReviews, productsResult] = await Promise.all([
+  const [dbReviews, dbProducts] = await Promise.all([
     getApprovedReviews(),
-    supabase
-      ? supabase.from('products').select('*').eq('is_active', true).order('sort_order').limit(4)
-      : Promise.resolve({ data: [] }),
+    getCachedHomepageProducts(),
   ]);
-
-  const formattedDbReviews = dbReviews.map((r) => ({
-    text: r.comment,
-    author: r.customer_name,
-    rating: r.rating,
-  }));
-
-  const dbProducts = productsResult.data ?? [];
 
   const perfumesForGrid = dbProducts.length > 0 ? dbProducts.map((p, idx) => {
     const defaultFallback = PERFUMES[idx] || PERFUMES[0];
@@ -42,6 +59,12 @@ export default async function HomePage() {
     };
   }) : undefined;
   
+  const formattedDbReviews = dbReviews.map((r: { comment: string; customer_name: string; rating: number }) => ({
+    text: r.comment,
+    author: r.customer_name,
+    rating: r.rating,
+  }));
+
   const allReviews = formattedDbReviews.slice(0, 3);
 
   return (
@@ -132,8 +155,13 @@ export default async function HomePage() {
         <div className="photo-strip">
           {PHOTO_STRIP.map((photo) => (
             <div key={photo.src} className="photo-strip-item" tabIndex={0}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={photo.src} alt={photo.alt} loading="eager" decoding="async" />
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 300px"
+                loading="lazy"
+              />
             </div>
           ))}
         </div>

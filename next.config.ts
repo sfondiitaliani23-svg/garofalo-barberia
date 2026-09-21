@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
   experimental: {
@@ -11,6 +12,11 @@ const nextConfig: NextConfig = {
       'recharts',
       'sonner',
       'canvas-confetti',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-select',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-avatar',
     ],
   },
   images: {

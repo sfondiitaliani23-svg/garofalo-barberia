@@ -1,7 +1,7 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { revalidatePath, unstable_cache } from 'next/cache';
 
 export interface CreateReviewInput {
   customerName: string;
@@ -10,28 +10,41 @@ export interface CreateReviewInput {
   authorizedByCustomer: boolean;
 }
 
-export async function getApprovedReviews() {
-  try {
-    const supabase = await createClient();
-    if (!supabase) return [];
+const getCachedReviews = unstable_cache(
+  async () => {
+    try {
+      const client = (await createServiceClient()) ?? (
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          ? (await import('@supabase/supabase-js')).createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            )
+          : null
+      );
+      if (!client) return [];
 
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('comment, customer_name, rating, created_at')
-      .eq('authorized_by_customer', true)
-      .order('created_at', { ascending: false })
-      .limit(20);
+      const { data, error } = await client
+        .from('reviews')
+        .select('comment, customer_name, rating, created_at')
+        .eq('authorized_by_customer', true)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-    if (error) {
-      console.error('Errore durante il recupero delle recensioni:', error);
+      if (error) {
+        return [];
+      }
+
+      return data || [];
+    } catch {
       return [];
     }
+  },
+  ['approved-reviews-list'],
+  { revalidate: 60, tags: ['reviews'] }
+);
 
-    return data || [];
-  } catch (err) {
-    console.error('Eccezione durante il recupero delle recensioni:', err);
-    return [];
-  }
+export async function getApprovedReviews() {
+  return getCachedReviews();
 }
 
 export async function createReview(input: CreateReviewInput) {

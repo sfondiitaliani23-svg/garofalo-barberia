@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Montserrat, Rye, Oswald, Bitter } from 'next/font/google';
+import { Montserrat, Rye } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { SITE_CONFIG } from '@/lib/site-config';
@@ -17,20 +17,6 @@ const rye = Rye({
   subsets: ['latin'],
   weight: ['400'],
   variable: '--font-display',
-  display: 'swap',
-});
-
-const oswald = Oswald({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-oswald',
-  display: 'swap',
-});
-
-const bitter = Bitter({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-bitter',
   display: 'swap',
 });
 
@@ -55,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="it"
-      className={`${montserrat.variable} ${rye.variable} ${oswald.variable} ${bitter.variable}`}
+      className={`${montserrat.variable} ${rye.variable}`}
     >
       <body>
         <LoadingScreen />

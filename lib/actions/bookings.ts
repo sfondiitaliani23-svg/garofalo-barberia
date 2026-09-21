@@ -1,7 +1,7 @@
 'use server';
 
 import { addMinutes } from 'date-fns';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getProfile, getSession } from '@/lib/auth';
@@ -409,15 +409,61 @@ export async function getAppointmentForCustomer(appointmentId: string) {
   return apt;
 }
 
+const getCachedServicesData = unstable_cache(
+  async () => {
+    try {
+      const client = (await createServiceClient()) ?? (
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          ? (await import('@supabase/supabase-js')).createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            )
+          : null
+      );
+      if (!client) return null;
+      const { data } = await client
+        .from('services')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      return data ?? [];
+    } catch {
+      return null;
+    }
+  },
+  ['active-services-list'],
+  { revalidate: 300, tags: ['services'] }
+);
+
+const getCachedBarbersData = unstable_cache(
+  async () => {
+    try {
+      const client = (await createServiceClient()) ?? (
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          ? (await import('@supabase/supabase-js')).createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            )
+          : null
+      );
+      if (!client) return null;
+      const { data } = await client
+        .from('barbers')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      return data ?? [];
+    } catch {
+      return null;
+    }
+  },
+  ['active-barbers-list'],
+  { revalidate: 300, tags: ['barbers'] }
+);
+
 export async function getServices(options?: { onlyPublic?: boolean }) {
   try {
-    const supabase = await createClient();
-    if (!supabase) throw new Error('no supabase');
-    const { data } = await supabase
-      .from('services')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order');
+    const data = await getCachedServicesData();
     if (data && data.length > 0) {
       const { isServicePubliclyBookable } = await import('@/lib/data/services');
       let result = [...data];
@@ -440,13 +486,7 @@ export async function getServices(options?: { onlyPublic?: boolean }) {
 
 export async function getBarbers(options?: { onlyPublic?: boolean }) {
   try {
-    const supabase = await createClient();
-    if (!supabase) throw new Error('no supabase');
-    const { data } = await supabase
-      .from('barbers')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order');
+    const data = await getCachedBarbersData();
     if (data && data.length > 0) {
       const { getBarberRank, isBarberPubliclyBookable } = await import('@/lib/utils/barber-schedule');
       let result = [...data];

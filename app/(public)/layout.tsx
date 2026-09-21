@@ -3,21 +3,16 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { SiteBanners } from '@/components/layout/SiteBanners';
 import { ClientFloatingWidgets } from '@/components/layout/ClientFloatingWidgets';
 import { getActiveSiteBanners } from '@/lib/actions/content';
-import { getProfile, getSession } from '@/lib/auth';
 import './public-pages.css';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
-  const [banners, session] = await Promise.all([getActiveSiteBanners(), getSession()]);
-  const profile = session ? await getProfile() : null;
+  const banners = await getActiveSiteBanners();
 
   return (
     <>
-      <SiteHeader
-        isLoggedIn={!!session}
-        userLabel={profile?.full_name?.split(' ')[0] ?? null}
-      />
+      <SiteHeader />
       <SiteBanners banners={banners} />
       <main>{children}</main>
       <SiteFooter />

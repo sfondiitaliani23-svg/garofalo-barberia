@@ -12,6 +12,34 @@ export async function middleware(request: NextRequest) {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) return NextResponse.next();
 
+  const pathname = request.nextUrl.pathname;
+
+  const isAreaCliente = pathname.startsWith('/area-cliente');
+  const isAdminProtected = pathname.startsWith('/admin') && pathname !== '/admin/login';
+
+  // Per tutte le pagine e risorse pubbliche, bypassa le chiamate di rete Supabase per un TTFB istantaneo
+  if (!isAreaCliente && !isAdminProtected) {
+    return NextResponse.next({ request });
+  }
+
+  // Verifica presenza di cookie di sessione Supabase prima di effettuare chiamate di rete
+  const allCookies = request.cookies.getAll();
+  const hasAuthCookie = allCookies.some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'));
+
+  if (!hasAuthCookie) {
+    if (isAreaCliente) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(url);
+    }
+    if (isAdminProtected) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      return NextResponse.redirect(url);
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -35,10 +63,9 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const pathname = request.nextUrl.pathname;
   const sessionUntil = request.cookies.get(CUSTOMER_SESSION_UNTIL_COOKIE)?.value;
 
-  if (pathname.startsWith('/area-cliente') && isCustomerSessionExpired(sessionUntil)) {
+  if (isAreaCliente && isCustomerSessionExpired(sessionUntil)) {
     await supabase.auth.signOut();
     const url = request.nextUrl.clone();
     url.pathname = '/login';
@@ -49,16 +76,7 @@ export async function middleware(request: NextRequest) {
     return expiredResponse;
   }
 
-  // Aggiorna il token di sessione su ogni richiesta (anche pagine pubbliche come /prenota)
   const { data: { user } } = await supabase.auth.getUser();
-
-  const needsRoleCheck =
-    pathname.startsWith('/area-cliente') ||
-    (pathname.startsWith('/admin') && pathname !== '/admin/login');
-
-  if (!needsRoleCheck) {
-    return supabaseResponse;
-  }
 
   let role: string | null = null;
   if (user) {
@@ -70,7 +88,7 @@ export async function middleware(request: NextRequest) {
     role = profile?.role ?? 'customer';
   }
 
-  if (pathname.startsWith('/area-cliente')) {
+  if (isAreaCliente) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
@@ -84,7 +102,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+  if (isAdminProtected) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/admin/login';

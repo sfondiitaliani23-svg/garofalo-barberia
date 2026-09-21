@@ -1,5 +1,6 @@
 'use server';
 
+import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import type { SiteContent } from '@/types/database';
 
@@ -10,25 +11,32 @@ function isContentVisible(item: SiteContent, now = Date.now()) {
   return true;
 }
 
+const getCachedSiteContent = unstable_cache(
+  async () => {
+    try {
+      const supabase = await createClient();
+      if (!supabase) return [];
+
+      const { data } = await supabase
+        .from('site_content')
+        .select('*')
+        .eq('is_active', true)
+        .order('key');
+
+      return (data ?? []) as SiteContent[];
+    } catch {
+      return [];
+    }
+  },
+  ['site-content-banners'],
+  { revalidate: 60, tags: ['site-content'] }
+);
+
 export async function getActiveSiteBanners(): Promise<SiteContent[]> {
   try {
-    const supabase = await createClient();
-    if (!supabase) return [];
-
-    const fetchPromise = supabase
-      .from('site_content')
-      .select('*')
-      .eq('is_active', true)
-      .order('key');
-
-    const timeoutPromise = new Promise<{ data: null }>((resolve) =>
-      setTimeout(() => resolve({ data: null }), 600)
-    );
-
-    const res = await Promise.race([fetchPromise, timeoutPromise]);
-    const data = res && 'data' in res ? res.data : null;
-
-    return (data ?? []).filter((item) => isContentVisible(item as SiteContent));
+    const data = await getCachedSiteContent();
+    const now = Date.now();
+    return data.filter((item) => isContentVisible(item, now));
   } catch {
     return [];
   }
