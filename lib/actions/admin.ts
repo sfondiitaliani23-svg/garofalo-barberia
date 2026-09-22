@@ -921,29 +921,33 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
   return { ok: true, emailsSent, scheduleChanges: scheduleChanges.length };
 }
 
-/** Calcola l'offset in minuti per Europe/Rome in una certa data. */
-function getRomeOffsetMinutes(localDateStr: string, localTimeStr: string): number {
-  // Costruisce una Date trattando la stringa come UTC, poi controlla che ora corrisponde in Roma
-  const testUtc = new Date(`${localDateStr}T${localTimeStr}Z`);
-  const romeStr = new Intl.DateTimeFormat('en-CA', {
+/**
+ * Restituisce la stringa di offset UTC per Europe/Rome in una data specifica.
+ * Usa l'ora di mezzogiorno (stabile, lontana da mezzanotte) per evitare
+ * problemi di rollover nei calcoli con orari serali (es. 23:59).
+ * Esempio: "+02:00" in estate (CEST), "+01:00" in inverno (CET).
+ */
+function getRomeOffsetString(dateStr: string): string {
+  // Prendiamo mezzogiorno UTC di quel giorno — lontano da qualsiasi cambio ora
+  const noonUtc = new Date(`${dateStr}T12:00:00Z`);
+  const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Rome',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(testUtc);
-  const [rH, rM] = romeStr.split(':').map(Number);
-  const [tH, tM] = localTimeStr.slice(0, 5).split(':').map(Number);
-  // L'offset è la differenza (in minuti) tra l'orario locale "desiderato" e quello che otteniamo
-  return (rH * 60 + rM) - (tH * 60 + tM);
+    timeZoneName: 'shortOffset',
+  }).formatToParts(noonUtc);
+  // Il part 'timeZoneName' vale es. "GMT+2" o "GMT+1"
+  const tzPart = parts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+2';
+  const match = tzPart.match(/GMT([+-])(\d+)(?::(\d+))?/);
+  if (!match) return '+02:00';
+  const sign = match[1];
+  const h = match[2].padStart(2, '0');
+  const m = (match[3] ?? '00').padStart(2, '0');
+  return `${sign}${h}:${m}`;
 }
 
 /** Costruisce un ISO string corretto per Europe/Rome da una data locale e un orario HH:MM. */
 function buildRomeISO(dateStr: string, timeStr: string): string {
-  const offset = getRomeOffsetMinutes(dateStr, timeStr);
-  const sign = offset >= 0 ? '+' : '-';
-  const absH = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
-  const absM = String(Math.abs(offset) % 60).padStart(2, '0');
-  return `${dateStr}T${timeStr}${sign}${absH}:${absM}`;
+  const offset = getRomeOffsetString(dateStr);
+  return `${dateStr}T${timeStr}${offset}`;
 }
 
 export async function saveAdminTimeOff(input: AdminTimeOffInput) {
