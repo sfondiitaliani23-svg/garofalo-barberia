@@ -80,9 +80,10 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
   const [halfDayBarberId, setHalfDayBarberId] = useState<string>('all');
   const [halfDayDate, setHalfDayDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
   const [halfDayPeriod, setHalfDayPeriod] = useState<'morning' | 'afternoon' | 'custom'>('afternoon');
-  const [halfDayStartTime, setHalfDayStartTime] = useState('14:30');
-  const [halfDayEndTime, setHalfDayEndTime] = useState('20:30');
-  const [halfDayReason, setHalfDayReason] = useState('Chiusura mezza giornata');
+  // 'morning' = blocca mattina (solo pomeriggio), 'afternoon' = blocca pomeriggio (solo mattina)
+  const [halfDayStartTime, setHalfDayStartTime] = useState('15:30');
+  const [halfDayEndTime, setHalfDayEndTime] = useState('23:59');
+  const [halfDayReason, setHalfDayReason] = useState('Mezza giornata (solo mattina)');
 
   useEffect(() => {
     if (selectedBarberId) {
@@ -296,11 +297,13 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
       let endT = halfDayEndTime;
 
       if (halfDayPeriod === 'morning') {
+        // Blocca la mattina → l'operatore lavora solo il pomeriggio
         startT = '08:30';
-        endT = '13:30';
+        endT = '13:00';
       } else if (halfDayPeriod === 'afternoon') {
-        startT = '14:30';
-        endT = '20:30';
+        // Blocca il pomeriggio → l'operatore lavora solo la mattina
+        startT = '15:30';
+        endT = '23:59';
       }
 
       const result = await saveAdminTimeOff({
@@ -309,7 +312,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
         endDate: halfDayDate,
         startTime: startT,
         endTime: endT,
-        reason: halfDayReason || 'Chiusura mezza giornata',
+        reason: halfDayReason || 'Mezza giornata (solo mattina)',
       });
 
       if (!result.ok) {
@@ -770,14 +773,15 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
               </div>
 
               <div>
-                <Label className="mb-2 block">Quale Mezza Giornata?</Label>
+                <Label className="mb-2 block">Quale turno bloccare?</Label>
+                <p className="mb-2 text-xs text-white/45">Seleziona il turno da chiudere — l&apos;altro rimarrà aperto.</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       setHalfDayPeriod('morning');
                       setHalfDayStartTime('08:30');
-                      setHalfDayEndTime('13:30');
+                      setHalfDayEndTime('13:00');
                     }}
                     className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition ${
                       halfDayPeriod === 'morning'
@@ -785,17 +789,18 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
                         : 'border-white/15 bg-[#1a1a1a] text-white/70 hover:bg-white/10'
                     }`}
                   >
-                    <Sun size={20} />
-                    <span className="text-xs font-bold uppercase">Mattina</span>
-                    <span className="text-[10px] opacity-75">08:30 – 13:30</span>
+                    <Moon size={20} />
+                    <span className="text-xs font-bold uppercase">Blocca Mattina</span>
+                    <span className="text-[10px] opacity-75 text-center">Aperto solo pomeriggio</span>
+                    <span className="text-[9px] opacity-50">blocca 08:30–13:00</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
                       setHalfDayPeriod('afternoon');
-                      setHalfDayStartTime('14:30');
-                      setHalfDayEndTime('20:30');
+                      setHalfDayStartTime('15:30');
+                      setHalfDayEndTime('23:59');
                     }}
                     className={`flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition ${
                       halfDayPeriod === 'afternoon'
@@ -803,9 +808,10 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
                         : 'border-white/15 bg-[#1a1a1a] text-white/70 hover:bg-white/10'
                     }`}
                   >
-                    <Moon size={20} />
-                    <span className="text-xs font-bold uppercase">Pomeriggio</span>
-                    <span className="text-[10px] opacity-75">14:30 – 20:30</span>
+                    <Sun size={20} />
+                    <span className="text-xs font-bold uppercase">Blocca Pomeriggio</span>
+                    <span className="text-[10px] opacity-75 text-center">Aperto solo mattina</span>
+                    <span className="text-[9px] opacity-50">blocca 15:30–fine</span>
                   </button>
                 </div>
 
@@ -861,14 +867,22 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
             </div>
 
             {/* Footer */}
-            <div className="flex shrink-0 pt-4 border-t border-white/10">
+            <div className="flex shrink-0 gap-2 pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setHalfDayModalOpen(false)}
+                disabled={pending}
+                className="flex-1 rounded-full border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 disabled:opacity-50"
+              >
+                Annulla
+              </button>
               <Button
                 type="button"
                 onClick={handleSaveHalfDay}
                 disabled={pending}
-                className="w-full bg-gold font-bold uppercase text-black hover:bg-gold-light"
+                className="flex-1 bg-gold font-bold uppercase text-black hover:bg-gold-light"
               >
-                {pending ? 'Salvataggio...' : 'Conferma Chiusura Mezza Giornata'}
+                {pending ? 'Salvataggio...' : 'Salva'}
               </Button>
             </div>
           </div>

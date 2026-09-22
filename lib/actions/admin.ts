@@ -921,6 +921,31 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
   return { ok: true, emailsSent, scheduleChanges: scheduleChanges.length };
 }
 
+/** Calcola l'offset in minuti per Europe/Rome in una certa data. */
+function getRomeOffsetMinutes(localDateStr: string, localTimeStr: string): number {
+  // Costruisce una Date trattando la stringa come UTC, poi controlla che ora corrisponde in Roma
+  const testUtc = new Date(`${localDateStr}T${localTimeStr}Z`);
+  const romeStr = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Rome',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(testUtc);
+  const [rH, rM] = romeStr.split(':').map(Number);
+  const [tH, tM] = localTimeStr.slice(0, 5).split(':').map(Number);
+  // L'offset è la differenza (in minuti) tra l'orario locale "desiderato" e quello che otteniamo
+  return (rH * 60 + rM) - (tH * 60 + tM);
+}
+
+/** Costruisce un ISO string corretto per Europe/Rome da una data locale e un orario HH:MM. */
+function buildRomeISO(dateStr: string, timeStr: string): string {
+  const offset = getRomeOffsetMinutes(dateStr, timeStr);
+  const sign = offset >= 0 ? '+' : '-';
+  const absH = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+  const absM = String(Math.abs(offset) % 60).padStart(2, '0');
+  return `${dateStr}T${timeStr}${sign}${absH}:${absM}`;
+}
+
 export async function saveAdminTimeOff(input: AdminTimeOffInput) {
   await requireAdmin();
   const supabase = await createServiceClient();
@@ -933,8 +958,9 @@ export async function saveAdminTimeOff(input: AdminTimeOffInput) {
   const startTimeStr = input.startTime ? `${input.startTime}:00` : '00:00:00';
   const endTimeStr = input.endTime ? `${input.endTime}:59` : '23:59:59';
 
-  const startsAt = parseISO(`${input.startDate}T${startTimeStr}`);
-  const endsAt = parseISO(`${input.endDate}T${endTimeStr}`);
+  // Usa il timezone corretto di Roma invece di parseISO (che userebbe UTC)
+  const startsAt = new Date(buildRomeISO(input.startDate, startTimeStr.slice(0, 5)));
+  const endsAt = new Date(buildRomeISO(input.endDate, endTimeStr.slice(0, 5)));
 
   if (endsAt < startsAt) {
     return { ok: false, error: 'La data di fine deve essere dopo l\'inizio' };
