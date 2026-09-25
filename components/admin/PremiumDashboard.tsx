@@ -31,6 +31,7 @@ import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { WhatsAppStatusWidget } from '@/components/admin/WhatsAppStatusWidget';
+import { getShopTimeString } from '@/lib/utils/booking-datetime';
 
 // Definiamo i tipi per gli appuntamenti in arrivo
 interface CalendarAppointment {
@@ -495,7 +496,7 @@ export function PremiumDashboard({
               (selectedPeriod === 'oggi' ? upcomingAppointments : selectedPeriod === 'ieri' ? yesterdayAppointments : [...yesterdayAppointments, ...upcomingAppointments]).slice(0, 5).map((appointment) => {
                 const startsAt = parseISO(appointment.starts_at);
                 const initials = getInitials(appointment.customer_name);
-                const timeLabel = format(startsAt, "HH:mm");
+                const timeLabel = getShopTimeString(startsAt);
                 const dateLabel = format(startsAt, "d MMM", { locale: it });
 
                 return (

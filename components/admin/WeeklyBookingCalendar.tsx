@@ -8,7 +8,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
 import { WeekMonthPicker } from '@/components/admin/WeekMonthPicker';
-import { getShopTimeString } from '@/lib/utils/booking-datetime';
+import { getShopDateString, getShopTimeString } from '@/lib/utils/booking-datetime';
 
 import {
   buildWeekGrid,
@@ -105,7 +105,7 @@ export function WeeklyBookingCalendar({
         <Button
           onClick={() => {
             setSelectedAppointment(null);
-            setPrefillDate(format(new Date(), 'yyyy-MM-dd'));
+            setPrefillDate(getShopDateString(new Date()));
             setPrefillTime(undefined);
             setModalOpen(true);
           }}
@@ -335,7 +335,7 @@ export function WeeklyBookingCalendar({
                     <span className="font-medium">{apt.customer_name}</span>
                     <span className="mx-2 text-white/30">·</span>
                     <span className="text-white/60">
-                      {format(new Date(apt.starts_at), "d MMM 'alle' HH:mm", { locale: it })}
+                      {format(new Date(apt.starts_at), 'd MMM', { locale: it })} alle {getShopTimeString(new Date(apt.starts_at))}
                     </span>
                     <span className="mx-2 text-white/30">·</span>
                     <span className="text-gold">{service?.name}</span>

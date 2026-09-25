@@ -10,6 +10,7 @@ import { CalendarOff, Clock, Moon, Pencil, Plus, Sun, Trash2, UserCog, X, Zap } 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getShopTimeString } from '@/lib/utils/booking-datetime';
 import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import {
   deleteAdminBarber,
@@ -595,8 +596,8 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
             upcomingTimeOff.map((entry) => {
               const startDate = parseISO(entry.start_at);
               const endDate = parseISO(entry.end_at);
-              const startTime = format(startDate, 'HH:mm');
-              const endTime = format(endDate, 'HH:mm');
+              const startTime = getShopTimeString(startDate);
+              const endTime = getShopTimeString(endDate);
               const isSameDay = format(startDate, 'yyyy-MM-dd') === format(endDate, 'yyyy-MM-dd');
               const durationHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
               const isHalfDay = isSameDay && durationHours < 16;
