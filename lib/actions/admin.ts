@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
-import { parseBookingDateTime, getShopDateString, getShopTimeString, getShopDayBounds } from '@/lib/utils/booking-datetime';
+import { parseBookingDateTime, getShopDateString, getShopTimeString, getShopDayBounds, getShopTimezoneOffset } from '@/lib/utils/booking-datetime';
 import {
   type AdminDayScheduleInput,
   defaultPeriodsForDay,
@@ -921,32 +921,10 @@ export async function saveAdminBarberSchedule(barberId: string, days: AdminDaySc
   return { ok: true, emailsSent, scheduleChanges: scheduleChanges.length };
 }
 
-/**
- * Restituisce la stringa di offset UTC per Europe/Rome in una data specifica.
- * Usa l'ora di mezzogiorno (stabile, lontana da mezzanotte) per evitare
- * problemi di rollover nei calcoli con orari serali (es. 23:59).
- * Esempio: "+02:00" in estate (CEST), "+01:00" in inverno (CET).
- */
-function getRomeOffsetString(dateStr: string): string {
-  // Prendiamo mezzogiorno UTC di quel giorno — lontano da qualsiasi cambio ora
-  const noonUtc = new Date(`${dateStr}T12:00:00Z`);
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Rome',
-    timeZoneName: 'shortOffset',
-  }).formatToParts(noonUtc);
-  // Il part 'timeZoneName' vale es. "GMT+2" o "GMT+1"
-  const tzPart = parts.find((p) => p.type === 'timeZoneName')?.value ?? 'GMT+2';
-  const match = tzPart.match(/GMT([+-])(\d+)(?::(\d+))?/);
-  if (!match) return '+02:00';
-  const sign = match[1];
-  const h = match[2].padStart(2, '0');
-  const m = (match[3] ?? '00').padStart(2, '0');
-  return `${sign}${h}:${m}`;
-}
-
-/** Costruisce un ISO string corretto per Europe/Rome da una data locale e un orario HH:MM. */
+/** Costruisce un ISO string corretto per Europe/Rome da una data locale e un orario HH:MM o HH:MM:SS. */
 function buildRomeISO(dateStr: string, timeStr: string): string {
-  const offset = getRomeOffsetString(dateStr);
+  const normalizedTime = timeStr.length >= 5 ? timeStr.slice(0, 5) : timeStr;
+  const offset = getShopTimezoneOffset(dateStr, normalizedTime);
   return `${dateStr}T${timeStr}${offset}`;
 }
 

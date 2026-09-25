@@ -148,12 +148,16 @@ export function buildWeekGrid(
       const dayApts = aptsByDate.get(key) ?? [];
 
       // Ricerca rapida in memoria locale del giorno specifico
+      const [tH, tM] = time.split(':').map(Number);
+      const slotStartMins = tH * 60 + tM;
+      const slotEndMins = slotStartMins + SITE_CONFIG.slotIntervalMinutes;
+
       const aptsAtSlot = dayApts.filter((item) => {
         if (item.startStr === time) return true;
         // Fallback per slot con orari non standard (es. 10:15)
-        const slotStart = parseBookingDateTime(key, time);
-        const slotEnd = addMinutes(slotStart, SITE_CONFIG.slotIntervalMinutes);
-        return item.dStart >= slotStart && item.dStart < slotEnd;
+        const [aH, aM] = item.startStr.split(':').map(Number);
+        const aptMins = aH * 60 + aM;
+        return aptMins >= slotStartMins && aptMins < slotEndMins;
       });
 
       if (aptsAtSlot.length > 0) {

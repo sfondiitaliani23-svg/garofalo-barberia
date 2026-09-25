@@ -1,9 +1,48 @@
 import { addDays, parseISO } from 'date-fns';
 
-/** DST approssimato per l'Italia (ultima domenica mar–ott). */
+const SHOP_TIMEZONE = 'Europe/Rome';
+
+/**
+ * Restituisce l'offset esatto di Europe/Rome ('+01:00' o '+02:00') per una data e un orario specifici.
+ * Gestisce con precisione millimetrica l'ora solare (CET / UTC+1) e l'ora legale (CEST / UTC+2),
+ * inclusi i passaggi nell'ultima domenica di marzo e nell'ultima domenica di ottobre.
+ */
+export function getShopTimezoneOffset(dateStr: string, timeStr = '12:00'): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [h, min] = timeStr.slice(0, 5).split(':').map(Number);
+  const baseUtc = new Date(Date.UTC(y, m - 1, d, h, min));
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: SHOP_TIMEZONE,
+      timeZoneName: 'longOffset',
+    }).formatToParts(baseUtc);
+    const tzPart = parts.find((p) => p.type === 'timeZoneName')?.value;
+    if (tzPart && tzPart.startsWith('GMT')) {
+      return tzPart.replace('GMT', ''); // "+01:00" o "+02:00"
+    }
+  } catch {
+    // Fallback
+  }
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: SHOP_TIMEZONE,
+      timeZoneName: 'shortOffset',
+    }).formatToParts(baseUtc);
+    const tzPart = parts.find((p) => p.type === 'timeZoneName')?.value;
+    if (tzPart === 'GMT+2') return '+02:00';
+    if (tzPart === 'GMT+1') return '+01:00';
+  } catch {
+    // Fallback
+  }
+
+  return '+01:00';
+}
+
+/** Verifica se per una data il salone si trova in ora legale (CEST / UTC+2). */
 export function isItalySummerTime(dateStr: string): boolean {
-  const month = Number(dateStr.slice(5, 7));
-  return month > 3 && month < 11;
+  return getShopTimezoneOffset(dateStr) === '+02:00';
 }
 
 /** Giorno della settimana (0–6) da una data calendario YYYY-MM-DD. */
@@ -17,8 +56,6 @@ export function getShopDayBounds(dateStr: string): { dayStart: Date; dayEnd: Dat
   const dayStart = parseBookingDateTime(dateStr, '00:00');
   return { dayStart, dayEnd: addDays(dayStart, 1) };
 }
-
-const SHOP_TIMEZONE = 'Europe/Rome';
 
 /** Formatta un istante come orario HH:mm del salone (Europe/Rome). */
 export function formatShopTimeFromDate(date: Date): string {
@@ -59,12 +96,13 @@ export function formatShopBookingDateTime(date: Date): { dateStr: string; timeSt
 
 /** Interpreta data e ora come orario di salone (Europe/Rome). */
 export function parseBookingDateTime(date: string, time: string): Date {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}(:\d{2})?$/.test(time)) {
     throw new Error('Data o orario non validi');
   }
 
-  const offset = isItalySummerTime(date) ? '+02:00' : '+01:00';
-  const parsed = parseISO(`${date}T${time}:00${offset}`);
+  const normalizedTime = time.length >= 5 ? time.slice(0, 5) : time;
+  const offset = getShopTimezoneOffset(date, normalizedTime);
+  const parsed = parseISO(`${date}T${normalizedTime}:00${offset}`);
 
   if (Number.isNaN(parsed.getTime())) {
     throw new Error('Data o orario non validi');
