@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect, useCallback, useMemo } from 'react';
+import { useState, useTransition, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -131,6 +131,7 @@ export function BookingWizard({
   const [pending, startTransition] = useTransition();
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [loadingDates, setLoadingDates] = useState(false);
+  const currentSlotRequestRef = useRef(0);
   const [barberStatuses, setBarberStatuses] = useState<BarberBookingStatus[]>([]);
   const [loadingBarberStatuses, setLoadingBarberStatuses] = useState(false);
   const [confirmation, setConfirmation] = useState<BookingConfirmation | null>(null);
@@ -153,40 +154,76 @@ export function BookingWizard({
   const loadBarberStatuses = useCallback(async () => {
     if (selectedServices.length === 0) return;
     setLoadingBarberStatuses(true);
-    const statuses = await getBarbersBookingAvailability(totalDuration, false, hasCutService);
-    setBarberStatuses(statuses);
-    setLoadingBarberStatuses(false);
+    try {
+      const statuses = await getBarbersBookingAvailability(totalDuration, false, hasCutService);
+      setBarberStatuses(statuses);
+    } catch (e) {
+      console.error('Errore nel caricamento disponibilità barbieri:', e);
+    } finally {
+      setLoadingBarberStatuses(false);
+    }
   }, [selectedServices.length, totalDuration, hasCutService]);
 
   const loadDates = useCallback(async () => {
-    if (selectedServices.length === 0) return;
+    if (selectedServices.length === 0) {
+      setLoadingDates(false);
+      return;
+    }
     setLoadingDates(true);
-    const result = await getAvailableDates(totalDuration, barberId, undefined, false, hasCutService);
-    setDates(result);
-    setDate((current) => {
-      if (result.length === 0) return null;
-      if (current && result.includes(current)) return current;
-      return result[0];
-    });
-    setLoadingDates(false);
+    try {
+      const result = await getAvailableDates(totalDuration, barberId, undefined, false, hasCutService);
+      setDates(result);
+      setDate((current) => {
+        if (result.length === 0) return null;
+        if (current && result.includes(current)) return current;
+        return result[0];
+      });
+    } catch (e) {
+      console.error('Errore nel caricamento date disponibili:', e);
+      setDates([]);
+      setDate(null);
+    } finally {
+      setLoadingDates(false);
+    }
   }, [selectedServices.length, totalDuration, barberId, hasCutService]);
 
   const loadSlots = useCallback(async () => {
-    if (selectedServices.length === 0 || !date) return;
+    if (selectedServices.length === 0 || !date) {
+      setLoadingSlots(false);
+      setSlots([]);
+      setSlotsDetail([]);
+      return;
+    }
+    const requestId = ++currentSlotRequestRef.current;
     setLoadingSlots(true);
-    const res = await getAvailableSlots(
-      barberId,
-      date,
-      totalDuration,
-      undefined,
-      false,
-      hasCutService
-    );
-    setSlots(res.slots ?? []);
-    setSlotsDetail(res.slotsDetail ?? []);
-    setFallbackNotice(res.fallbackNotice ?? null);
-    setSlotsUnavailable(Boolean(res.unavailable));
-    setLoadingSlots(false);
+    try {
+      const res = await getAvailableSlots(
+        barberId,
+        date,
+        totalDuration,
+        undefined,
+        false,
+        hasCutService
+      );
+      if (requestId === currentSlotRequestRef.current) {
+        setSlots(res?.slots ?? []);
+        setSlotsDetail(res?.slotsDetail ?? []);
+        setFallbackNotice(res?.fallbackNotice ?? null);
+        setSlotsUnavailable(Boolean(res?.unavailable));
+      }
+    } catch (err) {
+      console.error('Errore nel caricamento degli orari disponibili:', err);
+      if (requestId === currentSlotRequestRef.current) {
+        setSlots([]);
+        setSlotsDetail([]);
+        setFallbackNotice(null);
+        setSlotsUnavailable(false);
+      }
+    } finally {
+      if (requestId === currentSlotRequestRef.current) {
+        setLoadingSlots(false);
+      }
+    }
   }, [selectedServices.length, totalDuration, barberId, date, hasCutService]);
 
   useEffect(() => {
@@ -204,6 +241,9 @@ export function BookingWizard({
   useEffect(() => {
     if (step === 2 && date && selectedServices.length > 0) {
       loadSlots();
+    } else if (!date) {
+      setLoadingSlots(false);
+      setSlots([]);
     }
   }, [step, date, selectedServices.length, barberId, loadSlots]);
 
@@ -732,7 +772,7 @@ export function BookingWizard({
                   <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} />
                 ) : slots.length === 0 ? (
                   <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-center">
-                    <p className="text-sm text-white/70">Nessun orario libero per questo giorno.</p>
+                    <p className="text-sm text-white/70">Nessun orario disponibile per questo giorno.</p>
                     <p className="text-xs text-white/40 mt-1">Seleziona un&apos;altra data dal calendario in alto.</p>
                   </div>
                 ) : (

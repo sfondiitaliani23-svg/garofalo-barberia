@@ -236,18 +236,29 @@ export function AdminAppointmentForm({
 
 
   const loadSlots = useCallback(async () => {
-    if (selectedServiceIds.length === 0 || !date) return;
+    if (selectedServiceIds.length === 0 || !date) {
+      setLoadingSlots(false);
+      setSlots([]);
+      return;
+    }
     setLoadingSlots(true);
-    const { slots: s, unavailable } = await getAvailableSlots(
-      barberId,
-      date,
-      customDuration,
-      appointment?.id ?? null,
-      true
-    );
-    setSlots(s);
-    setSlotsUnavailable(Boolean(unavailable));
-    setLoadingSlots(false);
+    try {
+      const { slots: s, unavailable } = await getAvailableSlots(
+        barberId,
+        date,
+        customDuration,
+        appointment?.id ?? null,
+        true
+      );
+      setSlots(s ?? []);
+      setSlotsUnavailable(Boolean(unavailable));
+    } catch (err) {
+      console.error('Errore nel caricamento slot admin:', err);
+      setSlots([]);
+      setSlotsUnavailable(false);
+    } finally {
+      setLoadingSlots(false);
+    }
   }, [barberId, date, selectedServiceIds, appointment?.id, customDuration]);
 
   const loadDates = useCallback(async () => {

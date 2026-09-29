@@ -53,15 +53,24 @@ export function RescheduleForm({
   }, [durationMinutes, barberId, appointmentId, currentDate]);
 
   const loadSlots = useCallback(async () => {
-    if (!date) return;
+    if (!date) {
+      setLoadingSlots(false);
+      return;
+    }
     setLoadingSlots(true);
-    const { slots: s, error } = await getAvailableSlots(barberId, date, durationMinutes, appointmentId);
-    const withCurrent = date === currentDate && !s.includes(currentTime)
-      ? [currentTime, ...s].sort()
-      : s;
-    setSlots(withCurrent);
-    if (error) toast.error(error);
-    setLoadingSlots(false);
+    try {
+      const { slots: s, error } = await getAvailableSlots(barberId, date, durationMinutes, appointmentId);
+      const withCurrent = date === currentDate && !s.includes(currentTime)
+        ? [currentTime, ...s].sort()
+        : s;
+      setSlots(withCurrent ?? []);
+      if (error) toast.error(error);
+    } catch (err) {
+      console.error('Errore nel recupero orari:', err);
+      setSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
   }, [barberId, date, durationMinutes, appointmentId, currentDate, currentTime]);
 
   useEffect(() => {
@@ -123,7 +132,7 @@ export function RescheduleForm({
           {loadingSlots ? (
             <p className="text-sm text-white/50">Caricamento orari...</p>
           ) : slots.length === 0 ? (
-            <p className="text-sm text-white/50">Nessun orario libero per questo giorno.</p>
+            <p className="text-sm text-white/50">Nessun orario disponibile per questo giorno.</p>
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
               {slots.map((t) => (
