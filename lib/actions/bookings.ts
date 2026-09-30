@@ -215,7 +215,9 @@ export async function createAppointment(input: CreateAppointmentInput) {
         startsAt: startsAtBase,
         customerName,
         customerPhone,
+        customerEmail: customerEmail ?? undefined,
         notes: input.notes,
+        createdAt: new Date(),
       });
     } catch (notifyError) {
       console.error('createAppointment notification failed:', notifyError);

@@ -36,13 +36,14 @@ function readEmailLogoBuffer() {
 }
 
 export function buildTransactionalEmail(params: {
-  to: string;
+  to: string | string[];
   subject: string;
   html: string;
   text: string;
+  replyTo?: string;
 }) {
   const from = getResendFromAddress();
-  const replyTo = getResendReplyTo();
+  const replyTo = params.replyTo ?? getResendReplyTo();
   const logo = readEmailLogoBuffer();
 
   return {

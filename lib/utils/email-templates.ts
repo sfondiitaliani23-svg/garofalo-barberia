@@ -178,11 +178,13 @@ export function renderEmailTemplate(options: EmailTemplateOptions) {
 export function renderAdminBookingEmailHtml(data: {
   customerName: string;
   phone: string;
+  customerEmail?: string;
   serviceName: string;
   price: string;
   barberName: string;
   dateStr: string;
   timeStr: string;
+  receivedAtStr?: string;
   notes?: string;
 }) {
   const adminUrl = `${siteUrl()}/admin/prenotazioni`;
@@ -196,9 +198,11 @@ export function renderAdminBookingEmailHtml(data: {
     detailRows: [
       { label: 'Cliente', value: escapeHtml(data.customerName), highlight: true },
       { label: 'Telefono', value: escapeHtml(data.phone) },
-      { label: 'Servizio', value: `${escapeHtml(data.serviceName)} · ${escapeHtml(data.price)}` },
-      { label: 'Barbiere', value: escapeHtml(data.barberName) },
-      { label: 'Data e ora', value: `${escapeHtml(data.dateStr)} alle ${escapeHtml(data.timeStr)}`, highlight: true },
+      { label: 'Email cliente', value: escapeHtml(data.customerEmail?.trim() || 'Non indicata') },
+      { label: 'Servizio scelto', value: `${escapeHtml(data.serviceName)} · ${escapeHtml(data.price)}` },
+      { label: 'Operatore assegnato', value: escapeHtml(data.barberName) },
+      { label: 'Data e ora appuntamento', value: `${escapeHtml(data.dateStr)} alle ${escapeHtml(data.timeStr)}`, highlight: true },
+      ...(data.receivedAtStr ? [{ label: 'Ricevuta il', value: escapeHtml(data.receivedAtStr) }] : []),
       ...(data.notes ? [{ label: 'Note cliente', value: escapeHtml(data.notes) }] : []),
     ],
     cta: { href: adminUrl, label: 'Apri calendario admin' },

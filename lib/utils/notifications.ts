@@ -16,15 +16,22 @@ export interface BookingNotificationData {
   startsAt: Date;
   customerName: string;
   customerPhone: string;
+  customerEmail?: string;
   notes?: string;
+  createdAt?: Date;
 }
 
 function formatBookingDetails(data: BookingNotificationData) {
   const { dateStr, timeStr } = formatShopBookingDateTime(data.startsAt);
   const price = `€${(data.priceCents / 100).toFixed(0)}`;
   const phone = data.customerPhone?.trim() || 'Non indicato';
+  const email = data.customerEmail?.trim() || 'Non indicata';
+  const receivedAt = data.createdAt
+    ? formatShopBookingDateTime(data.createdAt)
+    : formatShopBookingDateTime(new Date());
+  const receivedAtStr = `${receivedAt.dateStr} alle ${receivedAt.timeStr}`;
 
-  return { dateStr, timeStr, price, phone };
+  return { dateStr, timeStr, price, phone, email, receivedAtStr };
 }
 
 export function buildWhatsAppBookingMessage(data: BookingNotificationData): string {
@@ -91,13 +98,79 @@ export async function sendAdminBookingPush(data: BookingNotificationData) {
   }
 }
 
+function getAdminEmails(): string[] {
+  const raw = process.env.ADMIN_EMAIL?.trim() || process.env.BOOKING_NOTIFICATION_EMAIL?.trim();
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean);
+}
+
 function getBookingNotificationEmail(): string | undefined {
   return process.env.BOOKING_NOTIFICATION_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim();
 }
 
 export async function sendAdminBookingEmail(data: BookingNotificationData) {
-  // E-mail di conferma prenotazione disabilitate su richiesta del proprietario
-  return { ok: true, reason: 'disabled' as const };
+  const recipients = getAdminEmails();
+  if (recipients.length === 0) {
+    console.warn('[EMAIL ADMIN] ADMIN_EMAIL non configurata. Invio notifica admin saltato.');
+    return { ok: true, reason: 'not_configured' as const };
+  }
+
+  if (!resend) {
+    console.warn('[EMAIL ADMIN] RESEND_API_KEY non configurata. Invio notifica admin saltato.');
+    return { ok: false, reason: 'not_configured' as const };
+  }
+
+  const { dateStr, timeStr, price, phone, email, receivedAtStr } = formatBookingDetails(data);
+  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni`;
+  const subject = `Nuova prenotazione - ${data.customerName} - ${dateStr} ${timeStr}`;
+
+  const text =
+    `Nuova prenotazione\n\n` +
+    `Nome cliente: ${data.customerName}\n` +
+    `Telefono: ${phone}\n` +
+    `Email cliente: ${email}\n` +
+    `Servizio scelto: ${data.serviceName} (${price})\n` +
+    `Operatore assegnato: ${data.barberName}\n` +
+    `Data e ora: ${dateStr} alle ${timeStr}\n` +
+    `Data/ora di ricezione: ${receivedAtStr}\n` +
+    (data.notes ? `Note del cliente: ${data.notes}\n` : '') +
+    `\nCalendario admin: ${adminUrl}`;
+
+  try {
+    const { error } = await resend.emails.send(
+      buildTransactionalEmail({
+        to: recipients.length === 1 ? recipients[0] : recipients,
+        subject,
+        text,
+        html: renderAdminBookingEmailHtml({
+          customerName: data.customerName,
+          phone,
+          customerEmail: data.customerEmail,
+          serviceName: data.serviceName,
+          price,
+          barberName: data.barberName,
+          dateStr,
+          timeStr,
+          receivedAtStr,
+          notes: data.notes,
+        }),
+        replyTo: data.customerEmail?.trim() || undefined,
+      })
+    );
+
+    if (error) {
+      console.error('[EMAIL ADMIN] invio fallito:', error);
+      return { ok: false, reason: 'send_failed' as const };
+    }
+
+    return { ok: true as const };
+  } catch (error) {
+    console.error('[EMAIL ADMIN] invio fallito:', error);
+    return { ok: false, reason: 'send_failed' as const };
+  }
 }
 
 export async function sendAdminBookingWeb3Forms(data: BookingNotificationData) {
