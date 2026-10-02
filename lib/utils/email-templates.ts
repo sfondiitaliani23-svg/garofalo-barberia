@@ -246,6 +246,68 @@ export function renderAdminCancellationEmailHtml(data: {
   });
 }
 
+export function renderCustomerBookingEmailHtml(data: {
+  customerName: string;
+  serviceName: string;
+  price: string;
+  barberName: string;
+  dateStr: string;
+  timeStr: string;
+  notes?: string;
+}) {
+  const areaUrl = `${siteUrl()}/area-cliente/appuntamenti`;
+  const notes = data.notes?.trim();
+
+  return renderEmailTemplate({
+    preheader: `Prenotazione confermata per ${data.dateStr} alle ${data.timeStr}`,
+    badge: 'Confermata',
+    eyebrow: 'La tua prenotazione',
+    title: `Ciao ${escapeHtml(data.customerName)},`,
+    intro: 'La prenotazione è confermata. Ti aspettiamo in salone: qui sotto trovi il riepilogo.',
+    detailRows: [
+      { label: 'Servizio', value: `${escapeHtml(data.serviceName)} · ${escapeHtml(data.price)}`, highlight: true },
+      { label: 'Barbiere', value: escapeHtml(data.barberName) },
+      { label: 'Data', value: escapeHtml(data.dateStr) },
+      { label: 'Orario', value: escapeHtml(data.timeStr), highlight: true },
+      { label: 'Dove siamo', value: escapeHtml(SITE_CONFIG.address) },
+      ...(notes ? [{ label: 'Note', value: escapeHtml(notes) }] : []),
+    ],
+    cta: { href: areaUrl, label: 'Vedi il tuo appuntamento' },
+    footerNote: `Puoi modificare o disdire entro ${SITE_CONFIG.cancellationMinutes} minuti prima dell’orario dalla tua area cliente.`,
+  });
+}
+
+export function renderCustomerCancellationEmailHtml(data: {
+  customerName: string;
+  serviceName: string;
+  price: string;
+  barberName: string;
+  dateStr: string;
+  timeStr: string;
+}) {
+  const bookUrl = `${siteUrl()}/prenota`;
+
+  return renderEmailTemplate({
+    preheader: `La prenotazione del ${data.dateStr} alle ${data.timeStr} è stata annullata`,
+    badge: 'Annullata',
+    eyebrow: 'Prenotazione annullata',
+    title: `Ciao ${escapeHtml(data.customerName)},`,
+    intro: 'La prenotazione è stata annullata. Se vuoi un altro orario puoi prenotarne uno nuovo dal sito.',
+    detailRows: [
+      { label: 'Servizio', value: `${escapeHtml(data.serviceName)} · ${escapeHtml(data.price)}` },
+      { label: 'Barbiere', value: escapeHtml(data.barberName) },
+      {
+        label: 'Appuntamento annullato',
+        value: `${escapeHtml(data.dateStr)} alle ${escapeHtml(data.timeStr)}`,
+        highlight: true,
+      },
+      { label: 'Dove siamo', value: escapeHtml(SITE_CONFIG.address) },
+    ],
+    cta: { href: bookUrl, label: 'Prenota di nuovo' },
+    footerNote: 'Se non hai richiesto tu questa disdetta, contattaci su WhatsApp o telefono.',
+  });
+}
+
 export function renderCustomerReminderEmailHtml(data: {
   customerName: string;
   serviceName: string;

@@ -318,6 +318,7 @@ export async function cancelAppointment(appointmentId: string) {
         startsAt: new Date(apt.starts_at),
         customerName: apt.customer_name,
         customerPhone: apt.customer_phone,
+        customerEmail: apt.customer_email ?? undefined,
         notes: apt.notes ?? undefined,
       });
     } catch (notifyError) {

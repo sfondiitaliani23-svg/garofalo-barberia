@@ -11,6 +11,44 @@ export function getResendReplyTo() {
   return process.env.RESEND_REPLY_TO ?? process.env.ADMIN_EMAIL ?? SITE_CONFIG.email;
 }
 
+/** Caselle che non devono mai ricevere mail automatiche del sito. */
+const HARDCODED_STAFF_INBOXES = ['luigigarofalo1996@gmail.com'];
+
+export function collectStaffInboxes(): Set<string> {
+  const values = [
+    ...HARDCODED_STAFF_INBOXES,
+    process.env.ADMIN_EMAIL,
+    process.env.BOOKING_NOTIFICATION_EMAIL,
+    process.env.RESEND_REPLY_TO,
+  ];
+  const inboxes = new Set<string>();
+
+  for (const value of values) {
+    for (const part of (value ?? '').split(',')) {
+      const email = part.trim().toLowerCase();
+      if (email.includes('@')) inboxes.add(email);
+    }
+  }
+
+  return inboxes;
+}
+
+/** Toglie le caselle dello staff. La mail di prenotazione può andare solo al cliente. */
+export function filterCustomerRecipients(to: string | string[]): string[] {
+  const blocked = collectStaffInboxes();
+  const list = Array.isArray(to) ? to : [to];
+  const unique = new Set<string>();
+
+  for (const raw of list) {
+    const email = raw.trim();
+    if (!email.includes('@')) continue;
+    if (blocked.has(email.toLowerCase())) continue;
+    unique.add(email);
+  }
+
+  return [...unique];
+}
+
 export function isResendSandboxFrom(from = getResendFromAddress()) {
   return from.includes('@resend.dev');
 }
@@ -42,13 +80,16 @@ export function buildTransactionalEmail(params: {
   text: string;
   replyTo?: string;
 }) {
+  const recipients = filterCustomerRecipients(params.to);
+  if (recipients.length === 0) return null;
+
   const from = getResendFromAddress();
   const replyTo = params.replyTo ?? getResendReplyTo();
   const logo = readEmailLogoBuffer();
 
   return {
     from,
-    to: params.to,
+    to: recipients.length === 1 ? recipients[0] : recipients,
     subject: params.subject,
     html: params.html,
     text: params.text,

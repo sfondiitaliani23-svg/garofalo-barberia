@@ -1,9 +1,9 @@
 import { Resend } from 'resend';
 import { SITE_CONFIG } from '@/lib/site-config';
-import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
+import { buildTransactionalEmail, filterCustomerRecipients } from '@/lib/utils/email-delivery';
 import {
-  renderAdminBookingEmailHtml,
-  renderAdminCancellationEmailHtml,
+  renderCustomerBookingEmailHtml,
+  renderCustomerCancellationEmailHtml,
 } from '@/lib/utils/email-templates';
 import { formatShopBookingDateTime } from '@/lib/utils/booking-datetime';
 
@@ -98,187 +98,149 @@ export async function sendAdminBookingPush(data: BookingNotificationData) {
   }
 }
 
-function getAdminEmails(): string[] {
-  const raw = process.env.ADMIN_EMAIL?.trim() || process.env.BOOKING_NOTIFICATION_EMAIL?.trim();
-  if (!raw) return [];
-  return raw
-    .split(',')
-    .map((e) => e.trim())
-    .filter(Boolean);
+function visibleCustomerNotes(notes?: string) {
+  const cleaned = notes?.replace(/\[Combo:\s*combo_[^\]]+\]/gi, '').trim();
+  return cleaned || undefined;
 }
 
-function getBookingNotificationEmail(): string | undefined {
-  return process.env.BOOKING_NOTIFICATION_EMAIL?.trim() || process.env.ADMIN_EMAIL?.trim();
+/** Lo staff non riceve mail di prenotazione. La funzione resta per non riattivare l'invio per sbaglio. */
+export async function sendAdminBookingEmail(_data: BookingNotificationData) {
+  return { ok: true, reason: 'disabled' as const };
 }
 
-export async function sendAdminBookingEmail(data: BookingNotificationData) {
-  const recipients = getAdminEmails();
-  if (recipients.length === 0) {
-    console.warn('[EMAIL ADMIN] ADMIN_EMAIL non configurata. Invio notifica admin saltato.');
-    return { ok: true, reason: 'not_configured' as const };
+export async function sendCustomerBookingEmail(data: BookingNotificationData) {
+  const customerEmail = data.customerEmail?.trim() ?? '';
+  if (!customerEmail) {
+    return { ok: true, reason: 'no_customer_email' as const };
+  }
+
+  if (filterCustomerRecipients(customerEmail).length === 0) {
+    console.warn('[EMAIL CLIENTE] invio bloccato: il destinatario è una casella dello staff.');
+    return { ok: true, reason: 'staff_blocked' as const };
   }
 
   if (!resend) {
-    console.warn('[EMAIL ADMIN] RESEND_API_KEY non configurata. Invio notifica admin saltato.');
+    console.warn('[EMAIL CLIENTE] RESEND_API_KEY non configurata. Conferma al cliente saltata.');
     return { ok: false, reason: 'not_configured' as const };
   }
 
-  const { dateStr, timeStr, price, phone, email, receivedAtStr } = formatBookingDetails(data);
-  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni`;
-  const subject = `Nuova prenotazione - ${data.customerName} - ${dateStr} ${timeStr}`;
-
+  const { dateStr, timeStr, price } = formatBookingDetails(data);
+  const notes = visibleCustomerNotes(data.notes);
+  const subject = `Prenotazione confermata - ${dateStr} alle ${timeStr}`;
   const text =
-    `Nuova prenotazione\n\n` +
-    `Nome cliente: ${data.customerName}\n` +
-    `Telefono: ${phone}\n` +
-    `Email cliente: ${email}\n` +
-    `Servizio scelto: ${data.serviceName} (${price})\n` +
-    `Operatore assegnato: ${data.barberName}\n` +
-    `Data e ora: ${dateStr} alle ${timeStr}\n` +
-    `Data/ora di ricezione: ${receivedAtStr}\n` +
-    (data.notes ? `Note del cliente: ${data.notes}\n` : '') +
-    `\nCalendario admin: ${adminUrl}`;
+    `Ciao ${data.customerName},\n\n` +
+    `la tua prenotazione da Garofalo Barberia è confermata.\n\n` +
+    `Servizio: ${data.serviceName} (${price})\n` +
+    `Barbiere: ${data.barberName}\n` +
+    `Data: ${dateStr}\n` +
+    `Orario: ${timeStr}\n` +
+    (notes ? `Note: ${notes}\n` : '') +
+    `\nTi aspettiamo in salone.`;
+
+  const payload = buildTransactionalEmail({
+    to: customerEmail,
+    subject,
+    text,
+    html: renderCustomerBookingEmailHtml({
+      customerName: data.customerName,
+      serviceName: data.serviceName,
+      price,
+      barberName: data.barberName,
+      dateStr,
+      timeStr,
+      notes,
+    }),
+  });
+
+  if (!payload) {
+    return { ok: true, reason: 'staff_blocked' as const };
+  }
 
   try {
-    const { error } = await resend.emails.send(
-      buildTransactionalEmail({
-        to: recipients.length === 1 ? recipients[0] : recipients,
-        subject,
-        text,
-        html: renderAdminBookingEmailHtml({
-          customerName: data.customerName,
-          phone,
-          customerEmail: data.customerEmail,
-          serviceName: data.serviceName,
-          price,
-          barberName: data.barberName,
-          dateStr,
-          timeStr,
-          receivedAtStr,
-          notes: data.notes,
-        }),
-        replyTo: data.customerEmail?.trim() || undefined,
-      })
-    );
+    const { error } = await resend.emails.send(payload);
 
     if (error) {
-      console.error('[EMAIL ADMIN] invio fallito:', error);
+      console.error('[EMAIL CLIENTE] conferma prenotazione fallita:', error);
       return { ok: false, reason: 'send_failed' as const };
     }
 
     return { ok: true as const };
   } catch (error) {
-    console.error('[EMAIL ADMIN] invio fallito:', error);
+    console.error('[EMAIL CLIENTE] conferma prenotazione fallita:', error);
     return { ok: false, reason: 'send_failed' as const };
   }
 }
 
-export async function sendAdminBookingWeb3Forms(data: BookingNotificationData) {
-  const accessKey = process.env.WEB3FORMS_ACCESS_KEY;
-  if (!accessKey) return { ok: false, reason: 'not_configured' };
-
-  const { dateStr, timeStr, price, phone } = formatBookingDetails(data);
-
-  try {
-    const response = await fetch('https://api.web3forms.com/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        access_key: accessKey,
-        subject: `Nuova prenotazione — ${data.customerName} — ${dateStr} ${timeStr}`,
-        from_name: 'Garofalo Barberia',
-        name: data.customerName,
-        phone,
-        servizio: data.serviceName,
-        barbiere: data.barberName,
-        data: dateStr,
-        orario: timeStr,
-        prezzo: price,
-        note: data.notes ?? '',
-        message:
-          `Nuova prenotazione\n\n` +
-          `Cliente: ${data.customerName}\n` +
-          `Telefono: ${phone}\n` +
-          `Servizio: ${data.serviceName} (${price})\n` +
-          `Barbiere: ${data.barberName}\n` +
-          `Data: ${dateStr} alle ${timeStr}` +
-          (data.notes ? `\nNote: ${data.notes}` : ''),
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok || !result.success) {
-      return { ok: false, reason: 'send_failed' };
-    }
-
-    return { ok: true };
-  } catch (error) {
-    console.error('Web3Forms notification failed:', error);
-    return { ok: false, reason: 'send_failed' };
-  }
-}
-
 export async function notifyAdminNewBooking(data: BookingNotificationData) {
-  const [push, email, web3] = await Promise.all([
+  const [push, email] = await Promise.all([
     sendAdminBookingPush(data),
-    sendAdminBookingEmail(data),
-    sendAdminBookingWeb3Forms(data),
+    sendCustomerBookingEmail(data),
   ]);
 
-  const delivered = [push, email, web3].some((r) => r.ok);
-
   return {
-    ok: delivered,
+    ok: push.ok || email.ok,
     push,
     email,
-    web3,
+    web3: { ok: false, reason: 'disabled' as const },
   };
 }
 
-export async function sendAdminCancellationEmail(data: BookingNotificationData) {
-  const notificationEmail = getBookingNotificationEmail();
-  if (!resend || !notificationEmail) return { ok: false, reason: 'not_configured' };
+/** Lo staff non riceve mail di disdetta. */
+export async function sendAdminCancellationEmail(_data: BookingNotificationData) {
+  return { ok: true, reason: 'disabled' as const };
+}
 
-  const { dateStr, timeStr, price, phone } = formatBookingDetails(data);
-  const adminUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://garofalo-barberia.vercel.app'}/admin/prenotazioni/storico`;
-  const subject = `Disdetta cliente — ${data.customerName} — ${dateStr} ${timeStr}`;
+export async function sendCustomerCancellationEmail(data: BookingNotificationData) {
+  const customerEmail = data.customerEmail?.trim() ?? '';
+  if (!customerEmail) {
+    return { ok: true, reason: 'no_customer_email' as const };
+  }
+
+  if (filterCustomerRecipients(customerEmail).length === 0) {
+    console.warn('[EMAIL CLIENTE] disdetta bloccata: il destinatario è una casella dello staff.');
+    return { ok: true, reason: 'staff_blocked' as const };
+  }
+
+  if (!resend) {
+    return { ok: false, reason: 'not_configured' as const };
+  }
+
+  const { dateStr, timeStr, price } = formatBookingDetails(data);
+  const subject = `Prenotazione annullata - ${dateStr} alle ${timeStr}`;
   const text =
-    `Un cliente ha disdetto la prenotazione\n\n` +
-    `Cliente: ${data.customerName} (${phone})\n` +
-    `Servizio: ${data.serviceName} — ${price}\n` +
-    `Barbiere: ${data.barberName}\n` +
-    `Appuntamento: ${dateStr} alle ${timeStr}\n` +
-    (data.notes ? `Note: ${data.notes}\n` : '') +
-    `\nStorico prenotazioni: ${adminUrl}`;
+    `Ciao ${data.customerName},\n\n` +
+    `la prenotazione del ${dateStr} alle ${timeStr} è stata annullata.\n\n` +
+    `Servizio: ${data.serviceName} (${price})\n` +
+    `Barbiere: ${data.barberName}\n`;
+
+  const payload = buildTransactionalEmail({
+    to: customerEmail,
+    subject,
+    text,
+    html: renderCustomerCancellationEmailHtml({
+      customerName: data.customerName,
+      serviceName: data.serviceName,
+      price,
+      barberName: data.barberName,
+      dateStr,
+      timeStr,
+    }),
+  });
+
+  if (!payload) {
+    return { ok: true, reason: 'staff_blocked' as const };
+  }
 
   try {
-    const { error } = await resend.emails.send(
-      buildTransactionalEmail({
-        to: notificationEmail,
-        subject,
-        text,
-        html: renderAdminCancellationEmailHtml({
-          customerName: data.customerName,
-          phone,
-          serviceName: data.serviceName,
-          price,
-          barberName: data.barberName,
-          dateStr,
-          timeStr,
-          notes: data.notes,
-        }),
-      })
-    );
-
+    const { error } = await resend.emails.send(payload);
     if (error) {
-      console.error('Cancellation email failed:', error);
-      return { ok: false, reason: 'send_failed' };
+      console.error('[EMAIL CLIENTE] disdetta fallita:', error);
+      return { ok: false, reason: 'send_failed' as const };
     }
-
-    return { ok: true };
+    return { ok: true as const };
   } catch (error) {
-    console.error('Cancellation email failed:', error);
-    return { ok: false, reason: 'send_failed' };
+    console.error('[EMAIL CLIENTE] disdetta fallita:', error);
+    return { ok: false, reason: 'send_failed' as const };
   }
 }
 
@@ -328,7 +290,7 @@ export async function sendAdminCancellationPush(data: BookingNotificationData) {
 
 export async function notifyAdminBookingCancellation(data: BookingNotificationData) {
   const [email, push] = await Promise.all([
-    sendAdminCancellationEmail(data),
+    sendCustomerCancellationEmail(data),
     sendAdminCancellationPush(data),
   ]);
 

@@ -1,7 +1,8 @@
 import { readFileSync } from 'fs';
 import { Resend } from 'resend';
+import { filterCustomerRecipients } from '../lib/utils/email-delivery';
 import {
-  renderAdminBookingEmailHtml,
+  renderCustomerBookingEmailHtml,
   renderCustomerReminderEmailHtml,
 } from '../lib/utils/email-templates';
 
@@ -11,14 +12,18 @@ const get = (key: string) => env.match(new RegExp(`^${key}=(.+)$`, 'm'))?.[1]?.t
 const resend = new Resend(get('RESEND_API_KEY'));
 const from = get('RESEND_FROM');
 const replyTo = get('RESEND_REPLY_TO');
-const to = process.argv[2] ?? 'luigigarofalo1996@gmail.com';
+const requested = process.argv[2]?.trim();
+const [to] = requested ? filterCustomerRecipients(requested) : [];
+if (!to) {
+  console.error('Passa l\'email di un cliente. Le caselle dello staff sono bloccate.');
+  process.exit(1);
+}
 
 const previews = [
   {
-    subject: '[Anteprima] Nuova prenotazione — design email',
-    html: renderAdminBookingEmailHtml({
+    subject: '[Anteprima] Prenotazione confermata — design email',
+    html: renderCustomerBookingEmailHtml({
       customerName: 'Marco Rossi',
-      phone: '320 123 4567',
       serviceName: 'Taglio e shampoo',
       price: '€17',
       barberName: 'Luigi Garofalo',

@@ -935,7 +935,7 @@ export function BookingWizard({
                   autoComplete="email"
                   className="mt-1 bg-[#1a1a1a] border-white/15"
                 />
-                <p className="mt-1 text-xs text-white/45">Per ricevere anche il promemoria via email</p>
+                <p className="mt-1 text-xs text-white/45">Per ricevere la conferma della prenotazione via email</p>
               </div>
               <div>
                 <Label htmlFor="notes">Note (opzionale)</Label>
