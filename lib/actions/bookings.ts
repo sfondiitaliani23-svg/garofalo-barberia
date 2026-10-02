@@ -12,6 +12,8 @@ import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appoin
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
 import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
+import { isValidCustomerEmail } from '@/lib/utils/customer-email';
+import { filterCustomerRecipients } from '@/lib/utils/email-delivery';
 import { isBarberAllowedForCut, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
 import { isCutService } from '@/lib/data/services';
 
@@ -41,17 +43,31 @@ export async function createAppointment(input: CreateAppointmentInput) {
       return { ok: false, error: 'Compila nome e telefono per confermare la prenotazione.' };
     }
 
-    const serviceIds = input.serviceIds || (input.serviceId ? [input.serviceId] : []);
-    if (serviceIds.length === 0 || !input.date || !input.time) {
-      return { ok: false, error: 'Seleziona almeno un servizio, la data e l\'orario prima di confermare.' };
-    }
-
     const sessionUser = await getSession();
     if (sessionUser) {
       await ensureProfileForAuthUser(sessionUser);
     }
 
     const profile = await getProfile();
+    const typedEmail = input.customerEmail?.trim() ?? '';
+    const customerEmail = typedEmail || profile?.email?.trim() || sessionUser?.email?.trim() || '';
+    if (!isValidCustomerEmail(customerEmail)) {
+      return {
+        ok: false,
+        error: 'Inserisci un’email valida: è obbligatoria per ricevere la conferma della prenotazione.',
+      };
+    }
+    if (filterCustomerRecipients(customerEmail).length === 0) {
+      return {
+        ok: false,
+        error: 'Usa la tua email personale per ricevere la conferma della prenotazione.',
+      };
+    }
+
+    const serviceIds = input.serviceIds || (input.serviceId ? [input.serviceId] : []);
+    if (serviceIds.length === 0 || !input.date || !input.time) {
+      return { ok: false, error: 'Seleziona almeno un servizio, la data e l\'orario prima di confermare.' };
+    }
 
     // Recupera tutti i servizi richiesti
     const { data: services, error: servicesError } = await supabase
@@ -133,12 +149,6 @@ export async function createAppointment(input: CreateAppointmentInput) {
         error: 'I servizi di taglio sono gestiti da Luigi Garofalo. Seleziona Luigi Garofalo per completare la prenotazione del taglio.',
       };
     }
-
-    const customerEmail =
-      input.customerEmail?.trim() ||
-      profile?.email?.trim() ||
-      sessionUser?.email?.trim() ||
-      null;
 
     // Applica promozione/sconto sul primo servizio come riferimento
     const promotionResult = await resolvePromotionForBooking(

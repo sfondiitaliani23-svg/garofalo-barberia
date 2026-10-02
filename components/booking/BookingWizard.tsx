@@ -22,6 +22,7 @@ import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid'
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
 import { resolvePromotionForBooking, validatePromotionCode } from '@/lib/actions/promotions';
 import { formatPrice, formatDuration, formatBarberRole } from '@/lib/utils';
+import { isValidCustomerEmail } from '@/lib/utils/customer-email';
 import type { Barber, Service } from '@/types/database';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -54,6 +55,7 @@ interface BookingConfirmation {
   date: string;
   time: string;
   customerName: string;
+  customerEmail: string;
   priceCents: number;
   originalPriceCents: number;
   discountCents: number;
@@ -345,6 +347,10 @@ export function BookingWizard({
       toast.error('Compila tutti i campi obbligatori');
       return;
     }
+    if (!isValidCustomerEmail(email)) {
+      toast.error('Inserisci un’email valida: è obbligatoria per ricevere la conferma della prenotazione.');
+      return;
+    }
 
     const effectiveBarberId = selectedSlotInfo?.barberId ?? barberId ?? defaultBarber?.id ?? null;
 
@@ -386,6 +392,7 @@ export function BookingWizard({
           date: date!,
           time: time!,
           customerName: name,
+          customerEmail: email.trim(),
           priceCents: result.priceCents ?? totalOriginalPrice,
           originalPriceCents: result.originalPriceCents ?? totalOriginalPrice,
           discountCents: result.discountCents ?? 0,
@@ -448,6 +455,9 @@ export function BookingWizard({
               </h2>
               <p className="text-xs text-white/40 mt-1 font-mono">
                 {confirmation.appointmentId ? `Rif: #${confirmation.appointmentId.replace('appointment_', '').substring(0, 10).toUpperCase()}` : 'Confermato'}
+              </p>
+              <p className="mt-3 max-w-md text-sm text-white/70">
+                La conferma è in arrivo su {confirmation.customerEmail}
               </p>
               
               <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-white/80">
@@ -925,17 +935,18 @@ export function BookingWizard({
                 <p className="mt-1 text-xs text-white/45">Per il promemoria WhatsApp 6 ore prima dell&apos;appuntamento</p>
               </div>
               <div>
-                <Label htmlFor="email">Email (opzionale)</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tua@email.com"
                   autoComplete="email"
                   className="mt-1 bg-[#1a1a1a] border-white/15"
                 />
-                <p className="mt-1 text-xs text-white/45">Per ricevere la conferma della prenotazione via email</p>
+                <p className="mt-1 text-xs text-white/45">Obbligatoria: qui ricevi la conferma della prenotazione</p>
               </div>
               <div>
                 <Label htmlFor="notes">Note (opzionale)</Label>
