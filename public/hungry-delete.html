@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hungry Delete – Micro-Interaction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon: #b5ff47;
+      --neon-dim: #8fd936;
+      --blue-btn: #4a8cff;
+      --blue-dark: #2563eb;
+      --card-bg: #ffffff;
+      --canvas-bg: #f4f3ef;
+      --dark-btn: #111111;
+      --text-main: #1a1a1a;
+      --text-muted: #6b7280;
+      --radius-pill: 999px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+
+    html, body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--canvas-bg);
+      background-image:
+        linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 40px;
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .header h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .badge {
+      display: inline-block;
+      background: var(--neon);
+      color: #000;
+      font-weight: 900;
+      font-size: inherit;
+      padding: 0 10px;
+      border-radius: 6px;
+      letter-spacing: -0.02em;
+    }
+    .header p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .cards-row {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 32px 28px 28px;
+      flex: 1;
+      min-width: 260px;
+      max-width: 330px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .card-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .card-label.success { color: #16a34a; }
+    .card-label.fail    { color: #dc2626; }
+
+    .delete-btn {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 26px;
+      border-radius: var(--radius-pill);
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      outline: none;
+      user-select: none;
+      overflow: visible;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .delete-btn:active { transform: scale(0.96); }
+    .delete-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+    .btn-success {
+      background: var(--dark-btn);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    }
+    .btn-success:hover:not(:disabled) {
+      box-shadow: 0 6px 24px rgba(0,0,0,0.45), 0 0 0 3px var(--neon);
+    }
+
+    .btn-fail {
+      background: var(--blue-btn);
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(74,140,255,0.40);
+    }
+    .btn-fail:hover:not(:disabled) {
+      background: var(--blue-dark);
+      box-shadow: 0 6px 24px rgba(74,140,255,0.55);
+    }
+
+    .trash-wrapper {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+    .trash-svg {
+      width: 26px;
+      height: 26px;
+      transition: transform 0.15s ease;
+    }
+
+    .progress-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px; height: 36px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .progress-ring circle {
+      fill: none;
+      stroke: var(--neon);
+      stroke-width: 3;
+      stroke-linecap: round;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+    }
+
+    .btn-label {
+      position: relative;
+      display: inline-flex;
+      gap: 0.5px;
+      overflow: visible;
+    }
+    .btn-label .letter {
+      display: inline-block;
+      position: relative;
+      transition: color 0.15s;
+    }
+
+    .check-icon {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%) scale(0);
+      opacity: 0;
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .footer-controls {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .sound-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-main);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .sound-toggle:hover { border-color: var(--neon); background: #f9ffe8; }
+    .sound-toggle .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      transition: background 0.2s;
+    }
+    .sound-toggle.off .dot { background: #d1d5db; }
+
+    .counter-badge {
+      background: var(--neon);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.82rem;
+      padding: 7px 16px;
+      border-radius: var(--radius-pill);
+      letter-spacing: 0.01em;
+      min-width: 140px;
+      text-align: center;
+    }
+    .counter-badge.pop {
+      animation: badge-pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes badge-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+    @keyframes letter-suck {
+      0%   { transform: translateX(0) scale(1); opacity: 1; }
+      60%  { transform: translateX(-12px) scale(0.7); opacity: 0.6; }
+      100% { transform: translateX(-28px) scale(0); opacity: 0; }
+    }
+    @keyframes trash-chomp {
+      0%,100% { transform: rotate(0deg) scale(1); }
+      25%      { transform: rotate(-8deg) scale(1.15); }
+      50%      { transform: rotate(0deg) scale(1.05); }
+      75%      { transform: rotate(6deg) scale(1.12); }
+    }
+    @keyframes trash-spit {
+      0%   { transform: rotate(0deg); }
+      20%  { transform: rotate(-10deg) scale(1.2); }
+      50%  { transform: rotate(12deg) scale(1.1); }
+      80%  { transform: rotate(-6deg); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    @keyframes check-in {
+      0%   { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+      60%  { transform: translate(-50%,-50%) scale(1.3); opacity: 1; }
+      100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+    }
+    @keyframes btn-shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-5px); }
+      40%      { transform: translateX(5px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+    @keyframes ring-fill {
+      from { stroke-dashoffset: 100; }
+      to   { stroke-dashoffset: 0; }
+    }
+
+    .flying-letter {
+      position: fixed;
+      pointer-events: none;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #4a8cff;
+      z-index: 9999;
+      animation: fly-letter 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes fly-letter {
+      0%   { transform: translate(0,0) scale(0) rotate(0deg); opacity: 0; }
+      15%  { transform: translate(0,0) scale(1.2) rotate(0deg); opacity: 1; }
+      60%  { transform: translate(var(--fly-x), var(--fly-y)) scale(1) rotate(var(--fly-r)); opacity: 1; }
+      85%  { transform: translate(var(--land-x), var(--land-y)) scale(0.9) rotate(var(--land-r)); opacity: 0.7; }
+      100% { transform: translate(var(--land-x), var(--land-y)) scale(0.8) rotate(var(--land-r)); opacity: 0; }
+    }
+
+    @media (max-width: 560px) {
+      .cards-row { flex-direction: column; align-items: center; }
+      .card { max-width: 100%; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <h1>Hungry <span class="badge">Delete</span></h1>
+    <p>Press a button. The bin eats the word.</p>
+  </header>
+
+  <div class="cards-row">
+
+    <!-- SUCCESS CARD -->
+    <div class="card">
+      <span class="card-label success">&#10003; &nbsp;SUCCEEDS</span>
+      <button class="delete-btn btn-success" id="btn-success" aria-label="Delete success">
+        <span class="trash-wrapper" id="trash-success-wrap">
+          <svg class="trash-svg" id="trash-svg-success" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 11v6M14 11v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <svg class="progress-ring" id="ring-success" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="14" id="ring-circle-success"/>
+          </svg>
+          <span class="check-icon" id="check-success">&#10004;</span>
+        </span>
+        <span class="btn-label" id="label-success">
+          <span class="letter">D</span><span class="letter">e</span><span class="letter">l</span><span class="letter">e</span><span class="letter">t</span><span class="letter">e</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- FAIL CARD -->
+    <div class="card">
+      <span class="card-label fail">&#10007; &nbsp;FAILS &#8211; SPITS IT BACK</span>
+      <button class="delete-btn btn-fail" id="btn-fail" aria-label="Delete fail">
+        <span class="trash-wrapper" id="trash-fail-wrap">
+          <svg class="trash-svg" id="trash-svg-fail" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 11v6M14 11v6" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="btn-label" id="label-fail">
+          <span class="letter">D</span><span class="letter">e</span><span class="letter">l</span><span class="letter">e</span><span class="letter">t</span><span class="letter">e</span>
+        </span>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="footer-controls">
+    <button class="sound-toggle" id="sound-toggle" aria-label="Toggle sound">
+      <span class="dot" id="sound-dot"></span>
+      <span id="sound-label">Sound: on</span>
+    </button>
+    <div class="counter-badge" id="counter-badge">0 letters eaten &#127859;</div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  var soundOn  = true;
+  var eaten    = 0;
+  var busySucc = false;
+  var busyFail = false;
+
+  var btnSucc       = document.getElementById('btn-success');
+  var btnFail       = document.getElementById('btn-fail');
+  var trashSuccSvg  = document.getElementById('trash-svg-success');
+  var trashFailSvg  = document.getElementById('trash-svg-fail');
+  var ringEl        = document.getElementById('ring-success');
+  var ringCircle    = document.getElementById('ring-circle-success');
+  var checkEl       = document.getElementById('check-success');
+  var labelSucc     = document.getElementById('label-success');
+  var labelFail     = document.getElementById('label-fail');
+  var soundToggle   = document.getElementById('sound-toggle');
+  var soundLabelEl  = document.getElementById('sound-label');
+  var counterBadge  = document.getElementById('counter-badge');
+
+  var audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function playTone(freq, type, duration, gain, startTime) {
+    var ctx = getCtx();
+    var osc = ctx.createOscillator();
+    var g   = ctx.createGain();
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, startTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, startTime + duration);
+    g.gain.setValueAtTime(gain, startTime);
+    g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }
+
+  function playEat() {
+    if (!soundOn) return;
+    var ctx = getCtx();
+    var now = ctx.currentTime;
+    [0, 0.08, 0.18, 0.30, 0.44, 0.60].forEach(function(t, i) {
+      playTone(280 + i * 60, 'sawtooth', 0.06, 0.13, now + t);
+    });
+    [0.75, 0.85].forEach(function(t, i) {
+      playTone(880 + i * 220, 'sine', 0.15, 0.10, now + t);
+    });
+  }
+
+  function playSpit() {
+    if (!soundOn) return;
+    var ctx = getCtx();
+    var now = ctx.currentTime;
+    playTone(120, 'sawtooth', 0.18, 0.18, now);
+    playTone(80,  'square',   0.25, 0.15, now + 0.10);
+    [0.30, 0.36, 0.42, 0.50, 0.56, 0.62].forEach(function(t, i) {
+      playTone(400 - i * 40, 'triangle', 0.08, 0.09, now + t);
+    });
+  }
+
+  function incrementCounter() {
+    eaten += 6;
+    counterBadge.textContent = eaten + ' letter' + (eaten !== 1 ? 's' : '') + ' eaten \u{1F37D}';
+    counterBadge.classList.remove('pop');
+    void counterBadge.offsetWidth;
+    counterBadge.classList.add('pop');
+  }
+
+  function getLetters(el) {
+    return Array.from(el.querySelectorAll('.letter'));
+  }
+
+  function resetLetters(el) {
+    getLetters(el).forEach(function(l) {
+      l.style.cssText = '';
+    });
+  }
+
+  /* ── SUCCESS ── */
+  function runSuccess() {
+    if (busySucc) return;
+    busySucc = true;
+    btnSucc.disabled = true;
+    playEat();
+
+    var letters = getLetters(labelSucc);
+
+    // suck letters
+    letters.forEach(function(letter, i) {
+      setTimeout(function() {
+        letter.style.animation = 'letter-suck 0.18s ease-in forwards';
+      }, i * 90);
+    });
+
+    // chomp
+    setTimeout(function() {
+      trashSuccSvg.style.animation = 'trash-chomp 0.55s ease-in-out';
+    }, 40);
+
+    // ring
+    setTimeout(function() {
+      ringEl.style.opacity = '1';
+      ringCircle.style.animation = 'ring-fill 0.55s ease-out forwards';
+    }, 180);
+
+    var doneAt = letters.length * 90 + 260;
+
+    // checkmark
+    setTimeout(function() {
+      ringEl.style.opacity = '0';
+      ringCircle.style.animation = '';
+      ringCircle.style.strokeDashoffset = '100';
+      checkEl.style.animation = 'check-in 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards';
+      incrementCounter();
+    }, doneAt);
+
+    // reset
+    setTimeout(function() {
+      trashSuccSvg.style.animation = '';
+      checkEl.style.animation = '';
+      checkEl.style.transform  = '';
+      checkEl.style.opacity    = '';
+      resetLetters(labelSucc);
+      btnSucc.disabled = false;
+      busySucc = false;
+    }, doneAt + 720);
+  }
+
+  /* ── FAIL ── */
+  function runFail() {
+    if (busyFail) return;
+    busyFail = true;
+    btnFail.disabled = true;
+    playSpit();
+
+    trashFailSvg.style.animation = 'trash-spit 0.5s ease-in-out';
+
+    var letters = getLetters(labelFail);
+
+    // shrink letters (eating attempt)
+    letters.forEach(function(l, i) {
+      setTimeout(function() {
+        l.style.transition = 'transform 0.12s, opacity 0.12s';
+        l.style.transform  = 'scale(0.3)';
+        l.style.opacity    = '0.3';
+      }, i * 55);
+    });
+
+    // spit flying letters
+    setTimeout(function() {
+      var trashEl   = document.getElementById('trash-fail-wrap');
+      var trashRect = trashEl.getBoundingClientRect();
+      var originX   = trashRect.left + trashRect.width  / 2;
+      var originY   = trashRect.top  + trashRect.height / 2;
+      var word      = 'Delete';
+
+      word.split('').forEach(function(char, i) {
+        var el = document.createElement('span');
+        el.className = 'flying-letter';
+        el.textContent = char;
+
+        var flyX  = 70  + Math.random() * 130;
+        var flyY  = -20 + (Math.random() - 0.5) * 70;
+        var landX = flyX + (Math.random() - 0.3) * 40;
+        var landY = flyY + 25 + Math.random() * 40;
+        var rot   = (Math.random() - 0.5) * 45;
+        var landR = rot + (Math.random() - 0.5) * 20;
+
+        el.style.left = originX + 'px';
+        el.style.top  = originY + 'px';
+        el.style.setProperty('--fly-x',  flyX  + 'px');
+        el.style.setProperty('--fly-y',  flyY  + 'px');
+        el.style.setProperty('--land-x', landX + 'px');
+        el.style.setProperty('--land-y', landY + 'px');
+        el.style.setProperty('--fly-r',  rot   + 'deg');
+        el.style.setProperty('--land-r', landR + 'deg');
+        el.style.animationDelay = (i * 55) + 'ms';
+
+        document.body.appendChild(el);
+        setTimeout(function() { el.remove(); }, 1100 + i * 55);
+      });
+
+      // restore letters
+      letters.forEach(function(l, i) {
+        setTimeout(function() {
+          l.style.transition = 'transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s';
+          l.style.transform  = '';
+          l.style.opacity    = '';
+        }, i * 55 + 60);
+      });
+    }, 280);
+
+    // shake
+    setTimeout(function() {
+      btnFail.style.animation = 'btn-shake 0.4s ease';
+    }, 300);
+
+    // full reset
+    setTimeout(function() {
+      trashFailSvg.style.animation = '';
+      btnFail.style.animation      = '';
+      letters.forEach(function(l) { l.style.cssText = ''; });
+      btnFail.disabled = false;
+      busyFail = false;
+    }, 1300);
+  }
+
+  /* ── SOUND TOGGLE ── */
+  soundToggle.addEventListener('click', function() {
+    soundOn = !soundOn;
+    soundLabelEl.textContent = 'Sound: ' + (soundOn ? 'on' : 'off');
+    soundToggle.classList.toggle('off', !soundOn);
+  });
+
+  btnSucc.addEventListener('click', runSuccess);
+  btnFail.addEventListener('click', runFail);
+
+}());
+</script>
+</body>
+</html>
