@@ -1,21 +1,20 @@
 'use client';
 
-import { useTransition, useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Pencil } from 'lucide-react';
 import { cancelAppointment } from '@/lib/actions/bookings';
 import { canManageAppointment } from '@/lib/utils/appointments';
 
-const WORD = 'Disdici';
+const DELETE_WORD = 'Disdici';
+const EDIT_WORD   = 'Modifica';
 
 interface AppointmentActionsProps {
   appointmentId: string;
   startsAt: string;
 }
 
-type Phase = 'idle' | 'eating' | 'success' | 'error';
+type Phase = 'idle' | 'eating' | 'editing' | 'success' | 'error';
 
 export function AppointmentActions({ appointmentId, startsAt }: AppointmentActionsProps) {
   const router = useRouter();
@@ -24,8 +23,15 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
 
   const [phase, setPhase] = useState<Phase>('idle');
 
-  // When the last letter finishes animating → fire server action
-  function onLastLetterDone() {
+  /* ── MODIFY: last letter animation done → navigate ── */
+  function onLastEditLetterDone() {
+    router.push(`/area-cliente/appuntamenti/${appointmentId}/modifica`);
+    // reset after nav starts
+    setTimeout(() => setPhase('idle'), 300);
+  }
+
+  /* ── DELETE: last letter animation done → server action ── */
+  function onLastDeleteLetterDone() {
     startTransition(async () => {
       const result = await cancelAppointment(appointmentId);
       if (!result.ok) {
@@ -40,6 +46,11 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
     });
   }
 
+  function handleEdit() {
+    if (phase !== 'idle' || serverPending) return;
+    setPhase('editing');
+  }
+
   function handleCancel() {
     if (phase !== 'idle' || serverPending) return;
     const ok = window.confirm("Vuoi disdire questa prenotazione? L'azione non è reversibile.");
@@ -47,10 +58,11 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
     setPhase('eating');
   }
 
-  const isEating  = phase === 'eating';
-  const isSuccess = phase === 'success';
-  const isError   = phase === 'error';
-  const disabled  = phase !== 'idle' || serverPending;
+  const isEditing  = phase === 'editing';
+  const isEating   = phase === 'eating';
+  const isSuccess  = phase === 'success';
+  const isError    = phase === 'error';
+  const disabled   = phase !== 'idle' || serverPending;
 
   if (!manageable) {
     return (
@@ -62,18 +74,41 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
 
   return (
     <div className="flex flex-wrap gap-2">
-      {/* Inline styles — guaranteed available at render time */}
+
+      {/* ─────────── INLINE KEYFRAMES ─────────── */}
       <style>{`
+        /* ── Edit animations ── */
+        @keyframes hd-highlight {
+          0%   { color: #fde68a; background: transparent; }
+          40%  { color: #fef9c3; background: rgba(251,191,36,0.25); text-shadow: 0 0 8px rgba(251,191,36,0.8); }
+          100% { color: #fde68a; background: transparent; }
+        }
+        @keyframes hd-pencil-write {
+          0%   { transform: rotate(0deg)   scale(1); }
+          20%  { transform: rotate(-18deg) scale(1.35); }
+          45%  { transform: rotate(12deg)  scale(1.2); }
+          70%  { transform: rotate(-8deg)  scale(1.1); }
+          100% { transform: rotate(0deg)   scale(1); }
+        }
+        .hd-pencil.editing {
+          animation: hd-pencil-write 0.55s ease-in-out;
+          display: inline-block;
+        }
+        .hd-edit-letter.editing {
+          animation: hd-highlight 0.28s ease-in-out forwards;
+        }
+
+        /* ── Delete animations ── */
         @keyframes hd-suck {
           0%   { transform: translateX(0)    scale(1);   opacity: 1; }
           60%  { transform: translateX(-8px) scale(.55); opacity: .5; }
           100% { transform: translateX(-20px) scale(0);  opacity: 0; }
         }
         @keyframes hd-chomp {
-          0%,100% { transform: rotate(0deg)  scale(1); }
+          0%,100% { transform: rotate(0deg)   scale(1); }
           25%     { transform: rotate(-10deg) scale(1.22); }
-          50%     { transform: rotate(0deg)  scale(1.08); }
-          75%     { transform: rotate(8deg)  scale(1.16); }
+          50%     { transform: rotate(0deg)   scale(1.08); }
+          75%     { transform: rotate(8deg)   scale(1.16); }
         }
         @keyframes hd-ring-fill {
           from { stroke-dashoffset: 100; }
@@ -91,14 +126,12 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
           60% { transform: translateX(-4px); }
           80% { transform: translateX(4px); }
         }
-        .hd-letter {
-          display: inline-block;
-        }
-        .hd-letter.eating {
-          animation: hd-suck 0.22s ease-in forwards;
-        }
         .hd-trash.eating {
           animation: hd-chomp 0.5s ease-in-out;
+          display: inline-block;
+        }
+        .hd-del-letter.eating {
+          animation: hd-suck 0.22s ease-in forwards;
         }
         .hd-ring circle.eating {
           animation: hd-ring-fill 0.6s ease-out forwards;
@@ -106,52 +139,73 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
         .hd-checkmark.success {
           animation: hd-check-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
-        .hd-btn.error {
+        .hd-btn-del.error {
           animation: hd-shake 0.4s ease;
         }
       `}</style>
 
-      {/* Modifica */}
-      <Link
-        href={`/area-cliente/appuntamenti/${appointmentId}/modifica`}
-        className="inline-flex items-center gap-2 rounded-lg border border-yellow-500/60 bg-yellow-500/15 px-4 py-2 text-sm font-semibold text-yellow-300 transition hover:bg-yellow-500/25"
+      {/* ══════════════ MODIFICA button ══════════════ */}
+      <button
+        type="button"
+        onClick={handleEdit}
+        disabled={disabled}
+        style={{ overflow: 'visible' }}
+        className="inline-flex items-center gap-2 rounded-lg border border-yellow-500/60 bg-yellow-500/15 px-4 py-2 text-sm font-semibold text-yellow-300 transition hover:bg-yellow-500/25 disabled:opacity-50"
       >
-        <Pencil size={16} />
-        Modifica prenotazione
-      </Link>
+        {/* Pencil icon */}
+        <span className={`hd-pencil${isEditing ? ' editing' : ''}`} style={{ display: 'inline-block', width: 16, height: 16, flexShrink: 0 }}>
+          {/* Custom pencil SVG */}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
 
-      {/* ── Hungry Delete button ── */}
+        {/* Animated letters of "Modifica" */}
+        <span style={{ display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
+          {EDIT_WORD.split('').map((char, i) => {
+            const isLast = i === EDIT_WORD.length - 1;
+            return (
+              <span
+                key={i}
+                className={`hd-edit-letter${isEditing ? ' editing' : ''}`}
+                style={isEditing ? { animationDelay: `${i * 55}ms` } : undefined}
+                onAnimationEnd={isLast && isEditing ? onLastEditLetterDone : undefined}
+              >{char}</span>
+            );
+          })}
+          <span>&nbsp;prenotazione</span>
+        </span>
+      </button>
+
+      {/* ══════════════ DISDICI button ══════════════ */}
       <button
         type="button"
         onClick={handleCancel}
         disabled={disabled}
         style={{ overflow: 'visible' }}
-        className={`hd-btn${isError ? ' error' : ''} relative inline-flex items-center gap-2 rounded-lg border border-red-500/60 bg-red-500/15 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/25 disabled:opacity-50`}
+        className={`hd-btn-del${isError ? ' error' : ''} relative inline-flex items-center gap-2 rounded-lg border border-red-500/60 bg-red-500/15 px-4 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/25 disabled:opacity-50`}
       >
-        {/* Trash + ring + checkmark */}
+        {/* Trash icon + ring + checkmark */}
         <span style={{ position: 'relative', width: 20, height: 20, flexShrink: 0, display: 'inline-block' }}>
-          {/* Trash SVG */}
           <svg
             className={`hd-trash${isEating ? ' eating' : ''}`}
             width="20" height="20" viewBox="0 0 24 24" fill="none"
             style={{ display: 'block' }}
           >
             <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M10 11v6M14 11v6"
-              stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
 
-          {/* Progress ring — only mounted while eating/success */}
           {(isEating || isSuccess) && (
             <svg
               className="hd-ring"
               width="30" height="30" viewBox="0 0 36 36"
-              style={{
-                position: 'absolute', top: '50%', left: '50%',
-                transform: 'translate(-50%,-50%)',
-                pointerEvents: 'none',
-              }}
+              style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' }}
             >
               <circle
                 cx="18" cy="18" r="14"
@@ -167,29 +221,24 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
             </svg>
           )}
 
-          {/* Checkmark */}
           {isSuccess && (
             <span
               className="hd-checkmark success"
-              style={{
-                position: 'absolute', top: '50%', left: '50%',
-                transform: 'translate(-50%,-50%) scale(0)',
-                opacity: 0, fontSize: 13, pointerEvents: 'none', lineHeight: 1,
-              }}
+              style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) scale(0)', opacity: 0, fontSize: 13, pointerEvents: 'none', lineHeight: 1 }}
             >✅</span>
           )}
         </span>
 
-        {/* "Disdici" — letters animate one by one, last triggers server action */}
+        {/* "Disdici" letters + static " prenotazione" */}
         <span style={{ display: 'inline-flex', alignItems: 'center', overflow: 'visible' }}>
-          {WORD.split('').map((char, i) => {
-            const isLast = i === WORD.length - 1;
+          {DELETE_WORD.split('').map((char, i) => {
+            const isLast = i === DELETE_WORD.length - 1;
             return (
               <span
                 key={i}
-                className={`hd-letter${isEating ? ' eating' : ''}`}
+                className={`hd-del-letter${isEating ? ' eating' : ''}`}
                 style={isEating ? { animationDelay: `${i * 75}ms` } : undefined}
-                onAnimationEnd={isLast && isEating ? onLastLetterDone : undefined}
+                onAnimationEnd={isLast && isEating ? onLastDeleteLetterDone : undefined}
               >{char}</span>
             );
           })}
