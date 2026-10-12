@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ServicesAccordion } from '@/components/servizi/ServicesAccordion';
+import { ServicesGrid } from '@/components/servizi/ServicesGrid';
 import { ActivePromotions } from '@/components/servizi/ActivePromotions';
 import { getServices } from '@/lib/actions/bookings';
 import { getActivePromotions } from '@/lib/actions/promotions';
@@ -47,9 +47,9 @@ export default async function ServiziPage() {
       </section>
 
       <section className="section section-white pb-24">
-        <div className="container-lux max-w-2xl">
+        <div className="container-lux max-w-5xl">
           <ActivePromotions promotions={promotions} />
-          <ServicesAccordion groups={groups} />
+          <ServicesGrid groups={groups} />
 
           <div className="mt-12 text-center">
             <p className="mb-4 text-sm text-white/45">
