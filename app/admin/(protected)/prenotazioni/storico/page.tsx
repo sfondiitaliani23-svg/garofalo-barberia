@@ -15,10 +15,10 @@ export default async function AdminStoricoPrenotazioniPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Storico & Prossime Prenotazioni</h1>
-      <p className="mt-1 text-white/50">
-        Gestisci le prossime prenotazioni da oggi in poi o consulta lo storico passato completo
-      </p>
+      <h1 className="text-3xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+        Storico Prenotazioni
+      </h1>
+      <p className="mt-1 text-sm text-white/50">Consulta, filtra e gestisci tutte le prenotazioni: prossime, passate o tutte.</p>
 
       <div className="mt-8">
         <UpcomingAppointmentsList

@@ -24,6 +24,7 @@ import {
   Phone,
   User,
   Scissors,
+  Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
@@ -56,6 +57,18 @@ function detectGenre(serviceName?: string): string {
   if (lower.includes('bimbo') || lower.includes('bambin')) return 'BIMBO';
   if (lower.includes('ragazzo') || lower.includes('junior')) return 'RAGAZZO';
   return 'UOMO';
+}
+
+const STATUS_STYLE: Record<string, { label: string; cls: string; dot: string }> = {
+  confirmed: { label: 'Confermato', cls: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300', dot: 'bg-emerald-400' },
+  completed: { label: 'Completato', cls: 'border-sky-500/30 bg-sky-500/10 text-sky-300', dot: 'bg-sky-400' },
+  cancelled: { label: 'Annullato', cls: 'border-red-500/30 bg-red-500/10 text-red-300', dot: 'bg-red-400' },
+  no_show: { label: 'Non presentato', cls: 'border-amber-500/30 bg-amber-500/10 text-amber-300', dot: 'bg-amber-400' },
+};
+
+function csvCell(value: string | number | null | undefined): string {
+  const v = String(value ?? '');
+  return /[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 }
 
 function normalize(str: string | undefined | null): string {
@@ -128,6 +141,8 @@ export function UpcomingAppointmentsList({
   const [search, setSearch] = useState('');
   const [onlyActive, setOnlyActive] = useState(true);
   const [reminderFilter, setReminderFilter] = useState<ReminderFilter>('all');
+  const [serviceFilter, setServiceFilter] = useState('all');
+  const [barberFilter, setBarberFilter] = useState('all');
   const [sortType, setSortType] = useState<SortType>('date');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [typeOpen, setTypeOpen] = useState(false);
@@ -157,6 +172,8 @@ export function UpcomingAppointmentsList({
       if (reminderFilter === 'pending' && (!!a.reminder_whatsapp_sent_at || !a.customer_phone)) return false;
       if (reminderFilter === 'sent' && !a.reminder_whatsapp_sent_at) return false;
       if (reminderFilter === 'no_phone' && !!a.customer_phone) return false;
+      if (serviceFilter !== 'all' && a.service?.name !== serviceFilter) return false;
+      if (barberFilter !== 'all' && a.barber_id !== barberFilter) return false;
 
       return matchesQuery(a, query);
     });
@@ -174,7 +191,34 @@ export function UpcomingAppointmentsList({
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
-  }, [appointments, query, onlyActive, reminderFilter, sortType, sortDir]);
+  }, [appointments, query, onlyActive, reminderFilter, serviceFilter, barberFilter, sortType, sortDir]);
+
+  /** Scarica in CSV (Excel) esattamente le righe visibili con i filtri attuali. */
+  function exportCsv() {
+    const header = ['Data', 'Ora', 'Cliente', 'Telefono', 'Servizio', 'Barbiere', 'Importo', 'Stato', 'Promemoria', 'Note'];
+    const rows = filtered.map((a) => {
+      const d = parseISO(a.starts_at);
+      return [
+        d.toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' }),
+        formatShopTimeFromDate(d),
+        a.customer_name,
+        a.customer_phone,
+        a.service?.name ?? '',
+        a.barber?.name ?? '',
+        a.service ? (a.service.price_cents / 100).toFixed(2).replace('.', ',') : '',
+        (STATUS_STYLE[a.status] ?? STATUS_STYLE.confirmed).label,
+        a.reminder_whatsapp_sent_at ? 'Avvisato' : !a.customer_phone ? 'Tel. mancante' : a.status === 'confirmed' ? 'Da avvisare' : '',
+        cleanCustomerNotes(a.notes) ?? '',
+      ].map(csvCell).join(';');
+    });
+    const blob = new Blob(['\uFEFF' + [header.join(';'), ...rows].join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `prenotazioni-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   function openEdit(appointment: CalendarAppointment) {
     setSelectedAppointment(appointment);
@@ -392,6 +436,51 @@ export function UpcomingAppointmentsList({
           </div>
         </div>
 
+        {/* Filtri avanzati (concept 03) */}
+        <div className="grid gap-2.5 pt-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto]">
+          <label className="admin-filter">
+            <span className="sr-only">Servizio</span>
+            <select value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)}>
+              <option value="all">Tutti i servizi</option>
+              {services.map((sv) => (
+                <option key={sv.id} value={sv.name}>{sv.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className="admin-filter">
+            <span className="sr-only">Barbiere</span>
+            <select value={barberFilter} onChange={(e) => setBarberFilter(e.target.value)}>
+              <option value="all">Tutti i barbieri</option>
+              {barbers.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </label>
+          {(serviceFilter !== 'all' || barberFilter !== 'all' || reminderFilter !== 'all' || search) ? (
+            <button
+              type="button"
+              onClick={() => {
+                setServiceFilter('all');
+                setBarberFilter('all');
+                setReminderFilter('all');
+                setSearch('');
+              }}
+              className="h-10 px-3 text-xs text-gold hover:underline"
+            >
+              Reset filtri
+            </button>
+          ) : <span />}
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={filtered.length === 0}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gold/60 px-4 text-xs font-semibold text-gold transition hover:bg-gold hover:text-black disabled:opacity-40"
+          >
+            <Download size={14} aria-hidden />
+            Esporta ({filtered.length})
+          </button>
+        </div>
+
         {/* RIGA 3: Ricerca & Ordinamento */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
           {/* Campo di Ricerca */}
@@ -507,177 +596,122 @@ export function UpcomingAppointmentsList({
           )}
         </div>
       ) : (
-        <div className="space-y-3">
-          {filtered.map((appointment) => {
-            const startsAt = parseISO(appointment.starts_at);
-            const dateLabel = formatShopDateLong(startsAt);
-            const timeLabel = formatShopTimeFromDate(startsAt);
-            const isPending = pendingId === appointment.id;
-            const isCompleted = appointment.status === 'completed';
-            const isCancelled = appointment.status === 'cancelled';
-            const genre = detectGenre(appointment.service?.name);
-            const isNotified = !!appointment.reminder_whatsapp_sent_at;
-            const hasPhone = !!appointment.customer_phone;
-            const cleanNote = cleanCustomerNotes(appointment.notes);
+        <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#0c0c0c]">
+          <table className="w-full min-w-[980px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-white/45">
+                <th className="px-4 py-3 font-semibold">Data e ora</th>
+                <th className="px-4 py-3 font-semibold">Cliente</th>
+                <th className="px-4 py-3 font-semibold">Servizio</th>
+                <th className="px-4 py-3 font-semibold">Barbiere</th>
+                <th className="px-4 py-3 font-semibold text-right">Importo</th>
+                <th className="px-4 py-3 font-semibold">Stato</th>
+                <th className="px-4 py-3 font-semibold">Promemoria</th>
+                <th className="px-4 py-3 font-semibold text-right">Azioni</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((appointment) => {
+                const startsAt = parseISO(appointment.starts_at);
+                const dateShort = startsAt.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Rome' });
+                const timeLabel = formatShopTimeFromDate(startsAt);
+                const isPending = pendingId === appointment.id;
+                const isNotified = !!appointment.reminder_whatsapp_sent_at;
+                const hasPhone = !!appointment.customer_phone;
+                const cleanNote = cleanCustomerNotes(appointment.notes);
+                const status = STATUS_STYLE[appointment.status] ?? STATUS_STYLE.confirmed;
+                const canRemind = hasPhone && appointment.status === 'confirmed';
 
-            // Stile Card Elegante e Pulito
-            let cardClasses = 'border-white/10 bg-[#141414] hover:border-white/20';
-            if (isCompleted) {
-              cardClasses = 'border-emerald-500/30 bg-[#0c1610]';
-            } else if (isCancelled) {
-              cardClasses = 'border-red-500/20 bg-[#160c0c] opacity-70';
-            } else if (isNotified) {
-              cardClasses = 'border-emerald-500/40 bg-[#0d1711] shadow-sm';
-            } else if (hasPhone) {
-              cardClasses = 'border-amber-500/35 bg-[#17140c] shadow-sm';
-            }
-
-            const genreStyle =
-              genre === 'BIMBO'
-                ? 'bg-blue-500/15 text-blue-300 border-blue-500/30'
-                : genre === 'RAGAZZO'
-                ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
-                : 'bg-white/10 text-white/60 border-white/10';
-
-            return (
-              <article
-                key={appointment.id}
-                className={`rounded-xl border p-4 transition-all duration-200 ${cardClasses}`}
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                  
-                  {/* Informazioni Cliente & Servizio */}
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    
-                    {/* Intestazione Riga: Nome, Genere, Data/Ora, Badge Stato */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-bold text-white text-base tracking-tight">
-                        {appointment.customer_name}
-                      </h3>
-
-                      <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-wider ${genreStyle}`}>
-                        {genre}
+                return (
+                  <tr
+                    key={appointment.id}
+                    className={`border-b border-white/5 transition hover:bg-white/[0.025] ${appointment.status === 'cancelled' ? 'opacity-60' : ''}`}
+                  >
+                    <td className="whitespace-nowrap px-4 py-3 text-white/80 tabular-nums">
+                      {dateShort}
+                      <span className="ml-2 text-white/50">{timeLabel}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-white">{appointment.customer_name}</p>
+                      {hasPhone && <p className="text-[11px] text-white/45 tabular-nums">{appointment.customer_phone}</p>}
+                      {cleanNote && (
+                        <p className="mt-0.5 max-w-[16rem] truncate text-[11px] italic text-amber-200/70" title={cleanNote}>
+                          Note: {cleanNote}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-white/75">
+                      {appointment.service?.name ?? '-'}
+                      {appointment.service && (
+                        <span className="block text-[11px] text-white/40">{formatDuration(appointment.service.duration_minutes)}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-white/75">{appointment.barber?.name ?? '-'}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right text-white/85 tabular-nums">
+                      {appointment.service ? formatPrice(appointment.service.price_cents) : '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${status.cls}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} aria-hidden />
+                        {status.label}
                       </span>
-
-                      {/* Badge Data & Ora */}
-                      <span className="rounded-lg bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-white/90">
-                        {dateLabel} · ore {timeLabel}
-                      </span>
-
-                      {/* Badge Stato Notifica WhatsApp Pulito */}
+                    </td>
+                    <td className="px-4 py-3 text-[11px]">
                       {isNotified ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 text-[11px] font-bold text-emerald-400">
-                          <CheckCheck size={13} />
-                          Avvisato ({formatShopTimeFromDate(parseISO(appointment.reminder_whatsapp_sent_at!))})
+                        <span className="inline-flex items-center gap-1 font-semibold text-emerald-300">
+                          <CheckCheck size={12} /> Avvisato
                         </span>
                       ) : !hasPhone ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-white/10 border border-white/15 px-2 py-0.5 text-[10px] font-semibold text-white/40">
-                          <AlertCircle size={11} />
-                          Tel. mancante
+                        <span className="inline-flex items-center gap-1 text-white/40">
+                          <AlertCircle size={12} /> Tel. mancante
+                        </span>
+                      ) : appointment.status === 'confirmed' ? (
+                        <span className="inline-flex items-center gap-1 font-semibold text-amber-300">
+                          <Clock size={12} /> Da avvisare
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[10px] font-bold text-amber-300">
-                          <Clock size={11} />
-                          Da avvisare
-                        </span>
+                        <span className="text-white/30">-</span>
                       )}
-                    </div>
-
-                    {/* Dettaglio Servizio, Barbiere e Telefono */}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/70">
-                      <span className="text-gold font-semibold flex items-center gap-1">
-                        <Scissors size={12} className="text-gold/80" />
-                        {appointment.service?.name ?? 'Servizio'}
-                        {appointment.service && (
-                          <span className="text-white/50 font-normal">
-                            ({formatDuration(appointment.service.duration_minutes)} · {formatPrice(appointment.service.price_cents)})
-                          </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        {canRemind && (
+                          <button
+                            type="button"
+                            onClick={() => handleSendManualWhatsApp(appointment)}
+                            className={`rounded-md p-2 transition ${isNotified ? 'text-emerald-400/70 hover:bg-emerald-500/10' : 'text-emerald-400 hover:bg-emerald-500/15'}`}
+                            title={isNotified ? 'Re-invia promemoria WhatsApp' : 'Invia promemoria WhatsApp'}
+                            aria-label={isNotified ? 'Re-invia promemoria WhatsApp' : 'Invia promemoria WhatsApp'}
+                          >
+                            <MessageCircle size={16} />
+                          </button>
                         )}
-                      </span>
-
-                      <span className="text-white/30 hidden sm:inline">|</span>
-
-                      <span className="text-white/60 flex items-center gap-1">
-                        <User size={12} className="text-white/40" />
-                        Barbiere: <strong className="text-white/80 font-medium">{appointment.barber?.name ?? '-'}</strong>
-                      </span>
-
-                      {hasPhone && (
-                        <>
-                          <span className="text-white/30 hidden sm:inline">|</span>
-                          <span className="text-white/60 flex items-center gap-1">
-                            <Phone size={12} className="text-white/40" />
-                            Tel: <strong className="text-white/80 font-medium">{appointment.customer_phone}</strong>
-                          </span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Note reali del cliente (se presenti) */}
-                    {cleanNote && (
-                      <p className="text-xs text-amber-200/70 italic bg-amber-500/5 border border-amber-500/15 rounded-md px-2.5 py-1 max-w-xl">
-                        Note: {cleanNote}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Pulsanti Azione Allineati a Destra */}
-                  <div className="flex shrink-0 items-center gap-2 pt-2 lg:pt-0 border-t border-white/5 lg:border-t-0">
-                    {hasPhone && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant={isNotified ? 'outline' : 'default'}
-                        className={`gap-1.5 text-xs font-bold transition h-9 px-3.5 ${
-                          isNotified
-                            ? 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
-                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-950/60'
-                        }`}
-                        onClick={() => handleSendManualWhatsApp(appointment)}
-                        title={isNotified ? 'Re-invia promemoria WhatsApp' : 'Invia promemoria WhatsApp al cliente'}
-                      >
-                        {isNotified ? (
-                          <>
-                            <CheckCheck size={14} className="text-emerald-400" />
-                            Re-invia
-                          </>
-                        ) : (
-                          <>
-                            <MessageCircle size={14} />
-                            Invia WhatsApp
-                          </>
-                        )}
-                      </Button>
-                    )}
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5 text-xs border-white/15 hover:border-gold hover:text-gold h-9 px-3"
-                      onClick={() => openEdit(appointment)}
-                    >
-                      <Pencil size={13} />
-                      Modifica
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="gap-1.5 text-xs h-9 px-3"
-                      disabled={isPending}
-                      onClick={() => handleCancel(appointment)}
-                    >
-                      <Trash2 size={13} />
-                      {isPending ? '...' : 'Rimuovi'}
-                    </Button>
-                  </div>
-
-                </div>
-              </article>
-            );
-          })}
+                        <button
+                          type="button"
+                          onClick={() => openEdit(appointment)}
+                          className="rounded-md p-2 text-white/60 transition hover:bg-white/5 hover:text-gold"
+                          title="Modifica"
+                          aria-label={`Modifica prenotazione di ${appointment.customer_name}`}
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCancel(appointment)}
+                          disabled={isPending}
+                          className="rounded-md p-2 text-red-400/80 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                          title="Rimuovi"
+                          aria-label={`Rimuovi prenotazione di ${appointment.customer_name}`}
+                        >
+                          {isPending ? <span className="text-xs">...</span> : <Trash2 size={15} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
