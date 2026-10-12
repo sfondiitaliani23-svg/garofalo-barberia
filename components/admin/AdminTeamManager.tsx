@@ -30,6 +30,7 @@ import {
   type AdminDayScheduleInput,
 } from '@/lib/utils/barber-schedule';
 import { cn } from '@/lib/utils';
+import { TeamWeekGrid } from '@/components/admin/TeamWeekGrid';
 import type { Barber, BarberAvailability, BarberTimeOff } from '@/types/database';
 
 const WEEK_DAYS = [
@@ -380,7 +381,19 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
 
   return (
     <div className="space-y-10">
-      <section>
+      <TeamWeekGrid
+        barbers={barbers}
+        availability={availability}
+        timeOff={timeOff}
+        onEdit={(id) => {
+          selectBarber(id);
+          requestAnimationFrame(() =>
+            document.getElementById('orari-barbiere')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          );
+        }}
+      />
+
+      <section id="modifica-turni" className="scroll-mt-24">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="font-display text-xl uppercase text-gold">Barbieri</h2>
@@ -430,7 +443,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
       </section>
 
       {selectedBarber && (
-        <section className="rounded-xl border border-white/10 bg-[#111] p-5">
+        <section id="orari-barbiere" className="scroll-mt-24 rounded-xl border border-white/10 bg-[#111] p-5">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Clock size={18} className="text-gold" />
