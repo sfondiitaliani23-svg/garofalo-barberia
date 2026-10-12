@@ -219,3 +219,78 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
     bookingsByMonth,
   };
 }
+/* ── Righe compatte per la pagina Analytics (filtri lato client) ─────────── */
+
+export interface AnalyticsRow {
+  /** Data e ora ISO */
+  t: string;
+  /** Stato: confirmed | completed | cancelled | no_show */
+  s: string;
+  /** Servizio */
+  sid: string | null;
+  sn: string | null;
+  sc: string | null;
+  /** Prezzo netto in centesimi (prezzo servizio − sconto) */
+  p: number;
+  /** Barbiere */
+  bid: string | null;
+  bn: string | null;
+  /** Cliente: chiave stabile + nome */
+  ck: string;
+  cn: string;
+}
+
+/**
+ * Nomi usati dallo staff per bloccare gli slot (non sono clienti).
+ * Restano nei conteggi delle prenotazioni del giorno ma non nelle classifiche clienti.
+ */
+const PLACEHOLDER_NAMES = /^(chiusura|chiuso|pausa|ferie|blocco|bloccato|riservato|occupato|test|prova)\b/i;
+
+/** Tutte le prenotazioni degli ultimi 24 mesi, senza il tetto di 1000 righe. */
+export async function getAnalyticsRows(): Promise<{ configured: boolean; rows: AnalyticsRow[] }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { configured: false, rows: [] };
+
+  const since = subMonths(new Date(), 24).toISOString();
+  const PAGE = 1000;
+  const out: AnalyticsRow[] = [];
+
+  for (let from = 0; from < 50_000; from += PAGE) {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select(
+        'customer_id, customer_name, customer_phone, status, starts_at, discount_cents, service:services(id, name, category, price_cents), barber:barbers(id, name)'
+      )
+      .gte('starts_at', since)
+      .order('starts_at', { ascending: true })
+      .order('id', { ascending: true })
+      .range(from, from + PAGE - 1);
+
+    if (error || !data) break;
+
+    for (const apt of data) {
+      const service = unwrapRelation(
+        apt.service as { id: string; name: string; category: string; price_cents: number } | { id: string; name: string; category: string; price_cents: number }[] | null
+      );
+      const barber = unwrapRelation(apt.barber as { id: string; name: string } | { id: string; name: string }[] | null);
+      const name = (apt.customer_name ?? '').trim();
+      out.push({
+        t: apt.starts_at,
+        s: apt.status,
+        sid: service?.id ?? null,
+        sn: service?.name ?? null,
+        sc: service?.category ?? null,
+        p: service ? Math.max(0, service.price_cents - (apt.discount_cents ?? 0)) : 0,
+        bid: barber?.id ?? null,
+        bn: barber?.name ?? null,
+        ck: PLACEHOLDER_NAMES.test(name) ? '' : customerKey(apt.customer_id, name, apt.customer_phone ?? ''),
+        cn: name,
+      });
+    }
+
+    if (data.length < PAGE) break;
+  }
+
+  return { configured: true, rows: out };
+}

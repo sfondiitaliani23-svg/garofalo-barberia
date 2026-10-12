@@ -1,20 +1,14 @@
-import { getBookingAnalytics } from '@/lib/actions/booking-analytics';
-import { BookingAnalyticsSection } from '@/components/admin/BookingAnalyticsSection';
+import { getAnalyticsRows } from '@/lib/actions/booking-analytics';
+import { AnalyticsExplorer } from '@/components/admin/AnalyticsExplorer';
 
 export const metadata = { title: 'Analytics Prenotazioni' };
 
 export default async function AdminAnalyticsPage() {
-  const stats = await getBookingAnalytics();
+  const { configured, rows } = await getAnalyticsRows();
 
-  return (
-    <div>
-      <h1 className="font-display text-3xl uppercase">Analytics avanzati</h1>
-      <p className="mt-1 text-white/50">
-        Statistiche su tutte le prenotazioni ricevute
-      </p>
-      <div className="mt-8">
-        <BookingAnalyticsSection stats={stats} />
-      </div>
-    </div>
-  );
+  if (!configured) {
+    return <p className="text-white/50">Database non configurato.</p>;
+  }
+
+  return <AnalyticsExplorer rows={rows} />;
 }
