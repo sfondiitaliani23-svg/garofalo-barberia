@@ -23,3 +23,7 @@ with sync_playwright() as p:
             for e in errs: print('    ',e)
             pg.close()
     b.close()
+
+import subprocess
+print('--- memoria bloccata ---', flush=True)
+subprocess.run(['python','.github/blocked.py','https://barberiagarofalo.it'])
