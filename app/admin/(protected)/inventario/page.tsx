@@ -8,11 +8,7 @@ export default async function AdminInventarioPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Inventario prodotti</h1>
-      <p className="mt-1 text-white/50">Profumi Mood e prodotti in negozio</p>
-      <div className="mt-8">
-        <AdminProductsManager products={products} />
-      </div>
+      <AdminProductsManager products={products} />
     </div>
   );
 }

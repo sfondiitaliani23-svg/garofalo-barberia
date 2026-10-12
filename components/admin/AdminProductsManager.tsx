@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, X, Package, Minus, AlertTriangle, Upload, Camera, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,8 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   const [description, setDescription] = useState('');
   const [stockRevision, setStockRevision] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [moves, setMoves] = useState<{ productId: string; delta: number; at: Date }[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -358,44 +360,129 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
 
   const activeProducts = items.filter((p) => p.is_active);
   const inactiveProducts = items.filter((p) => !p.is_active);
+  const selected = items.find((p) => p.id === selectedId) ?? activeProducts[0] ?? items[0] ?? null;
 
   return (
     <div>
-      {outOfStockProducts.length > 0 && (
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-orange-500/30 bg-orange-500/10 p-4">
-          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-orange-300" />
-          <div>
-            <p className="text-sm font-medium text-orange-200">Scorte esaurite</p>
-            <p className="mt-1 text-xs text-orange-200/70">
-              {outOfStockProducts.map((p) => p.name).join(' · ')}
-            </p>
-          </div>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            Inventario Prodotti
+          </h1>
+          <p className="mt-1 text-sm text-white/50">Profumi Mood e prodotti in negozio. Le scorte si salvano con il pulsante Salva.</p>
         </div>
-      )}
-
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-white/50">Gestisci profumi Mood e altri prodotti in negozio</p>
         <Button onClick={openCreate}>
           <Plus size={16} />
           Nuovo prodotto
         </Button>
       </div>
 
-      <div className="mt-6 space-y-2">
-        {activeProducts.map((p) => (
-          <ProductRow
-            key={p.id}
-            product={p}
-            rowBusy={deletingId === p.id}
-            onEdit={() => openEdit(p)}
-            onDelete={() => handleDelete(p)}
-            onAdjustStock={handleStockAdjust}
+      {outOfStockProducts.length > 0 && (
+        <div className="mt-5 flex items-start gap-3 rounded-lg border border-orange-500/30 bg-orange-500/10 p-4">
+          <AlertTriangle size={18} className="mt-0.5 shrink-0 text-orange-300" />
+          <div>
+            <p className="text-sm font-medium text-orange-200">Scorte esaurite</p>
+            <p className="mt-1 text-xs text-orange-200/70">{outOfStockProducts.map((p) => p.name).join(' · ')}</p>
+          </div>
+        </div>
+      )}
+
+      {activeProducts.length === 0 && (
+        <p className="mt-6 text-white/50">Nessun prodotto in inventario. Aggiungine uno nuovo.</p>
+      )}
+
+      {selected && (
+        <div className="mt-6 grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)_280px]">
+          {/* Elenco prodotti */}
+          <nav className="space-y-2" aria-label="Prodotti">
+            {activeProducts.map((p) => {
+              const st = stockState(p);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSelectedId(p.id)}
+                  aria-current={selected.id === p.id}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-lg border p-2.5 text-left transition',
+                    selected.id === p.id ? 'border-gold/60 bg-gold/10' : 'border-white/10 bg-[#0e0e0e] hover:border-white/25'
+                  )}
+                >
+                  <ProductThumb product={p} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-white">{p.name}</span>
+                    <span className="text-[11px] text-white/45">Stock: {p.stock_quantity}</span>
+                  </span>
+                  <span className={cn('h-2 w-2 shrink-0 rounded-full', st.dot)} title={st.label} aria-label={st.label} />
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Dettaglio esteso */}
+          <ProductDetail
+            product={selected}
+            busy={deletingId === selected.id}
+            onEdit={() => openEdit(selected)}
+            onDelete={() => handleDelete(selected)}
+            onAdjustStock={(id, d) => {
+              handleStockAdjust(id, d);
+              setMoves((prev) => [{ productId: id, delta: d, at: new Date() }, ...prev].slice(0, 50));
+            }}
           />
-        ))}
-        {activeProducts.length === 0 && (
-          <p className="text-white/50">Nessun prodotto in inventario. Aggiungine uno nuovo.</p>
-        )}
-      </div>
+
+          {/* Movimenti e riepilogo */}
+          <aside className="space-y-4">
+            <div className="rounded-xl border border-white/10 bg-[#0e0e0e] p-4">
+              <p className="text-sm font-semibold text-white">Movimenti di questa sessione</p>
+              <p className="mt-0.5 text-[11px] text-white/40">Si salvano con il pulsante Salva.</p>
+              <ul className="mt-3 space-y-2">
+                {moves.filter((m) => m.productId === selected.id).length === 0 ? (
+                  <li className="text-xs text-white/40">Nessun movimento. Usa + e − per caricare o scaricare.</li>
+                ) : (
+                  moves
+                    .filter((m) => m.productId === selected.id)
+                    .slice(0, 8)
+                    .map((m, i) => (
+                      <li key={i} className="flex items-center justify-between text-xs">
+                        <span className="text-white/55">
+                          {m.at.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                        <span className={cn('font-bold tabular-nums', m.delta > 0 ? 'text-emerald-400' : 'text-red-400')}>
+                          {m.delta > 0 ? `+${m.delta}` : m.delta}
+                        </span>
+                      </li>
+                    ))
+                )}
+              </ul>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-[#0e0e0e] p-4">
+              <p className="text-sm font-semibold text-white">Riepilogo inventario</p>
+              <ul className="mt-3 space-y-2 text-xs">
+                {(['ok', 'low', 'out'] as const).map((k) => {
+                  const meta = STOCK_META[k];
+                  const n = activeProducts.filter((p) => stockState(p).key === k).length;
+                  return (
+                    <li key={k} className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-white/65">
+                        <span className={cn('h-2 w-2 rounded-full', meta.dot)} aria-hidden />
+                        {meta.label}
+                      </span>
+                      <span className="font-semibold text-white tabular-nums">{n}</span>
+                    </li>
+                  );
+                })}
+                <li className="flex items-center justify-between border-t border-white/5 pt-2">
+                  <span className="text-white/65">Pezzi totali in negozio</span>
+                  <span className="font-semibold text-gold tabular-nums">
+                    {activeProducts.reduce((sum, p) => sum + p.stock_quantity, 0)}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      )}
 
       {inactiveProducts.length > 0 && (
         <div className="mt-8">
@@ -404,15 +491,20 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
           </h2>
           <div className="space-y-2 opacity-70">
             {inactiveProducts.map((p) => (
-              <ProductRow
-                key={p.id}
-                product={p}
-                rowBusy={deletingId === p.id}
-                onEdit={() => openEdit(p)}
-                onDelete={() => handleDelete(p)}
-                onAdjustStock={handleStockAdjust}
-                inactive
-              />
+              <div key={p.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#0e0e0e] px-3 py-2">
+                <span className="flex items-center gap-3">
+                  <ProductThumb product={p} size="sm" />
+                  <span className="text-sm text-white/70">{p.name}</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <button type="button" onClick={() => openEdit(p)} className="rounded-md p-2 text-white/55 hover:text-gold" aria-label={`Modifica ${p.name}`}>
+                    <Pencil size={14} />
+                  </button>
+                  <button type="button" onClick={() => handleDelete(p)} disabled={deletingId === p.id} className="rounded-md p-2 text-red-400/80 hover:text-red-400" aria-label={`Elimina ${p.name}`}>
+                    <Trash2 size={14} />
+                  </button>
+                </span>
+              </div>
             ))}
           </div>
         </div>
@@ -591,104 +683,129 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
   );
 }
 
-const ProductRow = memo(function ProductRow({
+type StockKey = 'ok' | 'low' | 'out';
+const STOCK_META: Record<StockKey, { label: string; dot: string; badge: string }> = {
+  ok: { label: 'Disponibile', dot: 'bg-emerald-400', badge: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300' },
+  low: { label: 'Scorte basse', dot: 'bg-amber-400', badge: 'border-amber-500/30 bg-amber-500/10 text-amber-300' },
+  out: { label: 'Esaurito', dot: 'bg-red-400', badge: 'border-red-500/30 bg-red-500/10 text-red-300' },
+};
+
+/** Stato scorte: esaurito a 0, basso fino alla soglia minima del prodotto. */
+function stockState(p: Product) {
+  const key: StockKey = p.stock_quantity <= 0 ? 'out' : p.stock_quantity <= (p.min_stock_level ?? 0) ? 'low' : 'ok';
+  return { key, ...STOCK_META[key] };
+}
+
+function ProductThumb({ product, size }: { product: Product; size: 'sm' | 'lg' }) {
+  const cls = size === 'sm' ? 'h-10 w-10 rounded-md' : 'h-full w-full rounded-lg';
+  return product.image_url ? (
+    <span className={cn('relative block shrink-0 overflow-hidden border border-gold/25 bg-black', cls)}>
+      <img src={product.image_url} alt={size === 'lg' ? product.name : ''} className="h-full w-full object-cover" />
+    </span>
+  ) : (
+    <span className={cn('flex shrink-0 items-center justify-center bg-gold/10 text-gold', cls)}>
+      <Package size={size === 'sm' ? 16 : 40} aria-hidden />
+    </span>
+  );
+}
+
+function ProductDetail({
   product,
-  rowBusy,
+  busy,
   onEdit,
   onDelete,
   onAdjustStock,
-  inactive = false,
 }: {
   product: Product;
-  rowBusy: boolean;
+  busy: boolean;
   onEdit: () => void;
   onDelete: () => void;
   onAdjustStock: (productId: string, delta: number) => void;
-  inactive?: boolean;
 }) {
-  const isOutOfStock = product.is_active && product.stock_quantity === 0;
+  const st = stockState(product);
   const isTemp = product.id.startsWith('temp-');
-
+  const rows: [string, React.ReactNode][] = [
+    ['Categoria', CATEGORY_LABELS[product.category]],
+    ['Brand', product.brand || '—'],
+    ['Codice', product.sku || '—'],
+    ['Soglia scorte basse', product.min_stock_level ?? 0],
+    ['Prezzo di vendita', product.price_cents != null ? formatPrice(product.price_cents) : '—'],
+  ];
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#111] px-4 py-3">
-      <div className="flex items-start gap-3">
-        {product.image_url ? (
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gold/30 bg-black">
-            <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
+    <section className="rounded-xl border border-white/10 bg-[#0e0e0e] p-5" aria-label={`Dettaglio ${product.name}`}>
+      <div className="grid gap-5 sm:grid-cols-[200px_minmax(0,1fr)]">
+        <div className="aspect-square">
+          <ProductThumb product={product} size="lg" />
+        </div>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+              {product.name}
+            </h2>
+            <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold', st.badge)}>
+              <span className={cn('h-1.5 w-1.5 rounded-full', st.dot)} aria-hidden />
+              {st.label}
+            </span>
           </div>
-        ) : (
-          <div className="mt-0.5 rounded-lg bg-gold/15 p-2.5 text-gold shrink-0">
-            <Package size={18} />
+          <p className="mt-3 text-sm font-semibold text-white/80">Dettagli prodotto</p>
+          <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-sm">
+            {rows.map(([k, v]) => (
+              <div key={k} className="contents">
+                <dt className="text-white/45">{k}</dt>
+                <dd className="text-white/85">{v}</dd>
+              </div>
+            ))}
+            <dt className="self-center text-white/45">Stock attuale</dt>
+            <dd className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => onAdjustStock(product.id, -1)}
+                disabled={isTemp || product.stock_quantity <= 0}
+                className="rounded-md border border-white/15 bg-[#1a1a1a] p-1.5 text-white/65 hover:text-white disabled:opacity-40"
+                aria-label="Scarica un pezzo"
+              >
+                <Minus size={14} />
+              </button>
+              <span className={cn('min-w-[2.5rem] text-center text-lg font-bold tabular-nums', st.key === 'ok' ? 'text-gold' : st.key === 'low' ? 'text-amber-300' : 'text-red-300')}>
+                {product.stock_quantity}
+              </span>
+              <button
+                type="button"
+                onClick={() => onAdjustStock(product.id, 1)}
+                disabled={isTemp}
+                className="rounded-md border border-white/15 bg-[#1a1a1a] p-1.5 text-white/65 hover:text-white disabled:opacity-40"
+                aria-label="Carica un pezzo"
+              >
+                <Plus size={14} />
+              </button>
+            </dd>
+          </dl>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onEdit}
+              disabled={busy || isTemp}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gold/60 px-4 py-2 text-xs font-semibold text-gold transition hover:bg-gold hover:text-black disabled:opacity-50"
+            >
+              <Pencil size={14} />
+              Modifica prodotto
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              disabled={busy || isTemp}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/40 px-4 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-500/15 disabled:opacity-50"
+            >
+              <Trash2 size={14} />
+              Elimina
+            </button>
           </div>
-        )}
-        <div>
-          <p className="font-medium">
-            {product.name}
-            {product.brand && <span className="ml-2 text-xs text-white/40">{product.brand}</span>}
-            {inactive && <span className="ml-2 text-xs text-white/40">(disattivato)</span>}
-            {isTemp && <span className="ml-2 text-xs text-gold/70">(salvataggio...)</span>}
-          </p>
-          <p className="text-xs text-white/40">
-            {CATEGORY_LABELS[product.category]}
-            {product.sku && ` · ${product.sku}`}
-            {product.price_cents != null && ` · ${formatPrice(product.price_cents)}`}
-          </p>
-          {product.description && (
-            <p className="mt-1 max-w-md text-xs text-white/50 line-clamp-1">{product.description}</p>
-          )}
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => onAdjustStock(product.id, -1)}
-            disabled={isTemp || product.stock_quantity <= 0}
-            className="rounded-lg border border-white/15 bg-[#1a1a1a] p-1.5 text-white/60 hover:text-white disabled:opacity-40"
-          >
-            <Minus size={14} />
-          </button>
-          <span
-            className={cn(
-              'min-w-[2.5rem] text-center text-lg font-bold',
-              isOutOfStock ? 'text-orange-300' : 'text-gold'
-            )}
-          >
-            {product.stock_quantity}
-          </span>
-          <button
-            type="button"
-            onClick={() => onAdjustStock(product.id, 1)}
-            disabled={isTemp}
-            className="rounded-lg border border-white/15 bg-[#1a1a1a] p-1.5 text-white/60 hover:text-white disabled:opacity-40"
-          >
-            <Plus size={14} />
-          </button>
-        </div>
-        {isOutOfStock && (
-          <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-xs text-orange-300">
-            Esaurito
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={onEdit}
-          disabled={rowBusy || isTemp}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-500/60 bg-yellow-500/15 px-3 py-1.5 text-xs font-semibold text-yellow-300 transition hover:bg-yellow-500/25 disabled:opacity-50"
-        >
-          <Pencil size={14} />
-          Modifica
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={rowBusy || isTemp}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/60 bg-red-500/15 px-3 py-1.5 text-xs font-semibold text-red-300 transition hover:bg-red-500/25 disabled:opacity-50"
-        >
-          <Trash2 size={14} />
-          Elimina
-        </button>
+      <div className="mt-5 border-t border-white/5 pt-4">
+        <p className="text-sm font-semibold text-white/80">Descrizione</p>
+        <p className="mt-1 text-sm leading-relaxed text-white/55">{product.description || 'Nessuna descrizione.'}</p>
       </div>
-    </div>
+    </section>
   );
-});
+}
