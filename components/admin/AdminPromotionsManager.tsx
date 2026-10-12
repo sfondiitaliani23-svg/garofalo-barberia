@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, X, Tag } from 'lucide-react';
+import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAdminSaveRegistration } from '@/components/admin/AdminSaveContext';
 import { saveAdminPromotion, deleteAdminPromotion } from '@/lib/actions/admin';
-import { formatDiscountLabel, isPromotionActive } from '@/lib/utils/promotions';
+import { calculateDiscount, formatDiscountLabel, isPromotionActive } from '@/lib/utils/promotions';
+import { formatPrice } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { DiscountType, Promotion, Service } from '@/types/database';
 
@@ -28,6 +29,23 @@ function fromDatetimeLocal(value: string) {
   if (!value) return null;
   return new Date(value).toISOString();
 }
+
+type PromoTab = 'all' | 'active' | 'expiring' | 'expired';
+const PROMO_TABS: { id: PromoTab; label: string }[] = [
+  { id: 'all', label: 'Tutte' },
+  { id: 'active', label: 'Attive' },
+  { id: 'expiring', label: 'In scadenza' },
+  { id: 'expired', label: 'Scadute / disattive' },
+];
+
+/** Foto reali del salone per categoria (come nella pagina Servizi). */
+const CATEGORY_IMAGES: Record<string, string> = {
+  taglio: '/assets/gallery/1000313550.jpg',
+  baby: '/assets/gallery/1000313555.jpg',
+  barba: '/assets/gallery/1000313557.jpg',
+  styling: '/assets/gallery/1000313548.jpg',
+};
+const DEFAULT_IMAGE = '/assets/gallery/1000313546.jpg';
 
 function promotionStatus(promo: Promotion) {
   if (!promo.is_active) return { label: 'Disattiva', className: 'text-white/40 bg-white/5' };
@@ -58,6 +76,7 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [tab, setTab] = useState<PromoTab>('all');
 
   function openCreate() {
     setEditing(null);
@@ -189,54 +208,75 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
     });
   }
 
-  const activePromos = items.filter((p) => p.is_active);
-  const inactivePromos = items.filter((p) => !p.is_active);
+  const now = new Date();
+  const soon = (p: Promotion) =>
+    isPromotionActive(p, now) && !!p.ends_at && new Date(p.ends_at).getTime() - now.getTime() <= 7 * 86_400_000;
+  const groups: Record<PromoTab, Promotion[]> = {
+    all: items,
+    active: items.filter((p) => isPromotionActive(p, now) && !soon(p)),
+    expiring: items.filter((p) => soon(p)),
+    expired: items.filter((p) => !isPromotionActive(p, now)),
+  };
+  const visible = groups[tab];
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-white/50">
-          Crea promozioni, codici sconto e offerte per i tuoi clienti
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            Promozioni
+          </h1>
+          <p className="mt-1 text-sm text-white/50">Crea, gestisci e monitora le tue promozioni e i codici sconto.</p>
+        </div>
         <Button onClick={openCreate}>
           <Plus size={16} />
           Nuova promozione
         </Button>
       </div>
 
-      <div className="mt-6 space-y-2">
-        {activePromos.map((p) => (
-          <PromotionRow
+      <div className="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Filtra promozioni">
+        {PROMO_TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={cn(
+              'rounded-full border px-4 py-1.5 text-sm font-medium transition',
+              tab === t.id ? 'border-gold bg-gold text-black' : 'border-white/15 text-white/65 hover:border-white/35'
+            )}
+          >
+            {t.label} ({groups[t.id].length})
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {visible.map((p) => (
+          <PromotionCard
             key={p.id}
             promo={p}
+            expiring={soon(p)}
             pending={pending}
             onEdit={() => openEdit(p)}
             onDelete={() => handleDelete(p)}
           />
         ))}
-        {activePromos.length === 0 && (
-          <p className="text-white/50">Nessuna promozione attiva. Creane una nuova.</p>
-        )}
+        <button
+          type="button"
+          onClick={openCreate}
+          className="flex min-h-[260px] flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gold/40 bg-white/[0.015] p-6 text-center transition hover:border-gold hover:bg-gold/5"
+        >
+          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-gold/60 text-gold">
+            <Plus size={22} aria-hidden />
+          </span>
+          <span className="font-semibold text-gold">Crea nuova promozione</span>
+          <span className="text-xs text-white/45">Aggiungi una nuova offerta per i tuoi clienti</span>
+        </button>
       </div>
-
-      {inactivePromos.length > 0 && (
-        <div className="mt-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/40">
-            Promozioni disattivate
-          </h2>
-          <div className="space-y-2 opacity-70">
-            {inactivePromos.map((p) => (
-              <PromotionRow
-                key={p.id}
-                promo={p}
-                pending={pending}
-                onEdit={() => openEdit(p)}
-                onDelete={() => handleDelete(p)}
-                inactive
-              />
-            ))}
-          </div>
-        </div>
+      {visible.length === 0 && tab !== 'all' && (
+        <p className="mt-4 text-sm text-white/45">Nessuna promozione in questa sezione.</p>
       )}
 
       {modalOpen && (
@@ -393,65 +433,89 @@ export function AdminPromotionsManager({ promotions, services }: AdminPromotions
   );
 }
 
-function PromotionRow({
+function PromotionCard({
   promo,
+  expiring,
   pending,
   onEdit,
   onDelete,
-  inactive = false,
 }: {
   promo: Promotion;
+  expiring: boolean;
   pending: boolean;
   onEdit: () => void;
   onDelete: () => void;
-  inactive?: boolean;
 }) {
-  const status = promotionStatus(promo);
+  const base = promotionStatus(promo);
+  const status = expiring ? { label: 'In scadenza', className: 'text-amber-300 bg-amber-500/15' } : base;
+  const svc = promo.service as (Service & { category?: string }) | null | undefined;
+  const image = (svc?.category && CATEGORY_IMAGES[svc.category]) || DEFAULT_IMAGE;
+  const price = svc?.price_cents ? calculateDiscount(svc.price_cents, promo) : null;
+  const ends = promo.ends_at
+    ? new Date(promo.ends_at).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Rome' })
+    : null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-[#111] px-4 py-3">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 rounded-lg bg-gold/15 p-2 text-gold">
-          <Tag size={16} />
-        </div>
-        <div>
-          <p className="font-medium">
-            {promo.title}
-            {inactive && <span className="ml-2 text-xs text-white/40">(disattivata)</span>}
-          </p>
-          <p className="text-xs text-white/40">
-            {formatDiscountLabel(promo.discount_type, promo.discount_value)}
-            {promo.code && ` · Codice: ${promo.code}`}
-            {promo.service?.name ? ` · ${promo.service.name}` : ' · Tutti i servizi'}
-          </p>
-          {promo.description && (
-            <p className="mt-1 text-xs text-white/50">{promo.description}</p>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className={cn('rounded-full px-2.5 py-1 text-xs font-medium', status.className)}>
+    <article className={cn('flex flex-col overflow-hidden rounded-xl border bg-[#0e0e0e] transition hover:border-gold/40', expiring ? 'border-amber-500/30' : 'border-white/10', base.label !== 'Attiva' && !expiring && 'opacity-75')}>
+      <div className="relative h-32 overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover"
+          style={{ backgroundImage: `url(${image})`, backgroundPosition: 'center 30%', filter: 'sepia(0.4) saturate(0.75) brightness(0.55)' }}
+          aria-hidden
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e0e] to-transparent" aria-hidden />
+        <span className={cn('absolute right-2 top-2 rounded-full px-2.5 py-0.5 text-[10px] font-bold backdrop-blur-sm', status.className)}>
           {status.label}
         </span>
-        <button
-          type="button"
-          onClick={onEdit}
-          disabled={pending}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-yellow-500/60 bg-yellow-500/15 px-3 py-1.5 text-xs font-semibold text-yellow-300 transition hover:bg-yellow-500/25 disabled:opacity-50"
-        >
-          <Pencil size={14} />
-          Modifica
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={pending}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/60 bg-red-500/15 px-3 py-1.5 text-xs font-semibold text-red-300 transition hover:bg-red-500/25 disabled:opacity-50"
-        >
-          <Trash2 size={14} />
-          Elimina
-        </button>
+        <span className="absolute left-3 top-2 rounded-md bg-gold px-2 py-0.5 text-xs font-bold text-black">
+          {formatDiscountLabel(promo.discount_type, promo.discount_value)}
+        </span>
       </div>
-    </div>
+      <div className="flex flex-1 flex-col p-4 pt-1">
+        <p className="font-semibold text-white">{promo.title}</p>
+        <p className="mt-0.5 line-clamp-2 text-xs text-white/50">
+          {promo.description || (svc?.name ? `Su ${svc.name}` : 'Valida su tutti i servizi')}
+        </p>
+        <div className="mt-3 flex items-baseline gap-2">
+          {price ? (
+            <>
+              <span className="text-xl font-bold text-gold">{formatPrice(price.finalCents)}</span>
+              <span className="text-xs text-white/40 line-through">{formatPrice(svc!.price_cents)}</span>
+            </>
+          ) : (
+            <span className="text-sm text-white/60">{svc?.name ?? 'Tutti i servizi'}</span>
+          )}
+        </div>
+        <div className="mt-1 flex flex-wrap gap-x-3 text-[11px] text-white/45">
+          {promo.code && (
+            <span>
+              Codice <strong className="font-mono text-white/75">{promo.code}</strong>
+            </span>
+          )}
+          <span>{ends ? `Scade il ${ends}` : 'Senza scadenza'}</span>
+        </div>
+        <div className="mt-auto flex items-center gap-2 pt-4">
+          <button
+            type="button"
+            onClick={onEdit}
+            disabled={pending}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-gold/50 px-3 py-1.5 text-xs font-semibold text-gold transition hover:bg-gold hover:text-black disabled:opacity-50"
+          >
+            <Pencil size={13} />
+            Modifica
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={pending}
+            className="rounded-full p-2 text-red-400/80 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-50"
+            title="Elimina"
+            aria-label={`Elimina ${promo.title}`}
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }

@@ -8,10 +8,7 @@ export default async function AdminPromozioniPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Promozioni e sconti</h1>
-      <div className="mt-8">
-        <AdminPromotionsManager promotions={promotions} services={services} />
-      </div>
+      <AdminPromotionsManager promotions={promotions} services={services} />
     </div>
   );
 }

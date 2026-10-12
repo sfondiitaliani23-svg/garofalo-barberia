@@ -8,10 +8,7 @@ export default async function AdminServiziPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Servizi e prezzi</h1>
-      <div className="mt-8">
-        <AdminServicesManager services={services} />
-      </div>
+      <AdminServicesManager services={services} />
     </div>
   );
 }

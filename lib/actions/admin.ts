@@ -1056,7 +1056,7 @@ export async function getAdminPromotions() {
   const [{ data: promotions }, { data: services }] = await Promise.all([
     supabase
       .from('promotions')
-      .select('*, service:services(id, name)')
+      .select('*, service:services(id, name, price_cents, category)')
       .order('created_at', { ascending: false }),
     supabase.from('services').select('id, name').eq('is_active', true).order('sort_order'),
   ]);
