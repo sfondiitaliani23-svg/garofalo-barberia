@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { differenceInMinutes, format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Plus } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AdminAppointmentForm } from '@/components/admin/AdminAppointmentForm';
 import { WeekMonthPicker } from '@/components/admin/WeekMonthPicker';
@@ -45,6 +45,23 @@ export function WeeklyBookingCalendar({
     searchParams.get('barber') ?? initialBarberId ?? barbers[0]?.id ?? ''
   );
   const [modalOpen, setModalOpen] = useState(false);
+  // Filtri avanzati (concept 02): non nascondono le card, le sbiadiscono,
+  // così uno slot occupato non sembra mai libero.
+  const [serviceFilter, setServiceFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [query, setQuery] = useState('');
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchesFilters = (apt: CalendarAppointment) => {
+    const service = apt.service as { name: string } | null;
+    if (serviceFilter !== 'all' && service?.name !== serviceFilter) return false;
+    if (statusFilter !== 'all' && apt.status !== statusFilter) return false;
+    if (normalizedQuery) {
+      const hay = `${apt.customer_name ?? ''} ${apt.customer_phone ?? ''}`.toLowerCase();
+      if (!hay.includes(normalizedQuery)) return false;
+    }
+    return true;
+  };
+  const filtersActive = serviceFilter !== 'all' || statusFilter !== 'all' || normalizedQuery !== '';
   const [selectedAppointment, setSelectedAppointment] = useState<CalendarAppointment | null>(null);
   const [prefillDate, setPrefillDate] = useState<string | undefined>();
   const [prefillTime, setPrefillTime] = useState<string | undefined>();
@@ -115,35 +132,63 @@ export function WeeklyBookingCalendar({
         </Button>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="admin-filter">
+          <span className="sr-only">Barbiere</span>
+          <select value={barberId} onChange={(e) => selectBarber(e.target.value)}>
+            <option value="all">Tutti i barbieri</option>
+            {barbers.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="admin-filter">
+          <span className="sr-only">Servizio</span>
+          <select value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)}>
+            <option value="all">Tutti i servizi</option>
+            {services.map((sv) => (
+              <option key={sv.id} value={sv.name}>
+                {sv.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="admin-filter">
+          <span className="sr-only">Stato</span>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="all">Tutti gli stati</option>
+            <option value="confirmed">Confermato</option>
+            <option value="completed">Completato</option>
+            <option value="cancelled">Annullato</option>
+            <option value="no_show">Non presentato</option>
+          </select>
+        </label>
+        <label className="admin-filter admin-filter--search">
+          <Search size={14} aria-hidden />
+          <span className="sr-only">Cerca cliente</span>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cerca cliente o telefono..."
+          />
+        </label>
+      </div>
+      {filtersActive && (
         <button
           type="button"
-          onClick={() => selectBarber('all')}
-          className={cn(
-            'rounded-full border px-4 py-2 text-sm font-medium transition',
-            barberId === 'all'
-              ? 'border-gold bg-gold/15 text-gold'
-              : 'border-white/15 text-white/60 hover:border-white/30'
-          )}
+          onClick={() => {
+            setServiceFilter('all');
+            setStatusFilter('all');
+            setQuery('');
+          }}
+          className="mt-2 text-xs text-gold hover:underline"
         >
-          Tutti i barbieri 👥
+          Azzera filtri
         </button>
-        {barbers.map((b) => (
-          <button
-            key={b.id}
-            type="button"
-            onClick={() => selectBarber(b.id)}
-            className={cn(
-              'rounded-full border px-4 py-2 text-sm font-medium transition',
-              barberId === b.id
-                ? 'border-gold bg-gold/15 text-gold'
-                : 'border-white/15 text-white/60 hover:border-white/30'
-            )}
-          >
-            {b.name}
-          </button>
-        ))}
-      </div>
+      )}
 
       <p className="mt-2 text-sm text-white/50">
         {barberId === 'all' ? (
@@ -218,17 +263,22 @@ export function WeeklyBookingCalendar({
                             const isCompleted = apt.status === 'completed';
                             const isCancelled = apt.status === 'cancelled';
 
-                            const cardClass = isCompleted
-                              ? 'border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25'
-                              : isCancelled
-                              ? 'border-red-500/30 bg-red-500/10 opacity-60 line-through'
-                              : 'border-gold/40 bg-gold/10 hover:bg-gold/20';
+                            const isNoShow = apt.status === 'no_show';
+                            const matches = matchesFilters(apt);
+                            const cardClass = cn(
+                              'border-white/10 bg-[#121212] hover:border-gold/40 hover:bg-[#171717]',
+                              isCancelled && 'opacity-60',
+                              !matches && 'opacity-20'
+                            );
 
-                            const headerColor = isCompleted
-                              ? 'text-emerald-400'
+                            const headerColor = isCancelled ? 'text-red-400' : 'text-gold';
+                            const status = isCompleted
+                              ? { label: 'Completato', dot: 'bg-sky-400', text: 'text-sky-300' }
                               : isCancelled
-                              ? 'text-red-400'
-                              : 'text-gold';
+                              ? { label: 'Annullato', dot: 'bg-red-400', text: 'text-red-300' }
+                              : isNoShow
+                              ? { label: 'Non presentato', dot: 'bg-amber-400', text: 'text-amber-300' }
+                              : { label: 'Confermato', dot: 'bg-emerald-400', text: 'text-emerald-300' };
 
                             const starts = new Date(apt.starts_at);
                             const ends = new Date(apt.ends_at);
@@ -244,7 +294,6 @@ export function WeeklyBookingCalendar({
                               >
                                 <span className={`text-[10px] font-bold flex items-center justify-between gap-1 w-full ${headerColor}`}>
                                   <span className="flex items-center gap-1">
-                                    {isCompleted && <span>✓</span>}
                                     {startStr}
                                     {durationMins > 30 && (
                                       <span className="text-[9px] opacity-75 font-normal">({durationMins}m)</span>
@@ -263,21 +312,22 @@ export function WeeklyBookingCalendar({
                                   )}
                                 </span>
                                 <span className="truncate text-xs font-semibold text-white mt-1 flex items-center justify-between gap-1">
-                                  <span className="truncate">
-                                    {apt.customer_name}
-                                    {isCompleted && <span className="ml-1 text-[10px] text-emerald-400 font-normal">(Completato)</span>}
-                                  </span>
+                                  <span className={cn('truncate', isCancelled && 'line-through')}>{apt.customer_name}</span>
                                   {apt.reminder_whatsapp_sent_at ? (
-                                    <span className="shrink-0 rounded bg-emerald-500/20 border border-emerald-500/40 px-1 py-0.5 text-[9px] font-bold text-emerald-300 flex items-center gap-0.5" title="Cliente avvisato su WhatsApp">
-                                      ✅ Avvisato
+                                    <span className="shrink-0 rounded border border-emerald-500/40 bg-emerald-500/15 px-1 py-0.5 text-[9px] font-bold text-emerald-300" title="Cliente avvisato su WhatsApp">
+                                      Avvisato
                                     </span>
-                                  ) : apt.customer_phone ? (
-                                    <span className="shrink-0 rounded bg-amber-500/20 border border-amber-500/30 px-1 py-0.5 text-[9px] font-bold text-amber-300 flex items-center gap-0.5" title="Da avvisare su WhatsApp">
-                                      ⏳ Da avvisare
+                                  ) : apt.customer_phone && !isCancelled && !isCompleted ? (
+                                    <span className="shrink-0 rounded border border-amber-500/30 bg-amber-500/15 px-1 py-0.5 text-[9px] font-bold text-amber-300" title="Da avvisare su WhatsApp">
+                                      Da avvisare
                                     </span>
                                   ) : null}
                                 </span>
                                 <span className="truncate text-[10px] text-white/50">{service?.name}</span>
+                                <span className={cn('mt-1 inline-flex items-center gap-1.5 text-[10px] font-semibold', status.text)}>
+                                  <span className={cn('h-1.5 w-1.5 rounded-full', status.dot)} aria-hidden />
+                                  {status.label}
+                                </span>
                                 {apt.customer_phone && (
                                   <span className="truncate text-[10px] text-white/40">{apt.customer_phone}</span>
                                 )}

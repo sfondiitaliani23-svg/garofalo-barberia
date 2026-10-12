@@ -394,3 +394,47 @@ h2,
   outline: 2px solid #ffb949;
   outline-offset: 2px;
 }
+
+/* ── Admin: filtri avanzati prenotazioni (concept 02) ──────────────────── */
+.admin-filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: #0f0f0f;
+  color: rgba(255, 255, 255, 0.5);
+  transition: border-color 0.2s ease;
+}
+
+.admin-filter:focus-within {
+  border-color: rgba(205, 154, 79, 0.6);
+}
+
+.admin-filter select,
+.admin-filter input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+}
+
+.admin-filter select {
+  cursor: pointer;
+}
+
+.admin-filter select option {
+  background: #111;
+  color: #fff;
+}
+
+.admin-filter input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}

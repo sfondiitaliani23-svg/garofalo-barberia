@@ -41,9 +41,11 @@ export default async function AdminPrenotazioniPage({
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Prenotazioni</h1>
-      <p className="mt-1 text-white/50">
-        Calendario settimanale — crea, modifica o disdici appuntamenti per clienti in salone
+      <h1 className="text-3xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+        Prenotazioni
+      </h1>
+      <p className="mt-1 text-sm text-white/50">
+        Consulta e gestisci gli appuntamenti: clicca uno slot libero per prenotare, o un appuntamento per modificarlo.
       </p>
 
       <div className="mt-8">
