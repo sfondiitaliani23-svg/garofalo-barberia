@@ -51,24 +51,39 @@ const PasskeyIcon = () => (
   </svg>
 );
 
+const STACK_BTN =
+  'w-full bg-[#161616] hover:bg-white/5 border-white/10 hover:border-gold/30 transition-all duration-300 py-6 text-sm font-medium';
+const ROW_BTN = 'login-alt-btn';
+
 function OAuthSubmitButton({
   provider,
   label,
   pendingLabel,
   icon,
+  row = false,
 }: {
   provider: 'google' | 'github' | 'apple' | 'facebook';
   label: string;
   pendingLabel: string;
   icon?: React.ReactNode;
+  row?: boolean;
 }) {
   const { pending } = useFormStatus();
+
+  if (row) {
+    return (
+      <button type="submit" className={ROW_BTN} disabled={pending} data-provider={provider}>
+        {icon}
+        {pending ? pendingLabel : label}
+      </button>
+    );
+  }
 
   return (
     <Button
       type="submit"
       variant="outline"
-      className="w-full bg-[#161616] hover:bg-white/5 border-white/10 hover:border-gold/30 transition-all duration-300 py-6 text-sm font-medium"
+      className={STACK_BTN}
       disabled={pending}
     >
       {icon}
@@ -82,12 +97,58 @@ export function OAuthLoginButtons({
   disabled = false,
   onWhatsAppClick,
   onPasskeyClick,
+  layout = 'stack',
 }: {
   redirectTo?: string;
   disabled?: boolean;
   onWhatsAppClick?: () => void;
   onPasskeyClick?: () => void;
+  /** 'row': tutte le alternative su una riga (pagina Accedi, concept 03). */
+  layout?: 'stack' | 'row';
 }) {
+  if (layout === 'row' && !disabled) {
+    return (
+      <div className="login-alt">
+        <div className="login-alt-sep" aria-hidden="true">
+          <span>Oppure accedi con</span>
+        </div>
+        <div className="login-alt-row">
+          <form action={signInWithOAuth}>
+            <input type="hidden" name="provider" value="google" />
+            <input type="hidden" name="redirect" value={redirectTo} />
+            <OAuthSubmitButton provider="google" label="Google" pendingLabel="Apertura..." icon={<GoogleIcon />} row />
+          </form>
+          {process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === 'true' && (
+            <form action={signInWithOAuth}>
+              <input type="hidden" name="provider" value="apple" />
+              <input type="hidden" name="redirect" value={redirectTo} />
+              <OAuthSubmitButton provider="apple" label="Apple" pendingLabel="Apertura..." icon={<AppleIcon />} row />
+            </form>
+          )}
+          {process.env.NEXT_PUBLIC_ENABLE_FACEBOOK_AUTH === 'true' && (
+            <form action={signInWithOAuth}>
+              <input type="hidden" name="provider" value="facebook" />
+              <input type="hidden" name="redirect" value={redirectTo} />
+              <OAuthSubmitButton provider="facebook" label="Facebook" pendingLabel="Apertura..." icon={<FacebookIcon />} row />
+            </form>
+          )}
+          {onPasskeyClick && (
+            <button type="button" onClick={onPasskeyClick} className={ROW_BTN}>
+              <PasskeyIcon />
+              Passkey
+            </button>
+          )}
+          {onWhatsAppClick && (
+            <button type="button" onClick={onWhatsAppClick} className={ROW_BTN}>
+              <WhatsAppIcon />
+              Accedi tramite WhatsApp (OTP)
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (disabled) {
     return (
       <div className="space-y-3">

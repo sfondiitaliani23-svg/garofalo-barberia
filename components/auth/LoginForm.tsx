@@ -9,9 +9,9 @@ import { OAuthLoginButtons } from '@/components/auth/OAuthLoginButtons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { safeDecodeURIComponent } from '@/lib/utils/site-origin';
 import { Loader2 } from 'lucide-react';
+import './login.css';
 
 function LoginFormInner({
   authConfigured,
@@ -28,7 +28,7 @@ function LoginFormInner({
   // Stato per l'accesso QR su PC
   const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [showClassicOnDesktop, setShowClassicOnDesktop] = useState(false);
+  const [showClassicOnDesktop, setShowClassicOnDesktop] = useState(true);
   const [qrSessionIdState, setQrSessionIdState] = useState<string | null>(null);
   const [qrStatus, setQrStatus] = useState<'pending' | 'scanned' | 'authenticated' | 'expired'>('pending');
 
@@ -169,16 +169,10 @@ function LoginFormInner({
 
   if (!mounted) {
     return (
-      <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
-        <CardHeader className="space-y-1">
-          <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Accedi</CardTitle>
-          <p className="text-xs text-white/45">Caricamento in corso...</p>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gold" />
-        </CardContent>
-      </Card>
+      <div className="login-bar login-bar--center" aria-busy="true">
+        <Loader2 className="h-7 w-7 animate-spin text-gold" />
+        <span className="sr-only">Caricamento in corso...</span>
+      </div>
     );
   }
 
@@ -237,13 +231,8 @@ function LoginFormInner({
       : '';
 
     return (
-      <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
-        <CardHeader className="space-y-1">
-          <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Accedi</CardTitle>
-          <p className="text-xs text-white/45">Area cliente Garofalo Barberia</p>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-6 space-y-6">
+      <div className="login-bar login-bar--center">
+        <div className="flex flex-col items-center justify-center py-2 space-y-6">
           <div className="text-center space-y-1">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Accedi rapidamente</h3>
             <p className="text-xs text-white/50 max-w-[280px] mx-auto">
@@ -296,24 +285,16 @@ function LoginFormInner({
           >
             Oppure usa le credenziali su questo computer
           </button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   // Se siamo su cellulare, o se l'utente ha scelto di mostrare il form classico su Desktop
   return (
-    <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
-      
-      <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Accedi</CardTitle>
-        <p className="text-xs text-white/45">
-          Area cliente Garofalo Barberia
-        </p>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
+    <div className="login-bar">
+      <h2 className="sr-only">Accedi all&apos;area cliente</h2>
+      <div className="space-y-4">
         {isCredentialError ? (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 space-y-2.5 text-xs">
             <div className="flex items-center gap-2 text-red-300 font-medium">
@@ -347,10 +328,10 @@ function LoginFormInner({
         {/* 1. FLUSSO EMAIL CLASSICO */}
         {authMethod === 'email' && (
           <>
-            <form action={signInWithEmail} className="space-y-4">
+            <form action={signInWithEmail} className="login-row">
               <input type="hidden" name="redirect" value={redirect} />
               {qrSessionId && <input type="hidden" name="qrSessionId" value={qrSessionId} />}
-              <div>
+              <div className="login-field">
                 <Label htmlFor="email" className="text-xs text-white/70">Email</Label>
                 <Input 
                   id="email" 
@@ -358,17 +339,27 @@ function LoginFormInner({
                   type="email" 
                   required 
                   autoComplete="email" 
+                  placeholder="Inserisci la tua email"
                   value={emailValue}
                   onChange={(e) => {
                     setEmailValue(e.target.value);
                     setResetEmail(e.target.value);
                   }}
-                  className="mt-1 bg-[#1a1a1a] border-white/10 text-white placeholder-white/30 focus:border-gold/50" 
+                  className="login-input" 
                 />
               </div>
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password" className="text-xs text-white/70">Password</Label>
+              <div className="login-field">
+                <Label htmlFor="password" className="text-xs text-white/70">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  placeholder="Inserisci la tua password"
+                  className="login-input"
+                />
+                <div className="login-forgot">
                   <button
                     type="button"
                     onClick={() => {
@@ -382,18 +373,10 @@ function LoginFormInner({
                     Password dimenticata?
                   </button>
                 </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  className="mt-1 bg-[#1a1a1a] border-white/10 text-white placeholder-white/30 focus:border-gold/50"
-                />
               </div>
-              <Button type="submit" className="w-full bg-gold hover:bg-gold-light text-black py-5 font-semibold transition-all duration-300 border-none">
-                Accedi con password
-              </Button>
+              <button type="submit" className="login-submit">
+                Accedi
+              </button>
             </form>
 
             <OAuthLoginButtons 
@@ -401,6 +384,7 @@ function LoginFormInner({
               disabled={!authConfigured} 
               onWhatsAppClick={() => setAuthMethod('whatsapp')}
               onPasskeyClick={handlePasskeySignIn}
+              layout="row"
             />
           </>
         )}
@@ -588,25 +572,25 @@ function LoginFormInner({
         )}
 
         {/* Pulsante per tornare al QR Code se siamo su Desktop */}
-        {isDesktop && showClassicOnDesktop && (
+        {isDesktop && showClassicOnDesktop && authMethod === 'email' && (
           <button
             type="button"
             onClick={() => setShowClassicOnDesktop(false)}
-            className="text-xs text-gold hover:underline block mx-auto mt-2"
+            className="text-xs text-gold/80 hover:text-gold hover:underline block mx-auto"
           >
-            ← Usa l&apos;accesso rapido con smartphone (QR)
+            Hai il telefono a portata di mano? Accedi con il QR Code
           </button>
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-white/40 border-t border-white/5 pt-4">
+        <p className="text-center text-xs text-white/40 border-t border-white/5 pt-4 mt-2">
           Non hai un account?{' '}
           <Link href="/register" className="text-gold hover:underline font-semibold">
             Registrati ora
           </Link>
         </p>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
