@@ -1,0 +1,173 @@
+name: Controllo backend
+
+# Verifica il sito online: pagine, assistente, database (tutte le tabelle)
+# e configurazione dei servizi esterni. Un passaggio per ogni controllo.
+on:
+  workflow_run:
+    workflows: ["Deploy su Vercel"]
+    types: [completed]
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SITE_URL: ${{ vars.PUBLIC_SITE_URL || 'https://barberiagarofalo.it' }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Scarica stato del backend
+        run: |
+          curl -sS -m 60 -H "Authorization: Bearer ${CRON_SECRET}" "${SITE_URL}/api/health" -o health.json || true
+          test -s health.json
+          jq '{status, duration_ms}' health.json
+          jq -r '.checks | to_entries[] | select(.value.ok|not) | "KO \(.key): \(.value.detail // "")"' health.json
+
+      - name: "Base: api"
+        if: always()
+        run: jq -e '.checks.api.ok == true' health.json
+
+      - name: "Base: database"
+        if: always()
+        run: jq -e '.checks.database.ok == true' health.json
+
+      - name: "Base: environment"
+        if: always()
+        run: jq -e '.checks.environment.ok == true' health.json
+
+      - name: "Tabella: appointments"
+        if: always()
+        run: jq -e '.checks.tabella_appointments.ok == true' health.json
+
+      - name: "Tabella: services"
+        if: always()
+        run: jq -e '.checks.tabella_services.ok == true' health.json
+
+      - name: "Tabella: profiles"
+        if: always()
+        run: jq -e '.checks.tabella_profiles.ok == true' health.json
+
+      - name: "Tabella: barbers"
+        if: always()
+        run: jq -e '.checks.tabella_barbers.ok == true' health.json
+
+      - name: "Tabella: visitor_sessions"
+        if: always()
+        run: jq -e '.checks.tabella_visitor_sessions.ok == true' health.json
+
+      - name: "Tabella: promotions"
+        if: always()
+        run: jq -e '.checks.tabella_promotions.ok == true' health.json
+
+      - name: "Tabella: products"
+        if: always()
+        run: jq -e '.checks.tabella_products.ok == true' health.json
+
+      - name: "Tabella: site_issues"
+        if: always()
+        run: jq -e '.checks.tabella_site_issues.ok == true' health.json
+
+      - name: "Tabella: barber_time_off"
+        if: always()
+        run: jq -e '.checks.tabella_barber_time_off.ok == true' health.json
+
+      - name: "Tabella: barber_availability"
+        if: always()
+        run: jq -e '.checks.tabella_barber_availability.ok == true' health.json
+
+      - name: "Tabella: customer_photos"
+        if: always()
+        run: jq -e '.checks.tabella_customer_photos.ok == true' health.json
+
+      - name: "Tabella: reviews"
+        if: always()
+        run: jq -e '.checks.tabella_reviews.ok == true' health.json
+
+      - name: "Tabella: qr_login_sessions"
+        if: always()
+        run: jq -e '.checks.tabella_qr_login_sessions.ok == true' health.json
+
+      - name: "Tabella: page_views"
+        if: always()
+        run: jq -e '.checks.tabella_page_views.ok == true' health.json
+
+      - name: "Tabella: site_content"
+        if: always()
+        run: jq -e '.checks.tabella_site_content.ok == true' health.json
+
+      - name: "Config: database_admin"
+        if: always()
+        run: jq -e '.checks.config_database_admin.ok == true' health.json
+
+      - name: "Config: email"
+        if: always()
+        run: jq -e '.checks.config_email.ok == true' health.json
+
+      - name: "Config: cron"
+        if: always()
+        run: jq -e '.checks.config_cron.ok == true' health.json
+
+      - name: "Config: push_admin_ntfy"
+        if: always()
+        run: jq -e '.checks.config_push_admin_ntfy.ok == true' health.json
+
+      - name: "Config: sito"
+        if: always()
+        run: jq -e '.checks.config_sito.ok == true' health.json
+
+      - name: "Config: whatsapp"
+        if: always()
+        run: jq -e '.checks.config_whatsapp.ok == true' health.json
+
+      - name: "Pagina: Home"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/")" = 200
+
+      - name: "Pagina: Servizi"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/servizi")" = 200
+
+      - name: "Pagina: Galleria"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/galleria")" = 200
+
+      - name: "Pagina: Chi siamo"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/chi-siamo")" = 200
+
+      - name: "Pagina: Recensioni"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/recensioni")" = 200
+
+      - name: "Pagina: Lascia una recensione"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/recensioni/nuova")" = 200
+
+      - name: "Pagina: Contatti"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/contatti")" = 200
+
+      - name: "Pagina: Prenota"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/prenota")" = 200
+
+      - name: "Pagina: Accedi"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/login")" = 200
+
+      - name: "Pagina: Registrati"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/register")" = 200
+
+      - name: "Pagina: Login admin"
+        if: always()
+        run: test "$(curl -s -o /dev/null -w '%{http_code}' -L -m 60 "${SITE_URL}/admin/login")" = 200
+
+      - name: "Assistente Eliseo risponde"
+        if: always()
+        run: |
+          r=$(curl -s -m 60 -X POST -H 'Content-Type: application/json' -d '{"message":"quanto costa la barba?","history":[]}' "${SITE_URL}/api/chat")
+          echo "$r" | jq -e '(.replies | length) > 0 and (.replies[0] | test("€"))'
