@@ -95,7 +95,7 @@ export function LiveTrafficChart({
 
   if (loading || !data) {
     return (
-      <div className="rounded-xl border border-white/10 bg-[#111] p-6 animate-pulse space-y-4">
+      <div className="rounded-xl border border-white/10 bg-black/45 backdrop-blur-md p-6 animate-pulse space-y-4">
         <div className="h-6 w-32 bg-white/5 rounded" />
         <div className="h-10 w-48 bg-white/5 rounded" />
         <div className="h-64 w-full bg-white/5 rounded" />
@@ -108,7 +108,7 @@ export function LiveTrafficChart({
   const percent = Math.abs(data.percentChange);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] relative overflow-hidden transition-all duration-300">
+    <div className="rounded-xl border border-white/10 bg-black/45 backdrop-blur-md p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)] relative overflow-hidden transition-all duration-300">
       {/* Indicatore dorato in alto */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
 

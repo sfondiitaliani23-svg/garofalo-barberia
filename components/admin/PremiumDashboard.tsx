@@ -108,7 +108,7 @@ function KpiCard({
   sparklineData: number[];
 }) {
   return (
-    <Card className="border-white/10 bg-[#111] hover:border-gold/30 transition-all duration-300 relative overflow-hidden">
+    <Card className="border-white/10 bg-black/45 backdrop-blur-md hover:border-gold/30 transition-all duration-300 relative overflow-hidden">
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-white/50">{title}</span>
@@ -354,7 +354,7 @@ export function PremiumDashboard({
         </div>
 
         {/* Grafico Donut Tasso Occupazione (1/3) */}
-        <div className="rounded-xl border border-white/10 bg-[#111] p-6 shadow-lg flex flex-col justify-between relative overflow-hidden">
+        <div className="rounded-xl border border-white/10 bg-black/45 backdrop-blur-md p-6 shadow-lg flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
           
           <div>
@@ -410,7 +410,7 @@ export function PremiumDashboard({
       {/* ── SEZIONE 3: DETTAGLIO COMPLEMENTARE (VISITE ORARIE + LISTA PRENOTAZIONI) ─ */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Grafico Visite Orarie a barre (2/3) */}
-        <div className="lg:col-span-2 rounded-xl border border-white/10 bg-[#111] p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
+        <div className="lg:col-span-2 rounded-xl border border-white/10 bg-black/45 backdrop-blur-md p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
           
           <div>
@@ -466,7 +466,7 @@ export function PremiumDashboard({
         </div>
 
         {/* Prossimi appuntamenti in arrivo (1/3) */}
-        <div className="rounded-xl border border-white/10 bg-[#111] p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
+        <div className="rounded-xl border border-white/10 bg-black/45 backdrop-blur-md p-6 shadow-lg relative overflow-hidden flex flex-col justify-between">
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
           
           <div>
