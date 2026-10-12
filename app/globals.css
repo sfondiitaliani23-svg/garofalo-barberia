@@ -363,3 +363,34 @@ h2,
   -moz-osx-font-smoothing: grayscale;
   will-change: transform;
 }
+
+/* ── Bottone Prenota del menu (stile concept 05) ───────────────────────── */
+.btn-book-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.05rem;
+  border: 1px solid #cd9a4f;
+  border-radius: 6px;
+  background: transparent;
+  color: #e5b565;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-book-outline:hover,
+.btn-book-outline:focus-visible {
+  background: #cd9a4f;
+  border-color: #cd9a4f;
+  color: #000;
+}
+
+.btn-book-outline:focus-visible {
+  outline: 2px solid #ffb949;
+  outline-offset: 2px;
+}

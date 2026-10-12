@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { CalendarDays, X } from 'lucide-react';
 import { SITE_CONFIG } from '@/lib/site-config';
 
 import { createClient } from '@/lib/supabase/client';
@@ -159,10 +159,8 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
                 Accedi
               </Link>
             )}
-            <Link
-              href="/prenota"
-              className="btn-primary text-[10px] tracking-[0.15em] uppercase py-2 px-4.5 whitespace-nowrap shrink-0 ml-1"
-            >
+            <Link href="/prenota" className="btn-book-outline shrink-0 ml-1">
+              <CalendarDays size={15} strokeWidth={1.75} aria-hidden />
               Prenota
             </Link>
           </nav>
