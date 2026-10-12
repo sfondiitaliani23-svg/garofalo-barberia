@@ -218,6 +218,14 @@
   background: rgba(0, 0, 0, 0.4);
 }
 
+.gc-nav.is-pressed,
+.gc-nav:active {
+  color: #000;
+  background: var(--gc-gold);
+  transform: translateY(-50%) scale(0.92);
+  transition: none;
+}
+
 .gc-nav-prev {
   left: 0.75rem;
 }

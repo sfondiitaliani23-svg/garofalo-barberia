@@ -40,7 +40,11 @@ export function GalleryCarousel() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [pressed, setPressed] = useState<'prev' | 'next' | null>(null);
+  const [inView, setInView] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const thumbsRef = useRef<HTMLDivElement>(null);
+  const pressTimer = useRef<number | null>(null);
   const touchX = useRef<number | null>(null);
 
   const images = filter === 'tutti' ? GALLERY_IMAGES : GALLERY_IMAGES.filter((img) => img.category === filter);
@@ -82,21 +86,55 @@ export function GalleryCarousel() {
     }
   }, [index, filter]);
 
-  // Tastiera nel lightbox
+  // Carosello visibile sullo schermo: solo allora le frecce della tastiera lo comandano
   useEffect(() => {
-    if (!lightbox) return;
+    const el = rootRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  /** Sposta la foto e accende il pulsante ‹ › corrispondente, come un click. */
+  const step = useCallback(
+    (dir: 'prev' | 'next') => {
+      go(dir === 'next' ? 1 : -1);
+      setPressed(dir);
+      if (pressTimer.current) window.clearTimeout(pressTimer.current);
+      pressTimer.current = window.setTimeout(() => setPressed(null), 180);
+    },
+    [go]
+  );
+
+  // Frecce ← → della tastiera, senza dover cliccare prima sulla galleria
+  useEffect(() => {
+    if (!inView && !lightbox) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightbox(false);
-      if (e.key === 'ArrowRight') go(1);
-      if (e.key === 'ArrowLeft') go(-1);
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        step('next');
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        step('prev');
+      } else if (e.key === 'Escape' && lightbox) {
+        setLightbox(false);
+      }
     };
     document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [inView, lightbox, step]);
+
+  // Pagina bloccata mentre il lightbox è aperto
+  useEffect(() => {
+    if (!lightbox) return;
     document.body.style.overflow = 'hidden';
     return () => {
-      document.removeEventListener('keydown', onKey);
       document.body.style.overflow = '';
     };
-  }, [lightbox, go]);
+  }, [lightbox]);
 
   const changeFilter = (id: string) => {
     setFilter(id);
@@ -116,7 +154,7 @@ export function GalleryCarousel() {
   const progress = ((index + 1) / total) * 100;
 
   return (
-    <div className="gc">
+    <div className="gc" ref={rootRef}>
       <div className="gc-filters" role="group" aria-label="Filtra le foto">
         {GALLERY_FILTERS.map((f) => (
           <button
@@ -140,10 +178,6 @@ export function GalleryCarousel() {
         onMouseLeave={() => setPaused(false)}
         onFocusCapture={() => setPaused(true)}
         onBlurCapture={() => setPaused(false)}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowRight') go(1);
-          if (e.key === 'ArrowLeft') go(-1);
-        }}
       >
         <div className="gc-slide">
           {/* Sfondo sfocato della stessa foto */}
@@ -197,10 +231,22 @@ export function GalleryCarousel() {
             </div>
           </div>
 
-          <button type="button" className="gc-nav gc-nav-prev" onClick={() => go(-1)} aria-label="Foto precedente">
+          <button
+            type="button"
+            className={`gc-nav gc-nav-prev${pressed === 'prev' ? ' is-pressed' : ''}`}
+            onClick={() => step('prev')}
+            aria-label="Foto precedente"
+            aria-keyshortcuts="ArrowLeft"
+          >
             <ChevronLeft size={22} />
           </button>
-          <button type="button" className="gc-nav gc-nav-next" onClick={() => go(1)} aria-label="Foto successiva">
+          <button
+            type="button"
+            className={`gc-nav gc-nav-next${pressed === 'next' ? ' is-pressed' : ''}`}
+            onClick={() => step('next')}
+            aria-label="Foto successiva"
+            aria-keyshortcuts="ArrowRight"
+          >
             <ChevronRight size={22} />
           </button>
         </div>
