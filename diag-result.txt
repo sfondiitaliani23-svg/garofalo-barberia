@@ -28,3 +28,12 @@ M admin/login 200 ok
 M privacy 200 ok
 M cookie 404 ok
      CONSOLE Failed to load resource: the server responded with a status of 404 ()
+--- memoria bloccata ---
+storage bloccato / ok []
+storage bloccato servizi ok []
+storage bloccato prenota ok []
+storage bloccato login ok []
+iPhone vecchio (no randomUUID) / ok []
+iPhone vecchio (no randomUUID) servizi ok []
+iPhone vecchio (no randomUUID) prenota ok []
+iPhone vecchio (no randomUUID) login ok []
