@@ -1,11 +1,10 @@
 name: Deploy su Vercel
 
 # Pubblica il sito in produzione a ogni push su main.
-# Serve una sola configurazione iniziale: 3 secret nel repo GitHub
-# (Settings → Secrets and variables → Actions):
-#   VERCEL_TOKEN       → token creato su vercel.com/account/tokens
-#   VERCEL_ORG_ID      → "orgId" del file .vercel/project.json sul PC
-#   VERCEL_PROJECT_ID  → "projectId" dello stesso file
+# La build gira sui server Vercel, che hanno la cache di node_modules e .next:
+# qui si caricano solo i file cambiati (confronto per hash).
+# Secret richiesti (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
 
 on:
   push:
@@ -14,11 +13,12 @@ on:
 
 concurrency:
   group: vercel-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -35,24 +35,22 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - name: Cache Vercel CLI
+        id: cli-cache
+        uses: actions/cache@v4
         with:
-          node-version: 22
+          path: ~/.vercel-cli
+          key: vercel-cli-${{ runner.os }}-v1
 
       - name: Installa Vercel CLI
-        run: npm install --global vercel@latest
-
-      - name: Scarica impostazioni e variabili d'ambiente di produzione
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-
-      - name: Build
-        run: vercel build --prod --token="$VERCEL_TOKEN"
+        if: steps.cli-cache.outputs.cache-hit != 'true'
+        run: npm install --prefix ~/.vercel-cli vercel@latest --no-audit --no-fund
 
       - name: Pubblica in produzione
         run: |
-          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          url=$(~/.vercel-cli/node_modules/.bin/vercel deploy --prod --yes --token="$VERCEL_TOKEN")
           echo "Pubblicato: $url"
           echo "### ✅ Sito pubblicato" >> "$GITHUB_STEP_SUMMARY"
           echo "$url" >> "$GITHUB_STEP_SUMMARY"

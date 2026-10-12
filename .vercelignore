@@ -8,4 +8,10 @@ video lancio  fake sito
 *.zip
 *.tar.gz
 *.mp4
-*.mov
+*.movlegacy
+scripts
+.agents
+.gemini
+.github
+*.md
+tsconfig.tsbuildinfo
