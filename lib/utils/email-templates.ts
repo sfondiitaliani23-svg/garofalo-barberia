@@ -314,15 +314,21 @@ export function renderCustomerReminderEmailHtml(data: {
   barberName: string;
   dateStr: string;
   timeStr: string;
+  when?: 'tomorrow' | 'soon';
 }) {
   const areaUrl = `${siteUrl()}/area-cliente/appuntamenti`;
+  const tomorrow = data.when !== 'soon';
 
   return renderEmailTemplate({
-    preheader: `Il tuo appuntamento da Garofalo Barberia è oggi alle ${data.timeStr}`,
+    preheader: tomorrow
+      ? `Domani alle ${data.timeStr} ti aspettiamo da Garofalo Barberia`
+      : `Il tuo appuntamento da Garofalo Barberia: ${data.dateStr} alle ${data.timeStr}`,
     badge: 'Promemoria',
     eyebrow: 'Ci vediamo presto',
     title: `Ciao ${escapeHtml(data.customerName)},`,
-    intro: 'Mancano circa <strong style="color:#ffb949;">6 ore</strong> al tuo appuntamento. Ecco il riepilogo — ti aspettiamo in salone con lo stesso stile che ami online.',
+    intro: tomorrow
+      ? 'Ti ricordiamo il tuo appuntamento di <strong style="color:#ffb949;">domani</strong>. Ecco il riepilogo: ti aspettiamo in salone.'
+      : 'Ti ricordiamo il tuo appuntamento. Ecco il riepilogo: ti aspettiamo in salone.',
     detailRows: [
       { label: 'Servizio', value: escapeHtml(data.serviceName) },
       { label: 'Barbiere', value: escapeHtml(data.barberName) },

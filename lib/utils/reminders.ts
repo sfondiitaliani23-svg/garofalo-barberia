@@ -9,6 +9,9 @@ import {
   parseBookingDateTime,
 } from '@/lib/utils/booking-datetime';
 import { describeGreenApiError, normalizeItalianPhone } from '@/lib/utils/phone';
+import { Resend } from 'resend';
+import { renderCustomerReminderEmailHtml } from '@/lib/utils/email-templates';
+import { buildTransactionalEmail } from '@/lib/utils/email-delivery';
 
 export interface ReminderAppointment {
   id: string;
@@ -20,6 +23,7 @@ export interface ReminderAppointment {
   ends_at: string;
   notes: string | null;
   reminder_whatsapp_sent_at: string | null;
+  reminder_email_sent_at?: string | null;
   barber?: { name: string } | { name: string }[] | null;
   service?: { name: string; price_cents?: number; duration_minutes?: number } | { name: string; price_cents?: number; duration_minutes?: number }[] | null;
 }
@@ -67,7 +71,7 @@ async function sendGreenApiWhatsApp(phone: string, body: string) {
       const detail = await response.text();
       const info = describeGreenApiError(detail);
       console.error(info.quota ? '[Green API] QUOTA ESAURITA:' : 'Green API WhatsApp reminder failed:', info.quota ? info.message : detail);
-      return { ok: false, reason: 'send_failed' as const };
+      return { ok: false, reason: info.quota ? ('quota' as const) : ('send_failed' as const) };
     }
 
     const result = await response.json();
@@ -165,15 +169,53 @@ export async function sendCustomerWhatsAppReminder(phone: string, body: string) 
   const providers = preferred
     ? [preferred, ...Object.values(providerMap).filter((fn) => fn !== preferred)]
     : [sendGreenApiWhatsApp, sendMetaWhatsApp, sendTwilioWhatsApp];
-  let lastReason: 'not_configured' | 'send_failed' = 'not_configured';
+  let lastReason: 'not_configured' | 'send_failed' | 'quota' = 'not_configured';
 
   for (const provider of providers) {
-    const result = await provider(normalized, body);
-    if (result.ok) return result;
-    if (result.reason === 'send_failed') lastReason = 'send_failed';
+    const result = (await provider(normalized, body)) as { ok: boolean; reason?: string };
+    if (result.ok) return { ok: true as const };
+    if (result.reason === 'quota') lastReason = 'quota';
+    else if (result.reason === 'send_failed' && lastReason !== 'quota') lastReason = 'send_failed';
   }
 
   return { ok: false, reason: lastReason };
+}
+
+// ---------------------------------------------------------------------------
+// Promemoria via email (gratuito con il piano free di Resend)
+// ---------------------------------------------------------------------------
+
+const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+
+export async function sendCustomerReminderEmail(
+  to: string | null | undefined,
+  data: { customerName: string; serviceName: string; barberName: string; startsAt: Date; when: 'tomorrow' | 'soon' }
+) {
+  const email = to?.trim();
+  if (!email) return { ok: false as const, reason: 'no_email' as const };
+  if (!resendClient) return { ok: false as const, reason: 'not_configured' as const };
+  const { dateStr, timeStr } = formatShopBookingDateTime(data.startsAt);
+  const payload = buildTransactionalEmail({
+    to: email,
+    subject: data.when === 'tomorrow' ? `Promemoria: domani alle ${timeStr} da Garofalo Barberia` : `Promemoria: ${dateStr} alle ${timeStr} da Garofalo Barberia`,
+    html: renderCustomerReminderEmailHtml({ ...data, dateStr, timeStr }),
+    text:
+      `Ciao ${data.customerName}, ti ricordiamo il tuo appuntamento da Garofalo Barberia.\n` +
+      `Servizio: ${data.serviceName}\nBarbiere: ${data.barberName}\nData: ${dateStr}\nOrario: ${timeStr}\n` +
+      `Indirizzo: ${SITE_CONFIG.address}`,
+  });
+  if (!payload) return { ok: false as const, reason: 'staff_blocked' as const };
+  try {
+    const { error } = await resendClient.emails.send(payload);
+    if (error) {
+      console.error('[EMAIL PROMEMORIA] invio fallito:', error);
+      return { ok: false as const, reason: 'send_failed' as const };
+    }
+    return { ok: true as const };
+  } catch (e) {
+    console.error('[EMAIL PROMEMORIA] invio fallito:', e);
+    return { ok: false as const, reason: 'send_failed' as const };
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -280,8 +322,8 @@ export async function sendImmediateWhatsAppReminderIfEligible(appointmentIds: st
   const { data: appointments } = await supabase
     .from('appointments')
     .select(
-      `id, customer_name, customer_phone, starts_at, ends_at, notes,
-       reminder_whatsapp_sent_at,
+      `id, customer_name, customer_phone, customer_email, starts_at, ends_at, notes,
+       reminder_whatsapp_sent_at, reminder_email_sent_at,
        barber:barbers(name),
        service:services(name)`
     )
@@ -291,16 +333,12 @@ export async function sendImmediateWhatsAppReminderIfEligible(appointmentIds: st
     return { sent: false, reason: 'not_found' };
   }
 
-  // Se uno qualsiasi dei record ha già il promemoria inviato, non re-inviare
-  if (appointments.some((a) => a.reminder_whatsapp_sent_at !== null)) {
+  // Se il promemoria è già partito su entrambi i canali, non re-inviare
+  if (appointments.some((a) => a.reminder_whatsapp_sent_at !== null && a.reminder_email_sent_at !== null)) {
     return { sent: false, reason: 'already_sent' };
   }
 
   const firstApt = appointments[0];
-  if (!firstApt.customer_phone?.trim()) {
-    return { sent: false, reason: 'no_phone' };
-  }
-
   const startsAt = new Date(firstApt.starts_at);
   if (!shouldSendImmediateWhatsAppReminder(startsAt)) {
     return { sent: false, reason: 'not_last_minute' };
@@ -316,15 +354,17 @@ export async function sendImmediateWhatsAppReminderIfEligible(appointmentIds: st
       startsAt: new Date(group.primary.starts_at),
     };
 
-    const message = buildWhatsAppReminderMessage(payload);
-    const result = await sendCustomerWhatsAppReminder(group.primary.customer_phone, message);
+    const primary = group.primary as ReminderAppointment;
+    const nowIso = new Date().toISOString();
 
-    if (result.ok) {
-      const nowIso = new Date().toISOString();
-      await supabase
-        .from('appointments')
-        .update({ reminder_whatsapp_sent_at: nowIso })
-        .in('id', group.ids);
+    if (!primary.reminder_whatsapp_sent_at && primary.customer_phone?.trim()) {
+      const result = await sendCustomerWhatsAppReminder(primary.customer_phone, buildWhatsAppReminderMessage(payload));
+      if (result.ok) await supabase.from('appointments').update({ reminder_whatsapp_sent_at: nowIso }).in('id', group.ids);
+    }
+
+    if (!primary.reminder_email_sent_at) {
+      const mail = await sendCustomerReminderEmail(primary.customer_email, { ...payload, when: 'soon' });
+      if (mail.ok) await supabase.from('appointments').update({ reminder_email_sent_at: nowIso }).in('id', group.ids);
     }
   }
 
@@ -341,6 +381,10 @@ export async function processAppointmentReminders() {
   if (!supabase) return { ok: false as const, error: 'Database non configurato' };
 
   const now = new Date();
+  // Il promemoria della sera parte dalle 22:30 (ora di Foggia), non prima.
+  if (getShopTimeString(now) < '22:30') {
+    return { ok: true as const, skipped: 'before_22_30' as const, count: 0, processed: [] };
+  }
   const currentRomeDate = getShopDateString(now);
   const tomorrowRomeDate = getShopDateString(
     addDays(parseBookingDateTime(currentRomeDate, '12:00'), 1)
@@ -351,12 +395,12 @@ export async function processAppointmentReminders() {
     .from('appointments')
     .select(
       `id, customer_name, customer_phone, customer_email, customer_id, starts_at, ends_at, notes,
-       reminder_whatsapp_sent_at,
+       reminder_whatsapp_sent_at, reminder_email_sent_at,
        barber:barbers(name),
        service:services(name, price_cents, duration_minutes)`
     )
     .eq('status', 'confirmed')
-    .is('reminder_whatsapp_sent_at', null)
+    .or('reminder_whatsapp_sent_at.is.null,reminder_email_sent_at.is.null')
     .gte('starts_at', tomorrowStart.toISOString())
     .lt('starts_at', tomorrowEnd.toISOString())
     .order('starts_at', { ascending: true });
@@ -377,12 +421,11 @@ export async function processAppointmentReminders() {
 
   const groups = groupAppointmentsForReminders(appointments as any);
   const processed = [];
+  // Se la quota WhatsApp è esaurita, non sprechiamo altri tentativi stasera.
+  let whatsappBlocked = false;
 
   for (const group of groups) {
-    const primaryApt = group.primary;
-    if (!primaryApt.customer_phone?.trim()) {
-      continue;
-    }
+    const primaryApt = group.primary as ReminderAppointment;
 
     const payload = {
       customerName: primaryApt.customer_name,
@@ -392,15 +435,18 @@ export async function processAppointmentReminders() {
       startsAt: new Date(primaryApt.starts_at),
     };
 
-    const message = buildWhatsAppReminderMessage(payload);
-    const result = await sendCustomerWhatsAppReminder(primaryApt.customer_phone, message);
+    const nowIso = new Date().toISOString();
+    let result: { ok: boolean; reason?: string } = { ok: false, reason: 'skipped' };
+    if (!primaryApt.reminder_whatsapp_sent_at && primaryApt.customer_phone?.trim() && !whatsappBlocked) {
+      result = await sendCustomerWhatsAppReminder(primaryApt.customer_phone, buildWhatsAppReminderMessage(payload));
+      if (result.ok) await supabase.from('appointments').update({ reminder_whatsapp_sent_at: nowIso }).in('id', group.ids);
+      if (result.reason === 'quota') whatsappBlocked = true;
+    }
 
-    if (result.ok) {
-      const nowIso = new Date().toISOString();
-      await supabase
-        .from('appointments')
-        .update({ reminder_whatsapp_sent_at: nowIso })
-        .in('id', group.ids);
+    let email: { ok: boolean; reason?: string } = { ok: false, reason: 'already_sent' };
+    if (!primaryApt.reminder_email_sent_at) {
+      email = await sendCustomerReminderEmail(primaryApt.customer_email, { ...payload, when: 'tomorrow' });
+      if (email.ok) await supabase.from('appointments').update({ reminder_email_sent_at: nowIso }).in('id', group.ids);
     }
 
     processed.push({
@@ -411,6 +457,7 @@ export async function processAppointmentReminders() {
       service: group.serviceNames,
       barber: group.barberName,
       whatsapp: result,
+      email,
     });
   }
 

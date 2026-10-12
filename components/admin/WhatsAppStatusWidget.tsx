@@ -14,6 +14,7 @@ import {
   ChevronRight,
   BellRing,
   BarChart3,
+  CalendarCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,10 +26,14 @@ import {
   rebootWhatsAppInstanceAction,
   getWhatsAppNumberAction,
   getWhatsAppReminderStatsAction,
+  getTomorrowWhatsAppQueueAction,
+  markReminderGroupSentAction,
+  type TomorrowReminderItem,
   type WhatsAppState,
 } from '@/lib/actions/whatsapp-admin';
 
 const WA_TABS = [
+  { id: 'tomorrow' as const, label: 'Promemoria di domani', icon: CalendarCheck },
   { id: 'messages' as const, label: 'Messaggi automatici', icon: BellRing },
   { id: 'test' as const, label: 'Invia test', icon: Send },
   { id: 'stats' as const, label: 'Statistiche', icon: BarChart3 },
@@ -85,7 +90,8 @@ export function WhatsAppStatusWidget() {
   const [testPhone, setTestPhone] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [rebooting, setRebooting] = useState(false);
-  const [tab, setTab] = useState<'messages' | 'test' | 'stats'>('messages');
+  const [tab, setTab] = useState<'tomorrow' | 'messages' | 'test' | 'stats'>('tomorrow');
+  const [queue, setQueue] = useState<TomorrowReminderItem[] | null>(null);
   const [quotaMsg, setQuotaMsg] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<WaMessageId>('reminder');
   const [waNumber, setWaNumber] = useState<string | null>(null);
@@ -95,6 +101,7 @@ export function WhatsAppStatusWidget() {
     if (!modalOpen) return;
     getWhatsAppNumberAction().then((r) => setWaNumber(r.phone ?? null)).catch(() => {});
     getWhatsAppReminderStatsAction().then(setStats).catch(() => {});
+    getTomorrowWhatsAppQueueAction().then(setQueue).catch(() => setQueue([]));
   }, [modalOpen]);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -406,6 +413,53 @@ export function WhatsAppStatusWidget() {
 
                 {/* Colonna destra: contenuto della sezione */}
                 <div className="rounded-xl border border-white/10 bg-[#111] p-4">
+                  {tab === 'tomorrow' && (
+                    <>
+                      <p className="text-sm font-semibold text-white">Promemoria di domani</p>
+                      <p className="text-xs text-white/50">
+                        Gratis e senza limiti: tocca &quot;Apri WhatsApp&quot;, premi invia dal telefono del salone. Il cliente risulta avvisato.
+                      </p>
+                      <ul className="mt-3 max-h-[360px] space-y-2 overflow-y-auto pr-1">
+                        {queue === null ? (
+                          <li className="text-xs text-white/40">Caricamento...</li>
+                        ) : queue.length === 0 ? (
+                          <li className="text-xs text-white/40">Nessun appuntamento con telefono per domani.</li>
+                        ) : (
+                          queue.map((q) => (
+                            <li key={q.ids[0]} className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${q.sent ? 'border-emerald-500/25 opacity-70' : 'border-white/10'}`}>
+                              <span className="w-11 shrink-0 text-sm font-semibold tabular-nums text-gold">{q.time}</span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm text-white">{q.name}</span>
+                                <span className="block truncate text-[11px] text-white/45">{q.service}</span>
+                              </span>
+                              {q.sent ? (
+                                <span className="text-[11px] font-semibold text-emerald-300">Avvisato</span>
+                              ) : (
+                                <a
+                                  href={q.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={() => {
+                                    setQueue((list) => list?.map((x) => (x.ids[0] === q.ids[0] ? { ...x, sent: true } : x)) ?? null);
+                                    void markReminderGroupSentAction(q.ids);
+                                  }}
+                                  className="shrink-0 rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-500"
+                                >
+                                  Apri WhatsApp
+                                </a>
+                              )}
+                            </li>
+                          ))
+                        )}
+                      </ul>
+                      {queue && queue.length > 0 && (
+                        <p className="mt-2 text-[11px] text-white/45">
+                          {queue.filter((q) => q.sent).length} di {queue.length} avvisati. L&apos;email di promemoria parte comunque in automatico alle 22:30.
+                        </p>
+                      )}
+                    </>
+                  )}
+
                   {tab === 'messages' && (
                     <>
                       <p className="text-sm font-semibold text-white">Messaggi automatici</p>

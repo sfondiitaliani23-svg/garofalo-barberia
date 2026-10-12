@@ -216,3 +216,68 @@ export async function getWhatsAppReminderStatsAction(): Promise<{ today: number;
     lastSentAt: (last.data?.[0]?.reminder_whatsapp_sent_at as string | undefined) ?? null,
   };
 }
+
+export interface TomorrowReminderItem {
+  ids: string[];
+  name: string;
+  phone: string;
+  time: string;
+  service: string;
+  url: string;
+  sent: boolean;
+}
+
+/**
+ * Appuntamenti confermati di domani con telefono: link wa.me con il promemoria
+ * già scritto, da inviare gratis dal WhatsApp del salone con un tocco.
+ */
+export async function getTomorrowWhatsAppQueueAction(): Promise<TomorrowReminderItem[]> {
+  await requireAdmin();
+  const { createServiceClient } = await import('@/lib/supabase/server');
+  const { addDays } = await import('date-fns');
+  const { getShopDateString, getShopDayBounds, parseBookingDateTime, getShopTimeString } = await import('@/lib/utils/booking-datetime');
+  const { groupAppointmentsForReminders, getWhatsAppReminderUrl } = await import('@/lib/utils/reminders');
+  const supabase = await createServiceClient();
+  if (!supabase) return [];
+
+  const today = getShopDateString(new Date());
+  const tomorrow = getShopDateString(addDays(parseBookingDateTime(today, '12:00'), 1));
+  const { dayStart, dayEnd } = getShopDayBounds(tomorrow);
+
+  const { data } = await supabase
+    .from('appointments')
+    .select('id, customer_name, customer_phone, customer_email, starts_at, ends_at, notes, reminder_whatsapp_sent_at, barber:barbers(name), service:services(name)')
+    .eq('status', 'confirmed')
+    .not('customer_phone', 'is', null)
+    .neq('customer_phone', '')
+    .gte('starts_at', dayStart.toISOString())
+    .lt('starts_at', dayEnd.toISOString())
+    .order('starts_at', { ascending: true });
+
+  const groups = groupAppointmentsForReminders((data ?? []) as never);
+  return groups.map((g) => ({
+    ids: g.ids,
+    name: g.primary.customer_name,
+    phone: g.primary.customer_phone,
+    time: getShopTimeString(new Date(g.primary.starts_at)),
+    service: g.serviceNames,
+    sent: !!g.primary.reminder_whatsapp_sent_at,
+    url: getWhatsAppReminderUrl({
+      customerName: g.primary.customer_name,
+      customerPhone: g.primary.customer_phone,
+      serviceName: g.serviceNames,
+      barberName: g.barberName,
+      startsAt: new Date(g.primary.starts_at),
+    }),
+  }));
+}
+
+/** Segna come avvisati tutti gli appuntamenti di un cliente (combo). */
+export async function markReminderGroupSentAction(ids: string[]): Promise<{ ok: boolean }> {
+  await requireAdmin();
+  const { createServiceClient } = await import('@/lib/supabase/server');
+  const supabase = await createServiceClient();
+  if (!supabase || ids.length === 0) return { ok: false };
+  const { error } = await supabase.from('appointments').update({ reminder_whatsapp_sent_at: new Date().toISOString() }).in('id', ids);
+  return { ok: !error };
+}
