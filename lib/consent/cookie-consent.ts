@@ -1,3 +1,5 @@
+import { storageGet, storageSet } from '@/lib/utils/safe-storage';
+
 export const COOKIE_CONSENT_KEY = 'garofalo_cookie_consent';
 
 export type CookieConsent = {
@@ -11,7 +13,7 @@ export function getCookieConsent(): CookieConsent | null {
   if (typeof window === 'undefined') return null;
 
   try {
-    const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
+    const raw = storageGet(COOKIE_CONSENT_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CookieConsent;
     if (typeof parsed.analytics !== 'boolean' || typeof parsed.preferences !== 'boolean') {
@@ -45,6 +47,6 @@ export function saveCookieConsent(analytics: boolean, preferences: boolean): voi
     decidedAt: new Date().toISOString(),
   };
 
-  localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consent));
+  storageSet(COOKIE_CONSENT_KEY, JSON.stringify(consent));
   window.dispatchEvent(new CustomEvent('garofalo:cookie-consent', { detail: consent }));
 }

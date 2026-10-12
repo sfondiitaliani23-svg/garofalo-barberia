@@ -1,5 +1,6 @@
 'use client';
 
+import { storageGet, storageSet } from '@/lib/utils/safe-storage';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { SITE_CONFIG } from '@/lib/site-config';
@@ -11,7 +12,7 @@ export function LoadingScreen() {
 
   useEffect(() => {
     // Se la schermata di caricamento è già stata mostrata in questa sessione, non bloccare la navigazione
-    if (sessionStorage.getItem('gbf_loader_shown')) {
+    if (storageGet('gbf_loader_shown', 'session')) {
       return;
     }
 
@@ -34,7 +35,7 @@ export function LoadingScreen() {
           setShouldRender(false);
         }, 250);
       }
-      sessionStorage.setItem('gbf_loader_shown', '1');
+      storageSet('gbf_loader_shown', '1', 'session');
     }, 450);
 
     return () => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { isStaleDeployError, reloadOnce } from '@/lib/utils/stale-reload';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,6 +13,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    if (isStaleDeployError(error)) reloadOnce();
     console.error('Application error:', error);
   }, [error]);
 
