@@ -176,49 +176,84 @@ function LoginFormInner({
     );
   }
 
-  // Gestione simulata dell'invio OTP WhatsApp
-  const handleSendWhatsAppOTP = (e: React.FormEvent) => {
+  // Dopo l'accesso: torna alla pagina richiesta (o autorizza il PC se arrivi dal QR)
+  const afterLogin = qrSessionId ? `/login/qr?id=${qrSessionId}` : redirect;
+
+  // Accesso con codice WhatsApp (OTP reale, verificato dal server)
+  const handleSendWhatsAppOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber.trim()) {
+    if (phoneNumber.replace(/\D/g, '').length < 9) {
       toast.error('Inserisci un numero di telefono valido');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const { requestWhatsAppCode } = await import('@/lib/actions/passwordless');
+      const res = await requestWhatsAppCode(phoneNumber);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      setOtpCode('');
       setWhatsAppStep('otp');
-      toast.success('Codice di verifica inviato su WhatsApp!');
-    }, 1200);
+      toast.success(res.message ?? 'Codice inviato su WhatsApp.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Gestione simulata della verifica OTP WhatsApp
-  const handleVerifyWhatsAppOTP = (e: React.FormEvent) => {
+  const handleVerifyWhatsAppOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otpCode.length < 6) {
       toast.error('Inserisci il codice di 6 cifre');
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Accesso autorizzato con WhatsApp!');
-      router.push(redirect);
+    try {
+      const { verifyWhatsAppCode } = await import('@/lib/actions/passwordless');
+      const res = await verifyWhatsAppCode(phoneNumber, otpCode);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success('Accesso effettuato.');
+      router.push(afterLogin);
       router.refresh();
-    }, 1000);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Gestione simulata dell'accesso Passkey
-  const handlePasskeySignIn = () => {
+  // Accesso con Passkey (WebAuthn reale: impronta, volto o PIN del dispositivo)
+  const handlePasskeySignIn = async () => {
     setAuthMethod('passkey');
     setLoading(true);
-    
-    // Simula la richiesta delle credenziali WebAuthn del browser
-    setTimeout(() => {
-      setLoading(false);
-      toast.success('Passkey verificata con successo via FaceID/TouchID!');
-      router.push(redirect);
+    try {
+      const { browserSupportsWebAuthn, startAuthentication } = await import('@simplewebauthn/browser');
+      if (!browserSupportsWebAuthn()) {
+        toast.error('Questo browser non supporta le Passkey.');
+        setAuthMethod('email');
+        return;
+      }
+      const { passkeyLoginOptions, passkeyLoginVerify } = await import('@/lib/actions/passwordless');
+      const optionsJSON = await passkeyLoginOptions();
+      const assertion = await startAuthentication({ optionsJSON });
+      const res = await passkeyLoginVerify(assertion);
+      if (!res.ok) {
+        toast.error(res.error);
+        setAuthMethod('email');
+        return;
+      }
+      toast.success('Accesso effettuato con Passkey.');
+      router.push(afterLogin);
       router.refresh();
-    }, 1500);
+    } catch (err) {
+      const name = (err as { name?: string })?.name;
+      toast.error(name === 'NotAllowedError' ? 'Accesso con Passkey annullato.' : 'Passkey non disponibile su questo dispositivo.');
+      setAuthMethod('email');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Se siamo su PC (Desktop) e non abbiamo forzato la visualizzazione classica, mostriamo il QR Code!
@@ -479,7 +514,7 @@ function LoginFormInner({
             {whatsAppStep === 'phone' ? (
               <form onSubmit={handleSendWhatsAppOTP} className="space-y-4">
                 <p className="text-sm text-white/60">
-                  Inserisci il tuo numero di telefono associato a WhatsApp. Ti invieremo un codice temporaneo (OTP).
+                  Inserisci il numero salvato nel tuo profilo. Ti mandiamo su WhatsApp un codice di 6 cifre, valido 5 minuti.
                 </p>
                 <div>
                   <Label htmlFor="whatsapp-phone" className="text-xs text-white/70">Numero di telefono</Label>

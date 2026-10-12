@@ -28,7 +28,7 @@ const FAQ_DATA: FAQItem[] = [
     id: '3',
     category: 'account',
     question: 'Cos\'è il login rapido tramite Passkey?',
-    answer: 'La Passkey ti consente di accedere al tuo account in modo sicuro e ultra-rapido utilizzando il riconoscimento facciale o l\'impronta digitale del tuo telefono o computer, senza dover digitare alcuna password. Puoi configurarla al primo login per un\'esperienza senza intoppi.',
+    answer: 'La Passkey ti consente di accedere al tuo account in modo sicuro e ultra-rapido utilizzando il riconoscimento facciale o l\'impronta digitale del tuo telefono o computer, senza dover digitare alcuna password. Attivala dal tuo Profilo, nella sezione "Accesso rapido con Passkey", una volta per ogni dispositivo.',
   },
   {
     id: '4',

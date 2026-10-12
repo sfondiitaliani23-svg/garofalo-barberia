@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getProfile } from '@/lib/auth';
 import { ProfileForm } from '@/components/customer/ProfileForm';
 import { SavedToast } from '@/components/customer/SavedToast';
+import { PasskeyManager } from '@/components/customer/PasskeyManager';
 
 export const metadata = { title: 'Profilo' };
 
@@ -19,6 +20,7 @@ export default async function CustomerProfiloPage() {
       <p className="mt-1 text-white/50">I tuoi dati e preferenze</p>
       
       <ProfileForm profile={profile} />
+      <PasskeyManager />
     </div>
   );
 }
