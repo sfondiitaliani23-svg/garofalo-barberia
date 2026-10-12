@@ -10,13 +10,6 @@ import {
   type AIAgentLog,
 } from '@/lib/data/site-areas';
 
-export type {
-  AIAgentDefinition,
-  SiteAreaInfo,
-  AIAgentLog,
-  IssueReport,
-} from '@/lib/data/site-areas';
-
 // Fallback in-memory storage se la tabella DB non è ancora migrata
 let memoryReportsStore: IssueReport[] = [
   {

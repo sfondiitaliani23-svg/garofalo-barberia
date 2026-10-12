@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { SITE_AREAS, type SiteAreaInfo } from '@/lib/data/site-areas';
+import { SITE_AREAS, type IssueReport, type SiteAreaInfo } from '@/lib/data/site-areas';
 import {
-  type IssueReport,
   createIssueReport,
   reRunAIAgents,
   updateReportStatus,
