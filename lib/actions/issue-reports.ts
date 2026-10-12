@@ -11,48 +11,7 @@ import {
 } from '@/lib/data/site-areas';
 
 // Fallback in-memory storage se la tabella DB non è ancora migrata
-let memoryReportsStore: IssueReport[] = [
-  {
-    id: 'REP-2026-0001',
-    areaId: 'prenotazioni',
-    areaName: 'Prenotazioni & Calcolatore Orari',
-    title: 'Controllo sincronizzazione fasce orarie serali',
-    description: 'Segnalato piccolo ritardo nell\'aggiornamento degli slot per le prenotazioni del sabato dopo le 18:00.',
-    priority: 'media',
-    status: 'risolto_ia',
-    reportedBy: 'Luigi Garofalo (Titolare)',
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    updatedAt: new Date(Date.now() - 3600000 * 4.9).toISOString(),
-    assignedAgents: [SITE_AREAS[0].agent1, SITE_AREAS[0].agent2],
-    aiResolutionSummary: 'Entrambi gli Agenti IA sono intervenuti: pulizia della cache della matrice oraria ed estesa la tolleranza del calcolatore slot. Problema risolto al 100% in autonomia.',
-    aiLogs: [
-      {
-        timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
-        agentId: SITE_AREAS[0].agent1.id,
-        agentName: SITE_AREAS[0].agent1.name,
-        step: 'Fase 1: Diagnosi',
-        action: 'Inizio scansione registri temporali per l\'area Prenotazioni & Calcolatore Orari.',
-        status: 'working',
-      },
-      {
-        timestamp: new Date(Date.now() - 3600000 * 4.98).toISOString(),
-        agentId: SITE_AREAS[0].agent1.id,
-        agentName: SITE_AREAS[0].agent1.name,
-        step: 'Fase 1: Risultato',
-        action: 'Identificata micro-latenza nella validazione slot. Applicato aggiornamento istantaneo parametri di query.',
-        status: 'fixed',
-      },
-      {
-        timestamp: new Date(Date.now() - 3600000 * 4.95).toISOString(),
-        agentId: SITE_AREAS[0].agent2.id,
-        agentName: SITE_AREAS[0].agent2.name,
-        step: 'Fase 2: Autoguarigione',
-        action: 'Esecuzione test sintetico su 50 combinazioni orarie. Verifica di stabilità superata.',
-        status: 'success',
-      },
-    ],
-  },
-];
+let memoryReportsStore: IssueReport[] = [];
 
 export interface CreateIssueInput {
   areaId: string;
@@ -201,7 +160,10 @@ export async function createIssueReport(input: CreateIssueInput): Promise<{
   }
 
   const areaInfo = SITE_AREAS.find((a) => a.id === input.areaId) || SITE_AREAS[0];
-  const { status, logs, summary } = executeAIAgentsForIssue(areaInfo, input);
+  // Nessuna risoluzione automatica: la segnalazione resta aperta finché qualcuno non la gestisce.
+  const status: IssueReport['status'] = 'in_analisi';
+  const logs: IssueReport['aiLogs'] = [];
+  const summary: string | undefined = undefined;
 
   const reportId = `REP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
   const nowStr = new Date().toISOString();
