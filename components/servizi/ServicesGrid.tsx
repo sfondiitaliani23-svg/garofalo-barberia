@@ -81,7 +81,6 @@ export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
 
       <div className="svc-grid">
         {groups.map((group) => {
-          const Icon = CATEGORY_ICONS[group.category];
           const isOpen = open === group.category;
           return (
             <button
@@ -100,7 +99,6 @@ export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
               />
               <span className="svc-card-shade" aria-hidden />
               <span className="svc-card-body">
-                <Icon className="svc-card-icon" size={30} strokeWidth={1.4} aria-hidden />
                 <span className="svc-card-label">{group.label}</span>
                 <span className="svc-card-subtitle">{group.subtitle}</span>
                 <span className="svc-card-foot">

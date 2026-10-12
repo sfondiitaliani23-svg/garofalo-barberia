@@ -138,12 +138,7 @@
   flex: 1;
   flex-direction: column;
   padding: 1rem;
-  padding-top: 52%;
-}
-
-.svc-card-icon {
-  color: var(--svc-gold-bright);
-  margin-bottom: 0.9rem;
+  padding-top: calc(52% + 2.5rem);
 }
 
 .svc-card-label {
@@ -414,13 +409,7 @@
 
   .svc-card-body {
     padding: 0.8rem;
-    padding-top: 48%;
-  }
-
-  .svc-card-icon {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 0.6rem;
+    padding-top: calc(48% + 2rem);
   }
 
   .svc-card-subtitle {

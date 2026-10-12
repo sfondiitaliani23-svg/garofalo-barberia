@@ -5,31 +5,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Expand, X } from 'lucide-react';
-import { GALLERY_FILTERS, GALLERY_IMAGES, type GalleryCategory } from '@/lib/data/gallery';
+import { GALLERY_FILTERS, GALLERY_IMAGES } from '@/lib/data/gallery';
 import './gallery-carousel.css';
 
 const AUTOPLAY_MS = 6000;
-
-const CATEGORY_COPY: Record<GalleryCategory, { eyebrow: string; title: string; accent: string; text: string }> = {
-  uomo: {
-    eyebrow: 'Tagli uomo',
-    title: 'Precisione',
-    accent: 'in ogni dettaglio.',
-    text: 'Tagli moderni e classici, barba curata. Ogni stile nasce da un ascolto attento e da una tecnica precisa.',
-  },
-  ragazzo: {
-    eyebrow: 'Tagli ragazzo',
-    title: 'Lo stile',
-    accent: 'che ti rappresenta.',
-    text: 'Fade, texture e tagli di tendenza. Ti consigliamo il look giusto e lo realizziamo con cura.',
-  },
-  bimbo: {
-    eyebrow: 'Tagli bimbo',
-    title: 'Piccoli clienti,',
-    accent: 'grande pazienza.',
-    text: 'Prendiamo tutto il tempo necessario: niente fretta, niente pressione. Anche per il primo taglio.',
-  },
-};
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -50,7 +29,7 @@ export function GalleryCarousel() {
   const images = filter === 'tutti' ? GALLERY_IMAGES : GALLERY_IMAGES.filter((img) => img.category === filter);
   const total = images.length;
   const current = images[Math.min(index, total - 1)];
-  const copy = CATEGORY_COPY[current.category];
+  const copy = current;
 
   const go = useCallback(
     (delta: number) => setIndex((i) => (i + delta + total) % total),
