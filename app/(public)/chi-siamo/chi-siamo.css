@@ -18,6 +18,10 @@
   color: var(--white);
 }
 
+.page-chi-siamo .page-hero + .section {
+  padding-top: 2.5rem;
+}
+
 .page-chi-siamo .section-lead {
   font-size: 1.05rem;
   line-height: 1.75;
@@ -25,7 +29,7 @@
 }
 
 .page-chi-siamo .page-hero {
-  padding: 8rem 0 4rem;
+  padding: 3.5rem 0 1.5rem;
   background: var(--black);
   color: var(--white);
   text-align: center;

@@ -1,0 +1,254 @@
+/* ── Animated divider ── */
+.animated-divider {
+  --divider-gold: var(--gold, #c9a227);
+  --divider-gold-light: var(--gold-light, #e8c547);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.animated-divider.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animated-divider-compact {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem auto 2.5rem;
+  max-width: 220px;
+}
+
+.animated-divider-svg-compact {
+  width: 100%;
+  height: 20px;
+  overflow: visible;
+}
+
+.animated-divider-line {
+  stroke: var(--divider-gold);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 88;
+  stroke-dashoffset: 88;
+}
+
+.animated-divider-line-single {
+  stroke: var(--divider-gold);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 220;
+  stroke-dashoffset: 220;
+}
+
+.animated-divider.is-visible .animated-divider-line-left {
+  animation: divider-line-draw 1s ease forwards;
+}
+
+.animated-divider.is-visible .animated-divider-line-right {
+  animation: divider-line-draw 1s ease 0.25s forwards;
+}
+
+.animated-divider.is-visible .animated-divider-line-single {
+  animation: divider-line-draw 1.2s ease forwards;
+}
+
+.animated-divider-gem-compact {
+  fill: var(--divider-gold);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.animated-divider.is-visible .animated-divider-gem-compact {
+  animation: divider-gem-in 0.6s ease 0.5s forwards, divider-gem-pulse 2.8s ease-in-out 1.2s infinite;
+}
+
+.animated-divider-wide {
+  width: 100%;
+  max-width: min(1100px, 92vw);
+  margin: 0 auto;
+  padding: 0;
+}
+
+.section-chi-siamo {
+  padding-bottom: 1rem;
+}
+
+.section-divider-chi-siamo {
+  background: transparent;
+  padding: 3rem 1.5rem 3.5rem;
+  margin: 0 auto;
+}
+
+.section-chi-siamo + .photo-strip-section {
+  padding-top: 1rem;
+}
+
+.section-divider-esperienza {
+  background: var(--black, #000000);
+  padding: 3rem 1.5rem 3.5rem;
+  margin: 0 auto;
+}
+
+.photo-strip-section + .section-divider-esperienza {
+  margin-top: -0.5rem;
+}
+
+.section-divider-esperienza + .section-esperienza {
+  padding-top: 3rem;
+}
+
+.animated-divider-eyebrow {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  opacity: 1;
+  transform: none;
+  flex-shrink: 0;
+}
+
+.animated-divider-eyebrow.is-visible,
+.animated-divider-eyebrow {
+  opacity: 1;
+  transform: none;
+}
+
+.animated-divider-svg-eyebrow {
+  width: 88px;
+  height: 20px;
+  overflow: visible;
+  display: block;
+}
+
+.animated-divider-gem-eyebrow {
+  fill: var(--divider-gold-light);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.animated-divider-eyebrow.is-visible .animated-divider-stroke-left {
+  animation: divider-line-draw 1s ease forwards;
+}
+
+.animated-divider-eyebrow.is-visible .animated-divider-gem-eyebrow {
+  animation: divider-gem-in 0.5s ease 0.45s forwards, divider-gem-pulse 2.8s ease-in-out 1s infinite;
+}
+
+.animated-divider-eyebrow.is-visible .animated-divider-dot-left {
+  animation: divider-dot-in 0.35s ease 0.35s forwards;
+}
+
+.animated-divider-eyebrow .animated-divider-stroke {
+  stroke-dasharray: 72;
+  stroke-dashoffset: 72;
+}
+
+.animated-divider-svg {
+  width: 100%;
+  height: 48px;
+  display: block;
+  overflow: visible;
+}
+
+.animated-divider-stroke {
+  fill: none;
+  stroke: var(--divider-gold);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+}
+
+.animated-divider.is-visible .animated-divider-stroke-left {
+  animation: divider-line-draw 1.4s ease forwards;
+}
+
+.animated-divider.is-visible .animated-divider-stroke-right {
+  animation: divider-line-draw 1.4s ease 0.35s forwards;
+}
+
+.animated-divider-gem {
+  fill: var(--divider-gold-light);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.animated-divider.is-visible .animated-divider-gem {
+  animation: divider-gem-in 0.7s ease 0.9s forwards, divider-gem-pulse 3s ease-in-out 1.6s infinite;
+}
+
+.animated-divider-dot {
+  fill: var(--divider-gold);
+  opacity: 0;
+}
+
+.animated-divider.is-visible .animated-divider-dot-left {
+  animation: divider-dot-in 0.4s ease 0.7s forwards;
+}
+
+.animated-divider.is-visible .animated-divider-dot-right {
+  animation: divider-dot-in 0.4s ease 0.85s forwards;
+}
+
+@keyframes divider-line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes divider-gem-in {
+  from {
+    opacity: 0;
+    transform: rotate(45deg) scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(45deg) scale(1);
+  }
+}
+
+@keyframes divider-gem-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(201, 162, 39, 0.55));
+    opacity: 0.85;
+  }
+}
+
+@keyframes divider-dot-in {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-divider {
+    opacity: 1;
+    transform: none;
+  }
+
+  .animated-divider-line,
+  .animated-divider-stroke {
+    stroke-dashoffset: 0;
+    animation: none !important;
+  }
+
+  .animated-divider-gem,
+  .animated-divider-gem-compact,
+  .animated-divider-dot {
+    opacity: 1;
+    animation: none !important;
+  }
+}

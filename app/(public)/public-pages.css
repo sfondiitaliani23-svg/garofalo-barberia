@@ -11,13 +11,17 @@
   padding: 5rem 0;
 }
 
+.public-page .page-hero + .section {
+  padding-top: 2.5rem;
+}
+
 .public-page .section-white {
   background: var(--black);
   color: var(--white);
 }
 
 .public-page .page-hero {
-  padding: 8rem 0 4rem;
+  padding: 3.5rem 0 1.5rem;
   background: var(--black);
   color: var(--white);
   text-align: center;
@@ -34,12 +38,12 @@
 }
 
 .public-page .hero-sub {
-  font-family: var(--font-barber-header);
-  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
-  font-weight: 400;
-  line-height: 1.45;
-  letter-spacing: 0.03em;
-  color: rgba(255, 255, 255, 0.85);
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.72);
   margin: 0 auto;
 }
 

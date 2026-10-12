@@ -345,3 +345,21 @@ img, video, picture, canvas, svg, [data-protected-image] {
 .review-card-lux:hover::after, .review-card-shine:hover::after {
   animation: sheen-sweep 2.8s infinite ease-in-out;
 }
+/* ── Titoli Rye nitidi su Windows ──────────────────────────────────────────
+   Su Windows (ClearType) i tratti sottili del font Rye, bianchi su nero,
+   mostravano bordi rossi/azzurri. Un layer composito senza sfondo opaco
+   forza l'antialiasing in scala di grigi. Non cambia layout né font. */
+h1,
+h2,
+.font-display,
+.hero-heading,
+.heading-display,
+.hero-sub,
+.team-studio-title,
+.newsletter-heading,
+.qr-brand-name,
+.svc-detail-label {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  will-change: transform;
+}
