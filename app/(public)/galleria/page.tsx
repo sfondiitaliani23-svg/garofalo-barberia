@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { GalleryGrid } from '@/components/galleria/GalleryGrid';
+import { GalleryCarousel } from '@/components/galleria/GalleryCarousel';
 import '../public-pages.css';
 
 export const metadata = { title: 'Galleria' };
@@ -16,7 +16,7 @@ export default function GalleriaPage() {
 
       <section className="section section-white pb-24">
         <div className="container-lux">
-          <GalleryGrid />
+          <GalleryCarousel />
           <div className="mt-12 text-center">
             <Link href="/prenota" className="btn-primary">
               Prenota il tuo taglio
