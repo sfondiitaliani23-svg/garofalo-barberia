@@ -1,134 +1,104 @@
-import Image from 'next/image';
+import { ArrowRight, Clock, Mail, Phone } from 'lucide-react';
 import { ContactForm } from '@/components/contatti/ContactForm';
 import { InstagramFeed } from '@/components/contatti/InstagramFeed';
 import { BookingQRCard } from '@/components/contatti/BookingQRCard';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
 import '../public-pages.css';
+import './contatti.css';
 
 export const metadata = { title: 'Contatti' };
 
 export default function ContattiPage() {
   return (
     <div className="public-page">
-      <section className="page-hero">
-        <div className="container-lux">
-          <h1 className="hero-heading">Dove siamo</h1>
-          <p className="hero-sub max-w-xl">Vieni in salone o contattaci per telefono e WhatsApp.</p>
+      <h1 className="sr-only">Dove siamo e contatti</h1>
+
+      {/* ── Mappa a tutta larghezza, versione scura ───────────────────── */}
+      <section className="ct-map" aria-label="Mappa">
+        <iframe
+          src={SITE_CONFIG.googleMapsEmbed}
+          className="ct-map-frame"
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          title="Mappa Garofalo Barberia"
+        />
+        <div className="ct-map-shade" aria-hidden />
+
+        <div className="ct-sede">
+          <p className="ct-sede-title">La nostra sede</p>
+          <p className="ct-sede-address">
+            {SITE_CONFIG.addressShort}
+            <br />
+            {SITE_CONFIG.addressCity}
+          </p>
+          <a href={SITE_CONFIG.googleMapsUrl} target="_blank" rel="noopener noreferrer" className="ct-btn-outline">
+            Apri su Google Maps
+            <ArrowRight size={14} aria-hidden />
+          </a>
         </div>
       </section>
 
-      <section className="section section-white pb-24">
-        <div className="container-lux">
-          <div className="split-section split-section--align-top">
-            <div className="space-y-4">
-              <div className="form-card p-6">
-                <div className="eyebrow">
-                  <div className="eyebrow-line" />
-                  <span className="eyebrow-text">Indirizzo</span>
-                </div>
-                <p className="font-semibold">{SITE_CONFIG.addressShort}</p>
-                <p className="text-sm text-white/50">{SITE_CONFIG.addressCity}</p>
-                <a
-                  href={SITE_CONFIG.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-block text-sm text-gold hover:text-gold-light"
-                >
-                  Apri in Google Maps →
-                </a>
-              </div>
-
-              <div className="form-card p-6">
-                <div className="eyebrow">
-                  <div className="eyebrow-line" />
-                  <span className="eyebrow-text">Orari</span>
-                </div>
-                <div className="price-list">
-                  {SITE_CONFIG.detailedHours.map((h) => (
-                    <div key={h.day} className="price-row">
-                      <span>{h.day}</span>
-                      <span className={h.time === 'Chiuso' ? 'text-white/50' : ''}>{h.time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-card p-6">
-                <div className="eyebrow">
-                  <div className="eyebrow-line" />
-                  <span className="eyebrow-text">Contatti</span>
-                </div>
-                <ul className="space-y-3 text-sm">
-                  <li>
-                    <a href={`tel:${SITE_CONFIG.phone}`} className="hover:text-gold-light">
-                      {SITE_CONFIG.phoneDisplay}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href={getWhatsAppLink()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 hover:text-gold-light"
-                    >
-                      <Image
-                        src="/assets/sostituisci-immagini/icone/whatsapp.png"
-                        alt=""
-                        width={22}
-                        height={22}
-                        className="whatsapp-icon-inline"
-                        aria-hidden
-                      />
-                      WhatsApp
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href={SITE_CONFIG.gmailComposeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-gold-light"
-                    >
-                      {SITE_CONFIG.email}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href={SITE_CONFIG.instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-gold-light"
-                    >
-                      {SITE_CONFIG.instagramHandle}
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="contatti-map-column">
-              <div className="map-embed">
-                <iframe
-                  src={SITE_CONFIG.googleMapsEmbed}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0, minHeight: 400, display: 'block' }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="Mappa Garofalo Barberia"
-                />
-              </div>
-
-              <InstagramFeed />
-            </div>
+      {/* ── Informazioni sotto la mappa ───────────────────────────────── */}
+      <section className="ct-info" aria-label="Contatti e orari">
+        <div className="ct-info-grid">
+          <div className="ct-col">
+            <Phone className="ct-icon" size={26} strokeWidth={1.4} aria-hidden />
+            <p className="ct-col-title">Telefono / WhatsApp</p>
+            <a href={`tel:${SITE_CONFIG.phone}`} className="ct-col-main">
+              +39 {SITE_CONFIG.phoneDisplay}
+            </a>
+            <a href={getWhatsAppLink()} target="_blank" rel="noopener noreferrer" className="ct-col-note ct-link">
+              Scrivici su WhatsApp →
+            </a>
           </div>
 
-          <div className="mt-12">
+          <div className="ct-col">
+            <Mail className="ct-icon" size={26} strokeWidth={1.4} aria-hidden />
+            <p className="ct-col-title">Email</p>
+            <a href={SITE_CONFIG.gmailComposeUrl} target="_blank" rel="noopener noreferrer" className="ct-col-main ct-break">
+              {SITE_CONFIG.email}
+            </a>
+            <a href={SITE_CONFIG.instagram} target="_blank" rel="noopener noreferrer" className="ct-col-note ct-link">
+              Instagram {SITE_CONFIG.instagramHandle}
+            </a>
+          </div>
+
+          <div className="ct-col">
+            <Clock className="ct-icon" size={26} strokeWidth={1.4} aria-hidden />
+            <p className="ct-col-title">Orari di apertura</p>
+            <dl className="ct-hours">
+              {SITE_CONFIG.hours.map((h) => (
+                <div key={h.day} className="ct-hours-row">
+                  <dt>{h.day}</dt>
+                  <dd className={h.time === 'Chiuso' ? 'is-closed' : ''}>{h.time}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div className="ct-col ct-col-cta">
+            <p className="ct-cta-title">Hai una domanda?</p>
+            <p className="ct-col-note">Scrivici, saremo felici di aiutarti.</p>
+            <a href="#scrivici" className="ct-btn-solid">
+              Contattaci
+              <ArrowRight size={14} aria-hidden />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Funzioni di sempre: modulo, Instagram, QR ─────────────────── */}
+      <section className="section section-white pb-24">
+        <div className="container-lux">
+          <div id="scrivici" className="scroll-mt-28">
             <ContactForm />
           </div>
 
-          {/* ── QR CODE PRENOTAZIONE ─────────────────────────────────── */}
+          <div className="mt-16">
+            <InstagramFeed />
+          </div>
+
           <div className="mt-16 border-t border-white/10 pt-16">
             <BookingQRCard />
           </div>

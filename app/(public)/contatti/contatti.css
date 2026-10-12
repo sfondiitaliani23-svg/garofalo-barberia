@@ -1,0 +1,252 @@
+/* ── Contatti: mappa a tutta larghezza + informazioni sotto (concept 04) ─── */
+
+.public-page .ct-map {
+  position: relative;
+  height: clamp(320px, 46vh, 460px);
+  overflow: hidden;
+  background: #0b0d10;
+  isolation: isolate;
+}
+
+/* Mappa Google resa scura: inversione + rotazione tinta, poi un velo caldo */
+.public-page .ct-map-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: invert(0.92) hue-rotate(180deg) saturate(0.55) brightness(0.82) contrast(1.05);
+  z-index: -2;
+}
+
+.public-page .ct-map-shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(180deg, rgba(205, 154, 79, 0.06), rgba(205, 154, 79, 0.03));
+  mix-blend-mode: normal;
+  z-index: -1;
+}
+
+.public-page .ct-sede {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(320px, calc(100% - 2rem));
+  padding: 1.5rem 1.5rem 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(6px);
+  text-align: center;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+}
+
+.public-page .ct-sede-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+.public-page .ct-sede-address {
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.public-page .ct-btn-outline,
+.public-page .ct-btn-solid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.15rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.public-page .ct-btn-outline {
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+}
+
+.public-page .ct-btn-outline:hover {
+  background: var(--gold);
+  color: #000;
+}
+
+.public-page .ct-btn-solid {
+  border: 1px solid var(--gold);
+  background: var(--gold);
+  color: #000;
+}
+
+.public-page .ct-btn-solid:hover {
+  background: var(--gold-light);
+  border-color: var(--gold-light);
+  transform: translateY(-1px);
+}
+
+.public-page .ct-btn-outline:focus-visible,
+.public-page .ct-btn-solid:focus-visible,
+.public-page .ct-link:focus-visible,
+.public-page .ct-col-main:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 2px;
+}
+
+/* Informazioni */
+.public-page .ct-info {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #070707;
+}
+
+.public-page .ct-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  max-width: 76rem;
+  margin: 0 auto;
+}
+
+.public-page .ct-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2rem 1.75rem;
+  min-width: 0;
+}
+
+.public-page .ct-col + .ct-col {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.public-page .ct-icon {
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+
+.public-page .ct-col-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.public-page .ct-col-main {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.public-page .ct-col-main:hover {
+  color: var(--gold-light);
+}
+
+.public-page .ct-break {
+  word-break: break-all;
+}
+
+.public-page .ct-col-note {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.public-page .ct-link {
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.public-page .ct-link:hover {
+  color: var(--gold-light);
+}
+
+.public-page .ct-hours {
+  margin: 0.4rem 0 0;
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.public-page .ct-hours-row dt {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.public-page .ct-hours-row dd {
+  margin: 0;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-variant-numeric: tabular-nums;
+}
+
+.public-page .ct-hours-row dd.is-closed {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.public-page .ct-col-cta {
+  justify-content: center;
+}
+
+.public-page .ct-cta-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+/* Tablet e mobile */
+@media (max-width: 960px) {
+  .public-page .ct-info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .public-page .ct-col + .ct-col {
+    border-left: none;
+  }
+
+  .public-page .ct-col:nth-child(even) {
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .public-page .ct-col:nth-child(n + 3) {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media (max-width: 560px) {
+  .public-page .ct-map {
+    height: 340px;
+  }
+
+  .public-page .ct-sede {
+    top: auto;
+    bottom: 1rem;
+    transform: translateX(-50%);
+  }
+
+  .public-page .ct-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .public-page .ct-col:nth-child(even) {
+    border-left: none;
+  }
+
+  .public-page .ct-col + .ct-col {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .public-page .ct-col {
+    padding: 1.5rem 1.25rem;
+  }
+}
