@@ -2,19 +2,27 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Scissors, RotateCcw, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { SITE_CONFIG } from '@/lib/site-config';
+
+interface ChatAction {
+  label: string;
+  href: string;
+}
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  actions?: ChatAction[];
 }
 
 const WELCOME: Message = {
   id: '0',
   role: 'assistant',
-  content: 'Ciao! 👋 Sono **Eliseo**, il tuo assistente virtuale della Barberia Garofalo.\n\nPosso aiutarti con:\n• Orari e prenotazioni\n• Servizi e prezzi\n• Come raggiungerci\n• Qualsiasi altra domanda!',
+  content: 'Ciao! 👋 Sono **Eliseo**, l\'assistente virtuale della Barberia Garofalo.\n\nPosso aiutarti con:\n• Orari e prenotazioni\n• Servizi e prezzi\n• Disdette e modifiche\n• Come raggiungerci',
 };
 
 const QUICK_QUESTIONS = [
@@ -24,13 +32,15 @@ const QUICK_QUESTIONS = [
   'Dove siete?',
 ];
 
+const URL_RE = /(https?:\/\/[^\s)]+)/g;
+
 export function EliseoChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [unread, setUnread] = useState(false);
-  const [isFriendMode, setIsFriendMode] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>(QUICK_QUESTIONS);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -73,6 +83,7 @@ export function EliseoChat() {
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text.trim() };
     setMessages(prev => [...prev, userMsg]);
     setInput('');
+    setSuggestions([]);
     setLoading(true);
 
     try {
@@ -81,30 +92,30 @@ export function EliseoChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text.trim(),
-          isFriendMode,
           history: messages.map(m => ({ role: m.role, content: m.content })),
         }),
       });
       const data = await res.json();
-      
-      if (typeof data.isFriendMode === 'boolean') {
-        setIsFriendMode(data.isFriendMode);
-      }
 
-      const replies: string[] = data.replies || (data.reply ? [data.reply] : ['Mi dispiace, riprova tra poco.']);
-      
+      const replies: string[] =
+        Array.isArray(data.replies) && data.replies.length > 0 ? data.replies : ['Mi dispiace, riprova tra poco.'];
+      const actions: ChatAction[] = Array.isArray(data.actions) ? data.actions : [];
+
       for (let i = 0; i < replies.length; i++) {
         if (i > 0) {
-          await new Promise(resolve => setTimeout(resolve, 600));
+          await new Promise(resolve => setTimeout(resolve, 450));
         }
+        const isLast = i === replies.length - 1;
         const botMsg: Message = {
           id: `${Date.now()}-${i}`,
           role: 'assistant',
           content: replies[i],
+          actions: isLast ? actions : undefined,
         };
         setMessages(prev => [...prev, botMsg]);
       }
-      
+
+      setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
       if (!isOpen) setUnread(true);
     } catch {
       setMessages(prev => [
@@ -112,7 +123,8 @@ export function EliseoChat() {
         {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: `Scusami, si è verificato un errore. Contattaci su WhatsApp al 320 188 6277. 📱`,
+          content: `Scusami, si è verificato un errore. Contattaci su WhatsApp al **${SITE_CONFIG.phoneDisplay}** 📱`,
+          actions: [{ label: 'Scrivi su WhatsApp', href: `https://wa.me/${SITE_CONFIG.whatsapp}` }],
         },
       ]);
     } finally {
@@ -127,8 +139,26 @@ export function EliseoChat() {
 
   const resetChat = () => {
     setMessages([{ ...WELCOME, id: Date.now().toString() }]);
-    setIsFriendMode(false);
+    setSuggestions(QUICK_QUESTIONS);
   };
+
+  /** Testo con link cliccabili */
+  const renderLinks = (text: string, keyPrefix: string) =>
+    text.split(URL_RE).map((chunk, k) =>
+      /^https?:\/\//.test(chunk) ? (
+        <a
+          key={`${keyPrefix}-${k}`}
+          href={chunk}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-[#cd9a4f]/50 underline-offset-2 break-all hover:text-[#e5b565]"
+        >
+          {chunk}
+        </a>
+      ) : (
+        chunk
+      )
+    );
 
   /** Render a single message bubble */
   const renderContent = (text: string) =>
@@ -136,13 +166,32 @@ export function EliseoChat() {
       // Bold: **text**
       const parts = line.split(/\*\*(.*?)\*\*/g);
       return (
-        <p key={i} className={i > 0 ? 'mt-0.5' : ''}>
+        <p key={i} className={cn(i > 0 && 'mt-0.5', line === '' && 'h-2')}>
           {parts.map((part, j) =>
-            j % 2 === 1 ? <strong key={j}>{part}</strong> : part
+            j % 2 === 1 ? <strong key={j}>{renderLinks(part, `${i}-${j}`)}</strong> : renderLinks(part, `${i}-${j}`)
           )}
         </p>
       );
     });
+
+  const actionClass =
+    'inline-flex items-center text-[11px] font-semibold px-3 py-1.5 rounded-full bg-[#cd9a4f]/15 border border-[#cd9a4f]/40 text-[#e5b565] hover:bg-[#cd9a4f] hover:text-black transition-all';
+
+  const renderAction = (a: ChatAction) => {
+    const internal = a.href.startsWith('/');
+    if (internal) {
+      return (
+        <Link key={a.href} href={a.href} onClick={() => setIsOpen(false)} className={actionClass}>
+          {a.label}
+        </Link>
+      );
+    }
+    return (
+      <a key={a.href} href={a.href} target={a.href.startsWith('tel:') ? undefined : '_blank'} rel="noopener noreferrer" className={actionClass}>
+        {a.label}
+      </a>
+    );
+  };
 
   return (
     <>
@@ -188,7 +237,8 @@ export function EliseoChat() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-3 eliseo-chat-messages">
           {messages.map(msg => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={msg.id}>
+            <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] flex items-center justify-center shrink-0 mr-2 mt-0.5">
                   <Scissors size={10} className="text-black" />
@@ -203,6 +253,12 @@ export function EliseoChat() {
               >
                 {renderContent(msg.content)}
               </div>
+            </div>
+            {msg.actions && msg.actions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2 ml-8">
+                {msg.actions.map(renderAction)}
+              </div>
+            )}
             </div>
           ))}
 
@@ -228,10 +284,10 @@ export function EliseoChat() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick questions (shown only at the start) */}
-        {messages.length <= 1 && (
+        {/* Suggerimenti */}
+        {!loading && suggestions.length > 0 && (
           <div className="px-3 pb-2 flex flex-wrap gap-1.5 shrink-0">
-            {QUICK_QUESTIONS.map(q => (
+            {suggestions.map(q => (
               <button
                 key={q}
                 onClick={() => sendMessage(q)}
@@ -250,6 +306,7 @@ export function EliseoChat() {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="Scrivi un messaggio..."
+            maxLength={500}
             disabled={loading}
             className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#cd9a4f]/40 transition-colors"
           />
