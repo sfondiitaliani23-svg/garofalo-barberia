@@ -86,6 +86,7 @@ export function WhatsAppStatusWidget() {
   const [testSending, setTestSending] = useState(false);
   const [rebooting, setRebooting] = useState(false);
   const [tab, setTab] = useState<'messages' | 'test' | 'stats'>('messages');
+  const [quotaMsg, setQuotaMsg] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<WaMessageId>('reminder');
   const [waNumber, setWaNumber] = useState<string | null>(null);
   const [stats, setStats] = useState<Awaited<ReturnType<typeof getWhatsAppReminderStatsAction>> | null>(null);
@@ -177,7 +178,8 @@ export function WhatsAppStatusWidget() {
       if (res.ok) {
         toast.success('✅ Messaggio WhatsApp di prova inviato con successo!');
       } else {
-        toast.error(res.error || 'Errore durante l\'invio di prova');
+        if (res.quota) setQuotaMsg(res.error ?? null);
+        toast.error(res.error || 'Errore durante l\'invio di prova', { duration: 10000 });
       }
     } catch (e: any) {
       toast.error(e?.message || 'Errore durante l\'invio');
@@ -286,6 +288,23 @@ export function WhatsAppStatusWidget() {
                 </button>
               </div>
 
+              {quotaMsg && (
+                <div className="mx-5 mt-4 flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm" role="alert">
+                  <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-300" aria-hidden />
+                  <div>
+                    <p className="font-semibold text-amber-200">Promemoria e codici WhatsApp bloccati per i clienti</p>
+                    <p className="mt-1 text-xs text-amber-100/80">{quotaMsg}</p>
+                    <a
+                      href="https://console.green-api.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-block text-xs font-semibold text-gold underline-offset-2 hover:underline"
+                    >
+                      Apri la console Green API →
+                    </a>
+                  </div>
+                </div>
+              )}
               <div className="admin-modal-scroll grid min-h-0 flex-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
                 {/* Colonna sinistra: numero e menu */}
                 <div className="space-y-4">

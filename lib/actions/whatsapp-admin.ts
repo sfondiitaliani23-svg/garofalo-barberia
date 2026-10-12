@@ -1,7 +1,7 @@
 'use server';
 
 import { requireAdmin } from '@/lib/auth';
-import { normalizeItalianPhone } from '@/lib/utils/phone';
+import { describeGreenApiError, normalizeItalianPhone } from '@/lib/utils/phone';
 
 function getGreenApiCredentials() {
   const instanceId = process.env.GREEN_API_INSTANCE_ID;
@@ -92,6 +92,7 @@ export async function sendWhatsAppTestMessageAction(phoneNumber: string): Promis
   ok: boolean;
   messageId?: string;
   error?: string;
+  quota?: boolean;
 }> {
   await requireAdmin();
   const creds = getGreenApiCredentials();
@@ -121,7 +122,9 @@ export async function sendWhatsAppTestMessageAction(phoneNumber: string): Promis
 
     if (!res.ok) {
       const errText = await res.text();
-      return { ok: false, error: `Invio fallito: ${errText}` };
+      console.error('[whatsapp test] Green API:', errText);
+      const info = describeGreenApiError(errText);
+      return { ok: false, error: info.message, quota: info.quota };
     }
 
     const data = await res.json();

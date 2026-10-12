@@ -8,7 +8,7 @@ import {
   getShopDayBounds,
   parseBookingDateTime,
 } from '@/lib/utils/booking-datetime';
-import { normalizeItalianPhone } from '@/lib/utils/phone';
+import { describeGreenApiError, normalizeItalianPhone } from '@/lib/utils/phone';
 
 export interface ReminderAppointment {
   id: string;
@@ -65,7 +65,8 @@ async function sendGreenApiWhatsApp(phone: string, body: string) {
 
     if (!response.ok) {
       const detail = await response.text();
-      console.error('Green API WhatsApp reminder failed:', detail);
+      const info = describeGreenApiError(detail);
+      console.error(info.quota ? '[Green API] QUOTA ESAURITA:' : 'Green API WhatsApp reminder failed:', info.quota ? info.message : detail);
       return { ok: false, reason: 'send_failed' as const };
     }
 
