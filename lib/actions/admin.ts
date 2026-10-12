@@ -591,6 +591,51 @@ export async function getCustomers() {
   return data ?? [];
 }
 
+export interface CustomerActivity {
+  /** Data dell'ultima prenotazione non annullata (passata o futura). */
+  lastAppointmentAt: string | null;
+  /** Ultimo servizio prenotato. */
+  lastServiceName: string | null;
+  /** Numero di prenotazioni non annullate. */
+  totalAppointments: number;
+  /** Ha una prenotazione confermata da oggi in poi. */
+  hasUpcoming: boolean;
+}
+
+/** Attività di prenotazione per ogni cliente registrato (chiave: id profilo). */
+export async function getCustomersActivity(): Promise<Record<string, CustomerActivity>> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return {};
+
+  const { data } = await supabase
+    .from('appointments')
+    .select('customer_id, starts_at, status, service:services(name)')
+    .not('customer_id', 'is', null)
+    .neq('status', 'cancelled')
+    .order('starts_at', { ascending: false })
+    .limit(5000);
+
+  const now = new Date().toISOString();
+  const out: Record<string, CustomerActivity> = {};
+  for (const row of (data ?? []) as Array<{ customer_id: string; starts_at: string; status: string; service: { name: string } | { name: string }[] | null }>) {
+    const entry = (out[row.customer_id] ??= {
+      lastAppointmentAt: null,
+      lastServiceName: null,
+      totalAppointments: 0,
+      hasUpcoming: false,
+    });
+    entry.totalAppointments += 1;
+    if (!entry.lastAppointmentAt) {
+      entry.lastAppointmentAt = row.starts_at;
+      const svc = Array.isArray(row.service) ? row.service[0] : row.service;
+      entry.lastServiceName = svc?.name ?? null;
+    }
+    if (row.status === 'confirmed' && row.starts_at >= now) entry.hasUpcoming = true;
+  }
+  return out;
+}
+
 export async function completeAppointmentAction(formData: FormData) {
   const id = formData.get('id') as string;
   await updateAppointmentStatus(id, 'completed');

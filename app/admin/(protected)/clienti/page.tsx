@@ -1,17 +1,26 @@
-import { AdminCustomersList } from '@/components/admin/AdminCustomersList';
-import { getCustomers } from '@/lib/actions/admin';
+import { AdminCustomersList, NewCustomerBookingButton } from '@/components/admin/AdminCustomersList';
+import { getCustomers, getCustomersActivity } from '@/lib/actions/admin';
 
 export const metadata = { title: 'Clienti' };
 
 export default async function AdminClientiPage() {
-  const customers = await getCustomers();
+  const [customers, activity] = await Promise.all([getCustomers(), getCustomersActivity().catch(() => ({}))]);
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Clienti</h1>
-      <p className="mt-1 text-white/50">Gestisci e trova rapidamente i clienti registrati</p>
-      <div className="mt-8">
-        <AdminCustomersList customers={customers} />
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+            Clienti
+          </h1>
+          <p className="mt-1 text-sm text-white/50">
+            Elenco completo dei clienti registrati · {customers.length} {customers.length === 1 ? 'cliente' : 'clienti'}
+          </p>
+        </div>
+        <NewCustomerBookingButton />
+      </div>
+      <div className="mt-6">
+        <AdminCustomersList customers={customers} activity={activity} />
       </div>
     </div>
   );
