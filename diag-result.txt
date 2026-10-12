@@ -1,0 +1,30 @@
+D / 200 ok
+D servizi 200 ok
+D galleria 200 ok
+D recensioni 200 ok
+D contatti 200 ok
+D chi-siamo 200 ok
+D login 200 ok
+D prenota 200 ok
+D registrati 404 ok
+     CONSOLE Failed to load resource: the server responded with a status of 404 ()
+D area-cliente 200 ok
+D admin/login 200 ok
+D privacy 200 ok
+D cookie 404 ok
+     CONSOLE Failed to load resource: the server responded with a status of 404 ()
+M / 200 ok
+M servizi 200 ok
+M galleria 200 ok
+M recensioni 200 ok
+M contatti 200 ok
+M chi-siamo 200 ok
+M login 200 ok
+M prenota 200 ok
+M registrati 404 ok
+     CONSOLE Failed to load resource: the server responded with a status of 404 ()
+M area-cliente 200 ok
+M admin/login 200 ok
+M privacy 200 ok
+M cookie 404 ok
+     CONSOLE Failed to load resource: the server responded with a status of 404 ()
