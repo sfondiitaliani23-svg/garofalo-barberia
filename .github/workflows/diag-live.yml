@@ -1,0 +1,11 @@
+name: Diagnosi sito live
+on:
+  push:
+    branches: [diag-live]
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install playwright==1.47.0 && python -m playwright install --with-deps chromium
+      - run: python .github/diag.py
