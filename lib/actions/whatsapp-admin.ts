@@ -153,3 +153,63 @@ export async function rebootWhatsAppInstanceAction(): Promise<{ ok: boolean; err
     return { ok: false, error: err?.message || 'Errore di rete' };
   }
 }
+
+/**
+ * Numero WhatsApp collegato all'istanza (getWaSettings di Green API).
+ */
+export async function getWhatsAppNumberAction(): Promise<{ ok: boolean; phone?: string }> {
+  await requireAdmin();
+  const creds = getGreenApiCredentials();
+  if (!creds) return { ok: false };
+  try {
+    const res = await fetch(`${creds.host}/waInstance${creds.instanceId}/getWaSettings/${creds.token}`, { cache: 'no-store' });
+    if (!res.ok) return { ok: false };
+    const data = await res.json();
+    const phone = typeof data?.phone === 'string' ? data.phone : undefined;
+    return { ok: !!phone, phone };
+  } catch {
+    return { ok: false };
+  }
+}
+
+/**
+ * Promemoria WhatsApp realmente inviati (da appointments.reminder_whatsapp_sent_at).
+ */
+export async function getWhatsAppReminderStatsAction(): Promise<{ today: number; week: number; pendingTonight: number; lastSentAt: string | null }> {
+  await requireAdmin();
+  const { createServiceClient } = await import('@/lib/supabase/server');
+  const supabase = await createServiceClient();
+  const empty = { today: 0, week: 0, pendingTonight: 0, lastSentAt: null };
+  if (!supabase) return empty;
+
+  const now = new Date();
+  const rome = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+  const startToday = new Date(`${rome}T00:00:00`);
+  const offsetMs = startToday.getTime() - new Date(startToday.toLocaleString('en-US', { timeZone: 'Europe/Rome' })).getTime();
+  const todayStart = new Date(startToday.getTime() + offsetMs);
+  const weekStart = new Date(todayStart.getTime() - 6 * 86_400_000);
+  const tomorrowStart = new Date(todayStart.getTime() + 86_400_000);
+  const dayAfter = new Date(todayStart.getTime() + 2 * 86_400_000);
+
+  const [today, week, last, pending] = await Promise.all([
+    supabase.from('appointments').select('id', { head: true, count: 'exact' }).gte('reminder_whatsapp_sent_at', todayStart.toISOString()),
+    supabase.from('appointments').select('id', { head: true, count: 'exact' }).gte('reminder_whatsapp_sent_at', weekStart.toISOString()),
+    supabase.from('appointments').select('reminder_whatsapp_sent_at').not('reminder_whatsapp_sent_at', 'is', null).order('reminder_whatsapp_sent_at', { ascending: false }).limit(1),
+    supabase
+      .from('appointments')
+      .select('id', { head: true, count: 'exact' })
+      .eq('status', 'confirmed')
+      .is('reminder_whatsapp_sent_at', null)
+      .not('customer_phone', 'is', null)
+      .neq('customer_phone', '')
+      .gte('starts_at', tomorrowStart.toISOString())
+      .lt('starts_at', dayAfter.toISOString()),
+  ]);
+
+  return {
+    today: today.count ?? 0,
+    week: week.count ?? 0,
+    pendingTonight: pending.count ?? 0,
+    lastSentAt: (last.data?.[0]?.reminder_whatsapp_sent_at as string | undefined) ?? null,
+  };
+}

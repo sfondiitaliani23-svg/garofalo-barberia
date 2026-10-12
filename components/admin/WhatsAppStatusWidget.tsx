@@ -4,26 +4,76 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import {
-  CheckCircle2,
   AlertTriangle,
   QrCode,
   RefreshCw,
   Send,
   X,
   MessageCircle,
-  Smartphone,
-  ExternalLink,
   Loader2,
+  ChevronRight,
+  BellRing,
+  BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { buildWhatsAppReminderMessage } from '@/lib/utils/whatsapp-reminders';
 import {
   getWhatsAppStatusAction,
   getWhatsAppQrAction,
   sendWhatsAppTestMessageAction,
   rebootWhatsAppInstanceAction,
+  getWhatsAppNumberAction,
+  getWhatsAppReminderStatsAction,
   type WhatsAppState,
 } from '@/lib/actions/whatsapp-admin';
+
+const WA_TABS = [
+  { id: 'messages' as const, label: 'Messaggi automatici', icon: BellRing },
+  { id: 'test' as const, label: 'Invia test', icon: Send },
+  { id: 'stats' as const, label: 'Statistiche', icon: BarChart3 },
+];
+
+/** Testi reali inviati dal sito (lib/utils/whatsapp-reminders.ts e lib/actions/*). */
+const SAMPLE_REMINDER = buildWhatsAppReminderMessage({
+  customerName: 'Mario',
+  customerPhone: '',
+  serviceName: 'Taglio e shampoo',
+  barberName: 'Luigi Garofalo',
+  startsAt: new Date('2026-10-14T08:30:00Z'),
+});
+const WA_MESSAGES = {
+  reminder: { title: 'Promemoria la sera prima', trigger: 'Ogni sera alle 22:30, per gli appuntamenti del giorno dopo', when: '22:30', text: SAMPLE_REMINDER },
+  immediate: { title: 'Promemoria immediato', trigger: 'Subito, se si prenota dopo le 22:30 per il giorno dopo', when: 'subito', text: SAMPLE_REMINDER },
+  otp: {
+    title: 'Codice di accesso',
+    trigger: 'Quando un cliente accede con "WhatsApp (OTP)"',
+    when: 'subito',
+    text: 'Barberia Garofalo: il tuo codice di accesso è 048213. Scade tra 5 minuti. Non condividerlo con nessuno.',
+  },
+  test: {
+    title: 'Messaggio di prova',
+    trigger: 'Quando premi "Invia test"',
+    when: 'subito',
+    text: '💈 *Garofalo Barberia — Test Notifiche WhatsApp*\n\n✅ Connessione stabilita con successo!\nIl sistema di promemoria automatici per gli appuntamenti alle 22:30 è ora perfettamente operativo.',
+  },
+};
+type WaMessageId = keyof typeof WA_MESSAGES;
+
+/** Formattazione WhatsApp: *grassetto*, a capo. */
+function renderWa(text: string) {
+  return text.split('\n').map((line, i) => (
+    <span key={i} className="block min-h-[0.6em] break-words">
+      {line.split(/(\*[^*]+\*)/g).map((part, j) => (part.startsWith('*') && part.endsWith('*') && part.length > 2 ? <strong key={j}>{part.slice(1, -1)}</strong> : part))}
+    </span>
+  ));
+}
+
+function formatWaNumber(raw: string) {
+  const d = raw.replace(/\D/g, '');
+  if (d.startsWith('39') && d.length >= 11) return `+39 ${d.slice(2, 5)} ${d.slice(5, 8)} ${d.slice(8)}`;
+  return `+${d}`;
+}
 
 export function WhatsAppStatusWidget() {
   const [status, setStatus] = useState<WhatsAppState>('starting');
@@ -35,6 +85,16 @@ export function WhatsAppStatusWidget() {
   const [testPhone, setTestPhone] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [rebooting, setRebooting] = useState(false);
+  const [tab, setTab] = useState<'messages' | 'test' | 'stats'>('messages');
+  const [previewId, setPreviewId] = useState<WaMessageId>('reminder');
+  const [waNumber, setWaNumber] = useState<string | null>(null);
+  const [stats, setStats] = useState<Awaited<ReturnType<typeof getWhatsAppReminderStatsAction>> | null>(null);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    getWhatsAppNumberAction().then((r) => setWaNumber(r.phone ?? null)).catch(() => {});
+    getWhatsAppReminderStatsAction().then(setStats).catch(() => {});
+  }, [modalOpen]);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Recupera lo stato attuale di connessione
@@ -208,194 +268,197 @@ export function WhatsAppStatusWidget() {
         </div>
       </div>
 
-      {/* ── MODALE COLLEGAMENTO QR CODE & TEST ──────────────── */}
+      {/* ── MODALE COLLEGAMENTO WHATSAPP (concept 03) ──────────────── */}
       {modalOpen &&
         typeof document !== 'undefined' &&
         createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden rounded-2xl border border-gold/30 bg-[#121212] text-white shadow-2xl">
-              {/* Header Fisso */}
-              <div className="shrink-0 flex items-center justify-between border-b border-white/10 px-6 py-4 bg-black/40">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
-                    <Smartphone size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-base text-white">Collegamento WhatsApp Salone</h3>
-                    <p className="text-[11px] text-white/50">Promemoria Appuntamenti Automatici</p>
-                  </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="wa-title">
+            <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d0d] text-white shadow-2xl">
+              <div className="flex shrink-0 items-start justify-between border-b border-white/10 px-6 py-4">
+                <div>
+                  <h3 id="wa-title" className="text-2xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                    Collegamento WhatsApp Salone
+                  </h3>
+                  <p className="text-xs text-white/50">Promemoria automatici e codici di accesso inviati dal numero del salone.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="rounded-lg p-1.5 text-white/50 hover:bg-white/10 hover:text-white transition"
-                  aria-label="Chiudi"
-                >
+                <button type="button" onClick={() => setModalOpen(false)} className="rounded-lg p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white" aria-label="Chiudi">
                   <X size={18} />
                 </button>
               </div>
 
-              {/* Corpo Scrollabile con scrollbar stilizzata */}
-              <div className="admin-modal-scroll flex-1 overflow-y-auto min-h-0 px-6 py-5 space-y-5">
-                {/* Stato Attuale */}
-                <div
-                  className={`rounded-xl border p-4 ${
-                    isConnected
-                      ? 'border-emerald-500/40 bg-emerald-500/10'
-                      : 'border-amber-500/40 bg-amber-500/10'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    {isConnected ? (
-                      <CheckCircle2 size={20} className="text-emerald-400 shrink-0" />
-                    ) : (
-                      <AlertTriangle size={20} className="text-amber-400 shrink-0" />
-                    )}
-                    <div>
-                      <h4 className="font-semibold text-sm text-white">
-                        {isConnected ? 'WhatsApp Salone Collegato ✅' : 'WhatsApp Non Collegato'}
-                      </h4>
-                      <p className="text-xs text-white/70 mt-0.5">
-                        {isConnected
-                          ? 'I promemoria partiranno automaticamente ogni sera alle 22:30.'
-                          : 'Segui le istruzioni qui sotto per inquadrare il codice QR.'}
-                      </p>
+              <div className="admin-modal-scroll grid min-h-0 flex-1 gap-4 overflow-y-auto p-5 lg:grid-cols-[260px_minmax(0,1fr)_minmax(0,1fr)]">
+                {/* Colonna sinistra: numero e menu */}
+                <div className="space-y-4">
+                  <div className={`rounded-xl border p-4 ${isConnected ? 'border-emerald-500/30 bg-emerald-500/[0.06]' : 'border-amber-500/30 bg-amber-500/[0.06]'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${isConnected ? 'bg-emerald-500 text-black' : 'bg-amber-500/20 text-amber-300'}`}>
+                        <MessageCircle size={20} aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <p className={`text-xs font-semibold ${isConnected ? 'text-emerald-300' : 'text-amber-300'}`}>
+                          {isConnected ? 'Numero collegato' : 'Non collegato'}
+                        </p>
+                        <p className="truncate text-base font-semibold text-white">{waNumber ? formatWaNumber(waNumber) : isConnected ? 'Numero del salone' : '—'}</p>
+                      </div>
+                      {isConnected && (
+                        <span className="ml-auto rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-300">Attivo</span>
+                      )}
                     </div>
+                    <p className="mt-3 text-[11px] text-white/50">
+                      {stats?.lastSentAt
+                        ? `Ultimo promemoria: ${new Date(stats.lastSentAt).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' })}`
+                        : 'Nessun promemoria registrato'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleReboot}
+                      disabled={rebooting}
+                      className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-gold/60 px-3 py-1.5 text-xs font-semibold text-gold transition hover:bg-gold hover:text-black disabled:opacity-50"
+                    >
+                      <RefreshCw size={12} className={rebooting ? 'animate-spin' : ''} />
+                      Ricollega o cambia numero
+                    </button>
                   </div>
+
+                  <nav className="space-y-1.5" aria-label="Sezioni">
+                    {WA_TABS.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTab(t.id)}
+                        aria-current={tab === t.id}
+                        className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition ${
+                          tab === t.id ? 'border-gold/50 bg-gold/10 text-gold' : 'border-white/10 text-white/75 hover:border-white/25'
+                        }`}
+                      >
+                        <t.icon size={15} aria-hidden />
+                        {t.label}
+                        <ChevronRight size={14} className="ml-auto opacity-50" aria-hidden />
+                      </button>
+                    ))}
+                  </nav>
                 </div>
 
-                {/* Sezione QR Code (se non connesso) */}
-                {!isConnected ? (
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-white/10 bg-black/60 p-4 text-center">
-                      <p className="text-xs font-semibold text-white/80 mb-3">
-                        Inquadra con il telefono aziendale:
-                      </p>
-
-                      <div className="relative mx-auto flex h-60 w-60 items-center justify-center rounded-xl bg-white p-3 shadow-xl">
+                {/* Colonna centrale: anteprima telefono o QR */}
+                <div className="flex justify-center">
+                  {isConnected ? (
+                    <div className="flex w-full max-w-[320px] flex-col overflow-hidden rounded-[28px] border-4 border-[#1f1f1f] bg-[#0b141a] shadow-xl">
+                      <div className="flex items-center gap-2.5 bg-[#1f2c34] px-4 py-3">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold text-[11px] font-bold text-black">GB</span>
+                        <div>
+                          <p className="text-sm font-semibold text-white">Barberia Garofalo</p>
+                          <p className="text-[10px] text-white/50">anteprima</p>
+                        </div>
+                      </div>
+                      <div className="flex min-h-[340px] flex-1 flex-col justify-end gap-2 p-3" style={{ background: '#0b141a' }}>
+                        <div className="max-w-[92%] self-start rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2 text-[12.5px] leading-snug text-white/90">
+                          {renderWa(WA_MESSAGES[previewId].text)}
+                          <p className="mt-1 text-right text-[10px] text-white/40">{WA_MESSAGES[previewId].when}</p>
+                        </div>
+                      </div>
+                      <p className="bg-[#1f2c34] px-4 py-2 text-center text-[10px] text-white/45">Testo reale inviato dal sito · dati di esempio</p>
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-[320px] rounded-xl border border-white/10 bg-black/60 p-4 text-center">
+                      <p className="mb-3 text-xs font-semibold text-white/80">Inquadra con il telefono del salone</p>
+                      <div className="relative mx-auto flex h-60 w-60 items-center justify-center rounded-xl bg-white p-3">
                         {qrLoading ? (
-                          <div className="flex flex-col items-center gap-2 text-black">
-                            <Loader2 className="animate-spin text-gold" size={32} />
-                            <span className="text-xs font-medium text-black/70">Generazione QR Code...</span>
-                          </div>
+                          <Loader2 className="animate-spin text-gold" size={32} />
                         ) : qrBase64 ? (
-                          <img
-                            src={`data:image/png;base64,${qrBase64}`}
-                            alt="WhatsApp QR Code"
-                            className="h-full w-full object-contain"
-                          />
+                          <img src={`data:image/png;base64,${qrBase64}`} alt="Codice QR per collegare WhatsApp" className="h-full w-full object-contain" />
                         ) : (
-                          <div className="text-center text-black/60 p-2">
-                            <p className="text-xs">QR non pronto</p>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={fetchQr}
-                              className="mt-2 text-xs border-black/20 text-black"
-                            >
-                              Riprova
-                            </Button>
-                          </div>
+                          <Button type="button" size="sm" variant="outline" onClick={fetchQr} className="border-black/20 text-xs text-black">
+                            Genera QR
+                          </Button>
                         )}
                       </div>
-
-                      <div className="mt-3 flex items-center justify-center gap-2">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={fetchQr}
-                          disabled={qrLoading}
-                          className="text-xs text-white/60 hover:text-white gap-1"
-                        >
-                          <RefreshCw size={12} className={qrLoading ? 'animate-spin' : ''} />
-                          Aggiorna QR
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Istruzioni Semplici per Luigi */}
-                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-xs text-white/75 space-y-2">
-                      <p className="font-semibold text-white uppercase text-[11px] tracking-wider text-gold">
-                        Istruzioni sul telefono del salone:
-                      </p>
-                      <ol className="list-decimal list-inside space-y-1 text-white/70">
-                        <li>Apri <strong>WhatsApp</strong> sul telefono aziendale</li>
-                        <li>Vai in <strong>Impostazioni</strong> (o i 3 puntini in alto a destra)</li>
-                        <li>Tocca <strong>Dispositivi collegati</strong> → <strong>Collega un dispositivo</strong></li>
-                        <li>Inquadra il codice QR qui sopra sullo schermo</li>
+                      <Button type="button" variant="ghost" size="sm" onClick={fetchQr} disabled={qrLoading} className="mt-3 gap-1 text-xs text-white/60 hover:text-white">
+                        <RefreshCw size={12} className={qrLoading ? 'animate-spin' : ''} />
+                        Aggiorna QR
+                      </Button>
+                      <ol className="mt-3 list-inside list-decimal space-y-1 text-left text-xs text-white/65">
+                        <li>Apri <strong>WhatsApp</strong> sul telefono del salone</li>
+                        <li>Vai in <strong>Impostazioni → Dispositivi collegati</strong></li>
+                        <li>Tocca <strong>Collega un dispositivo</strong> e inquadra il QR</li>
                       </ol>
                     </div>
-                  </div>
-                ) : (
-                  /* Sezione Test Invio quando è già connesso */
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
-                      <h4 className="font-semibold text-sm text-emerald-400 flex items-center gap-2">
-                        <Send size={15} />
-                        Invia Messaggio di Prova
-                      </h4>
-                      <p className="text-xs text-white/60">
-                        Inserisci un numero di cellulare per ricevere un messaggio WhatsApp di test e verificare la corretta consegna.
-                      </p>
+                  )}
+                </div>
 
-                      <div className="flex gap-2">
+                {/* Colonna destra: contenuto della sezione */}
+                <div className="rounded-xl border border-white/10 bg-[#111] p-4">
+                  {tab === 'messages' && (
+                    <>
+                      <p className="text-sm font-semibold text-white">Messaggi automatici</p>
+                      <p className="text-xs text-white/50">Cosa invia il sito, e quando. Tocca per l&apos;anteprima.</p>
+                      <ul className="mt-3 space-y-2">
+                        {(Object.keys(WA_MESSAGES) as WaMessageId[]).map((id) => (
+                          <li key={id}>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewId(id)}
+                              aria-pressed={previewId === id}
+                              className={`w-full rounded-lg border px-3 py-2.5 text-left transition ${previewId === id ? 'border-gold/50 bg-gold/10' : 'border-white/10 hover:border-white/25'}`}
+                            >
+                              <span className="block text-sm font-semibold text-white">{WA_MESSAGES[id].title}</span>
+                              <span className="block text-[11px] text-white/50">{WA_MESSAGES[id].trigger}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+
+                  {tab === 'test' && (
+                    <>
+                      <p className="text-sm font-semibold text-white">Invia messaggio di prova</p>
+                      <p className="text-xs text-white/50">Ricevi il messaggio di prova su un numero a tua scelta, per controllare la consegna.</p>
+                      <div className="mt-4 flex gap-2">
                         <Input
                           type="tel"
                           value={testPhone}
                           onChange={(e) => setTestPhone(e.target.value)}
                           placeholder="Es. 3201886277"
-                          className="bg-black/60 border-white/15 text-sm h-10"
+                          className="h-10 border-white/15 bg-black/60 text-sm"
+                          aria-label="Numero per il test"
                         />
-                        <Button
-                          type="button"
-                          onClick={handleSendTest}
-                          disabled={testSending}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 shrink-0 h-10 gap-1.5"
-                        >
-                          {testSending ? (
-                            <Loader2 className="animate-spin" size={14} />
-                          ) : (
-                            <Send size={14} />
-                          )}
-                          Invia Test
+                        <Button type="button" onClick={handleSendTest} disabled={testSending || !isConnected} className="h-10 shrink-0 gap-1.5 bg-emerald-600 px-4 text-xs font-semibold text-white hover:bg-emerald-500">
+                          {testSending ? <Loader2 className="animate-spin" size={14} /> : <Send size={14} />}
+                          Invia test
                         </Button>
                       </div>
-                    </div>
+                      {!isConnected && <p className="mt-2 text-xs text-amber-300">Collega prima WhatsApp con il QR.</p>}
+                      <button type="button" onClick={() => setPreviewId('test')} className="mt-3 text-xs text-gold hover:underline">
+                        Vedi il testo del messaggio di prova
+                      </button>
+                    </>
+                  )}
 
-                    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-center">
-                      <p className="text-xs text-white/50 mb-2">
-                        Hai bisogno di ricollegare o cambiare numero?
-                      </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleReboot}
-                        disabled={rebooting}
-                        className="text-xs border-white/20 text-white/80 hover:text-white gap-1.5"
-                      >
-                        <RefreshCw size={13} className={rebooting ? 'animate-spin' : ''} />
-                        Riavvia Sessione / Mostra QR
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                  {tab === 'stats' && (
+                    <>
+                      <p className="text-sm font-semibold text-white">Statistiche promemoria</p>
+                      <p className="text-xs text-white/50">Dalle prenotazioni: quando un promemoria parte, viene registrato.</p>
+                      <dl className="mt-4 grid grid-cols-2 gap-2">
+                        {[
+                          ['Inviati oggi', stats?.today],
+                          ['Ultimi 7 giorni', stats?.week],
+                          ['Da inviare stasera', stats?.pendingTonight],
+                        ].map(([label, value]) => (
+                          <div key={label as string} className="rounded-lg border border-white/10 p-3">
+                            <dt className="text-[11px] text-white/50">{label}</dt>
+                            <dd className="mt-1 text-xl font-semibold tabular-nums text-white">{value ?? '…'}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <p className="mt-3 text-[11px] text-white/45">&quot;Da inviare stasera&quot;: appuntamenti di domani con telefono e senza promemoria.</p>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Footer Fisso */}
-              <div className="shrink-0 border-t border-white/10 px-6 py-4 bg-black/40 flex justify-between items-center">
-                <span className="text-[11px] text-white/40">
-                  {instanceId ? `Istanza #${instanceId}` : 'Green API'}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setModalOpen(false)}
-                  className="text-xs border-white/20 text-white"
-                >
+              <div className="flex shrink-0 items-center justify-between border-t border-white/10 px-6 py-3">
+                <span className="text-[11px] text-white/40">{instanceId ? `Istanza #${instanceId}` : 'Green API'}</span>
+                <Button type="button" variant="outline" size="sm" onClick={() => setModalOpen(false)} className="border-white/20 text-xs text-white">
                   Chiudi
                 </Button>
               </div>
