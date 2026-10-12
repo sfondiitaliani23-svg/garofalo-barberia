@@ -1,0 +1,356 @@
+/* ── Lascia una recensione: modulo ampio con riepilogo (concept 05) ───────── */
+
+.rf-panel {
+  --rf-gold: #cd9a4f;
+  --rf-gold-bright: #ffb949;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: linear-gradient(160deg, #0f0f0f 0%, #080808 100%);
+  overflow: hidden;
+}
+
+.rf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  padding: 1.75rem 2rem 2rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rf-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--rf-gold-bright);
+  text-align: left;
+}
+
+.rf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.rf-label {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0;
+}
+
+.rf-stars {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.rf-star-btn {
+  padding: 0.15rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: transform 0.15s ease;
+}
+
+.rf-star-btn:active {
+  transform: scale(0.9);
+}
+
+.rf-star-btn:focus-visible {
+  outline: 2px solid var(--rf-gold-bright);
+  outline-offset: 1px;
+}
+
+.rf-star {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--rf-gold);
+  fill: transparent;
+  stroke-width: 1.5;
+  transition: fill 0.15s ease;
+}
+
+.rf-star.is-on {
+  fill: var(--rf-gold-bright);
+  color: var(--rf-gold-bright);
+}
+
+.rf-rating-label {
+  margin-left: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rf-gold);
+}
+
+.rf-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.rf-input::placeholder {
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.rf-input:focus {
+  outline: none;
+  border-color: rgba(205, 154, 79, 0.7);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.rf-textarea {
+  min-height: 7rem;
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.rf-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+.rf-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  max-width: 30rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rf-check input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  accent-color: var(--rf-gold);
+  cursor: pointer;
+}
+
+.rf-check strong {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.rf-check small {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.rf-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--rf-gold);
+  color: #000;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+}
+
+.rf-submit:hover:not(:disabled) {
+  background: var(--rf-gold-bright);
+  transform: translateY(-1px);
+}
+
+.rf-submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.rf-submit:focus-visible,
+.rf-secondary:focus-visible {
+  outline: 2px solid var(--rf-gold-bright);
+  outline-offset: 2px;
+}
+
+/* Riepilogo */
+.rf-summary {
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem 1.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.rf-summary-stars {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 1rem;
+}
+
+.rf-summary-stars .rf-star {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.rf-summary-text {
+  margin-top: 0.9rem;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.rf-divider {
+  height: 1px;
+  margin: 1.5rem 0;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rf-privacy {
+  display: flex;
+  gap: 0.7rem;
+  color: var(--rf-gold);
+}
+
+.rf-privacy > svg {
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.rf-privacy-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.rf-privacy-text {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.rf-signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.rf-signature-logo {
+  width: 5.5rem;
+  height: auto;
+  opacity: 0.55;
+}
+
+.rf-signature-line {
+  width: 3rem;
+  height: 1px;
+  background: var(--rf-gold);
+  opacity: 0.6;
+}
+
+/* Successo */
+.rf-success {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.rf-success-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--rf-gold-bright);
+}
+
+.rf-success-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: #fff;
+}
+
+.rf-success-text {
+  max-width: 30rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rf-success-note {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--rf-gold);
+}
+
+.rf-success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.rf-secondary {
+  padding: 0.8rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.rf-secondary:hover {
+  border-color: var(--rf-gold);
+  color: var(--rf-gold-bright);
+}
+
+/* Tablet e mobile */
+@media (max-width: 860px) {
+  .rf-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .rf-form {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.5rem 1.25rem;
+  }
+
+  .rf-summary {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .rf-bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rf-submit {
+    width: 100%;
+  }
+}

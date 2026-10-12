@@ -1,17 +1,24 @@
 'use client';
 
+import Image from 'next/image';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Star, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowRight, CheckCircle, Loader2, ShieldCheck, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { createReview } from '@/lib/actions/reviews';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import './review-form.css';
 
 interface ReviewFormProps {
   defaultName?: string;
 }
+
+const RATING_LABELS: Record<number, string> = {
+  5: 'Eccellente',
+  4: 'Molto buono',
+  3: 'Buono',
+  2: 'Sufficiente',
+  1: 'Insufficiente',
+};
 
 export function ReviewForm({ defaultName = '' }: ReviewFormProps) {
   const router = useRouter();
@@ -22,6 +29,8 @@ export function ReviewForm({ defaultName = '' }: ReviewFormProps) {
   const [authorizedByCustomer, setAuthorizedByCustomer] = useState(true);
   const [pending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
+
+  const shownRating = hoverRating ?? rating;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,142 +57,166 @@ export function ReviewForm({ defaultName = '' }: ReviewFormProps) {
         setSuccess(true);
         toast.success('Recensione inviata con successo!');
       } else {
-        toast.error(res.error || 'Errore durante l\'invio.');
+        toast.error(res.error || "Errore durante l'invio.");
       }
     });
   };
 
   if (success) {
     return (
-      <div className="text-center py-12 px-4 space-y-6 max-w-md mx-auto">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mx-auto animate-bounce">
-          <CheckCircle className="h-10 w-10" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-display uppercase tracking-wide text-gold font-bold">
-            Grazie mille!
-          </h2>
-          <p className="text-sm text-white/70">
-            La tua recensione è stata inviata. Apprezziamo molto il tuo tempo e il tuo supporto per Garofalo Barberia.
-          </p>
-          {authorizedByCustomer && (
-            <p className="text-xs text-gold/80 italic mt-2">
-              ✓ Avendo concesso l'autorizzazione, la tua recensione è ora visibile sul nostro sito!
-            </p>
-          )}
-        </div>
-        <div className="pt-4 flex flex-col gap-3">
-          <Button onClick={() => router.push('/')} className="w-full bg-gold hover:bg-gold-light text-black font-semibold rounded-full py-6">
-            Torna alla Home
-          </Button>
-          <Button onClick={() => router.push('/prenota')} variant="outline" className="w-full border-white/10 text-white rounded-full py-6">
+      <div className="rf-panel rf-success">
+        <CheckCircle className="rf-success-icon" aria-hidden />
+        <h2 className="rf-success-title">Grazie mille!</h2>
+        <p className="rf-success-text">
+          La tua recensione è stata inviata. Apprezziamo molto il tuo tempo e il tuo supporto per Garofalo Barberia.
+        </p>
+        {authorizedByCustomer && (
+          <p className="rf-success-note">Hai dato l&apos;autorizzazione: la tua recensione è ora visibile sul sito.</p>
+        )}
+        <div className="rf-success-actions">
+          <button type="button" className="rf-submit" onClick={() => router.push('/recensioni')}>
+            Vedi le recensioni
+            <ArrowRight size={15} aria-hidden />
+          </button>
+          <button type="button" className="rf-secondary" onClick={() => router.push('/prenota')}>
             Prenota un appuntamento
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-lg mx-auto bg-white/[0.02] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
-      
-      <div className="space-y-1 text-center">
-        <h2 className="font-display text-xl uppercase tracking-wider text-gold">La tua recensione</h2>
-        <p className="text-xs text-white/50">Aiutaci a crescere e condividi la tua opinione con gli altri clienti</p>
-      </div>
+    <div className="rf-panel">
+      <form onSubmit={handleSubmit} className="rf-form">
+        <h2 className="rf-title">La tua recensione</h2>
 
-      {/* Star Selector */}
-      <div className="flex flex-col items-center justify-center space-y-2">
-        <Label className="text-xs text-white/60">Valutazione</Label>
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((star) => {
-            const active = hoverRating !== null ? star <= hoverRating : star <= rating;
-            return (
-              <button
-                key={star}
-                type="button"
-                onClick={() => setRating(star)}
-                onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(null)}
-                className="transition-transform active:scale-90 p-1"
-                aria-label={`Valuta ${star} stelle`}
-              >
-                <Star
-                  className={`h-8 w-8 transition-colors ${
-                    active ? 'fill-gold text-gold' : 'text-white/20'
-                  }`}
-                />
-              </button>
-            );
-          })}
-        </div>
-        <span className="text-xs font-semibold text-gold tracking-widest mt-1">
-          {rating === 5 ? 'ECCELLENTE' : rating === 4 ? 'MOLTO BUONO' : rating === 3 ? 'BUONO' : rating === 2 ? 'SUFFICIENTE' : 'INSUFFICIENTE'}
-        </span>
-      </div>
+        <fieldset className="rf-field">
+          <legend className="rf-label">Valutazione</legend>
+          <div className="rf-stars" onMouseLeave={() => setHoverRating(null)}>
+            {[1, 2, 3, 4, 5].map((star) => {
+              const active = star <= shownRating;
+              return (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onFocus={() => setHoverRating(star)}
+                  onBlur={() => setHoverRating(null)}
+                  className="rf-star-btn"
+                  aria-label={`Valuta ${star} ${star === 1 ? 'stella' : 'stelle'}`}
+                  aria-pressed={star === rating}
+                >
+                  <Star className={active ? 'rf-star is-on' : 'rf-star'} aria-hidden />
+                </button>
+              );
+            })}
+            <span className="rf-rating-label">{RATING_LABELS[shownRating]}</span>
+          </div>
+        </fieldset>
 
-      {/* Name Input */}
-      <div>
-        <Label htmlFor="review-name" className="text-xs text-white/70">Il tuo nome (visibile al pubblico) *</Label>
-        <Input
-          id="review-name"
-          type="text"
-          placeholder="Es. Mario Rossi"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-          required
-          className="mt-1 bg-black/40 border-white/10 text-white placeholder-white/30 focus:border-gold/50 rounded-lg py-5"
-        />
-      </div>
-
-      {/* Comment Input */}
-      <div>
-        <Label htmlFor="review-comment" className="text-xs text-white/70">Cosa ne pensi del nostro servizio? *</Label>
-        <textarea
-          id="review-comment"
-          placeholder="Scrivi qui la tua recensione..."
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          required
-          rows={4}
-          className="mt-1 flex w-full rounded-lg border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-white/30 focus:border-gold/50 focus:outline-none focus:ring-0 admin-modal-scroll resize-y overflow-y-auto"
-        />
-      </div>
-
-      {/* Authorization Checkbox */}
-      <div className="rounded-xl border border-gold/20 bg-gold/5 p-4 space-y-3">
-        <label className="flex items-start gap-3 cursor-pointer select-none">
+        <div className="rf-field">
+          <label htmlFor="review-name" className="rf-label">
+            Il tuo nome (visibile al pubblico) *
+          </label>
           <input
-            type="checkbox"
-            checked={authorizedByCustomer}
-            onChange={(e) => setAuthorizedByCustomer(e.target.checked)}
-            className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-5 w-5 shrink-0 mt-0.5"
+            id="review-name"
+            type="text"
+            placeholder="Es. Mario Rossi"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            required
+            maxLength={80}
+            autoComplete="name"
+            className="rf-input"
           />
-          <div className="space-y-1">
-            <span className="text-sm font-semibold text-white">Autorizzo la pubblicazione sul sito</span>
-            <p className="text-xs text-white/50 leading-relaxed">
-              Spuntando questa casella, autorizzi la pubblicazione del tuo nome e della tua recensione direttamente sulla homepage del sito di Garofalo Barberia.
+        </div>
+
+        <div className="rf-field">
+          <label htmlFor="review-comment" className="rf-label">
+            Cosa ne pensi del nostro servizio? *
+          </label>
+          <textarea
+            id="review-comment"
+            placeholder="Scrivi qui la tua recensione..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            required
+            rows={4}
+            maxLength={1000}
+            className="rf-input rf-textarea"
+          />
+        </div>
+
+        <div className="rf-bottom">
+          <label className="rf-check">
+            <input
+              type="checkbox"
+              checked={authorizedByCustomer}
+              onChange={(e) => setAuthorizedByCustomer(e.target.checked)}
+            />
+            <span>
+              <strong>Autorizzo la pubblicazione sul sito</strong>
+              <small>
+                Spuntando questa casella, autorizzi la pubblicazione del tuo nome e della tua recensione direttamente
+                sul sito di Garofalo Barberia.
+              </small>
+            </span>
+          </label>
+
+          <button type="submit" disabled={pending} className="rf-submit">
+            {pending ? (
+              <>
+                <Loader2 size={16} className="animate-spin" aria-hidden />
+                Invio in corso...
+              </>
+            ) : (
+              <>
+                Pubblica recensione
+                <ArrowRight size={15} aria-hidden />
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+
+      <aside className="rf-summary" aria-label="Riepilogo">
+        <h2 className="rf-title">Riepilogo</h2>
+        <div className="rf-summary-stars" aria-label={`${rating} stelle su 5`}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star key={star} className={star <= rating ? 'rf-star is-on' : 'rf-star'} aria-hidden />
+          ))}
+        </div>
+        <p className="rf-summary-text">
+          {authorizedByCustomer
+            ? 'La tua valutazione verrà mostrata pubblicamente insieme alla tua recensione.'
+            : 'Senza autorizzazione la tua recensione resta privata: la legge solo lo staff della Barberia.'}
+        </p>
+
+        <div className="rf-divider" />
+
+        <div className="rf-privacy">
+          <ShieldCheck size={18} strokeWidth={1.6} aria-hidden />
+          <div>
+            <p className="rf-privacy-title">La tua privacy è al sicuro</p>
+            <p className="rf-privacy-text">
+              Salviamo solo nome, valutazione e testo. Il tuo nome è visibile solo se autorizzi la pubblicazione.
             </p>
           </div>
-        </label>
-      </div>
+        </div>
 
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        disabled={pending}
-        className="w-full bg-gold hover:bg-gold-light text-black py-6 font-bold rounded-full transition-all duration-300 shadow-lg border-none"
-      >
-        {pending ? (
-          <div className="flex items-center justify-center gap-2">
-            <Loader2 size={18} className="animate-spin" />
-            <span>Invio in corso...</span>
-          </div>
-        ) : (
-          'Invia recensione'
-        )}
-      </Button>
-    </form>
+        <div className="rf-signature">
+          <Image
+            src="/assets/sostituisci-immagini/icone/favicon.png"
+            alt="Garofalo Barberia"
+            width={96}
+            height={96}
+            className="rf-signature-logo"
+          />
+          <span className="rf-signature-line" aria-hidden />
+        </div>
+      </aside>
+    </div>
   );
 }

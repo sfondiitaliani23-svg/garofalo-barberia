@@ -1,0 +1,321 @@
+/* ── Recensioni: carousel orizzontale con recensione in evidenza (concept 04) ── */
+
+.rc {
+  --rc-gold: #cd9a4f;
+  --rc-gold-bright: #ffb949;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #070707;
+}
+
+.rc-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34% minmax(0, 1fr);
+  min-height: 440px;
+}
+
+.rc-photo {
+  background-size: cover;
+  background-position: center 30%;
+  filter: sepia(0.45) brightness(0.55) contrast(1.05) saturate(0.8);
+  -webkit-mask-image: linear-gradient(90deg, #000 60%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 60%, transparent 100%);
+}
+
+.rc-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem 4.5rem 3.5rem 2rem;
+}
+
+.rc-card {
+  position: relative;
+  padding: 2rem 2.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: linear-gradient(150deg, rgba(20, 20, 20, 0.95) 0%, rgba(10, 10, 10, 0.95) 100%);
+  animation: rc-in 0.45s ease;
+}
+
+.rc-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rc-gold);
+  margin-bottom: 0.75rem;
+}
+
+.rc-stars {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.rc-stars .is-on {
+  color: var(--rc-gold-bright);
+  fill: var(--rc-gold-bright);
+}
+
+.rc-stars .is-off {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.rc-quote {
+  margin: 1rem 0 0;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+  line-height: 1.3;
+  color: #fff;
+}
+
+.rc-body {
+  margin-top: 1rem;
+  max-width: 40rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rc-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.75rem;
+}
+
+.rc-author {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rc-gold);
+}
+
+.rc-date {
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.rc-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.25rem;
+  border-radius: 999px;
+  background: var(--rc-gold);
+  color: #000;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.rc-cta:hover {
+  background: var(--rc-gold-bright);
+  transform: translateY(-1px);
+}
+
+.rc-cta:focus-visible {
+  outline: 2px solid var(--rc-gold-bright);
+  outline-offset: 2px;
+}
+
+/* Frecce */
+.rc-nav {
+  position: absolute;
+  top: calc(50% - 0.75rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  z-index: 1;
+}
+
+.rc-nav:hover {
+  border-color: var(--rc-gold);
+  color: var(--rc-gold-bright);
+}
+
+.rc-nav.is-pressed,
+.rc-nav:active {
+  background: var(--rc-gold);
+  border-color: var(--rc-gold);
+  color: #000;
+  transform: translateY(-50%) scale(0.92);
+  transition: none;
+}
+
+.rc-nav-prev {
+  left: 0.75rem;
+}
+
+.rc-nav-next {
+  right: 1.25rem;
+}
+
+/* Pallini */
+.rc-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+  transform: translateX(-50%);
+  max-width: 90%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rc-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.rc-dot:hover {
+  border-color: var(--rc-gold);
+}
+
+.rc-dot.is-active {
+  background: var(--rc-gold);
+  border-color: var(--rc-gold);
+  transform: scale(1.15);
+}
+
+/* Barra dei numeri */
+.rc-stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.25rem 1rem;
+}
+
+.rc-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 2.5rem;
+  color: var(--rc-gold);
+}
+
+.rc-stat + .rc-stat {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.rc-stat-value {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #fff;
+}
+
+.rc-stat-label {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@keyframes rc-in {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Tablet e mobile */
+@media (max-width: 900px) {
+  .rc-stage {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .rc-photo {
+    height: 180px;
+    -webkit-mask-image: linear-gradient(180deg, #000 50%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 50%, transparent 100%);
+  }
+
+  .rc-content {
+    margin-top: -3.5rem;
+    padding: 0 1rem 3.25rem;
+  }
+
+  .rc-card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .rc-nav {
+    top: auto;
+    bottom: 0.6rem;
+    transform: none;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .rc-nav.is-pressed,
+  .rc-nav:active {
+    transform: scale(0.92);
+  }
+
+  .rc-nav-prev {
+    left: 1rem;
+  }
+
+  .rc-nav-next {
+    right: 1rem;
+  }
+
+  .rc-dots {
+    bottom: 1.4rem;
+    max-width: calc(100% - 7rem);
+  }
+
+  .rc-stats {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+    gap: 0.9rem;
+  }
+
+  .rc-stat {
+    padding: 0;
+  }
+
+  .rc-stat + .rc-stat {
+    border-left: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-card {
+    animation: none;
+  }
+}

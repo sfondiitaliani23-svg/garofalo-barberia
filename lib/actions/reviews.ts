@@ -84,3 +84,53 @@ export async function createReview(input: CreateReviewInput) {
     return { ok: false, error: err.message || 'Errore imprevisto' };
   }
 }
+
+export interface ReviewStats {
+  total: number;
+  average: number;
+  /** Percentuale di recensioni con 4 o 5 stelle. */
+  satisfiedPercent: number;
+}
+
+const getCachedReviewStats = unstable_cache(
+  async (): Promise<ReviewStats> => {
+    const empty = { total: 0, average: 0, satisfiedPercent: 0 };
+    try {
+      const client = (await createServiceClient()) ?? (
+        process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          ? (await import('@supabase/supabase-js')).createClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL,
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            )
+          : null
+      );
+      if (!client) return empty;
+
+      const { data, error } = await client
+        .from('reviews')
+        .select('rating')
+        .eq('authorized_by_customer', true);
+
+      if (error || !data || data.length === 0) return empty;
+
+      const ratings = data.map((r) => Number(r.rating) || 0).filter((r) => r >= 1 && r <= 5);
+      if (ratings.length === 0) return empty;
+      const sum = ratings.reduce((a, b) => a + b, 0);
+      const satisfied = ratings.filter((r) => r >= 4).length;
+      return {
+        total: ratings.length,
+        average: Math.round((sum / ratings.length) * 10) / 10,
+        satisfiedPercent: Math.round((satisfied / ratings.length) * 100),
+      };
+    } catch {
+      return empty;
+    }
+  },
+  ['approved-reviews-stats'],
+  { revalidate: 60, tags: ['reviews'] }
+);
+
+/** Numeri reali su tutte le recensioni pubblicate (non solo le ultime 20). */
+export async function getReviewStats() {
+  return getCachedReviewStats();
+}
