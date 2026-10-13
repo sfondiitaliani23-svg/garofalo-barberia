@@ -39,16 +39,12 @@ export function CookieConsent() {
       <div className="mx-auto w-full max-w-3xl">
         {!customizeOpen ? (
           <>
-            <p className="text-sm font-medium text-white">Informativa sui cookie</p>
+            <p className="text-sm font-medium text-white">Cookie</p>
             <p className="mt-1 text-xs leading-relaxed text-white/60">
-              Utilizziamo cookie tecnici necessari al funzionamento del sito e, solo con il tuo
-              consenso, cookie analitici e di preferenza per migliorare l&apos;esperienza e
-              comprendere come viene utilizzato il sito. Puoi accettare tutti i cookie, rifiutare
-              quelli opzionali o personalizzare le tue scelte.{' '}
+              Cookie tecnici sempre attivi; statistiche e preferenze solo se acconsenti.{' '}
               <Link href="/privacy" className="text-gold underline underline-offset-2">
-                Leggi l&apos;informativa privacy
+                Privacy
               </Link>
-              .
             </p>
 
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
