@@ -7,7 +7,6 @@ import { getBarbers } from '@/lib/actions/bookings';
 import { getBarberWorkWeek } from '@/lib/actions/availability';
 import { TEAM_EXTRA } from '@/lib/data/team';
 import { barberSlug, firstName } from '@/lib/utils/barber-slug';
-import { isBarberAllowedForCut } from '@/lib/utils/barber-schedule';
 import { formatBarberRole } from '@/lib/utils';
 import { SITE_URL, breadcrumbJsonLd } from '@/lib/seo';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
@@ -44,7 +43,6 @@ export default async function BarberPage({ params }: { params: Promise<{ slug: s
   const week = await getBarberWorkWeek(b.id);
   const extra = TEAM_EXTRA[slug] ?? {};
   const name = firstName(b.name);
-  const cuts = isBarberAllowedForCut(b.name);
   const others = all.filter((x) => x.id !== b.id);
   const workDays = week.days.filter((d) => d.periods.length > 0);
 
@@ -103,11 +101,6 @@ export default async function BarberPage({ params }: { params: Promise<{ slug: s
                   <MessageCircle size={16} aria-hidden /> WhatsApp
                 </a>
               </div>
-              {!cuts && (
-                <p className="cp-hint" style={{ marginTop: '0.75rem' }}>
-                  Online con {name} puoi prenotare barba e piega. Per un taglio con {name}, scrivici su WhatsApp.
-                </p>
-              )}
             </div>
           </div>
         </div>

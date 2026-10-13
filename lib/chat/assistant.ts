@@ -396,7 +396,7 @@ class Reply {
 }
 
 function cutBookingNote(): string {
-  return 'I **tagli** (anche baby) si prenotano online con **Luigi**. Per i servizi **barba** puoi scegliere il barbiere che preferisci.';
+  return 'Online puoi prenotare **tutti i servizi**, tagli compresi, con il barbiere che preferisci: **Luigi**, **Vittorio** o **Francesco**.';
 }
 
 function answer(id: IntentId, ctx: Ctx, r: Reply) {
@@ -532,7 +532,7 @@ function answer(id: IntentId, ctx: Ctx, r: Reply) {
       r.add(
         isLuigi
           ? `✂️ **${b.name}** è il titolare. Con lui prenoti online **tutti i servizi**, tagli compresi.`
-          : `✂️ Con **${first}** puoi prenotare online i servizi **barba**.\nI **tagli** si prenotano online con **Luigi**. Se vuoi il taglio con ${first}, scrivici su WhatsApp al **${PHONE}**.`,
+          : `✂️ Con **${first}** prenoti online **tutti i servizi**, tagli compresi. Quando prenoti, scegli ${first} come barbiere.`,
         ACTIONS.book,
         ACTIONS.whatsapp
       );

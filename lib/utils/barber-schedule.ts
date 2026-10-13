@@ -19,9 +19,9 @@ export const SCHEDULE_PERIOD_LABELS: Record<SchedulePeriod, string> = {
   afternoon: 'Pomeriggio',
 };
 
+/** Tutti i barbieri ricevono online anche i tagli (dal 13/10/2026). */
 export function isBarberAllowedForCut(name?: string | null): boolean {
-  if (!name) return false;
-  return name.toLowerCase().includes('luigi');
+  return Boolean(name);
 }
 
 export function isBarberAdminOnly(name?: string | null): boolean {

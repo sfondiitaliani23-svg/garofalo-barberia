@@ -17,7 +17,7 @@ export const BABY_NOTE =
 
 /**
  * Restituisce true se il servizio è un taglio (Taglio e shampoo, Taglio baby).
- * Per questi servizi la prenotazione online pubblica è affidata a Luigi Garofalo.
+ * (Un tempo i tagli online erano riservati a Luigi: dal 13/10/2026 tutti i barbieri li ricevono.)
  */
 export function isCutService(serviceNameOrCategory?: string | null): boolean {
   if (!serviceNameOrCategory) return false;

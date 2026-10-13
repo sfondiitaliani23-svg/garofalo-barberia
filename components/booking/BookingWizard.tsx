@@ -93,19 +93,15 @@ export function BookingWizard({
     [selectedServices]
   );
 
-  // Se è stato scelto il taglio -> solo Luigi Garofalo
-  // Se sono stati scelti solo trattamenti barba/styling -> Luigi Garofalo, Vittorio Morlino, Francesco Costantino
+  // Tutti i barbieri ricevono tutti i servizi (tagli compresi).
   const barbers = useMemo(() => {
-    if (hasCutService) {
-      return rawBarbers.filter((b) => b.name.toLowerCase().includes('luigi'));
-    }
     return [...rawBarbers].sort((a, b) => {
       const rankA = getBarberRank(a.name);
       const rankB = getBarberRank(b.name);
       if (rankA !== rankB) return rankA - rankB;
       return (a.sort_order ?? 0) - (b.sort_order ?? 0);
     });
-  }, [hasCutService, rawBarbers]);
+  }, [rawBarbers]);
 
   // Primo barbiere pubblico disponibile
   const defaultBarber = useMemo(() => {
@@ -664,26 +660,18 @@ export function BookingWizard({
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gold">
-                    {hasCutService ? 'Operatore per il taglio' : 'Con chi vuoi effettuare il trattamento?'}
+                    Con chi vuoi prenotare?
                   </h3>
                   {defaultBarber && (
                     <span className="text-xs text-white/40">
-                      {hasCutService ? 'Affidato a: ' + defaultBarber.name : 'Seleziona il tuo barbiere'}
+                      Seleziona il tuo barbiere
                     </span>
                   )}
                 </div>
 
-                {hasCutService && (
-                  <p className="mb-3 text-xs text-white/60">
-                    I servizi di taglio sono gestiti direttamente dal titolare <strong>Luigi Garofalo</strong>.
-                  </p>
-                )}
-
-                {!hasCutService && (
-                  <p className="mb-3 text-xs text-white/60">
-                    Scegli con quale professionista del salone effettuare il servizio barba/styling:
-                  </p>
-                )}
+                <p className="mb-3 text-xs text-white/60">
+                  Scegli il barbiere che preferisci, oppure &quot;Nessuna preferenza&quot; per il primo orario libero.
+                </p>
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {loadingBarberStatuses && (
@@ -731,22 +719,20 @@ export function BookingWizard({
                       </button>
                     );
                   })}
-                  {!hasCutService && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBarberId(null);
-                        setTime(null);
-                      }}
-                      className={cn(
-                        'rounded-lg border p-4 text-left transition sm:col-span-2',
-                        barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/40'
-                      )}
-                    >
-                      <p className="font-medium text-white">Nessuna preferenza (Primo disponibile)</p>
-                      <p className="text-sm text-white/50">Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco</p>
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBarberId(null);
+                      setTime(null);
+                    }}
+                    className={cn(
+                      'rounded-lg border p-4 text-left transition sm:col-span-2',
+                      barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/40'
+                    )}
+                  >
+                    <p className="font-medium text-white">Nessuna preferenza (Primo disponibile)</p>
+                    <p className="text-sm text-white/50">Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco</p>
+                  </button>
                 </div>
               </div>
 
