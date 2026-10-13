@@ -245,3 +245,13 @@ export async function optOutEmail(email: string) {
   const { error } = await supabase.from('site_content').insert({ key, title: 'optout', body: '{}', is_active: false, updated_at: new Date().toISOString() });
   return !error;
 }
+
+export type ComebackStats = {
+  sent30: number;
+  sent90: number;
+  booked90: number;
+  rate90: number; // percentuale
+  optouts: number;
+  nextRun: number;
+  recent: { day: string; sent: number; booked: number }[];
+};

@@ -2,17 +2,18 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Briefcase, Check, MessageSquareHeart, Printer, QrCode, Star, Trash2 } from 'lucide-react';
+import { Briefcase, Check, MailCheck, MessageSquareHeart, Printer, QrCode, Star, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { InboxItem } from '@/lib/actions/site-inbox';
 import type { ShopQr } from '@/lib/data/qr';
+import type { ComebackStats } from '@/lib/utils/comeback';
 
-type Tab = 'feedback' | 'candidatura' | 'qr';
+type Tab = 'feedback' | 'candidatura' | 'qr' | 'torna';
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
 
-export function AdminInbox({ items: initial, qrs, scans }: { items: InboxItem[]; qrs: ShopQr[]; scans: Record<string, number> }) {
+export function AdminInbox({ items: initial, qrs, scans, comeback }: { items: InboxItem[]; qrs: ShopQr[]; scans: Record<string, number>; comeback: ComebackStats }) {
   const [items, setItems] = useState(initial);
   const [tab, setTab] = useState<Tab>('feedback');
   const [, start] = useTransition();
@@ -46,13 +47,14 @@ export function AdminInbox({ items: initial, qrs, scans }: { items: InboxItem[];
     { id: 'feedback', label: 'Feedback anonimi', icon: MessageSquareHeart, badge: unread(feedback) },
     { id: 'candidatura', label: 'Candidature', icon: Briefcase, badge: unread(apps) },
     { id: 'qr', label: 'QR del salone', icon: QrCode },
+    { id: 'torna', label: 'È ora di tornare', icon: MailCheck },
   ];
 
   return (
     <div className="space-y-6">
       <header className="print:hidden">
         <h1 className="font-display text-3xl uppercase text-white">Messaggi e QR</h1>
-        <p className="mt-1 text-sm text-white/50">Feedback anonimi, candidature dal sito e QR da stampare per il salone.</p>
+        <p className="mt-1 text-sm text-white/50">Feedback anonimi, candidature, QR da stampare e promemoria “è ora di tornare”.</p>
       </header>
 
       <div className="flex flex-wrap gap-2 print:hidden" role="tablist">
@@ -126,6 +128,41 @@ export function AdminInbox({ items: initial, qrs, scans }: { items: InboxItem[];
                 <p className="mt-2 text-[11px] text-white/35">Consenso privacy dato. Elimina la candidatura a fine selezione.</p>
               </Card>
             ))
+          )}
+        </section>
+      )}
+
+      {tab === 'torna' && (
+        <section className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Stat label="Email inviate (30 giorni)" value={String(comeback.sent30)} />
+            <Stat label="Clienti tornati (90 giorni)" value={`${comeback.booked90} su ${comeback.sent90}`} />
+            <Stat label="Tasso di ritorno" value={comeback.sent90 ? `${comeback.rate90}%` : '–'} />
+            <Stat label="Pronte per il prossimo invio" value={String(comeback.nextRun)} />
+          </div>
+          <p className="text-sm text-white/55">
+            Ogni giorno tra le 10:30 e le 11:00 parte un’email a chi ha fatto l’ultimo taglio circa 5 settimane fa (6 per i bimbi, 3 per la sola barba) e non ha già un appuntamento.
+            Un cliente conta come “tornato” se prenota entro 30 giorni dall’email. Si sono cancellati: <strong className="text-white">{comeback.optouts}</strong>.
+          </p>
+          {comeback.recent.length === 0 ? (
+            <Empty text="Nessuna email ancora inviata. Il primo invio parte domani mattina." />
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-white/10">
+              <table className="w-full text-sm">
+                <thead className="bg-white/[0.03] text-left text-xs uppercase tracking-wider text-white/45">
+                  <tr><th className="px-4 py-2.5">Giorno</th><th className="px-4 py-2.5">Inviate</th><th className="px-4 py-2.5">Tornati</th></tr>
+                </thead>
+                <tbody>
+                  {comeback.recent.map((r) => (
+                    <tr key={r.day} className="border-t border-white/5">
+                      <td className="px-4 py-2.5 text-white/80">{r.day}</td>
+                      <td className="px-4 py-2.5 text-white">{r.sent}</td>
+                      <td className="px-4 py-2.5 text-gold-light">{r.booked}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </section>
       )}
