@@ -2,7 +2,7 @@ name: Diagnosi sito live
 on:
   push:
     branches: [diag-live]
-    paths: ['.github/diag.py', '.github/workflows/diag-live.yml']
+    paths: ['.github/diag.py', '.github/qa.sh', '.github/workflows/diag-live.yml']
 permissions:
   contents: write
 jobs:
@@ -10,10 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
       - run: pip install playwright==1.47.0 && python -m playwright install --with-deps chromium
-      - run: python .github/diag.py > diag-result.txt 2>&1 || true
+      - run: bash .github/qa.sh > diag-result.txt 2>&1 || true
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
       - run: |
           git config user.name diag-bot && git config user.email diag@bot
-          git add diag-result.txt && git commit -m "risultato diagnosi" && git push
+          git add diag-result.txt qa-out || true
+          git commit -m "risultato diagnosi" && git push
