@@ -43,7 +43,7 @@ export function localBusinessJsonLd(services: SeoService[] = []) {
     },
     hasMap: SITE_CONFIG.googleMapsUrl,
     areaServed: { '@type': 'City', name: 'Foggia' },
-    sameAs: [SITE_CONFIG.instagram.split('?')[0]],
+    sameAs: [SITE_CONFIG.instagram.split('?')[0], `https://www.google.com/maps/place/?q=place_id:${SITE_CONFIG.googlePlaceId}`],
     openingHoursSpecification: openingHoursSpecification(),
     potentialAction: {
       '@type': 'ReserveAction',

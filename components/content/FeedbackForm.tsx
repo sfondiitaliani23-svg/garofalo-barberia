@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Star } from 'lucide-react';
 import { submitFeedbackAction } from '@/lib/actions/site-inbox';
+import { SITE_CONFIG } from '@/lib/site-config';
 
 const LABELS = ['', 'Male', 'Così così', 'Bene', 'Molto bene', 'Benissimo'];
 
@@ -36,9 +37,14 @@ export function FeedbackForm() {
         <h2>Grazie, lo leggiamo davvero.</h2>
         <p>Il tuo feedback è arrivato in modo anonimo al salone.</p>
         <p className="mt-4">Ti va di lasciare anche una recensione pubblica? Aiuta chi ci sceglie per la prima volta.</p>
-        <Link href="/recensioni/nuova" className="btn-primary mt-4 inline-flex">
-          Scrivi una recensione
-        </Link>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <a href={SITE_CONFIG.googleReviewUrl} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex">
+            Recensisci su Google
+          </a>
+          <Link href="/recensioni/nuova" className="cp-ghost">
+            Oppure sul sito
+          </Link>
+        </div>
       </div>
     );
   }
