@@ -13,3 +13,4 @@ for path in / /servizi /prenota /galleria /contatti /taglio-uomo-foggia /journal
 done
 python .github/diag.py
 # rerun 1791903535
+# rerun 1791904169
