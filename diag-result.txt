@@ -1,5 +1,7 @@
-servizi mobile run 1 perf 84 LCP 3.7 s | elemento: body > div.fixed > div.mx-auto > p.mt-1 | <p class="mt-1 text-xs leading-relaxed text-white/60">
-   fasi: [('TTFB', 650), ('Load Delay', 0), ('Load Time', 0), ('Render Delay', 3075)]
-servizi mobile run 2 perf 71 LCP 6.1 s | elemento: body > div.fixed > div.mx-auto > p.mt-1 | <p class="mt-1 text-xs leading-relaxed text-white/60">
-   fasi: [('TTFB', 616), ('Load Delay', 0), ('Load Time', 0), ('Render Delay', 5475)]
+servizi mobile run 1 perf 68 LCP 8.5 s | elemento: div#gbf-loader > div > div > img.w-auto | <img alt="Barberia Garofalo" width="200" height="120" decoding="async" data-nimg="1" class="w-auto h-full object-contain" srcset="/_next/image?url=%2Fassets%2Fs
+   fasi: [('TTFB', 759), ('Load Delay', 6910), ('Load Time', 658), ('Render Delay', 158)]
+servizi mobile run 2 perf 70 LCP 8.3 s | elemento: div#gbf-loader > div > div > img.w-auto | <img alt="Barberia Garofalo" width="200" height="120" decoding="async" data-nimg="1" class="w-auto h-full object-contain" srcset="/_next/image?url=%2Fassets%2Fs
+   fasi: [('TTFB', 687), ('Load Delay', 7129), ('Load Time', 235), ('Render Delay', 286)]
+servizi mobile run 3 perf 70 LCP 10.6 s | elemento: div#gbf-loader > div > div > img.w-auto | <img alt="Barberia Garofalo" width="200" height="120" decoding="async" data-nimg="1" class="w-auto h-full object-contain" srcset="/_next/image?url=%2Fassets%2Fs
+   fasi: [('TTFB', 658), ('Load Delay', 8945), ('Load Time', 611), ('Render Delay', 345)]
 presence anonimo -> 204
