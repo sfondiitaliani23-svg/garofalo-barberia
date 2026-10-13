@@ -555,12 +555,11 @@ export function BookingWizard({
             <div className="py-6 text-center border-b border-white/10">
               <a
                 href={SITE_CONFIG.googleReviewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...(SITE_CONFIG.googleReviewUrl.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 className="inline-flex items-center justify-center gap-2 text-gold hover:text-gold/80 hover:underline transition-all py-1 font-semibold text-sm"
               >
                 <Star className="h-5 w-5 fill-gold text-gold shrink-0" />
-                Lasciaci una recensione su Google
+                {SITE_CONFIG.googleReviewUrl.includes('google') || SITE_CONFIG.googleReviewUrl.includes('g.page') ? 'Lasciaci una recensione su Google' : 'Lasciaci una recensione'}
               </a>
             </div>
 

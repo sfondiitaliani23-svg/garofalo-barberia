@@ -16,7 +16,8 @@ export const SITE_CONFIG = {
     "https://maps.google.com/?q=Viale+Ignazio+d'Addedda,+236,+71122+Foggia+FG",
   googleMapsEmbed:
     "https://www.google.com/maps?q=Viale+Ignazio+d'Addedda,+236,+71122+Foggia+FG&hl=it&z=16&output=embed",
-  googleReviewUrl: 'https://g.page/r/garofalobarberia/review',
+  // Link Google vero (da Google Business Profile → Chiedi recensioni). Finché manca, usa il modulo del sito.
+  googleReviewUrl: process.env.NEXT_PUBLIC_GOOGLE_REVIEW_URL ?? '/recensioni/nuova',
   gmailComposeUrl: `https://mail.google.com/mail/?view=cm&fs=1&to=${EMAIL}`,
   cancellationMinutes: 30,
   slotIntervalMinutes: 30,
