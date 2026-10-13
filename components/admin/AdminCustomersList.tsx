@@ -56,6 +56,11 @@ function matchesQuery(customer: Profile, query: string) {
 export function AdminCustomersList({ customers, activity = {}, presence: presenceInit }: AdminCustomersListProps) {
   const presence = usePresence(presenceInit ?? { byUser: {}, team: [], onlineCustomers: [], generatedAt: '' });
   const [search, setSearch] = useState('');
+  // Ricerca arrivata dalla dashboard (?q=...)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) setSearch(q.slice(0, 80));
+  }, []);
   const [service, setService] = useState('all');
   const [period, setPeriod] = useState<PeriodFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');

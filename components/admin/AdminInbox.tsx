@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Briefcase, Check, MailCheck, MessageSquareHeart, Printer, QrCode, Star, Trash2, BellRing } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,6 +18,11 @@ const fmt = (iso: string) =>
 export function AdminInbox({ items: initial, qrs, scans, comeback, push }: { items: InboxItem[]; qrs: ShopQr[]; scans: Record<string, number>; comeback: ComebackStats; push: { devices: number; users: number; history: BroadcastLog[] } }) {
   const [items, setItems] = useState(initial);
   const [tab, setTab] = useState<Tab>('feedback');
+  // Apertura diretta di una scheda dal link (es. ?tab=notifiche dalla barra laterale)
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab') as Tab | null;
+    if (t && ['feedback', 'candidatura', 'qr', 'torna', 'notifiche'].includes(t)) setTab(t);
+  }, []);
   const [, start] = useTransition();
 
   const feedback = items.filter((i) => i.kind === 'feedback');

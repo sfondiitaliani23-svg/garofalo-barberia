@@ -21,6 +21,7 @@ import {
   MessageSquareWarning,
   Inbox,
   BookOpen,
+  BellRing,
 } from 'lucide-react';
 
 const links = [
@@ -84,11 +85,16 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── 1. SIDEBAR DESKTOP (lg+) ── */}
-      <aside className="hidden lg:flex w-56 flex-col border-r border-white/10 bg-[#0a0a0a] p-4 fixed left-0 top-0 bottom-0 h-screen z-30 overflow-y-auto">
-        <Link href="/admin/dashboard" className="mb-8 font-display text-sm uppercase tracking-wider text-gold">
-          Admin Garofalo
+      <aside className="adm-side hidden lg:flex fixed left-0 top-0 bottom-0 z-30 h-screen w-60 flex-col overflow-y-auto p-4">
+        <Link href="/admin/dashboard" className="adm-brand">
+          <span className="adm-brand-icon" aria-hidden>
+            <Scissors size={16} />
+          </span>
+          <span>
+            Garofalo <em>Admin</em>
+          </span>
         </Link>
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-1" aria-label="Menu amministrazione">
           {links.map(({ href, label, icon: Icon, exact }) => {
             const isActive = exact
               ? pathname === href
@@ -99,20 +105,28 @@ export function AdminSidebar() {
                 key={href}
                 href={href}
                 prefetch={true}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition',
-                  isActive ? 'bg-gold/15 text-gold' : 'text-white/60 hover:bg-white/5 hover:text-white'
-                )}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn('adm-link', isActive && 'is-active')}
               >
-                <Icon size={16} />
+                <Icon size={17} />
                 {label}
               </Link>
             );
           })}
         </nav>
+        <div className="adm-promo">
+          <span className="adm-promo-icon" aria-hidden>
+            <BellRing size={18} />
+          </span>
+          <p className="adm-promo-title">Avvisa i clienti</p>
+          <p className="adm-promo-text">Manda una notifica a chi ha l&apos;app: offerte, posti liberi, chiusure.</p>
+          <Link href="/admin/messaggi?tab=notifiche" className="adm-promo-btn">
+            Scrivi ora
+          </Link>
+        </div>
         <form action={signOut}>
-          <button type="submit" className="mt-4 w-full rounded-lg px-3 py-2 text-left text-sm text-white/50 hover:bg-white/5 flex items-center gap-2">
-            <LogOut size={16} />
+          <button type="submit" className="adm-link mt-3 w-full">
+            <LogOut size={17} />
             Esci
           </button>
         </form>
