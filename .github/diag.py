@@ -1,27 +1,16 @@
-import urllib.request
 from playwright.sync_api import sync_playwright
 B='https://barberiagarofalo.it'
-r=urllib.request.urlopen(B+'/', timeout=30)
-for k in ['strict-transport-security','x-content-type-options','x-frame-options','referrer-policy','permissions-policy','cross-origin-opener-policy','content-security-policy']:
-    print(k, '=>', r.headers.get(k))
+spy = """window.__evt=[]; const ob=navigator.sendBeacon.bind(navigator); navigator.sendBeacon=(u,d)=>{ if(String(u).includes('/api/evt')) window.__evt.push(String(u)); return ob(u,d); };"""
 with sync_playwright() as p:
-    b=p.chromium.launch(); ctx=b.new_context(); pg=ctx.new_page(); errs=[]; csp=[]
+    b=p.chromium.launch(); ctx=b.new_context(); ctx.add_init_script(spy); pg=ctx.new_page(); errs=[]
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    pg.on('console', lambda m: csp.append(m.text[:160]) if 'Content Security Policy' in m.text or 'Refused' in m.text else None)
-    evt=[]
-    pg.on('request', lambda rq: evt.append(rq.url) if '/api/evt' in rq.url else None)
-    for path in ['/','/contatti','/servizi','/login','/prenota','/journal','/link']:
-        rr=pg.goto(B+path, wait_until='load', timeout=60000); pg.wait_for_timeout(2500)
-        if path=='/':
-            try: pg.click('text=Accetta', timeout=2000)
-            except:
-                try: pg.click('text=Accetta tutti', timeout=1500)
-                except: pass
-        print(path, rr.status, 'APPERR' if pg.locator('text=Application error').count() else 'ok')
-    print('iframe mappa:', pg.goto(B+'/contatti') and pg.locator('iframe').count())
-    pg.goto(B+'/link', wait_until='load'); pg.wait_for_timeout(1500)
-    with ctx.expect_page() as np:
-        pg.locator('a:has-text("WhatsApp")').first.click()
-    pg.wait_for_timeout(2000)
-    print('chiamate /api/evt:', len(evt))
-    print('violazioni CSP:', csp[:5]); print('errori:', errs[:3]); b.close()
+    pg.goto(B+'/servizi', wait_until='load', timeout=60000); pg.wait_for_timeout(2000)
+    pg.click('text=Accetta tutti', timeout=5000); pg.wait_for_timeout(1500)
+    print('consenso:', pg.evaluate("localStorage.getItem('garofalo_cookie_consent')")[:60])
+    pg.locator('a[href^="/prenota"]').first.click(); pg.wait_for_timeout(2500)
+    print('beacon dopo Prenota (pagina nuova, conteggio precedente):', 'ok' )
+    pg.goto(B+'/contatti', wait_until='load'); pg.wait_for_timeout(2000)
+    pg.evaluate("document.querySelector('a[href^=\"tel:\"]').addEventListener('click', e=>e.preventDefault())")
+    pg.locator('a[href^="tel:"]').first.click(); pg.wait_for_timeout(1500)
+    print('beacon /api/evt su Chiama:', pg.evaluate('window.__evt.length'))
+    print('errori:', errs[:3]); b.close()
