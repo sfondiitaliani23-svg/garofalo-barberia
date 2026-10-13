@@ -12,7 +12,8 @@ export function LoadingScreen() {
 
   useEffect(() => {
     // Se la schermata di caricamento è già stata mostrata in questa sessione, non bloccare la navigazione
-    if (storageGet('gbf_loader_shown', 'session')) {
+    // Solo sulla home: chi arriva direttamente su Servizi, Prenota ecc. (spesso da Google) vede subito la pagina.
+    if (window.location.pathname !== '/' || storageGet('gbf_loader_shown', 'session')) {
       return;
     }
 
