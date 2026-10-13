@@ -1,18 +1,4 @@
-strict-transport-security => max-age=63072000
-x-content-type-options => nosniff
-x-frame-options => SAMEORIGIN
-referrer-policy => strict-origin-when-cross-origin
-permissions-policy => camera=(self), microphone=(), geolocation=(), payment=(), usb=(), publickey-credentials-get=(self), publickey-credentials-create=(self)
-cross-origin-opener-policy => same-origin-allow-popups
-content-security-policy => frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests
-/ 200 ok
-/contatti 200 ok
-/servizi 200 ok
-/login 200 ok
-/prenota 200 ok
-/journal 200 ok
-/link 200 ok
-iframe mappa: 2
-chiamate /api/evt: 0
-violazioni CSP: []
+consenso: {"necessary":true,"analytics":true,"preferences":true,"decid
+beacon dopo Prenota (pagina nuova, conteggio precedente): ok
+beacon /api/evt su Chiama: 1
 errori: []
