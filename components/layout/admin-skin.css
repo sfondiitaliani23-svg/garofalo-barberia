@@ -1,0 +1,95 @@
+/*
+ * "Vestito" grafico dell'area admin, uguale alla nuova Dashboard.
+ * Solo aspetto: nessuna funzione cambia. Tutto è limitato a .adm-skin (il contenuto admin).
+ */
+@media screen {
+
+.adm-skin {
+  --sk-accent: #e8b96a;
+  --sk-accent-deep: #b27d39;
+  --sk-line: rgba(255, 255, 255, 0.07);
+  --sk-muted: rgba(244, 239, 231, 0.58);
+  /* Bagliore oro in alto a destra, come nella Dashboard (solo sfondo: nessun effetto sui livelli delle finestre) */
+  background:
+    radial-gradient(520px 340px at 88% 0%, rgba(232, 185, 106, 0.1), transparent 70%),
+    radial-gradient(300px 220px at 100% 0%, rgba(178, 125, 57, 0.12), transparent 75%);
+  background-repeat: no-repeat;
+}
+
+/* Etichetta della sezione sopra il titolo */
+.adm-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sk-accent);
+  margin-bottom: 0.35rem;
+}
+
+/* Titoli di pagina: stesso carattere della Dashboard */
+.adm-skin h1 {
+  font-family: var(--font-sans), 'Montserrat', system-ui, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em;
+  text-transform: none !important;
+  color: #fff;
+}
+/* Titoli delle card: puliti, bianchi, non più in stile insegna */
+.adm-skin :is(h2, h3).font-display {
+  font-family: var(--font-sans), 'Montserrat', system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* Card e riquadri: nero profondo con riflesso oro in alto a sinistra */
+.adm-skin :is(.bg-\[\#111\], .bg-\[\#0e0e0e\], .bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-\[\#0a0a0a\], .bg-black\/45, .bg-\[\#0e0e0e\]\/90).border {
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(232, 185, 106, 0.06), transparent 55%),
+    linear-gradient(180deg, #141414, #0f0f0f);
+  border-color: var(--sk-line);
+  backdrop-filter: none;
+}
+.adm-skin :is(.rounded-xl, .rounded-2xl).border:is(.bg-\[\#111\], .bg-\[\#0e0e0e\], .bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-black\/45) {
+  border-radius: 14px;
+}
+.adm-skin .bg-\[\#1a1a1a\].border,
+.adm-skin .bg-\[\#161616\].border {
+  background: #161616;
+  border-color: var(--sk-line);
+}
+
+/* Tabelle */
+.adm-skin table th {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--sk-muted);
+}
+.adm-skin table thead tr { border-color: var(--sk-line); }
+.adm-skin table tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+.adm-skin table { font-variant-numeric: tabular-nums; }
+
+/* Pulsanti principali oro: gradiente con leggero bagliore */
+.adm-skin .bg-gold:not(.rounded-full.h-2):not([class*='h-1']):not([class*='w-1']) {
+  background-image: linear-gradient(140deg, #f0c378, #c48f45);
+  box-shadow: 0 0 16px rgba(232, 185, 106, 0.22);
+}
+.adm-skin .bg-gold:hover { filter: brightness(1.05); }
+
+/* Campi: bordi sottili e messa a fuoco oro */
+.adm-skin :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']) {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.adm-skin :is(input, select, textarea):focus-visible {
+  outline: none;
+  border-color: rgba(232, 185, 106, 0.55) !important;
+  box-shadow: 0 0 0 3px rgba(232, 185, 106, 0.12);
+}
+
+/* Linguette (tab) attive dorate restano come sono; solo un tocco di bagliore */
+.adm-skin [role='tab'][aria-selected='true'] { box-shadow: 0 0 14px rgba(232, 185, 106, 0.18); }
+
+}
