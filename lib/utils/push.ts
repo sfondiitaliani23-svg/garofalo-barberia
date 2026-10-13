@@ -115,3 +115,56 @@ export async function sendPushOnce(onceKey: string, userId: string, payload: Pus
   if (error) return 0; // già inviata
   return sendPushToUser(userId, payload);
 }
+
+/** Invia a tutti i telefoni iscritti (avvisi del salone). Torna inviati e iscrizioni totali. */
+export async function sendPushToAll(payload: PushPayload): Promise<{ sent: number; total: number; users: number }> {
+  const supabase = await createServiceClient();
+  if (!supabase || !(await configure())) return { sent: 0, total: 0, users: 0 };
+  const rows: { key: string; body: string | null }[] = [];
+  for (let from = 0; from < 20000; from += 1000) {
+    const { data } = await supabase.from('site_content').select('key, body').like('key', 'push:%').range(from, from + 999);
+    rows.push(...((data ?? []) as { key: string; body: string | null }[]));
+    if (!data || data.length < 1000) break;
+  }
+  let sent = 0;
+  const users = new Set<string>();
+  const body = JSON.stringify(payload);
+  for (let i = 0; i < rows.length; i += 20) {
+    await Promise.all(
+      rows.slice(i, i + 20).map(async (row) => {
+        let s: StoredSub;
+        try {
+          s = JSON.parse(row.body ?? '{}');
+        } catch {
+          return;
+        }
+        try {
+          await webpush.sendNotification(s.sub, body, { TTL: 60 * 60 * 24, urgency: 'normal' });
+          sent++;
+          users.add(s.userId);
+        } catch (e) {
+          const code = (e as { statusCode?: number }).statusCode;
+          if (code === 404 || code === 410) await supabase.from('site_content').delete().eq('key', row.key);
+        }
+      })
+    );
+  }
+  return { sent, total: rows.length, users: users.size };
+}
+
+export async function pushAudience(): Promise<{ devices: number; users: number }> {
+  const supabase = await createServiceClient();
+  if (!supabase) return { devices: 0, users: 0 };
+  const { data } = await supabase.from('site_content').select('body').like('key', 'push:%').limit(20000);
+  const users = new Set<string>();
+  for (const r of data ?? []) {
+    try {
+      users.add(JSON.parse(r.body ?? '{}').userId);
+    } catch {
+      /* riga non valida */
+    }
+  }
+  return { devices: data?.length ?? 0, users: users.size };
+}
+
+export type BroadcastLog = { at: string; title: string; body: string; url: string; sent: number; users: number };

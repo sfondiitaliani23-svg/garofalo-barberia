@@ -2,18 +2,20 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Briefcase, Check, MailCheck, MessageSquareHeart, Printer, QrCode, Star, Trash2 } from 'lucide-react';
+import { Briefcase, Check, MailCheck, MessageSquareHeart, Printer, QrCode, Star, Trash2, BellRing } from 'lucide-react';
 import { toast } from 'sonner';
 import type { InboxItem } from '@/lib/actions/site-inbox';
 import type { ShopQr } from '@/lib/data/qr';
 import type { ComebackStats } from '@/lib/utils/comeback';
+import type { BroadcastLog } from '@/lib/utils/push';
+import { AdminPushBroadcast } from '@/components/admin/AdminPushBroadcast';
 
-type Tab = 'feedback' | 'candidatura' | 'qr' | 'torna';
+type Tab = 'feedback' | 'candidatura' | 'qr' | 'torna' | 'notifiche';
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
 
-export function AdminInbox({ items: initial, qrs, scans, comeback }: { items: InboxItem[]; qrs: ShopQr[]; scans: Record<string, number>; comeback: ComebackStats }) {
+export function AdminInbox({ items: initial, qrs, scans, comeback, push }: { items: InboxItem[]; qrs: ShopQr[]; scans: Record<string, number>; comeback: ComebackStats; push: { devices: number; users: number; history: BroadcastLog[] } }) {
   const [items, setItems] = useState(initial);
   const [tab, setTab] = useState<Tab>('feedback');
   const [, start] = useTransition();
@@ -48,6 +50,7 @@ export function AdminInbox({ items: initial, qrs, scans, comeback }: { items: In
     { id: 'candidatura', label: 'Candidature', icon: Briefcase, badge: unread(apps) },
     { id: 'qr', label: 'QR del salone', icon: QrCode },
     { id: 'torna', label: 'È ora di tornare', icon: MailCheck },
+    { id: 'notifiche', label: 'Notifiche ai clienti', icon: BellRing },
   ];
 
   return (
@@ -131,6 +134,8 @@ export function AdminInbox({ items: initial, qrs, scans, comeback }: { items: In
           )}
         </section>
       )}
+
+      {tab === 'notifiche' && <AdminPushBroadcast devices={push.devices} users={push.users} history={push.history} />}
 
       {tab === 'torna' && (
         <section className="space-y-4">
