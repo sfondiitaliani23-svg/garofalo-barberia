@@ -225,3 +225,20 @@
 .of-empty { text-align: center; padding: 2rem 1.25rem; border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 16px; }
 .of-empty h2 { color: #fff; font-weight: 700; font-size: 1.15rem; }
 .of-empty p { color: rgba(255, 255, 255, 0.6); margin-top: 0.4rem; }
+
+/* Team */
+.tm-grid { display: grid; gap: 1.25rem; }
+@media (min-width: 720px) { .tm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tm-card { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden; background: #0e0e0e; transition: border-color 0.2s, transform 0.2s; }
+.tm-card:hover { border-color: rgba(205, 154, 79, 0.6); transform: translateY(-2px); }
+.tm-photo { position: relative; aspect-ratio: 4 / 5; background: #151515; }
+.tm-body { padding: 1rem 1.2rem 1.25rem; }
+.tm-name { color: #fff; font-weight: 700; font-size: 1.15rem; }
+.tm-role { color: rgba(255, 255, 255, 0.55); font-size: 0.85rem; margin: 0.15rem 0 0.5rem; }
+.tm-hero { display: grid; gap: 2rem; align-items: start; }
+@media (min-width: 900px) { .tm-hero { grid-template-columns: 400px 1fr; gap: 3rem; } }
+.tm-hero-photo { position: relative; aspect-ratio: 4 / 5; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.08); background: #151515; }
+.tm-title { text-align: left; font-size: clamp(2rem, 5vw, 3rem); margin: 0.4rem 0 1rem; }
+.tm-facts { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.1rem 0 0.25rem; }
+.tm-facts li { padding: 0.35rem 0.8rem; border-radius: 999px; border: 1px solid rgba(205, 154, 79, 0.4); color: var(--color-gold-light); font-size: 0.8rem; font-weight: 600; }
+.tm-away { margin-top: 1rem; padding: 0.7rem 0.9rem; border-radius: 10px; border: 1px solid rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.07); color: #fcd34d; font-size: 0.9rem; }

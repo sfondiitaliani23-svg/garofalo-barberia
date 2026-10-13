@@ -2,9 +2,12 @@ import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/seo';
 import { LOCAL_PAGES } from '@/lib/data/local-pages';
 import { JOURNAL } from '@/lib/data/journal';
+import { getBarbers } from '@/lib/actions/bookings';
+import { barberSlug } from '@/lib/utils/barber-slug';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
+  const barbers = await getBarbers().catch(() => []);
   const main: { path: string; priority: number; freq: 'weekly' | 'monthly' | 'yearly' }[] = [
     { path: '', priority: 1, freq: 'weekly' },
     { path: '/prenota', priority: 0.9, freq: 'weekly' },
@@ -12,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/galleria', priority: 0.7, freq: 'monthly' },
     { path: '/recensioni', priority: 0.7, freq: 'weekly' },
     { path: '/chi-siamo', priority: 0.6, freq: 'monthly' },
+    { path: '/team', priority: 0.6, freq: 'monthly' },
     { path: '/contatti', priority: 0.8, freq: 'monthly' },
     { path: '/prima-visita', priority: 0.7, freq: 'monthly' },
     { path: '/faq', priority: 0.7, freq: 'monthly' },
@@ -24,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...main.map((p) => ({ url: `${SITE_URL}${p.path}`, lastModified: now, changeFrequency: p.freq, priority: p.priority })),
     ...LOCAL_PAGES.map((p) => ({ url: `${SITE_URL}/${p.slug}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.8 })),
+    ...barbers.map((b) => ({ url: `${SITE_URL}/team/${barberSlug(b.name)}`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.5 })),
     ...JOURNAL.map((a) => ({ url: `${SITE_URL}/journal/${a.slug}`, lastModified: new Date(a.date), changeFrequency: 'yearly' as const, priority: 0.6 })),
   ];
 }

@@ -677,3 +677,49 @@ export async function getBarbersBookingAvailability(
     return [];
   }
 }
+/**
+ * Settimana di lavoro di un barbiere per la sua pagina pubblica:
+ * fasce orarie per giorno (già dentro gli orari del salone) e assenza in corso o prossima.
+ */
+export async function getBarberWorkWeek(barberId: string): Promise<{
+  days: { dayOfWeek: number; periods: { start: string; end: string }[] }[];
+  away: { from: string; to: string } | null;
+}> {
+  const empty = {
+    days: [2, 3, 4, 5, 6].map((d) => ({
+      dayOfWeek: d,
+      periods: getShopPeriodsForDay(d).map((p) => ({ start: p.startTime, end: p.endTime })),
+    })),
+    away: null,
+  };
+  try {
+    const supabase = await createServiceClient();
+    if (!supabase) return empty;
+    const now = new Date();
+    const [{ data: rows }, { data: off }] = await Promise.all([
+      supabase.from('barber_availability').select('*').eq('barber_id', barberId),
+      supabase
+        .from('barber_time_off')
+        .select('start_at, end_at')
+        .eq('barber_id', barberId)
+        .gte('end_at', now.toISOString())
+        .lte('start_at', new Date(now.getTime() + 14 * 86_400_000).toISOString())
+        .order('start_at')
+        .limit(1),
+    ]);
+    const all = (rows ?? []) as AvailabilityRow[];
+    const days = [2, 3, 4, 5, 6].map((d) => ({
+      dayOfWeek: d,
+      periods: resolveAvailabilityPeriods(d, all.filter((r) => r.day_of_week === d)),
+    }));
+    const next = off?.[0];
+    // Solo assenze di almeno un giorno intero: le pause brevi non si mostrano.
+    const away =
+      next && new Date(next.end_at).getTime() - new Date(next.start_at).getTime() >= 20 * 3_600_000
+        ? { from: next.start_at as string, to: next.end_at as string }
+        : null;
+    return { days, away };
+  } catch {
+    return empty;
+  }
+}

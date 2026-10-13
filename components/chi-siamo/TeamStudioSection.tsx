@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef } from 'react';
+import { barberSlug, firstName } from '@/lib/utils/barber-slug';
 
 export interface TeamMember {
   id: string;
@@ -97,8 +98,8 @@ export function TeamStudioSection({ members }: TeamStudioSectionProps) {
                 <h3 className="team-studio-name">{member.name}</h3>
                 <p className="team-studio-role">{member.role}</p>
               </div>
-              <Link href="/prenota" className="team-studio-book-btn">
-                Prenota
+              <Link href={`/team/${barberSlug(member.name)}`} className="team-studio-book-btn">
+                Prenota con {firstName(member.name)}
               </Link>
             </div>
           ))}

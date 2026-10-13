@@ -39,6 +39,8 @@ interface BookingWizardProps {
   defaultEmail?: string;
   /** Servizi già scelti (da ?service= nel link, es. dalla guida alla scelta). */
   initialServiceIds?: string[];
+  /** Barbiere già scelto (da ?barber= nel link, es. dalla pagina del team). */
+  initialBarberId?: string | null;
 }
 
 const STEPS = ['Servizio', 'Barbiere & Orario', 'Conferma'];
@@ -71,6 +73,7 @@ export function BookingWizard({
   defaultPhone = '',
   defaultEmail = '',
   initialServiceIds = [],
+  initialBarberId = null,
 }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -109,7 +112,9 @@ export function BookingWizard({
     return barbers[0] ?? null;
   }, [barbers]);
 
-  const [barberId, setBarberId] = useState<string | null>(() => defaultBarber?.id ?? null);
+  const [barberId, setBarberId] = useState<string | null>(() =>
+    initialBarberId && barbers.some((b) => b.id === initialBarberId) ? initialBarberId : defaultBarber?.id ?? null
+  );
 
   // Se cambiano i servizi e il barbiere selezionato non è più valido (es. selezionato taglio con altro operatore)
   useEffect(() => {

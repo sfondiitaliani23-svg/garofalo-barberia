@@ -131,6 +131,7 @@ export function SiteFooter() {
         </div>
       </div>
       <nav aria-label="Informazioni" className="container-lux mb-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/55">
+        <Link href="/team" className="hover:text-gold-light">Il team</Link>
         <Link href="/prima-visita" className="hover:text-gold-light">Prima visita</Link>
         <Link href="/faq" className="hover:text-gold-light">Domande frequenti</Link>
         <Link href="/journal" className="hover:text-gold-light">Journal</Link>

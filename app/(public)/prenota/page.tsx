@@ -1,6 +1,7 @@
 import { BookingWizard } from '@/components/booking/BookingWizard';
 import { getServices, getBarbers } from '@/lib/actions/bookings';
 import { getProfile } from '@/lib/auth';
+import { barberSlug } from '@/lib/utils/barber-slug';
 
 export const metadata = {
   title: 'Prenota Online',
@@ -25,9 +26,9 @@ function pickServiceIds(services: { id: string; name: string }[], raw: string | 
 export default async function PrenotaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ service?: string | string[] }>;
+  searchParams: Promise<{ service?: string | string[]; barber?: string }>;
 }) {
-  const { service } = await searchParams;
+  const { service, barber } = await searchParams;
   const [services, barbers, profile] = await Promise.all([
     getServices(),
     getBarbers(),
@@ -48,6 +49,7 @@ export default async function PrenotaPage({
           defaultPhone={profile?.phone ?? ''}
           defaultEmail={profile?.email ?? ''}
           initialServiceIds={pickServiceIds(services, service)}
+          initialBarberId={barbers.find((b) => b.id === barber || barberSlug(b.name) === barber)?.id ?? null}
         />
       </div>
     </section>
