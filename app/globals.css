@@ -500,6 +500,8 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
 
 /* ── Modalità app (sito aperto dall'icona sulla schermata Home) ───────── */
 .app-tabbar { display: none; }
+/* Nell'app installata niente "Torna in alto": lo scorrimento è già veloce */
+html.is-app .scroll-top-btn { display: none !important; }
 @media (max-width: 1023px) {
   html.is-app .app-tabbar {
     position: fixed;
@@ -508,7 +510,7 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
     bottom: 0;
     z-index: 190;
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     align-items: end;
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
     background: rgba(10, 10, 10, 0.92);
@@ -534,7 +536,7 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
 }
 .app-tab:active { transform: scale(0.94); }
 .app-tab.is-active { color: var(--color-gold-light); }
-.app-tab-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+.app-tab-label { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
 .app-tab--main .app-tab-icon {
   display: grid;
   place-items: center;
