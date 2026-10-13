@@ -115,7 +115,7 @@ export function renderEmailTemplate(options: EmailTemplateOptions) {
                 ${escapeHtml(SITE_CONFIG.name)}
               </div>
               <div style="margin-top:8px;font-family:Arial,Helvetica,sans-serif;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:${MUTED};">
-                Foggia · Dal 1996
+                Foggia
               </div>
             </td>
           </tr>

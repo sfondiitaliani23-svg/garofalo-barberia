@@ -1,4 +1,5 @@
 import { processAppointmentReminders } from '@/lib/utils/reminders';
+import { processComebackReminders } from '@/lib/utils/comeback';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -17,9 +18,11 @@ export async function GET(request: Request) {
   }
 
   const result = await processAppointmentReminders();
+  // Promemoria "è ora di tornare": parte da solo una volta al giorno (10:30–11:00 di Roma).
+  const comeback = await processComebackReminders().catch((e) => ({ ok: false as const, error: String(e) }));
   const status = result.ok ? 200 : 500;
 
-  return Response.json(result, { status });
+  return Response.json({ ...result, comeback }, { status });
 }
 
 export async function POST(request: Request) {

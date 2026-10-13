@@ -56,6 +56,15 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="font-display text-lg uppercase text-gold">Promemoria “è ora di tornare”</h2>
+            <p className="mt-2">
+              Se hai prenotato lasciando la tua email, qualche settimana dopo la visita possiamo inviarti un solo
+              promemoria per prenotare di nuovo, come cliente del salone. In fondo a ogni email c&apos;è il link per non
+              riceverli più: basta un clic. Le conferme e i promemoria degli appuntamenti restano attivi.
+            </p>
+          </section>
+
+          <section>
             <h2 className="font-display text-lg uppercase text-gold">Feedback e candidature</h2>
             <p className="mt-2">
               Il feedback anonimo non raccoglie nome né contatti: salviamo solo voto e commento.
