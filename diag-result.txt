@@ -1,39 +1,12 @@
-D / 200 ok
-D servizi 200 ok
-D galleria 200 ok
-D recensioni 200 ok
-D contatti 200 ok
-D chi-siamo 200 ok
-D login 200 ok
-D prenota 200 ok
-D registrati 404 ok
-     CONSOLE Failed to load resource: the server responded with a status of 404 ()
-D area-cliente 200 ok
-D admin/login 200 ok
-D privacy 200 ok
-D cookie 404 ok
-     CONSOLE Failed to load resource: the server responded with a status of 404 ()
-M / 200 ok
-M servizi 200 ok
-M galleria 200 ok
-M recensioni 200 ok
-M contatti 200 ok
-M chi-siamo 200 ok
-M login 200 ok
-M prenota 200 ok
-M registrati 404 ok
-     CONSOLE Failed to load resource: the server responded with a status of 404 ()
-M area-cliente 200 ok
-M admin/login 200 ok
-M privacy 200 ok
-M cookie 404 ok
-     CONSOLE Failed to load resource: the server responded with a status of 404 ()
---- memoria bloccata ---
-storage bloccato / ok []
-storage bloccato servizi ok []
-storage bloccato prenota ok []
-storage bloccato login ok []
-iPhone vecchio (no randomUUID) / ok []
-iPhone vecchio (no randomUUID) servizi ok []
-iPhone vecchio (no randomUUID) prenota ok []
-iPhone vecchio (no randomUUID) login ok []
+/robots.txt 200 User-Agent: * Allow: / Disallow: /admin Disallow: /area-cliente Disallow: /api/ Disallow: /auth/ Disallow: /login/qr Disallow: /reimposta-password  Host: https:
+/sitemap.xml 200 <?xml version="1.0" encoding="UTF-8"?> <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"> <url> <loc>https://barberiagarofalo.it</loc> <lastmod>2026-1
+/llms.txt 200 # Barberia Garofalo  > Barberia a Foggia per uomo, ragazzo e bimbo. Taglio, barba e acconciatura. Viale Ignazio d'Addedda, 236, 71122 Foggia (FG).  ## Contatti 
+/api/open-now 200 {"open":false,"soon":false,"label":"Chiuso · apre alle 15:30","closedDates":[]}
+/ 200 ['HairSalon'] Chiuso · apre alle 15:30 ok
+/servizi 200 [] Chiuso · apre alle 15:30 ok
+/taglio-uomo-foggia 200 ['HairSalon', 'BreadcrumbList', 'FAQPage'] Chiuso · apre alle 15:30 ok
+/barba-foggia 200 ['HairSalon', 'BreadcrumbList', 'FAQPage'] Chiuso · apre alle 15:30 ok
+/taglio-bambino-foggia 200 ['HairSalon', 'BreadcrumbList', 'FAQPage'] Chiuso · apre alle 15:30 ok
+/contatti 200 [] Chiuso · apre alle 15:30 ok
+guida -> https://barberiagarofalo.it/prenota?service=Taglio%20e%20shampoo selezionati: 1
+errori: []
