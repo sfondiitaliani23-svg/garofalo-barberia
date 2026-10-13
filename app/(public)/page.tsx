@@ -6,7 +6,6 @@ import { HomeClientEffects } from '@/components/home/HomeClientEffects';
 import { PerfumeCardsGrid } from '@/components/home/PerfumeCardsGrid';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
 import { HomeTicker } from '@/components/home/HomeTicker';
-import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { localBusinessJsonLd } from '@/lib/seo';
 import { getServices } from '@/lib/actions/bookings';
@@ -103,7 +102,6 @@ export default async function HomePage() {
             />
           </div>
 
-          <OpenNowBadge className="hero-open-badge" />
           <h1 className="hero-heading">
             La migliore esperienza è solo da<br />Barberia Garofalo
           </h1>

@@ -1,4 +1,3 @@
-import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import { ArrowRight, Clock, Mail, Phone } from 'lucide-react';
 import { ContactForm } from '@/components/contatti/ContactForm';
 import { InstagramFeed } from '@/components/contatti/InstagramFeed';
@@ -72,7 +71,6 @@ export default function ContattiPage() {
           <div className="ct-col">
             <Clock className="ct-icon" size={26} strokeWidth={1.4} aria-hidden />
             <p className="ct-col-title">Orari di apertura</p>
-            <OpenNowBadge className="mb-3" />
             <dl className="ct-hours">
               {SITE_CONFIG.hours.map((h) => (
                 <div key={h.day} className="ct-hours-row">

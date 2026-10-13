@@ -7,7 +7,6 @@ import { LOCAL_PAGES, getLocalPage } from '@/lib/data/local-pages';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
 import { breadcrumbJsonLd, faqJsonLd, localBusinessJsonLd } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import './local-page.css';
 
 const euro = (c: number) => `${(c / 100).toFixed(c % 100 === 0 ? 0 : 2).replace('.', ',')} €`;
@@ -54,7 +53,6 @@ export async function LocalLandingPage({ slug }: { slug: string }) {
               <MessageCircle size={16} aria-hidden /> Scrivici su WhatsApp
             </a>
           </div>
-          <OpenNowBadge className="lp-badge" />
         </div>
       </section>
 

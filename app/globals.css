@@ -581,3 +581,6 @@ html.is-app .open-badge {
   backdrop-filter: none !important;
 }
 html.is-app header.sticky { background-color: #000 !important; transition: none !important; }
+
+/* App installata: niente riquadro "La nostra sede" sopra la mappa (la mappa ha già "Apri in Maps") */
+html.is-app .ct-sede { display: none !important; }

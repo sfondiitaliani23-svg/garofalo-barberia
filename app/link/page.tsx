@@ -2,7 +2,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { CalendarCheck, MessageCircle, MapPin, Scissors, BookOpen, Star, Instagram, Tag } from 'lucide-react';
 import { TrackingOnlyWidgets } from '@/components/layout/ClientFloatingWidgets';
-import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
 import '@/components/content/content.css';
 
@@ -39,7 +38,6 @@ export default function LinkPage() {
         />
         <h1 className="lk-name">{SITE_CONFIG.name}</h1>
         <p className="lk-sub">{SITE_CONFIG.addressShort} · Foggia</p>
-        <OpenNowBadge />
         <nav className="lk-list" aria-label="Link principali">
           {items.map(({ href, label, icon: Icon, main, external }) =>
             external ? (

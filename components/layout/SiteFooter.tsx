@@ -1,4 +1,3 @@
-import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { CookiePreferencesButton } from '@/components/layout/CookiePreferencesButton';
@@ -58,7 +57,6 @@ export function SiteFooter() {
         <div>
           <h3 className="footer-heading mb-4 font-display text-sm uppercase tracking-wider text-white">Contatti</h3>
           <p className="footer-location-name mb-2 text-sm font-semibold text-white/80">Foggia</p>
-          <OpenNowBadge className="mb-3" />
           <ul className="footer-contact-list">
             <li className="footer-contact-item">
               <a href={`tel:${SITE_CONFIG.phone}`} className="footer-contact-link">
