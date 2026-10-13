@@ -1,6 +1,6 @@
-/servizi | perf 76 | LCP 6.2 s | div.svc-grid-wrap > div.svc-grid > button#baby > span.svc-card-img
-/servizi | perf 77 | LCP 6.1 s | div.svc-grid-wrap > div.svc-grid > button#taglio > span.svc-card-img
-/prenota | perf 96 | LCP 2.6 s | section.py-16 > div.container-lux > div.mb-10 > h1.font-display
-/galleria | perf 85 | LCP 3.3 s | div.gc-stage > div.gc-slide > button.gc-photo > img.gc-photo-img
-/contatti | perf 93 | LCP 2.6 s | body > div.fixed > div.mx-auto > p.mt-1
-/ | perf 87 | LCP 2.9 s | body > main > div.home-page > section.hero-section
+/servizi | perf 91 | LCP 2.8 s | div.svc-grid-wrap > div.svc-grid > button#taglio > span.svc-card-img
+/servizi | perf 94 | LCP 2.7 s | div.svc-grid-wrap > div.svc-grid > button#taglio > span.svc-card-img
+/prenota | perf 94 | LCP 2.5 s | section.py-16 > div.container-lux > div.mb-10 > h1.font-display
+/galleria | perf 85 | LCP 3.2 s | div.gc-stage > div.gc-slide > button.gc-photo > img.gc-photo-img
+/contatti | perf 88 | LCP 2.7 s | body > div.fixed > div.mx-auto > p.mt-1
+/ | perf 87 | LCP 3.0 s | body > main > div.home-page > section.hero-section
