@@ -14,6 +14,9 @@ with sync_playwright() as p:
         if len(dbtn)>1:
             dbtn[1].click(); pg.wait_for_timeout(6000)
             body=pg.locator('body').inner_text()
-            i=body.find('orario'); print('   ', body[i-40:i+400].replace('\n',' | '))
+            times=re.findall(r'\b(?:0[89]|1\d|20):[0-5]\d\b', body.split('Scegli il giorno')[-1])
+            i=body.find('Scegli il giorno'); tail=body[i:].replace('\n',' | ')
+            print('   ', dbtn[1].inner_text().replace('\n',' '), 'orari trovati:', len(times), times[:8])
+            print('   ', tail[300:700])
         pg.close()
     b.close()
