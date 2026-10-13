@@ -1,7 +1,19 @@
-chiave notifiche: 87 caratteri
-stessa chiave alla seconda richiesta: True
-sw con push: True
-iscrizione senza login -> 401
-barra app: True
-servizi h1: block
-errori: []
+SITEMAP 200 26 pagine
+PAGINE NON OK: nessuna
+GET /link 200 
+GET /robots.txt 200 
+GET /llms.txt 200 
+GET /manifest.webmanifest 200 
+GET /sw.js 200 
+GET /offline.html 200 
+GET /login 200 
+GET /registrati 404 
+GET /api/open-now 200 {"open":false,"soon":false,"label":"Chiuso · apre domani alle 08:30","closedDates":[]}
+GET /api/push/key 200 {"publicKey":"BH62aCM7DliPCbP17gMWqMJw6QWSIMtlj_7vIlyE07NgpZFLm1OrCh5uM6xaePz8urwagAbJFGSI
+GET /feedback 200 
+GET /area-cliente 200 
+GET /admin 200 
+CRON /api/cron/comeback?dry=1 200 {"ok":true,"dry":true,"count":11,"skipped":{"future":16,"optout":0,"sent":0,"notYet":42,"tooOld":8},"preview":[{"name":"Mario","lastVisit":"2026-09-12","daysSince":31,"barber":"Vittorio Morlino","services":["Barba rasata / lama"]},{"name":"Giusy","lastVisit":"2026-08-25","daysSince":49,"barber":"Lui
+DESKTOP errori: nessuno
+TELEFONO errori: nessuno
+PRENOTA testo iniziale: ME | NU | HOME | CHI SIAMO | SERVIZI | GALLERIA | RECENSIONI | CONTATTI | INSTALLA APP | ACCEDI | PRENOTA ORA |  | VIALE IGNAZIO D'ADDEDDA, 236 – FOGGIA |  | PRENOTA IL TUO APPUNTAMENTO |  | Scegli servizio, barbiere e orario dispon
