@@ -6,6 +6,7 @@ import { formatShopDateTimeShort } from '@/lib/utils/booking-datetime';
 import { Calendar, Scissors, Clock, Star, ChevronRight } from 'lucide-react';
 import { LogoutCard } from '@/components/customer/LogoutCard';
 import { groupComboAppointments } from '@/lib/utils/group-appointments';
+import { PushManager } from '@/components/customer/PushManager';
 
 export const metadata = { title: 'La mia Dashboard | Barberia Garofalo' };
 
@@ -43,6 +44,7 @@ export default async function CustomerDashboardPage() {
 
   return (
     <div className="space-y-8">
+      <PushManager variant="banner" />
       {/* Hero benvenuto */}
       <div className="relative rounded-2xl overflow-hidden border border-gold/15 bg-gradient-to-br from-[#0f0c08] via-[#111] to-[#0a0a0a] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
         {/* Decorazione geometrica gold */}

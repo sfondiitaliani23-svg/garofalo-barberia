@@ -56,6 +56,15 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="font-display text-lg uppercase text-gold">Notifiche sul telefono</h2>
+            <p className="mt-2">
+              Solo se le attivi tu, salviamo l&apos;indirizzo tecnico che il browser fornisce per inviarti notifiche
+              (promemoria degli appuntamenti e novità del salone). Le disattivi in qualsiasi momento dal tuo profilo
+              o dalle impostazioni del telefono.
+            </p>
+          </section>
+
+          <section>
             <h2 className="font-display text-lg uppercase text-gold">Account: online e ultimo accesso</h2>
             <p className="mt-2">
               Se hai un account e sei collegato, mentre usi il sito registriamo solo l&apos;ora dell&apos;ultima attività,

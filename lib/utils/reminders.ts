@@ -449,7 +449,20 @@ export async function processAppointmentReminders() {
       if (email.ok) await supabase.from('appointments').update({ reminder_email_sent_at: nowIso }).in('id', group.ids);
     }
 
+    let push = 0;
+    if (primaryApt.customer_id) {
+      const { sendPushOnce } = await import('@/lib/utils/push');
+      const time = new Date(primaryApt.starts_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
+      push = await sendPushOnce(`domani:${group.ids[0]}`, primaryApt.customer_id, {
+        title: `Domani alle ${time} ✂️`,
+        body: `${group.serviceNames}${group.barberName ? ` con ${group.barberName}` : ''}. Ti aspettiamo da Barberia Garofalo.`,
+        url: '/area-cliente/appuntamenti',
+        tag: `promemoria-${group.ids[0]}`,
+      }).catch(() => 0);
+    }
+
     processed.push({
+      push,
       ids: group.ids,
       customer: primaryApt.customer_name,
       phone: primaryApt.customer_phone,

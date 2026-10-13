@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/actions/auth';
-import { LayoutDashboard, Calendar, History, Image, User, HelpCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Calendar, History, Image, User, HelpCircle, LogOut, Home as HomeIcon } from 'lucide-react';
 
 const links = [
   { href: '/area-cliente/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -94,6 +94,14 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
 
       {/* ── Bottom Navigation Bar Mobile (< lg) ── */}
       <nav className="fixed bottom-0 left-0 right-0 z-[200] lg:hidden bg-[#0a0a0a] border-t border-white/10 flex items-stretch justify-around safe-b h-16">
+        {/* Solo nell'app installata: torna al sito (non c'è la barra del browser) */}
+        <Link
+          href="/"
+          className="app-only flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-white/60"
+        >
+          <HomeIcon size={20} strokeWidth={1.75} aria-hidden />
+          <span className="leading-none mt-0.5">Home</span>
+        </Link>
         {links.slice(0, 5).map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
           const isProfileLink = label === 'Profilo';

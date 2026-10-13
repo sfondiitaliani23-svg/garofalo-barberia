@@ -3,6 +3,7 @@ import { getProfile } from '@/lib/auth';
 import { ProfileForm } from '@/components/customer/ProfileForm';
 import { SavedToast } from '@/components/customer/SavedToast';
 import { PasskeyManager } from '@/components/customer/PasskeyManager';
+import { PushManager } from '@/components/customer/PushManager';
 
 export const metadata = { title: 'Profilo' };
 
@@ -21,6 +22,7 @@ export default async function CustomerProfiloPage() {
       
       <ProfileForm profile={profile} />
       <PasskeyManager />
+      <PushManager />
     </div>
   );
 }

@@ -497,3 +497,68 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
   opacity: 0;
   pointer-events: none;
 }
+
+/* ── Modalità app (sito aperto dall'icona sulla schermata Home) ───────── */
+.app-tabbar { display: none; }
+@media (max-width: 1023px) {
+  html.is-app .app-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 190;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  html.is-app body:has(.app-tabbar) { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  /* In app la barra sostituisce il pulsante WhatsApp; l'assistente sale sopra la barra */
+  html.is-app body:has(.app-tabbar) a[aria-label="WhatsApp"].fixed { display: none; }
+  html.is-app body:has(.app-tabbar) #eliseo-chat-btn { bottom: calc(80px + env(safe-area-inset-bottom)) !important; }
+}
+.app-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  min-height: 52px;
+  color: rgba(255, 255, 255, 0.6);
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, transform 0.15s;
+}
+.app-tab:active { transform: scale(0.94); }
+.app-tab.is-active { color: var(--color-gold-light); }
+.app-tab-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+.app-tab--main .app-tab-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-top: -18px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  color: #000;
+  box-shadow: 0 6px 20px rgba(205, 154, 79, 0.35);
+}
+.app-tab--main { color: var(--color-gold-light); }
+
+/* Passaggio tra pagine in modalità app */
+html.is-app .page-enter { animation: pageEnter 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { html.is-app .page-enter { animation: none; } }
+/* In app niente selezione accidentale del testo sui pulsanti e niente rimbalzo sopra la pagina */
+html.is-app { overscroll-behavior-y: none; }
+html.is-app button, html.is-app .app-tab { user-select: none; -webkit-user-select: none; }
+
+/* Elementi visibili solo nell'app installata */
+.app-only { display: none !important; }
+html.is-app .app-only { display: flex !important; }

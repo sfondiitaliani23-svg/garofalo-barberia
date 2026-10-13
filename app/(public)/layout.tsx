@@ -1,5 +1,6 @@
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
+import { AppTabBar } from '@/components/layout/AppTabBar';
 import { SiteBanners } from '@/components/layout/SiteBanners';
 import { ClientFloatingWidgets } from '@/components/layout/ClientFloatingWidgets';
 import { getActiveSiteBanners } from '@/lib/actions/content';
@@ -17,6 +18,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <main>{children}</main>
       <SiteFooter />
       <ClientFloatingWidgets />
+      <AppTabBar />
     </>
   );
 }

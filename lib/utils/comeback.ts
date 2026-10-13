@@ -210,6 +210,8 @@ export async function processComebackReminders(opts: { dry?: boolean; force?: bo
 
   let sent = 0;
   let failed = 0;
+  const { data: profs } = await supabase.from('profiles').select('id, email').not('email', 'is', null).limit(5000);
+  const profileByEmail = new Map((profs ?? []).map((p) => [String(p.email).toLowerCase(), p.id as string]));
   for (const c of candidates.slice(0, DAILY_CAP)) {
     // Segno prima di inviare: se il job parte due volte, nessuno riceve due email.
     const { error: markErr } = await supabase
@@ -227,7 +229,20 @@ export async function processComebackReminders(opts: { dry?: boolean; force?: bo
       if (error) {
         failed++;
         await supabase.from('site_content').delete().eq('key', c.key);
-      } else sent++;
+      } else {
+        sent++;
+        // Anche sul telefono, se il cliente ha l'account e le notifiche attive.
+        const uid = profileByEmail.get(c.email);
+        if (uid) {
+          const { sendPushToUser } = await import('@/lib/utils/push');
+          await sendPushToUser(uid, {
+            title: `${c.name}, è ora di tornare?`,
+            body: c.barberName ? `Prenota il prossimo appuntamento con ${firstName(c.barberName)} in un tocco.` : 'Prenota il prossimo appuntamento in un tocco.',
+            url: '/prenota',
+            tag: 'torna',
+          }).catch(() => 0);
+        }
+      }
     } catch {
       failed++;
       await supabase.from('site_content').delete().eq('key', c.key);

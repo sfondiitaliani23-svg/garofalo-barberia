@@ -68,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{
             __html:
               "try{if(localStorage.getItem('garofalo_cookie_consent'))document.documentElement.classList.add('has-consent')}catch(e){}" +
+                "try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)document.documentElement.classList.add('is-app')}catch(e){}" +
                 "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__gbBIP=e;window.dispatchEvent(new Event('gb-bip'))});",
           }}
         />

@@ -1101,10 +1101,10 @@
     padding-top: 6rem;
     padding-bottom: 7rem;
   }
-  .hero-heading {
-    display: none; /* Nasconde l'heading testuale su mobile per dare spazio al logo centrale */
+  .home-page .hero-heading {
+    display: none; /* Solo in home: su mobile al posto del titolo c'è il logo centrale */
   }
-  .hero-sub {
+  .home-page .hero-sub {
     font-size: 0.95rem;
     margin-top: 1rem;
     padding: 0 0.5rem;
