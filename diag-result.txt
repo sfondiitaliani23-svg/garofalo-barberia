@@ -1,6 +1,3 @@
-/team 200 ['/team/luigi-garofalo', '/team/francesco-costantino', '/team/vittorio-morlino']
-/team/luigi-garofalo 200 | Martedì 08:30–13:00 · 15:30–20:30 ; Mercoledì 08:30–13:00 · 15:30–20:30 ; Giovedì 08:30–13:00 · 15:30–20:30 ; Venerdì 08:30–13:00 · 15:30–20:30 ; Sabato 08:30–13:30 · 14:30–20:00 | away: 0
-/team/francesco-costantino 200 | Martedì 08:30–13:00 · 15:30–20:30 ; Mercoledì 08:30–13:00 · 15:30–20:30 ; Giovedì 08:30–13:00 · 15:30–20:30 ; Venerdì 08:30–13:00 · 15:30–20:30 ; Sabato 08:30–13:30 · 14:30–20:00 | away: 0
-/team/vittorio-morlino 200 | Martedì 08:30–13:00 · 15:30–20:30 ; Mercoledì 08:30–13:00 · 15:30–20:30 ; Giovedì 08:30–13:00 · 15:30–20:30 ; Venerdì 08:30–13:00 · 15:30–20:30 ; Sabato 08:30–13:30 · 14:30–20:00 | away: 0
-prenota -> /prenota?barber=vittorio-morlino
-errori: []
+vittorio-morlino | giorno: MAR 13 ott | orari: 0 [] | errori: [] | riservato: False
+francesco-costantino | giorno: MAR 13 ott | orari: 0 [] | errori: [] | riservato: False
+luigi-garofalo | giorno: MAR 13 ott | orari: 0 [] | errori: [] | riservato: False
