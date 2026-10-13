@@ -1,46 +1,44 @@
 === LIGHTHOUSE ===
 _chi-siamo-desktop               perf=100 acce=100 best=100 seo=100 | LCP 0.5 s | CLS 0 | TBT 0 ms
-_chi-siamo-mobile                perf=93 acce=100 best=100 seo=100 | LCP 2.5 s | CLS 0 | TBT 240 ms
-_contatti-desktop                perf=99 acce=100 best=78 seo=100 | LCP 0.7 s | CLS 0 | TBT 10 ms
-_contatti-mobile                 perf=86 acce=100 best=79 seo=100 | LCP 3.2 s | CLS 0 | TBT 280 ms
-_galleria-desktop                perf=100 acce=100 best=100 seo=100 | LCP 0.5 s | CLS 0 | TBT 0 ms
-_galleria-mobile                 perf=84 acce=100 best=100 seo=100 | LCP 3.2 s | CLS 0 | TBT 370 ms
+_chi-siamo-mobile                perf=96 acce=100 best=100 seo=100 | LCP 2.8 s | CLS 0 | TBT 60 ms
+_contatti-desktop                perf=97 acce=100 best=78 seo=100 | LCP 0.8 s | CLS 0 | TBT 0 ms
+_contatti-mobile                 perf=90 acce=100 best=79 seo=100 | LCP 3.4 s | CLS 0 | TBT 80 ms
+_galleria-desktop                perf=98 acce=100 best=100 seo=100 | LCP 0.5 s | CLS 0.084 | TBT 0 ms
+_galleria-mobile                 perf=91 acce=100 best=100 seo=100 | LCP 3.3 s | CLS 0 | TBT 130 ms
 _home-desktop                    perf=100 acce=100 best=96 seo=100 | LCP 0.6 s | CLS 0.001 | TBT 0 ms
-_home-mobile                     perf=84 acce=100 best=100 seo=100 | LCP 2.8 s | CLS 0 | TBT 440 ms
+_home-mobile                     perf=94 acce=100 best=100 seo=100 | LCP 3.0 s | CLS 0.002 | TBT 60 ms
 _journal-desktop                 perf=100 acce=100 best=100 seo=100 | LCP 0.5 s | CLS 0 | TBT 0 ms
-_journal-mobile                  perf=92 acce=100 best=100 seo=100 | LCP 2.5 s | CLS 0 | TBT 260 ms
-_prenota-desktop                 perf=100 acce=100 best=100 seo=100 | LCP 0.5 s | CLS 0 | TBT 0 ms
-_prenota-mobile                  perf=93 acce=100 best=100 seo=100 | LCP 2.6 s | CLS 0 | TBT 220 ms
-_recensioni-desktop              perf=100 acce=95 best=100 seo=100 | LCP 0.5 s | CLS 0 | TBT 0 ms
-_recensioni-mobile               perf=92 acce=95 best=100 seo=100 | LCP 2.6 s | CLS 0 | TBT 230 ms
-_servizi-desktop                 perf=93 acce=100 best=100 seo=100 | LCP 1.7 s | CLS 0 | TBT 0 ms
-_servizi-mobile                  perf=72 acce=100 best=100 seo=100 | LCP 6.1 s | CLS 0 | TBT 260 ms
+_journal-mobile                  perf=99 acce=100 best=100 seo=100 | LCP 1.8 s | CLS 0 | TBT 70 ms
+_prenota-desktop                 perf=100 acce=100 best=100 seo=100 | LCP 0.4 s | CLS 0 | TBT 0 ms
+_prenota-mobile                  perf=94 acce=100 best=100 seo=100 | LCP 3.0 s | CLS 0 | TBT 70 ms
+_recensioni-desktop              perf=100 acce=95 best=100 seo=100 | LCP 0.6 s | CLS 0 | TBT 0 ms
+_recensioni-mobile               perf=94 acce=95 best=100 seo=100 | LCP 3.0 s | CLS 0 | TBT 80 ms
+_servizi-desktop                 perf=93 acce=100 best=100 seo=100 | LCP 1.7 s | CLS 0.001 | TBT 0 ms
+_servizi-mobile                  perf=74 acce=100 best=100 seo=100 | LCP 8.5 s | CLS 0 | TBT 60 ms
 _taglio-uomo-foggia-desktop      perf=100 acce=100 best=100 seo=100 | LCP 0.5 s | CLS 0.003 | TBT 0 ms
-_taglio-uomo-foggia-mobile       perf=93 acce=100 best=100 seo=100 | LCP 2.6 s | CLS 0.002 | TBT 240 ms
+_taglio-uomo-foggia-mobile       perf=93 acce=100 best=100 seo=100 | LCP 3.1 s | CLS 0.002 | TBT 100 ms
 _team_luigi-garofalo-desktop     perf=100 acce=100 best=100 seo=100 | LCP 0.5 s | CLS 0 | TBT 0 ms
-_team_luigi-garofalo-mobile      perf=92 acce=100 best=100 seo=100 | LCP 2.5 s | CLS 0 | TBT 270 ms
+_team_luigi-garofalo-mobile      perf=100 acce=100 best=100 seo=100 | LCP 1.5 s | CLS 0 | TBT 60 ms
 
 === AUDIT SOTTO 90 ===
 [20] unused-javascript: Reduce unused JavaScript | {"url": "https://barberiagarofalo.it/_next/static/chunks/b60b6794ae9219bc.js", "totalBytes": "65453", "wastedBytes": "54589"}
 [20] bf-cache: Page prevented back/forward cache restoration | {"reason": "The page cannot be cached because it has a BroadcastChannel instance with registered listeners.", "failureType": "Actionable", "subItems": "{'type': 'subitems', 'items': [{'frameUrl': 'https://barberiagarofalo.it/chi-siamo'}]}"}
-[10] total-blocking-time: Total Blocking Time | 
-[10] max-potential-fid: Max Potential First Input Delay | 
-[10] mainthread-work-breakdown: Minimize main-thread work | {"group": "scriptEvaluation", "groupLabel": "Script Evaluation", "duration": "855.3639999999941"}
 [10] offscreen-images: Defer offscreen images | {"node": "{'type': 'node', 'lhId': '1-49-IMG', 'path': '1,HTML,1,BODY,1,HEADER,0,DIV,1,DIV,0,A,0,IMG', 'selector': 'div.container-lux > div.flex > a.relative > img.hidden", "url": "https://barberiagarofalo.it/_next/image?url=%2Fassets%2Fsostituisci-immagini%2Ficone%2Fbarberia_garofalo.png&w=384&q=75
-[8] largest-contentful-paint: Largest Contentful Paint | 
-[7] largest-contentful-paint-element: Largest Contentful Paint element | {"type": "table", "headings": "[{'key': 'node', 'valueType': 'node', 'label': 'Element'}]", "items": "[{'node': {'type': 'node', 'lhId': 'page-0-P', 'path': '1,HTML,1,BODY,6,DIV,0,DIV,1,P', 'selector': 'body > div.fixed > div.mx-auto > p.mt-1', 'boundingRect': {"}
-[6] render-blocking-resources: Eliminate render-blocking resources | {"url": "https://barberiagarofalo.it/_next/static/chunks/8db75b96fdf76401.css", "totalBytes": "18567", "wastedMs": "150"}
+[9] largest-contentful-paint: Largest Contentful Paint | 
+[6] render-blocking-resources: Eliminate render-blocking resources | {"url": "https://barberiagarofalo.it/_next/static/chunks/8db75b96fdf76401.css", "totalBytes": "18562", "wastedMs": "150"}
 [4] modern-image-formats: Serve images in next-gen formats | {"node": "{'type': 'node', 'lhId': '1-1-SECTION', 'path': '1,HTML,1,BODY,4,MAIN,0,DIV,1,SECTION', 'selector': 'body > main > div.home-page > section.hero-section', 'bound", "url": "https://barberiagarofalo.it/assets/sostituisci-immagini/homepage/1.jpg", "fromProtocol": "True"}
+[3] speed-index: Speed Index | 
+[3] largest-contentful-paint-element: Largest Contentful Paint element | {"type": "table", "headings": "[{'key': 'node', 'valueType': 'node', 'label': 'Element'}]", "items": "[{'node': {'type': 'node', 'lhId': 'page-0-IMG', 'path': '1,HTML,1,BODY,4,MAIN,0,DIV,1,SECTION,0,DIV,0,DIV,1,DIV,0,DIV,1,BUTTON,0,IMG', 'selector': 'div.gc-stag"}
 [3] uses-responsive-images: Properly size images | {"node": "{'type': 'node', 'lhId': '1-84-IMG', 'path': '1,HTML,1,BODY,4,MAIN,0,DIV,2,SECTION,0,DIV,1,DIV,0,DIV,0,IMG', 'selector': 'div.container-lux > div.split-section ", "url": "https://barberiagarofalo.it/_next/image?url=%2Fassets%2Fsostituisci-immagini%2Fhomepage%2F3.jpg&w=1200&q=75", "totalByt
-[3] lcp-lazy-loaded: Largest Contentful Paint image was lazily loaded | {"node": "{'type': 'node', 'lhId': '1-54-IMG', 'path': '1,HTML,1,BODY,4,MAIN,0,DIV,1,SECTION,0,DIV,0,DIV,1,A,0,DIV,0,IMG', 'selector': 'div.jr-grid > a.jr-card > div.jr-c"}
 [2] third-party-cookies: Uses third-party cookies | {"name": "mid", "url": "https://www.instagram.com/barberia_garofalo/embed"}
-[2] uses-long-cache-ttl: Serve static assets with an efficient cache policy | {"url": "https://www.google.com/maps/vt?pb=!1m5!1m4!1i16!2i35600!3i24464!4i256!2m3!1e0!2sm!3i799565130!2m3!1e2!2sspotlit!5i1!3m13!2sit!3sUS!5e289!12m5!1e68!2m2!1sset!2sR", "debugData": "{'type': 'debugdata', 'public': True, 'max-age': 269}", "cacheLifetimeMs": "269000"}
+[2] uses-long-cache-ttl: Serve static assets with an efficient cache policy | {"url": "https://www.google.com/maps/vt?pb=!1m5!1m4!1i16!2i35599!3i24463!4i256!2m3!1e0!2sm!3i799565130!2m3!1e2!2sspotlit!5i1!3m13!2sit!3sUS!5e289!12m5!1e68!2m2!1sset!2sR", "debugData": "{'type': 'debugdata', 'public': True, 'max-age': 430}", "cacheLifetimeMs": "430000"}
 [2] inspector-issues: Issues were logged in the `Issues` panel in Chrome Devtools | {"issueType": "Cookie", "subItems": "{'type': 'subitems', 'items': [{'url': 'https://www.instagram.com/barberia_garofalo/embed'}]}"}
 [2] interactive: Time to Interactive | 
+[2] mainthread-work-breakdown: Minimize main-thread work | {"group": "other", "groupLabel": "Other", "duration": "759.939999999985"}
+[2] lcp-lazy-loaded: Largest Contentful Paint image was lazily loaded | {"node": "{'type': 'node', 'lhId': '1-54-IMG', 'path': '1,HTML,1,BODY,4,MAIN,0,DIV,1,SECTION,0,DIV,0,DIV,1,A,0,DIV,0,IMG', 'selector': 'div.jr-grid > a.jr-card > div.jr-c"}
 [2] heading-order: Heading elements are not in a sequentially-descending order | {"node": "{'type': 'node', 'lhId': '1-0-H3', 'path': '1,HTML,1,BODY,5,FOOTER,0,DIV,0,DIV,0,H3', 'selector': 'footer.site-footer > div.container-lux > div > h3.footer-head"}
 [2] target-size: Touch targets do not have sufficient size or spacing. | {"node": "{'type': 'node', 'lhId': '1-1-BUTTON', 'path': '1,HTML,1,BODY,4,MAIN,0,SECTION,0,DIV,1,DIV,0,DIV,1,DIV,3,DIV,0,BUTTON', 'selector': 'div.rc-stage > div.rc-conte", "subItems": "{'type': 'subitems', 'items': [{'relatedNode': {'type': 'node', 'lhId': '1-2-BUTTON', 'path': '1,HTML,1,BODY,4,MAI
 [2] uses-optimized-images: Efficiently encode images | {"node": "{'type': 'node', 'lhId': '1-54-SPAN', 'path': '1,HTML,1,BODY,4,MAIN,0,DIV,1,SECTION,0,DIV,0,DIV,1,DIV,2,BUTTON,0,SPAN', 'selector': 'div.svc-grid-wrap > div.svc", "url": "https://barberiagarofalo.it/assets/gallery/1000313557.jpg", "fromProtocol": "True"}
-[1] first-contentful-paint: First Contentful Paint | 
 [1] image-aspect-ratio: Displays images with incorrect aspect ratio | {"url": "https://barberiagarofalo.it/_next/image?url=%2Fassets%2Fsostituisci-immagini%2Ficone%2Fbarberia_garofalo.png&w=256&q=75", "node": "{'type': 'node', 'lhId': '1-83-IMG', 'path': '1,HTML,1,BODY,4,MAIN,0,DIV,1,SECTION,0,DIV,0,DIV,0,IMG', 'selector': 'section.hero-section > div.hero-content > di
 
 === LINK ===
