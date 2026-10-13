@@ -28,7 +28,7 @@ function RegisterFormInner() {
 
       <CardHeader className="space-y-1">
         <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Crea account</CardTitle>
-        <p className="text-xs text-white/45">Prenota più velocemente e vedi il tuo storico</p>
+        <p className="text-xs text-white/60">Prenota più velocemente e vedi il tuo storico</p>
       </CardHeader>
       <CardContent>
         {error && (
@@ -81,7 +81,7 @@ function RegisterFormInner() {
             Registrati
           </Button>
         </form>
-        <p className="mt-4 text-center text-xs text-white/40 border-t border-white/5 pt-4">
+        <p className="mt-4 text-center text-xs text-white/60 border-t border-white/5 pt-4">
           Hai già un account?{' '}
           <Link href="/login" className="text-gold hover:underline font-semibold">
             Accedi

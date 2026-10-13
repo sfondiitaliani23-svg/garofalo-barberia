@@ -21,10 +21,10 @@ export default async function JournalPage() {
       <section className="section pb-24">
         <div className="container-lux">
           <div className="jr-grid">
-            {articles.map((a) => (
+            {articles.map((a, i) => (
               <Link key={a.slug} href={`/journal/${a.slug}`} className="jr-card">
                 <div className="jr-card-img">
-                  <Image src={a.image} alt={a.imageAlt} fill sizes="(max-width: 720px) 100vw, 33vw" className="object-cover" />
+                  <Image src={a.image} alt={a.imageAlt} fill priority={i === 0} sizes="(max-width: 720px) 100vw, 33vw" className="object-cover" />
                 </div>
                 <div className="jr-card-body">
                   <span className="jr-meta">
@@ -37,7 +37,7 @@ export default async function JournalPage() {
               </Link>
             ))}
           </div>
-          <p className="mt-8 text-center text-xs text-white/40">Ultimo aggiornamento: {formatJournalDate(articles[0].date)}</p>
+          <p className="mt-8 text-center text-xs text-white/60">Ultimo aggiornamento: {formatJournalDate(articles[0].date)}</p>
         </div>
       </section>
     </div>

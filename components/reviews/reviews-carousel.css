@@ -61,7 +61,7 @@
 }
 
 .rc-stars .is-off {
-  color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .rc-quote {
@@ -103,7 +103,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .rc-cta {

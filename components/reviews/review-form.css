@@ -102,7 +102,7 @@
 }
 
 .rf-input::placeholder {
-  color: rgba(255, 255, 255, 0.32);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .rf-input:focus {

@@ -20,7 +20,7 @@ export function InactiveTimeSlotGrid({
       {slots.map((time) => (
         <div
           key={time}
-          className="cursor-not-allowed rounded-lg border border-white/5 bg-white/[0.02] py-2.5 text-center text-sm font-medium text-white/25"
+          className="cursor-not-allowed rounded-lg border border-white/5 bg-white/[0.02] py-2.5 text-center text-sm font-medium text-white/60"
           aria-disabled
         >
           {time}

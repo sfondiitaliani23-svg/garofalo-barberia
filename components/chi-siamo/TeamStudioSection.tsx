@@ -82,7 +82,7 @@ export function TeamStudioSection({ members }: TeamStudioSectionProps) {
               key={member.id}
               className={`team-studio-card${member.isOwner ? ' team-studio-card--owner' : ''}`}
             >
-              <div className="team-studio-link" role="button" tabIndex={0} aria-label={`${member.name} — ${member.role}`}>
+              <div className="team-studio-link" role="button" tabIndex={0}>
                 <div className="team-studio-photo-wrap">
                   <div className="team-studio-photo-bg" aria-hidden="true" />
                   <div className="team-studio-photo">

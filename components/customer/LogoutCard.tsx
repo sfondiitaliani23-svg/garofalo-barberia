@@ -13,7 +13,7 @@ export function LogoutCard() {
         <span className="text-2xl">🚪</span>
         <div className="text-left">
           <p className="font-bold text-white/70 group-hover:text-red-400 text-sm transition-colors">Esci dall&apos;account</p>
-          <p className="text-[11px] text-white/30">Disconnetti la sessione</p>
+          <p className="text-[11px] text-white/60">Disconnetti la sessione</p>
         </div>
         <LogOut size={16} className="ml-auto text-white/20 group-hover:text-red-400 transition-colors shrink-0" />
       </button>

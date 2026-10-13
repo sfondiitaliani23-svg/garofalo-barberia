@@ -173,7 +173,7 @@ export function OAuthLoginButtons({
           <div className="w-full border-t border-white/10"></div>
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#111] px-3 text-white/40">Oppure accedi con</span>
+          <span className="bg-[#111] px-3 text-white/60">Oppure accedi con</span>
         </div>
       </div>
 

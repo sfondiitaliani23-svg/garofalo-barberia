@@ -117,7 +117,7 @@ export function QrAuthHandler({
           <p className="text-sm text-white/80">
             La sessione sul tuo computer è stata autorizzata con successo. Ora puoi utilizzare il computer!
           </p>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-white/60">
             Puoi chiudere questa scheda del telefono o andare alla tua area riservata cliccando qui sotto.
           </p>
           <Button

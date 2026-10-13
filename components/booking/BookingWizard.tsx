@@ -461,7 +461,7 @@ export function BookingWizard({
               <h2 className="text-2xl font-display uppercase font-bold text-gold tracking-wide">
                 {SITE_CONFIG.name}
               </h2>
-              <p className="text-xs text-white/40 mt-1 font-mono">
+              <p className="text-xs text-white/60 mt-1 font-mono">
                 {confirmation.appointmentId ? `Rif: #${confirmation.appointmentId.replace('appointment_', '').substring(0, 10).toUpperCase()}` : 'Confermato'}
               </p>
               <p className="mt-3 max-w-md text-sm text-white/70">
@@ -509,7 +509,7 @@ export function BookingWizard({
                         <User className="h-3.5 w-3.5 text-gold" />
                         <span>Operatore: <strong className="text-white">{confirmation.barberName}</strong></span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-white/40 mt-0.5">
+                      <div className="flex items-center gap-1.5 text-xs text-white/60 mt-0.5">
                         <Clock className="h-3 w-3" />
                         <span>{formatDuration(service.duration_minutes)}</span>
                       </div>
@@ -667,7 +667,7 @@ export function BookingWizard({
                     Con chi vuoi prenotare?
                   </h3>
                   {defaultBarber && (
-                    <span className="text-xs text-white/40">
+                    <span className="text-xs text-white/60">
                       Seleziona il tuo barbiere
                     </span>
                   )}
@@ -806,7 +806,7 @@ export function BookingWizard({
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-white/40 mt-1">Seleziona un&apos;altra data dal calendario in alto.</p>
+                      <p className="text-xs text-white/60 mt-1">Seleziona un&apos;altra data dal calendario in alto.</p>
                     )}
                   </div>
                 ) : (
@@ -838,7 +838,7 @@ export function BookingWizard({
                                     ? 'text-black/80 font-medium'
                                     : isFallback
                                     ? 'text-amber-400/90 font-medium'
-                                    : 'text-white/40'
+                                    : 'text-white/60'
                                 )}
                               >
                                 {detail.barberName.split(' ')[0]}
@@ -892,7 +892,7 @@ export function BookingWizard({
                   <>
                     <p>
                       <strong>Prezzo complessivo:</strong>{' '}
-                      <span className="line-through text-white/40">{formatPrice(totalOriginalPrice)}</span>{' '}
+                      <span className="line-through text-white/60">{formatPrice(totalOriginalPrice)}</span>{' '}
                       <span className="text-gold font-semibold">{formatPrice(appliedPromotion.finalCents)}</span>
                     </p>
                     <p className="text-emerald-400/90 text-xs">
@@ -956,7 +956,7 @@ export function BookingWizard({
               <div>
                 <Label htmlFor="phone">Telefono *</Label>
                 <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="320 188 6277" className="mt-1 bg-[#1a1a1a] border-white/15" />
-                <p className="mt-1 text-xs text-white/45">Per il promemoria WhatsApp 6 ore prima dell&apos;appuntamento</p>
+                <p className="mt-1 text-xs text-white/60">Per il promemoria WhatsApp 6 ore prima dell&apos;appuntamento</p>
               </div>
               <div>
                 <Label htmlFor="email">Email *</Label>
@@ -970,7 +970,7 @@ export function BookingWizard({
                   autoComplete="email"
                   className="mt-1 bg-[#1a1a1a] border-white/15"
                 />
-                <p className="mt-1 text-xs text-white/45">Obbligatoria: qui ricevi la conferma della prenotazione</p>
+                <p className="mt-1 text-xs text-white/60">Obbligatoria: qui ricevi la conferma della prenotazione</p>
               </div>
               <div>
                 <Label htmlFor="notes">Note (opzionale)</Label>

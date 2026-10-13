@@ -66,7 +66,7 @@ export function ResetPasswordForm() {
         <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">
           Nuova Password
         </CardTitle>
-        <p className="text-xs text-white/45">
+        <p className="text-xs text-white/60">
           Inserisci la nuova password per il tuo account Garofalo Barberia.
         </p>
       </CardHeader>
@@ -141,7 +141,7 @@ export function ResetPasswordForm() {
               )}
             </Button>
 
-            <p className="text-center text-xs text-white/40 pt-2">
+            <p className="text-center text-xs text-white/60 pt-2">
               <Link href="/login" className="text-gold hover:underline">
                 ← Torna alla pagina di accesso
               </Link>

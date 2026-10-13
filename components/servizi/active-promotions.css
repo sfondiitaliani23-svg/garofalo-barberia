@@ -61,7 +61,7 @@
 .promo-card-meta {
   margin-top: 0.5rem;
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .promo-card-code {
@@ -84,7 +84,7 @@
 .active-promotions-cta {
   margin-top: 1rem;
   font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.62);
   text-align: center;
 }
 

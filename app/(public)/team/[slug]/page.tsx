@@ -133,7 +133,7 @@ export default async function BarberPage({ params }: { params: Promise<{ slug: s
               {others.map((o) => (
                 <li key={o.id}>
                   <Link href={`/team/${barberSlug(o.name)}`}>
-                    {o.name} <span className="text-xs text-white/45">{formatBarberRole(o.role)}</span>
+                    {o.name} <span className="text-xs text-white/60">{formatBarberRole(o.role)}</span>
                   </Link>
                 </li>
               ))}

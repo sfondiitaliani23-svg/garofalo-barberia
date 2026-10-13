@@ -40,7 +40,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
       {photos.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-[#0e0e0e] p-12 text-center text-white/50">
           <p className="font-medium">Nessuna foto ancora presente nella tua galleria.</p>
-          <p className="mt-1 text-sm text-white/30">L'amministratore caricherà qui le foto dei tuoi tagli migliori!</p>
+          <p className="mt-1 text-sm text-white/60">L'amministratore caricherà qui le foto dei tuoi tagli migliori!</p>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -96,7 +96,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
                     {photo.caption}
                   </p>
                 ) : (
-                  <p className="text-xs italic text-white/30">Senza didascalia</p>
+                  <p className="text-xs italic text-white/60">Senza didascalia</p>
                 )}
               </div>
             </div>
@@ -150,7 +150,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
                 </div>
                 {activePhoto.caption && (
                   <div className="flex items-start gap-2.5 pt-1">
-                    <MessageSquare size={16} className="text-white/40 mt-0.5 shrink-0" />
+                    <MessageSquare size={16} className="text-white/60 mt-0.5 shrink-0" />
                     <p className="text-sm text-white/90 leading-relaxed">{activePhoto.caption}</p>
                   </div>
                 )}

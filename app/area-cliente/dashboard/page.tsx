@@ -60,7 +60,7 @@ export default async function CustomerDashboardPage() {
           <h1 className="text-3xl font-bold text-white tracking-wide">
             {firstName} <span className="text-gold">✂</span>
           </h1>
-          <p className="mt-1 text-white/40 text-sm">
+          <p className="mt-1 text-white/60 text-sm">
             Benvenuto nel tuo spazio riservato — Barberia Garofalo, Foggia
           </p>
 
@@ -69,14 +69,14 @@ export default async function CustomerDashboardPage() {
             <div className="flex items-center gap-2 bg-white/5 rounded-lg px-4 py-2.5 border border-white/8">
               <Scissors size={15} className="text-gold" />
               <div>
-                <p className="text-xs text-white/40 leading-none">Tagli effettuati</p>
+                <p className="text-xs text-white/60 leading-none">Tagli effettuati</p>
                 <p className="text-base font-bold text-white leading-tight">{totalCount}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-white/5 rounded-lg px-4 py-2.5 border border-white/8">
               <Star size={15} className="text-gold fill-gold" />
               <div>
-                <p className="text-xs text-white/40 leading-none">Cliente fedele</p>
+                <p className="text-xs text-white/60 leading-none">Cliente fedele</p>
                 <p className="text-base font-bold text-gold leading-tight">
                   {totalCount >= 10 ? 'Gold' : totalCount >= 5 ? 'Silver' : 'New'}
                 </p>
@@ -95,7 +95,7 @@ export default async function CustomerDashboardPage() {
           </h2>
           <Link
             href="/area-cliente/storico"
-            className="text-xs text-white/40 hover:text-gold transition-colors flex items-center gap-1"
+            className="text-xs text-white/60 hover:text-gold transition-colors flex items-center gap-1"
           >
             Vedi tutti <ChevronRight size={12} />
           </Link>
@@ -104,7 +104,7 @@ export default async function CustomerDashboardPage() {
         {upcoming.length === 0 ? (
           <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-8 text-center">
             <Clock size={28} className="text-white/20 mx-auto mb-3" />
-            <p className="text-white/40 text-sm">Nessun appuntamento in programma.</p>
+            <p className="text-white/60 text-sm">Nessun appuntamento in programma.</p>
             <Link
               href="/prenota"
               className="mt-4 inline-flex items-center gap-2 bg-gold hover:bg-[#ffb949] text-black font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-full transition-all"
@@ -128,7 +128,7 @@ export default async function CustomerDashboardPage() {
                     </div>
                     <div>
                       <p className="font-semibold text-white text-sm">{service?.name}</p>
-                      <p className="text-xs text-white/40 mt-0.5">
+                      <p className="text-xs text-white/60 mt-0.5">
                         {formatShopDateTimeShort(parseISO(apt.starts_at))} · con{' '}
                         <span className="text-gold">{barber?.name}</span>
                       </p>
@@ -161,7 +161,7 @@ export default async function CustomerDashboardPage() {
           >
             <span className="text-2xl">{icon}</span>
             <p className="mt-2 font-bold text-white text-sm group-hover:text-gold transition-colors">{label}</p>
-            <p className="text-[11px] text-white/40">{sub}</p>
+            <p className="text-[11px] text-white/60">{sub}</p>
           </Link>
         ))}
       </div>

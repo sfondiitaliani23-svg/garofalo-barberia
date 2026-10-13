@@ -202,7 +202,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
       />
 
       {/* Pannello drawer */}
-      <div
+      <nav
         className={`fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col lg:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
@@ -220,7 +220,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           />
           <button
             onClick={close}
-            className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 hover:border-gold/40 text-white/40 hover:text-gold transition-all"
+            className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 hover:border-gold/40 text-white/60 hover:text-gold transition-all"
             aria-label="Chiudi menu"
           >
             <X size={18} />
@@ -269,11 +269,11 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           >
             Prenota ora
           </Link>
-          <p className="text-[10px] text-white/25 tracking-widest uppercase text-center mt-4">
+          <p className="text-[10px] text-white/60 tracking-widest uppercase text-center mt-4">
             Viale Ignazio D&apos;Addedda, 236 – Foggia
           </p>
         </div>
-      </div>
+      </nav>
     </>
   );
 }

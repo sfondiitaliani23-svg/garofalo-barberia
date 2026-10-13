@@ -32,7 +32,7 @@ function splitReview(text: string): { headline: string; body: string } {
 
 function Stars({ rating, size = 16 }: { rating: number; size?: number }) {
   return (
-    <span className="rc-stars" aria-label={`${rating} stelle su 5`}>
+    <span className="rc-stars" role="img" aria-label={`${rating} stelle su 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Star key={i} size={size} className={i < rating ? 'is-on' : 'is-off'} aria-hidden />
       ))}

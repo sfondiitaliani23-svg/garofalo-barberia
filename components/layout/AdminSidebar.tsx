@@ -130,7 +130,7 @@ export function AdminSidebar() {
               onClick={closeMenu}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors',
-                isActive ? 'text-gold' : 'text-white/40 hover:text-white/70'
+                isActive ? 'text-gold' : 'text-white/60 hover:text-white/70'
               )}
             >
               <Icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
@@ -144,7 +144,7 @@ export function AdminSidebar() {
           onClick={toggleMenu}
           className={cn(
             'flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors',
-            menuOpen ? 'text-gold' : 'text-white/40 hover:text-white/70'
+            menuOpen ? 'text-gold' : 'text-white/60 hover:text-white/70'
           )}
         >
           {menuOpen ? <X size={20} strokeWidth={2.5} /> : <Menu size={20} strokeWidth={1.75} />}
@@ -204,7 +204,7 @@ export function AdminSidebar() {
                       isActive ? 'bg-gold/15 text-gold' : 'text-white/70 hover:bg-white/5 hover:text-white'
                     )}
                   >
-                    <Icon size={20} className={isActive ? 'text-gold' : 'text-white/40'} />
+                    <Icon size={20} className={isActive ? 'text-gold' : 'text-white/60'} />
                     {label}
                   </Link>
                 );

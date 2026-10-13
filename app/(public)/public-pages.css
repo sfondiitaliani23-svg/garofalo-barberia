@@ -135,7 +135,7 @@
 }
 
 .public-page .form-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .public-page .form-input:focus {
@@ -527,7 +527,7 @@
 
 .public-page .qr-scan-sub {
   font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.62);
   letter-spacing: 0.02em;
   margin: 0;
   line-height: 1.35;

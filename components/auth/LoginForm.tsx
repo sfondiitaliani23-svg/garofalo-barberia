@@ -283,7 +283,7 @@ function LoginFormInner({
                 className="h-[180px] w-[180px] rounded-lg transition-opacity duration-300"
               />
             ) : (
-              <div className="flex flex-col items-center justify-center space-y-2 text-white/40">
+              <div className="flex flex-col items-center justify-center space-y-2 text-white/60">
                 <Loader2 className="h-6 w-6 animate-spin text-gold" />
                 <span className="text-[10px]">Generazione codice...</span>
               </div>
@@ -564,7 +564,7 @@ function LoginFormInner({
                 <button
                   type="button"
                   onClick={() => setWhatsAppStep('phone')}
-                  className="text-xs text-white/40 hover:text-gold block mx-auto underline mt-2"
+                  className="text-xs text-white/60 hover:text-gold block mx-auto underline mt-2"
                 >
                   Cambia numero di telefono
                 </button>
@@ -593,7 +593,7 @@ function LoginFormInner({
             <p className="text-sm font-medium text-white/80">
               Verifica della Passkey in corso...
             </p>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-white/60">
               Usa il tuo volto (FaceID) o impronta (TouchID) per accedere.
             </p>
             <button
@@ -618,7 +618,7 @@ function LoginFormInner({
         )}
 
         {/* Footer */}
-        <p className="text-center text-xs text-white/40 border-t border-white/5 pt-4 mt-2">
+        <p className="text-center text-xs text-white/60 border-t border-white/5 pt-4 mt-2">
           Non hai un account?{' '}
           <Link href="/register" className="text-gold hover:underline font-semibold">
             Registrati ora

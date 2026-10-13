@@ -69,7 +69,7 @@ export default async function ServiziPage() {
           />
 
           <div className="mt-12 text-center">
-            <p className="mb-4 text-sm text-white/45">
+            <p className="mb-4 text-sm text-white/60">
               Shampoo e consulenza styling inclusi con ogni taglio.
             </p>
             <Link href="/prenota" className="btn-primary">

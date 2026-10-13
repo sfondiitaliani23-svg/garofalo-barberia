@@ -436,7 +436,7 @@ h2,
 }
 
 .admin-filter input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 /* ── Badge "Aperto ora" ─────────────────────────────────────────── */
@@ -487,3 +487,6 @@ h2,
   font-size: 0.95rem;
 }
 .input-dark:focus { outline: none; border-color: var(--color-gold); }
+
+/* Banner cookie: nascosto subito se la scelta è già stata fatta */
+html.has-consent [data-cookie-banner] { display: none !important; }

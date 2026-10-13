@@ -15,7 +15,7 @@ const STATUS_COLORS: Record<AppointmentStatus, string> = {
   confirmed: 'text-gold bg-gold/10 border-gold/20',
   completed: 'text-green-400 bg-green-500/10 border-green-500/20',
   cancelled: 'text-red-400 bg-red-500/10 border-red-500/20',
-  no_show: 'text-white/40 bg-white/5 border-white/10',
+  no_show: 'text-white/60 bg-white/5 border-white/10',
 };
 
 interface AppointmentCardProps {
@@ -72,7 +72,7 @@ export function AppointmentCard({
           </p>
 
           {/* Riferimento Ordine in stile Treatwell */}
-          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-white/5 text-xs text-white/40">
+          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-white/5 text-xs text-white/60">
             <span>Riferimento ordine:</span>
             <span className="font-mono bg-white/5 px-2 py-0.5 rounded text-white/70 border border-white/10">
               {orderCode}

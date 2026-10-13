@@ -103,7 +103,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
               href={href}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors',
-                isActive ? 'text-gold' : 'text-white/40 hover:text-white/70'
+                isActive ? 'text-gold' : 'text-white/60 hover:text-white/70'
               )}
             >
               {isProfileLink ? (
@@ -129,7 +129,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
           href="/area-cliente/assistenza"
           className={cn(
             'flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors',
-            pathname === '/area-cliente/assistenza' ? 'text-gold' : 'text-white/40 hover:text-white/70'
+            pathname === '/area-cliente/assistenza' ? 'text-gold' : 'text-white/60 hover:text-white/70'
           )}
         >
           <HelpCircle size={20} strokeWidth={pathname === '/area-cliente/assistenza' ? 2.5 : 1.75} />

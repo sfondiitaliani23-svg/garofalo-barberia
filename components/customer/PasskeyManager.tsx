@@ -100,15 +100,15 @@ export function PasskeyManager() {
       {!supported && <p className="mt-3 text-xs text-amber-300">Questo browser non supporta le Passkey.</p>}
       <ul className="mt-4 space-y-2">
         {items === null ? (
-          <li className="text-xs text-white/40">Caricamento...</li>
+          <li className="text-xs text-white/60">Caricamento...</li>
         ) : items.length === 0 ? (
-          <li className="text-xs text-white/40">Nessuna Passkey attiva.</li>
+          <li className="text-xs text-white/60">Nessuna Passkey attiva.</li>
         ) : (
           items.map((p) => (
             <li key={p.id} className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2 text-sm">
               <span className="text-white/80">
                 {p.name}
-                <span className="ml-2 text-xs text-white/40">
+                <span className="ml-2 text-xs text-white/60">
                   dal {new Date(p.createdAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               </span>

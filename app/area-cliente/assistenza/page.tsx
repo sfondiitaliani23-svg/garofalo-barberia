@@ -97,7 +97,7 @@ export default function CustomerCarePage() {
       {/* Barra di ricerca */}
       <div className="relative mt-4 max-w-xl mx-auto">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-white/40" />
+          <Search className="h-5 w-5 text-white/60" />
         </div>
         <input
           type="text"
@@ -152,7 +152,7 @@ export default function CustomerCarePage() {
                     {isExpanded ? (
                       <ChevronUp className="h-4 w-4 text-gold flex-shrink-0 ml-2" />
                     ) : (
-                      <ChevronDown className="h-4 w-4 text-white/40 flex-shrink-0 ml-2" />
+                      <ChevronDown className="h-4 w-4 text-white/60 flex-shrink-0 ml-2" />
                     )}
                   </button>
                   {isExpanded && (
@@ -165,7 +165,7 @@ export default function CustomerCarePage() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-white/40 text-center py-6">
+          <p className="text-sm text-white/60 text-center py-6">
             Nessuna risposta trovata per i criteri inseriti. Prova a cambiare parole chiave o seleziona un'altra categoria.
           </p>
         )}

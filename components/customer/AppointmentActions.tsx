@@ -66,7 +66,7 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
 
   if (!manageable) {
     return (
-      <p className="text-xs text-white/40">
+      <p className="text-xs text-white/60">
         Modifica o disdetta non più disponibile (meno di 30 minuti all&apos;appuntamento)
       </p>
     );

@@ -62,6 +62,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="it"
       className={`${montserrat.variable} ${rye.variable}`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('garofalo_cookie_consent'))document.documentElement.classList.add('has-consent')}catch(e){}",
+          }}
+        />
+      </head>
       <body>
         <LoadingScreen />
         <ImageProtection />

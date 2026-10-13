@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { hasCookieConsentDecision, saveCookieConsent } from '@/lib/consent/cookie-consent';
 
 export function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+  // Visibile già nell'HTML del server: se c'è già una scelta, la nasconde subito il CSS
+  // (classe html.has-consent impostata prima del disegno), poi l'effetto sotto la toglie.
+  const [visible, setVisible] = useState(true);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [analytics, setAnalytics] = useState(true);
   const [preferences, setPreferences] = useState(true);

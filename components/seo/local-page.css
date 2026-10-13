@@ -73,7 +73,7 @@
   background: #0e0e0e;
 }
 .lp-price-name { color: #fff; font-weight: 600; }
-.lp-price-meta { color: rgba(255, 255, 255, 0.45); font-size: 0.78rem; margin-top: 0.1rem; }
+.lp-price-meta { color: rgba(255, 255, 255, 0.62); font-size: 0.78rem; margin-top: 0.1rem; }
 .lp-price-value { color: var(--color-gold-light); font-weight: 700; font-variant-numeric: tabular-nums; }
 .lp-price-cta {
   display: inline-flex;
@@ -92,7 +92,7 @@
   .lp-price-row { grid-template-columns: 1fr auto; }
   .lp-price-cta { grid-column: 1 / -1; justify-content: center; }
 }
-.lp-note { margin-top: 0.9rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.45); }
+.lp-note { margin-top: 0.9rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.62); }
 .lp-note a, .lp-link { color: var(--color-gold-light); text-decoration: underline; text-underline-offset: 3px; }
 
 .lp-faq { display: grid; gap: 0.5rem; }

@@ -606,7 +606,7 @@
 }
 
 .newsletter-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .newsletter-input:focus {
@@ -1038,7 +1038,7 @@
 .hero-slider-indicator .indicator-item .num {
   font-size: 0.9rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.62);
   font-family: 'Montserrat', sans-serif;
   transition: color 0.3s;
 }

@@ -183,7 +183,7 @@ export function MonthDatePicker({
       {/* 1. Riga MESE: scorciatoie con smooth scroll */}
       {monthOptions.length > 1 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">Mese</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">Mese</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {monthOptions.map((month) => {
               const isActive = activeMonth === month.value;
@@ -213,7 +213,7 @@ export function MonthDatePicker({
 
       {/* 2. Riga GIORNO: striscia UNICA e continua di tutti i giorni prenotabili */}
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">Giorno</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">Giorno</p>
         <div
           ref={daysContainerRef}
           className="flex items-center gap-2 overflow-x-auto pb-2 scroll-smooth"

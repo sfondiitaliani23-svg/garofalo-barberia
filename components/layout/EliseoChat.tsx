@@ -225,10 +225,10 @@ export function EliseoChat() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={resetChat} title="Nuova chat" className="text-white/25 hover:text-white/60 transition-colors p-1">
+            <button onClick={resetChat} title="Nuova chat" aria-label="Nuova chat" className="text-white/55 hover:text-white transition-colors p-1">
               <RotateCcw size={13} />
             </button>
-            <button onClick={() => setIsOpen(false)} className="text-white/25 hover:text-white/60 transition-colors p-1">
+            <button onClick={() => setIsOpen(false)} aria-label="Chiudi assistente" className="text-white/55 hover:text-white transition-colors p-1">
               <ChevronDown size={18} />
             </button>
           </div>
@@ -308,7 +308,7 @@ export function EliseoChat() {
             placeholder="Scrivi un messaggio..."
             maxLength={500}
             disabled={loading}
-            className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#cd9a4f]/40 transition-colors"
+            className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-[#cd9a4f]/40 transition-colors"
           />
           <button
             type="submit"

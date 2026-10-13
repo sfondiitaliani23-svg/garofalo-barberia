@@ -140,7 +140,7 @@ export function SiteFooter() {
         <Link href="/feedback" className="hover:text-gold-light">Feedback anonimo</Link>
         <Link href="/lavora-con-noi" className="hover:text-gold-light">Lavora con noi</Link>
       </nav>
-      <div className="footer-copy container-lux flex flex-col items-center gap-2 border-t border-white/10 text-center text-xs leading-relaxed text-white/40">
+      <div className="footer-copy container-lux flex flex-col items-center gap-2 border-t border-white/10 text-center text-xs leading-relaxed text-white/60">
         <p>© 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.</p>
         <p className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">
           <Link href="/privacy" className="hover:text-gold-light underline">
@@ -155,7 +155,7 @@ export function SiteFooter() {
             href="https://www.instagram.com/eliseomiraglia"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/55 transition hover:text-gold-light"
+            className="text-white/70 underline underline-offset-2 transition hover:text-gold-light"
           >
             @eliseomiraglia
           </a>
@@ -167,7 +167,7 @@ export function SiteFooter() {
             href="https://www.instagram.com/elisee_graphic"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white/55 transition hover:text-gold-light"
+            className="text-white/70 underline underline-offset-2 transition hover:text-gold-light"
           >
             @elisee_graphic
           </a>

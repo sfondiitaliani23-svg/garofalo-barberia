@@ -191,7 +191,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
           <div className="flex flex-col items-center sm:items-start gap-2">
             <p className="text-sm font-semibold text-white">Immagine del profilo</p>
-            <p className="text-xs text-white/40 max-w-xs text-center sm:text-left leading-relaxed">
+            <p className="text-xs text-white/60 max-w-xs text-center sm:text-left leading-relaxed">
               Scegli se scattare una foto al volo con la tua fotocamera o caricarne una dal tuo dispositivo.
             </p>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mt-1.5">

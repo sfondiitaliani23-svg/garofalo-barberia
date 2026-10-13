@@ -139,7 +139,7 @@
 }
 .cp-field textarea { min-height: 7rem; resize: vertical; }
 .cp-field input:focus, .cp-field select:focus, .cp-field textarea:focus { outline: none; border-color: var(--color-gold); }
-.cp-hint { color: rgba(255, 255, 255, 0.45); font-size: 0.78rem; margin-top: 0.3rem; }
+.cp-hint { color: rgba(255, 255, 255, 0.62); font-size: 0.78rem; margin-top: 0.3rem; }
 .cp-check { display: flex; gap: 0.6rem; align-items: flex-start; color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; line-height: 1.5; }
 .cp-check input { margin-top: 0.2rem; width: 1.1rem; height: 1.1rem; accent-color: var(--color-gold); flex: none; }
 .cp-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
@@ -161,7 +161,7 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: #0b0b0b;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.62);
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -192,7 +192,7 @@
 .lk-btn:hover { border-color: var(--color-gold); background: rgba(205, 154, 79, 0.08); }
 .lk-btn--main { background: var(--color-gold); border-color: var(--color-gold); color: #000; }
 .lk-btn--main:hover { background: var(--color-gold-light); }
-.lk-foot { margin-top: 2rem; color: rgba(255, 255, 255, 0.35); font-size: 0.75rem; }
+.lk-foot { margin-top: 2rem; color: rgba(255, 255, 255, 0.62); font-size: 0.75rem; }
 .cp-step--plain { padding-left: 1.25rem; }
 .cp-step--plain::before { content: none; counter-increment: none; }
 

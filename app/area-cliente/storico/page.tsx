@@ -35,7 +35,7 @@ export default async function CustomerStoricoPage() {
   return (
     <div className="max-w-4xl mx-auto pb-12">
       {/* Navigazione Briciola (Breadcrumb) stile Treatwell */}
-      <nav className="text-xs text-white/40 mb-6 uppercase tracking-wider">
+      <nav className="text-xs text-white/60 mb-6 uppercase tracking-wider">
         <Link href="/area-cliente/dashboard" className="hover:text-gold transition-colors">
           Il mio profilo
         </Link>
@@ -70,7 +70,7 @@ export default async function CustomerStoricoPage() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-white/35 py-4 border-t border-white/5">
+          <p className="text-sm text-white/60 py-4 border-t border-white/5">
             Non hai prenotazioni in programma al momento.
           </p>
         )}
@@ -100,7 +100,7 @@ export default async function CustomerStoricoPage() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-white/35 py-4 border-t border-white/5">
+          <p className="text-sm text-white/60 py-4 border-t border-white/5">
             Non hai prenotazioni passate nel tuo storico.
           </p>
         )}
