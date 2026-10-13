@@ -1,10 +1,6 @@
-manifest Barberia Garofalo ['/pwa/icon-192.png', '/pwa/icon-512.png', '/pwa/maskable-512.png']
-/pwa/icon-512.png 200 public, max-age=31536000, immutable
-/offline.html 200 public, max-age=0, must-revalidate
-/sw.js 200 no-cache, no-store, must-revalidate
-/prodotti 200 cards: 4 ok
-/offerte 200 cards: 1 ok
-/ 200 cards: 0 ok
-sw attivo: True
-offline -> SERVIZI & PREZZI
+/team 200 ['/team/luigi-garofalo', '/team/francesco-costantino', '/team/vittorio-morlino']
+/team/luigi-garofalo 200 | Martedì 08:30–13:00 · 15:30–20:30 ; Mercoledì 08:30–13:00 · 15:30–20:30 ; Giovedì 08:30–13:00 · 15:30–20:30 ; Venerdì 08:30–13:00 · 15:30–20:30 ; Sabato 08:30–13:30 · 14:30–20:00 | away: 0
+/team/francesco-costantino 200 | Martedì 08:30–13:00 · 15:30–20:30 ; Mercoledì 08:30–13:00 · 15:30–20:30 ; Giovedì 08:30–13:00 · 15:30–20:30 ; Venerdì 08:30–13:00 · 15:30–20:30 ; Sabato 08:30–13:30 · 14:30–20:00 | away: 0
+/team/vittorio-morlino 200 | Martedì 08:30–13:00 · 15:30–20:30 ; Mercoledì 08:30–13:00 · 15:30–20:30 ; Giovedì 08:30–13:00 · 15:30–20:30 ; Venerdì 08:30–13:00 · 15:30–20:30 ; Sabato 08:30–13:30 · 14:30–20:00 | away: 0
+prenota -> /prenota?barber=vittorio-morlino
 errori: []
