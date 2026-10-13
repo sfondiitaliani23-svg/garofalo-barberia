@@ -5,7 +5,7 @@ export type ShopPeriod = {
   endTime: string;
 };
 
-/** Orari di apertura reali del salone (mattina + pomeriggio, pausa 13:00–14:00). */
+/** Orari di apertura reali del salone (mattina + pomeriggio; sabato 08:30–13:30 e 14:30–20:00). */
 export function getShopPeriodsForDay(dayOfWeek: number): ShopPeriod[] {
   if (dayOfWeek === 0 || dayOfWeek === 1) return [];
 

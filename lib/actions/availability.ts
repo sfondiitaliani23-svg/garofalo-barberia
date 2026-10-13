@@ -67,7 +67,29 @@ function isLegacyContinuousSchedule(dayAvailability: AvailabilityRow[]): boolean
   return primary.end_time.slice(0, 5) > '13:00';
 }
 
+/** Gli orari del barbiere non escono mai dagli orari del salone (es. sabato fino alle 13:30). */
+function clampToShopHours(dayOfWeek: number, periods: { start: string; end: string }[]) {
+  const shop = getShopPeriodsForDay(dayOfWeek);
+  if (shop.length === 0) return [];
+  const out: { start: string; end: string }[] = [];
+  for (const p of periods) {
+    for (const s of shop) {
+      const start = p.start > s.startTime ? p.start : s.startTime;
+      const end = p.end < s.endTime ? p.end : s.endTime;
+      if (start < end) out.push({ start, end });
+    }
+  }
+  return out;
+}
+
 function resolveAvailabilityPeriods(
+  dayOfWeek: number,
+  dayAvailability: AvailabilityRow[]
+): { start: string; end: string }[] {
+  return clampToShopHours(dayOfWeek, resolveRawAvailabilityPeriods(dayOfWeek, dayAvailability));
+}
+
+function resolveRawAvailabilityPeriods(
   dayOfWeek: number,
   dayAvailability: AvailabilityRow[]
 ): { start: string; end: string }[] {

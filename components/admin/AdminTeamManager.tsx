@@ -452,7 +452,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
               </h2>
             </div>
             <p className="text-xs text-white/45">
-              Mattina e pomeriggio come sul sito (pausa 13:00–14:00). Puoi aprire solo mezza giornata.
+              Mattina e pomeriggio come sul sito (sabato 08:30–13:30 e 14:30–20:00). Puoi aprire solo mezza giornata.
             </p>
           </div>
 
