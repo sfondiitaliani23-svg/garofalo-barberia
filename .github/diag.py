@@ -1,5 +1,5 @@
 import json, urllib.request
-for i in (1,2):
+for i in (1,2,3):
     d=json.load(open(f'lh-servizi-{i}.json')); a=d['audits']
     el=a['largest-contentful-paint-element']['details']['items'][0]['items'][0]['node']
     print('servizi mobile run',i,'perf',round(d['categories']['performance']['score']*100),'LCP',a['largest-contentful-paint']['displayValue'],'| elemento:',el.get('selector'),'|',el.get('snippet','')[:160])
