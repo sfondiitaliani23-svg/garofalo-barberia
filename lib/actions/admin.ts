@@ -1044,6 +1044,7 @@ export interface AdminPromotionInput {
 
 function revalidatePromotionPaths() {
   revalidatePath('/admin/promozioni');
+  revalidatePath('/offerte');
   revalidatePath('/servizi');
   revalidatePath('/prenota');
 }

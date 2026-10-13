@@ -134,6 +134,8 @@ export function SiteFooter() {
         <Link href="/prima-visita" className="hover:text-gold-light">Prima visita</Link>
         <Link href="/faq" className="hover:text-gold-light">Domande frequenti</Link>
         <Link href="/journal" className="hover:text-gold-light">Journal</Link>
+        <Link href="/offerte" className="hover:text-gold-light">Offerte</Link>
+        <Link href="/prodotti" className="hover:text-gold-light">Prodotti</Link>
         <Link href="/feedback" className="hover:text-gold-light">Feedback anonimo</Link>
         <Link href="/lavora-con-noi" className="hover:text-gold-light">Lavora con noi</Link>
       </nav>

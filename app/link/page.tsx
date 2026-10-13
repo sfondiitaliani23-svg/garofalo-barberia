@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { CalendarCheck, MessageCircle, MapPin, Scissors, BookOpen, Star, Instagram } from 'lucide-react';
+import { CalendarCheck, MessageCircle, MapPin, Scissors, BookOpen, Star, Instagram, Tag } from 'lucide-react';
 import { TrackingOnlyWidgets } from '@/components/layout/ClientFloatingWidgets';
 import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
@@ -19,6 +19,7 @@ export default function LinkPage() {
     { href: '/prenota', label: 'Prenota online', icon: CalendarCheck, main: true },
     { href: getWhatsAppLink(), label: 'Scrivici su WhatsApp', icon: MessageCircle, external: true },
     { href: '/servizi', label: 'Servizi e prezzi', icon: Scissors },
+    { href: '/offerte', label: 'Offerte', icon: Tag },
     { href: SITE_CONFIG.googleMapsUrl, label: 'Come arrivare', icon: MapPin, external: true },
     { href: '/recensioni', label: 'Recensioni', icon: Star },
     { href: '/journal', label: 'Consigli su capelli e barba', icon: BookOpen },

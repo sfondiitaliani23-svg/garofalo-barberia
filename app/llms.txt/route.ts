@@ -42,6 +42,8 @@ export async function GET() {
     ...LOCAL_PAGES.map((p) => `- [${p.h1}](${SITE_URL}/${p.slug})`),
     `- [Prima visita: come funziona](${SITE_URL}/prima-visita)`,
     `- [Domande frequenti](${SITE_URL}/faq)`,
+    `- [Offerte attive](${SITE_URL}/offerte)`,
+    `- [Prodotti in salone](${SITE_URL}/prodotti)`,
     `- [Lavora con noi](${SITE_URL}/lavora-con-noi)`,
     '',
     '## Journal',

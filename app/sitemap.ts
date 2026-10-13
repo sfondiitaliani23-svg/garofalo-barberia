@@ -16,6 +16,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/prima-visita', priority: 0.7, freq: 'monthly' },
     { path: '/faq', priority: 0.7, freq: 'monthly' },
     { path: '/journal', priority: 0.6, freq: 'weekly' },
+    { path: '/offerte', priority: 0.6, freq: 'weekly' },
+    { path: '/prodotti', priority: 0.5, freq: 'monthly' },
     { path: '/lavora-con-noi', priority: 0.4, freq: 'monthly' },
     { path: '/privacy', priority: 0.2, freq: 'yearly' },
   ];

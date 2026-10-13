@@ -195,3 +195,33 @@
 .lk-foot { margin-top: 2rem; color: rgba(255, 255, 255, 0.35); font-size: 0.75rem; }
 .cp-step--plain { padding-left: 1.25rem; }
 .cp-step--plain::before { content: none; counter-increment: none; }
+
+/* Prodotti */
+.pr-group + .pr-group { margin-top: 3rem; }
+.pr-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) { .pr-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.pr-card { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; overflow: hidden; background: #0e0e0e; display: flex; flex-direction: column; }
+.pr-img { position: relative; aspect-ratio: 1; background: #151515; }
+.pr-noimg { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 3rem; color: rgba(205, 154, 79, 0.5); }
+.pr-stock { position: absolute; left: 0.6rem; top: 0.6rem; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; background: rgba(0, 0, 0, 0.7); color: rgba(255, 255, 255, 0.7); }
+.pr-stock.is-on { color: #4ade80; }
+.pr-body { padding: 0.9rem 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+.pr-brand { color: var(--color-gold); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.pr-name { color: #fff; font-weight: 700; line-height: 1.3; }
+.pr-desc { color: rgba(255, 255, 255, 0.55); font-size: 0.82rem; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.pr-price { margin-top: auto; padding-top: 0.4rem; color: var(--color-gold-light); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Offerte */
+.of-list { display: grid; gap: 1rem; }
+.of-card { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; align-items: start; padding: 1.4rem; border-radius: 16px; border: 1px solid rgba(205, 154, 79, 0.35); background: linear-gradient(135deg, rgba(205, 154, 79, 0.1), rgba(205, 154, 79, 0.01)); }
+@media (max-width: 520px) { .of-card { grid-template-columns: 1fr; } }
+.of-badge { min-width: 5.5rem; padding: 1rem 0.75rem; border-radius: 12px; background: var(--color-gold); color: #000; font-weight: 800; font-size: 1.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+.of-title { color: #fff; font-weight: 700; font-size: 1.2rem; }
+.of-desc { color: rgba(255, 255, 255, 0.7); margin-top: 0.35rem; line-height: 1.6; }
+.of-meta { color: rgba(255, 255, 255, 0.5); font-size: 0.85rem; margin-top: 0.5rem; }
+.of-code { margin-top: 0.6rem; color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; }
+.of-code strong { color: var(--color-gold-light); letter-spacing: 0.08em; }
+.of-cta { margin-top: 1rem; }
+.of-empty { text-align: center; padding: 2rem 1.25rem; border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 16px; }
+.of-empty h2 { color: #fff; font-weight: 700; font-size: 1.15rem; }
+.of-empty p { color: rgba(255, 255, 255, 0.6); margin-top: 0.4rem; }

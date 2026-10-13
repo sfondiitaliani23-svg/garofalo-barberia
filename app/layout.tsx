@@ -6,6 +6,7 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { SITE_URL } from '@/lib/seo';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
 import { ImageProtection } from '@/components/layout/ImageProtection';
+import { ServiceWorkerRegister } from '@/components/layout/ServiceWorkerRegister';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -36,6 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image' },
   formatDetection: { telephone: false },
+  appleWebApp: { capable: true, title: 'Garofalo', statusBarStyle: 'black-translucent' },
   title: {
     default: `${SITE_CONFIG.name} | Foggia`,
     template: `%s | ${SITE_CONFIG.name}`,
@@ -52,6 +54,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport = { themeColor: '#000000' };
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -61,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <LoadingScreen />
         <ImageProtection />
+        <ServiceWorkerRegister />
         {children}
         <Toaster theme="dark" position="top-center" richColors className="!z-[200]" />
       </body>
