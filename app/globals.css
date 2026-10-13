@@ -500,53 +500,129 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
 
 /* ── Modalità app (sito aperto dall'icona sulla schermata Home) ───────── */
 .app-tabbar { display: none; }
-/* Nell'app installata niente "Torna in alto": lo scorrimento è già veloce */
-html.is-app .scroll-top-btn { display: none !important; }
+/* Barra dell'app: "dock" sospeso in rilievo (neumorfismo scuro) con bagliore oro sulla voce attiva */
 @media (max-width: 1023px) {
   html.is-app .app-tabbar {
+    --dock-bg: #171614;
+    --dock-dark: rgba(0, 0, 0, 0.78);
+    --dock-light: rgba(255, 255, 255, 0.055);
+    --dock-glow: rgba(232, 185, 106, 0.55);
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 50%;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
     z-index: 190;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    align-items: end;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-    background: #0a0a0a;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 24px;
+    border-radius: 36px;
+    background: var(--dock-bg);
+    box-shadow:
+      14px 14px 30px var(--dock-dark),
+      -10px -10px 26px var(--dock-light),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
-  html.is-app body:has(.app-tabbar) { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  html.is-app body:has(.app-tabbar) { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
   /* In app la barra sostituisce il pulsante WhatsApp; l'assistente sale sopra la barra */
   html.is-app body:has(.app-tabbar) a[aria-label="WhatsApp"].fixed { display: none; }
-  html.is-app body:has(.app-tabbar) #eliseo-chat-btn { bottom: calc(80px + env(safe-area-inset-bottom)) !important; }
+  html.is-app body:has(.app-tabbar) #eliseo-chat-btn { bottom: calc(112px + env(safe-area-inset-bottom)) !important; }
 }
 .app-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 3px;
-  min-height: 52px;
-  color: rgba(255, 255, 255, 0.6);
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s, transform 0.15s;
-}
-.app-tab:active { transform: scale(0.94); }
-.app-tab.is-active { color: var(--color-gold-light); }
-.app-tab-label { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
-.app-tab--main .app-tab-icon {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 46px;
-  height: 46px;
-  margin-top: -18px;
-  border-radius: 999px;
-  background: var(--color-gold);
-  color: #000;
-  box-shadow: 0 6px 20px rgba(205, 154, 79, 0.35);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  color: rgba(244, 239, 231, 0.55);
+  background: var(--dock-bg, #171614);
+  box-shadow:
+    6px 6px 12px var(--dock-dark, rgba(0, 0, 0, 0.78)),
+    -6px -6px 12px var(--dock-light, rgba(255, 255, 255, 0.055));
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, color 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.app-tab--main { color: var(--color-gold-light); }
+.app-tab-icon { display: grid; place-items: center; transition: transform 0.25s ease, filter 0.25s ease; }
+.app-tab-icon svg { stroke: currentColor; }
+@media (hover: hover) {
+  .app-tab:hover {
+    transform: translateY(-4px);
+    color: #f4efe7;
+    box-shadow:
+      9px 9px 18px var(--dock-dark, rgba(0, 0, 0, 0.78)),
+      -9px -9px 18px var(--dock-light, rgba(255, 255, 255, 0.055));
+  }
+}
+/* Voce attiva (e tocco): incassata, con bagliore oro */
+.app-tab:active,
+.app-tab.is-active {
+  color: var(--color-gold-light, #e5b565);
+  background: linear-gradient(135deg, #12110f 0%, #1c1a17 100%);
+  transform: translateY(1px) scale(0.94);
+  box-shadow:
+    inset 4px 4px 8px var(--dock-dark, rgba(0, 0, 0, 0.78)),
+    inset -4px -4px 8px var(--dock-light, rgba(255, 255, 255, 0.055)),
+    0 0 12px var(--dock-glow, rgba(232, 185, 106, 0.55));
+}
+.app-tab.is-active .app-tab-icon {
+  filter: drop-shadow(0 0 6px var(--dock-glow, rgba(232, 185, 106, 0.55)));
+  transform: scale(1.1);
+}
+/* Puntino luminoso sotto la voce attiva */
+.app-tab-dot {
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-gold-light, #e5b565);
+  box-shadow: 0 0 8px var(--dock-glow, rgba(232, 185, 106, 0.55));
+  transform: translateX(-50%) scale(0);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.app-tab.is-active .app-tab-dot { transform: translateX(-50%) scale(1); }
+/* Etichetta a fumetto sopra il pulsante (al passaggio o dopo un tocco) */
+.app-tab::before,
+.app-tab::after {
+  position: absolute;
+  left: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.app-tab::before {
+  content: attr(data-tooltip);
+  bottom: 72px;
+  transform: translateX(-50%) translateY(8px) scale(0.9);
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: #e8b96a;
+  color: #111;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+.app-tab::after {
+  content: '';
+  bottom: 62px;
+  transform: translateX(-50%) translateY(4px);
+  border: 5px solid transparent;
+  border-top-color: #e8b96a;
+}
+.app-tab.show-tip::before,
+.app-tab.show-tip::after { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+.app-tab.show-tip::after { transform: translateX(-50%) translateY(0); }
+@media (hover: hover) {
+  .app-tab:hover::before,
+  .app-tab:hover::after { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  .app-tab:hover::after { transform: translateX(-50%) translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-tab, .app-tab::before, .app-tab::after, .app-tab-dot { transition: none; }
+}
 
 /* Passaggio tra pagine in modalità app */
 html.is-app .page-enter { animation: pageEnter 0.15s ease-out; }
