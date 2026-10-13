@@ -513,9 +513,7 @@ html.is-app .scroll-top-btn { display: none !important; }
     grid-template-columns: repeat(3, 1fr);
     align-items: end;
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
-    background: rgba(10, 10, 10, 0.92);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: #0a0a0a;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
   html.is-app body:has(.app-tabbar) { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
@@ -551,10 +549,10 @@ html.is-app .scroll-top-btn { display: none !important; }
 .app-tab--main { color: var(--color-gold-light); }
 
 /* Passaggio tra pagine in modalità app */
-html.is-app .page-enter { animation: pageEnter 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+html.is-app .page-enter { animation: pageEnter 0.15s ease-out; }
 @keyframes pageEnter {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0.4; }
+  to { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { html.is-app .page-enter { animation: none; } }
 /* In app niente selezione accidentale del testo sui pulsanti e niente rimbalzo sopra la pagina */
@@ -564,3 +562,22 @@ html.is-app button, html.is-app .app-tab { user-select: none; -webkit-user-selec
 /* Elementi visibili solo nell'app installata */
 .app-only { display: none !important; }
 html.is-app .app-only { display: flex !important; }
+
+/* Protezione immagini senza JavaScript pesante */
+html.img-protect img,
+html.img-protect video {
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* App installata: niente sfocature dietro gli elementi fissi (sui telefoni rendono lo scorrimento pesante) */
+html.is-app { touch-action: manipulation; }
+html.is-app header,
+html.is-app header *,
+html.is-app .open-badge {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+html.is-app header.sticky { background-color: #000 !important; transition: none !important; }

@@ -10,7 +10,14 @@ export function ScrollToTop() {
   const pathname = usePathname();
   const isCustomerArea = pathname?.startsWith('/area-cliente') ?? false;
 
+  const [inApp, setInApp] = useState(false);
+
   useEffect(() => {
+    // Nell'app installata il tasto non serve: niente ascolto dello scorrimento
+    if (document.documentElement.classList.contains('is-app')) {
+      setInApp(true);
+      return;
+    }
     const toggleVisibility = () => {
       if (window.scrollY > 300) {
         setIsVisible(true);
@@ -19,9 +26,11 @@ export function ScrollToTop() {
       }
     };
 
-    window.addEventListener('scroll', toggleVisibility);
+    window.addEventListener('scroll', toggleVisibility, { passive: true });
     return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
+
+  if (inApp) return null;
 
   const scrollToTop = () => {
     window.scrollTo({

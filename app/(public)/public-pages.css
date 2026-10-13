@@ -272,6 +272,7 @@
 }
 
 .public-page .contatti-instagram-embed {
+  min-height: 480px;
   border-radius: 4px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
