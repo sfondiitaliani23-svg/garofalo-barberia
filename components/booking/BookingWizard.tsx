@@ -109,7 +109,7 @@ export function BookingWizard({
   }, [barbers]);
 
   const [barberId, setBarberId] = useState<string | null>(() =>
-    initialBarberId && barbers.some((b) => b.id === initialBarberId) ? initialBarberId : defaultBarber?.id ?? null
+    initialBarberId && barbers.some((b) => b.id === initialBarberId) ? initialBarberId : null
   );
 
   // Se cambiano i servizi e il barbiere selezionato non è più valido (es. selezionato taglio con altro operatore)
@@ -124,6 +124,7 @@ export function BookingWizard({
   const [slots, setSlots] = useState<string[]>([]);
   const [slotsDetail, setSlotsDetail] = useState<SlotDetail[]>([]);
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
+  const [alternatives, setAlternatives] = useState<{ barberId: string; barberName: string; slots: string[] }[]>([]);
   const [slotsUnavailable, setSlotsUnavailable] = useState(false);
   const [dates, setDates] = useState<string[]>([]);
   const [name, setName] = useState(defaultName);
@@ -180,8 +181,10 @@ export function BookingWizard({
       const result = await getAvailableDates(totalDuration, barberId, undefined, false, hasCutService);
       setDates(result);
       setDate((current) => {
+        // Se il cliente aveva già scelto un giorno, lo teniamo anche quando il nuovo
+        // barbiere è al completo: così vede l'avviso e i colleghi liberi quel giorno.
+        if (current) return current;
         if (result.length === 0) return null;
-        if (current && result.includes(current)) return current;
         return result[0];
       });
     } catch (e) {
@@ -215,6 +218,7 @@ export function BookingWizard({
         setSlots(res?.slots ?? []);
         setSlotsDetail(res?.slotsDetail ?? []);
         setFallbackNotice(res?.fallbackNotice ?? null);
+        setAlternatives(res?.alternatives ?? []);
         setSlotsUnavailable(Boolean(res?.unavailable));
       }
     } catch (err) {
@@ -775,8 +779,35 @@ export function BookingWizard({
                   <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} />
                 ) : slots.length === 0 ? (
                   <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-center">
-                    <p className="text-sm text-white/70">Nessun orario disponibile per questo giorno.</p>
-                    <p className="text-xs text-white/40 mt-1">Seleziona un&apos;altra data dal calendario in alto.</p>
+                    <p className="text-sm text-white/70">
+                      {barberId
+                        ? `${barbers.find((b) => b.id === barberId)?.name.split(' ')[0] ?? 'Il barbiere scelto'} è al completo in questo giorno.`
+                        : 'Nessun orario disponibile per questo giorno.'}
+                    </p>
+                    {alternatives.length > 0 ? (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs text-white/50">Liberi lo stesso giorno:</p>
+                        {alternatives.map((a) => (
+                          <button
+                            key={a.barberId}
+                            type="button"
+                            onClick={() => {
+                              setBarberId(a.barberId);
+                              setTime(null);
+                            }}
+                            className="flex w-full items-center justify-between gap-3 rounded-lg border border-gold/40 bg-gold/5 px-3 py-2.5 text-left text-sm transition hover:bg-gold/10"
+                          >
+                            <span className="font-semibold text-white">{a.barberName}</span>
+                            <span className="text-xs text-gold-light">
+                              {a.slots.slice(0, 4).join(' · ')}
+                              {a.slots.length > 4 ? ' …' : ''} → Scegli
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-white/40 mt-1">Seleziona un&apos;altra data dal calendario in alto.</p>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-4">

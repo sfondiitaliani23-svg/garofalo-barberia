@@ -33,6 +33,8 @@ export type SlotDetail = {
 export type AvailableSlotsResult = {
   slots: string[];
   slotsDetail?: SlotDetail[];
+  /** Colleghi liberi quel giorno, quando il barbiere scelto è al completo. */
+  alternatives?: { barberId: string; barberName: string; slots: string[] }[];
   primaryBarberAvailable?: boolean;
   primaryBarberName?: string;
   primaryBarberId?: string;
@@ -417,21 +419,30 @@ export async function getAvailableSlots(
       slotsByBarber.set(b.id, computeSlotsForBarber(b.id, dateStr, durationMinutes, context, forAdmin));
     }
 
-    // Se l'utente ha selezionato un barbiere specifico diverso dal primario
-    if (barberId && barberId !== primaryBarberId) {
+    // Barbiere scelto dal cliente: solo i suoi orari (mai quelli dei colleghi).
+    // Se è al completo, proponiamo i colleghi liberi a parte.
+    if (barberId) {
       const explicitBarber = context.barberDetails.get(barberId);
       const bSlots = slotsByBarber.get(barberId) ?? [];
       const slotsDetail: SlotDetail[] = bSlots.map((t) => ({
         time: t,
         barberId,
         barberName: explicitBarber?.name ?? 'Barbiere',
-        isPrimary: false,
+        isPrimary: barberId === primaryBarberId,
         isFallback: false,
       }));
+
+      const alternatives =
+        bSlots.length === 0
+          ? allBarbers
+              .filter((b) => b.id !== barberId && (slotsByBarber.get(b.id)?.length ?? 0) > 0)
+              .map((b) => ({ barberId: b.id, barberName: b.name, slots: slotsByBarber.get(b.id) ?? [] }))
+          : [];
 
       return {
         slots: bSlots,
         slotsDetail,
+        alternatives,
         primaryBarberAvailable: (slotsByBarber.get(primaryBarberId)?.length ?? 0) > 0,
         primaryBarberName,
         primaryBarberId,
