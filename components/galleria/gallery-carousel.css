@@ -489,3 +489,5 @@
     animation: none;
   }
 }
+
+.gc-lightbox-zoom { position: absolute; inset: 0; }

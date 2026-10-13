@@ -1,5 +1,6 @@
 'use client';
 
+import { PinchZoom } from '@/components/ui/PinchZoom';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -275,7 +276,9 @@ export function GalleryCarousel() {
           >
             <div className="gc-lightbox-bg" style={{ backgroundImage: `url(${bgOf(current.src)})` }} aria-hidden />
             <div className="gc-lightbox-frame" onClick={(e) => e.stopPropagation()}>
-              <Image key={current.src} src={current.src} alt={current.alt} fill sizes="92vw" className="object-contain" priority />
+              <PinchZoom className="gc-lightbox-zoom" resetKey={current.src}>
+                <Image key={current.src} src={current.src} alt={current.alt} fill sizes="92vw" className="object-contain" priority />
+              </PinchZoom>
             </div>
             <button type="button" className="gc-lb-btn gc-lb-close" onClick={() => setLightbox(false)} aria-label="Chiudi">
               <X size={18} />

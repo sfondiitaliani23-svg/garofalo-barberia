@@ -573,7 +573,8 @@ html.img-protect video {
 }
 
 /* App installata: niente sfocature dietro gli elementi fissi (sui telefoni rendono lo scorrimento pesante) */
-html.is-app { touch-action: manipulation; }
+/* App: la pagina scorre ma non si ingrandisce con due dita; mappa (iframe) e foto gestiscono il loro zoom */
+html.is-app, html.is-app body { touch-action: pan-x pan-y; }
 html.is-app header,
 html.is-app header *,
 html.is-app .open-badge {

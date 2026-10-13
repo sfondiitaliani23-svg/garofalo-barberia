@@ -69,6 +69,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html:
               "try{if(localStorage.getItem('garofalo_cookie_consent'))document.documentElement.classList.add('has-consent')}catch(e){}" +
                 "try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone===true)document.documentElement.classList.add('is-app')}catch(e){}" +
+                // Nell'app installata niente zoom della pagina con due dita (solo foto e mappa si ingrandiscono)
+                "try{if(document.documentElement.classList.contains('is-app')){var vc='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';var lv=function(){var ms=document.querySelectorAll('meta[name=viewport]');if(!ms.length){var m=document.createElement('meta');m.name='viewport';document.head.appendChild(m);ms=[m]}for(var i=0;i<ms.length;i++)ms[i].content=vc};lv();document.addEventListener('DOMContentLoaded',lv);window.addEventListener('load',lv);try{new MutationObserver(function(){var ms=document.querySelectorAll('meta[name=viewport]');for(var i=0;i<ms.length;i++)if(ms[i].content!==vc){lv();break}}).observe(document.head,{subtree:true,childList:true,attributes:true,attributeFilter:['content']})}catch(e){}document.addEventListener('gesturestart',function(e){if(!(e.target&&e.target.closest&&e.target.closest('[data-zoom]')))e.preventDefault()},{passive:false})}}catch(e){}" +
                 "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__gbBIP=e;window.dispatchEvent(new Event('gb-bip'))});",
           }}
         />

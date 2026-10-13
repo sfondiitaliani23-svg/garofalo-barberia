@@ -1,5 +1,6 @@
 'use client';
 
+import { PinchZoom } from '@/components/ui/PinchZoom';
 import { useState } from 'react';
 import { X, Calendar, MessageSquare, Maximize2, Download } from 'lucide-react';
 
@@ -127,11 +128,13 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
           >
             {/* Image */}
             <div className="relative overflow-hidden bg-black flex items-center justify-center max-h-[70vh]">
-              <img
-                src={activePhoto.photo_url}
-                alt={activePhoto.caption || 'Ingrandimento foto taglio'}
-                className="max-h-[70vh] w-auto max-w-full object-contain"
-              />
+              <PinchZoom resetKey={activePhoto.photo_url} className="flex max-h-[70vh] items-center justify-center">
+                <img
+                  src={activePhoto.photo_url}
+                  alt={activePhoto.caption || 'Ingrandimento foto taglio'}
+                  className="max-h-[70vh] w-auto max-w-full object-contain"
+                />
+              </PinchZoom>
             </div>
 
             {/* Metadata Footer */}
