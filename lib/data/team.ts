@@ -17,8 +17,8 @@ export const TEAM_EXTRA: Record<string, { intro?: string; facts?: string[]; quot
   },
   'vittorio-morlino': {
     intro:
-      'Vittorio fa il barbiere da 2 anni ed è cresciuto nel salone, accanto a Luigi. Giovane, curioso e sempre aggiornato sugli stili del momento: ascolta cosa vuoi e ti consiglia il look che ti rappresenta.',
-    facts: ['In barberia da 2 anni', 'Stili di tendenza', 'Cresciuto accanto a Luigi'],
+      'Vittorio fa il barbiere da 2 anni e lavora fianco a fianco con Luigi. Giovane, curioso e sempre aggiornato sugli stili del momento: ascolta cosa vuoi e ti consiglia il look che ti rappresenta.',
+    facts: ['In barberia da 2 anni', 'Stili di tendenza', 'In squadra con Luigi'],
     quote: 'Prima ascolto, poi taglio: il look giusto è quello in cui ti riconosci.',
   },
 };
