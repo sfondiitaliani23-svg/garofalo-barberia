@@ -1,18 +1,93 @@
-HTML / ['1.20s/1.22s 97kB cache=STALE', '0.37s/0.43s 97kB cache=HIT', '1.25s/1.29s 97kB cache=HIT']
-HTML /prenota ['0.33s/0.37s 56kB cache=MISS', '0.24s/0.27s 56kB cache=MISS', '0.42s/0.44s 56kB cache=MISS']
-HTML /contatti ['0.43s/0.46s 69kB cache=STALE', '0.50s/0.54s 69kB cache=HIT', '0.48s/0.51s 69kB cache=HIT']
-HTML /servizi ['0.42s/0.44s 60kB cache=STALE', '0.36s/0.38s 60kB cache=HIT', '0.41s/0.44s 60kB cache=HIT']
-HTML /area-cliente/dashboard ['0.31s/0.33s 51kB cache=MISS', '0.27s/0.30s 51kB cache=MISS', '0.50s/0.52s 51kB cache=MISS']
-HTML /login ['0.17s/0.20s 51kB cache=MISS', '0.16s/0.18s 51kB cache=MISS', '0.17s/0.19s 51kB cache=MISS']
-RSC  /prenota ['0.19s/0.20s 24kB cache=MISS', '0.14s/0.15s 24kB cache=MISS', '0.17s/0.18s 24kB cache=MISS']
-RSC  /contatti ['0.41s/0.42s 30kB cache=HIT', '0.16s/0.17s 30kB cache=HIT', '0.51s/0.53s 30kB cache=HIT']
-RSC  / ['0.16s/0.19s 40kB cache=HIT', '0.12s/0.15s 40kB cache=HIT', '0.36s/0.37s 40kB cache=HIT']
-home load 1.6s
-home long tasks 6 649 [224, 137, 54, 126, 54, 54]
-tab Contatti  url 0.30s  long tasks 121
-tab Prenota   url 1.11s  long tasks 368
-tab Home      url 0.05s  long tasks 102
-tab Prenota   url 0.27s  long tasks 0
-tab Contatti  url 0.18s  long tasks 0
-richieste lente: ['1.14s /_next/static/chunks/2b23984f852f631b.js', '1.14s /_next/static/chunks/d96012bcfc98706a.js', '1.14s /_next/static/chunks/turbopack-752d34bb559adb0a.js', '1.14s /_next/static/chunks/7c7171d2c11871af.js', '1.14s /_next/static/chunks/64396b544cbf95c0.js', '1.14s /_next/static/chunks/0455297d89e6cc67.js', '1.14s /_next/static/chunks/aaf105c52118202f.js', '1.15s /_next/static/chunks/c03cf2d800022200.js', '1.15s /_next/static/chunks/d7dabadf1e8a079a.js', '1.15s /_next/static/chunks/4664d1433a5aa645.js', '1.15s /_next/static/chunks/2532f69a4166d704.js', '1.22s /_next/static/chunks/f3c0d688d48db501.js', '1.22s /_next/static/chunks/fa78d6d690d06bd9.js', '1.22s /_next/static/chunks/94b3a591ea22b5c3.js', '1.22s /_next/static/chunks/b60b6794ae9219bc.js', '1.27s /_next/static/chunks/7bb15ebb87a545d5.js', '0.83s /', '0.96s /api/analytics/heartbeat', '1.01s /contatti', '0.89s /prenota', '1.49s /api/analytics/heartbeat', '2.08s /', '1.02s /prenota', '1.22s /contatti', '1.22s /api/analytics/heartbeat']
-richieste in 30s da fermo: {'https://static.cdninstagram.com/rsrc.php/v4/yn/r/yFHdK3kd2jy.js': 1, 'https://www.instagram.com/ajax/bootloader-endpoint/': 1}
+Vercel CLI 64.0.2 (Node.js 20.20.2)
+> NOTE: The Vercel CLI now collects telemetry regarding usage of the CLI.
+> This information is used to shape the CLI roadmap and prioritize features.
+> You can learn more, including how to opt-out if you'd not like to participate in this program, by visiting the following URL:
+> https://vercel.com/docs/cli/about-telemetry
+Retrieving project…
+Fetching deployments in eliseeshop
+> Deployments for eliseeshop/garofalo-barberia [120ms]
+
+  Age     Project                          Deployment                                                    Status      Environment     Duration     Username                  
+  51m     eliseeshop/garofalo-barberia     https://garofalo-barberia-4lh0jg4dr-eliseeshop.vercel.app     ● Ready     Production      3m           sfondiitaliani23-3899     
+  1h      eliseeshop/garofalo-barberia     https://garofalo-barberia-jmjnx67c4-eliseeshop.vercel.app     ● Ready     Production      2m           sfondiitaliani23-3899     
+ULTIMO: https://garofalo-barberia-4lh0jg4dr-eliseeshop.vercel.app
+2026-10-13T22:36:35.387Z  ├ ƒ /api/cron/monitor                              0 B            0 B
+2026-10-13T22:36:35.388Z  ├ ƒ /api/evt                                       0 B            0 B
+2026-10-13T22:36:35.388Z  ├ ƒ /api/health                                    0 B            0 B
+2026-10-13T22:36:35.388Z  ├ ƒ /api/open-now                                  0 B            0 B
+2026-10-13T22:36:35.388Z  ├ ƒ /api/presence                                  0 B            0 B
+2026-10-13T22:36:35.389Z  ├ ƒ /api/promemoria/stop                           0 B            0 B
+2026-10-13T22:36:35.389Z  ├ ƒ /api/push/key                                  0 B            0 B
+2026-10-13T22:36:35.389Z  ├ ƒ /api/push/subscribe                            0 B            0 B
+2026-10-13T22:36:35.389Z  ├ ƒ /api/push/test                                 0 B            0 B
+2026-10-13T22:36:35.389Z  ├ ○ /apple-icon.png                                0 B            0 B
+2026-10-13T22:36:35.389Z  ├ ƒ /area-cliente/appuntamenti                     0 B         158 kB
+2026-10-13T22:36:35.390Z  ├ ƒ /area-cliente/appuntamenti/[id]/modifica    5.1 kB         169 kB
+2026-10-13T22:36:35.390Z  ├ ƒ /area-cliente/assistenza                   3.86 kB         159 kB
+2026-10-13T22:36:35.390Z  ├ ƒ /area-cliente/dashboard                    2.59 kB         158 kB
+2026-10-13T22:36:35.390Z  ├ ƒ /area-cliente/galleria                     3.01 kB         158 kB
+2026-10-13T22:36:35.390Z  ├ ƒ /area-cliente/profilo                      8.82 kB         164 kB
+2026-10-13T22:36:35.390Z  ├ ƒ /area-cliente/storico                          0 B         158 kB
+2026-10-13T22:36:35.390Z  ├ ƒ /auth/callback                                 0 B            0 B
+2026-10-13T22:36:35.391Z  ├ ○ /barba-foggia                                  0 B         221 kB          1m      1y
+2026-10-13T22:36:35.391Z  ├ ○ /chi-siamo                                 1.17 kB         223 kB          1m      1y
+2026-10-13T22:36:35.391Z  ├ ○ /contatti                                  7.86 kB         229 kB          1m      1y
+2026-10-13T22:36:35.391Z  ├ ○ /faq                                           0 B         221 kB          1m      1y
+2026-10-13T22:36:35.391Z  ├ ○ /feedback                                  1.98 kB         223 kB          1m      1y
+2026-10-13T22:36:35.392Z  ├ ○ /galleria                                  5.36 kB         227 kB          1m      1y
+2026-10-13T22:36:35.392Z  ├ ○ /icon.png                                      0 B            0 B
+2026-10-13T22:36:35.392Z  ├ ○ /journal                                       0 B         221 kB          1m      1y
+2026-10-13T22:36:35.392Z  ├ ● /journal/[slug]                                0 B         221 kB          1m      1y
+2026-10-13T22:36:35.392Z  ├   ├ /journal/ogni-quanto-tagliare-i-capelli                                  1m      1y
+2026-10-13T22:36:35.393Z  ├   ├ /journal/primo-taglio-bambino                                            1m      1y
+2026-10-13T22:36:35.393Z  ├   ├ /journal/barba-lama-forbici-panno-caldo                                  1m      1y
+2026-10-13T22:36:35.393Z  ├   └ [+2 more paths]
+2026-10-13T22:36:35.393Z  ├ ○ /lavora-con-noi                            1.66 kB         223 kB          1m      1y
+2026-10-13T22:36:35.393Z  ├ ○ /link                                      6.01 kB         152 kB
+2026-10-13T22:36:35.393Z  ├ ○ /llms.txt                                      0 B            0 B          5m      1y
+2026-10-13T22:36:35.394Z  ├ ƒ /login                                      9.7 kB         231 kB
+2026-10-13T22:36:35.394Z  ├ ƒ /login/qr                                  10.8 kB         232 kB
+2026-10-13T22:36:35.394Z  ├ ○ /manifest.webmanifest                          0 B            0 B
+2026-10-13T22:36:35.394Z  ├ ○ /offerte                                       0 B         221 kB          1m      1y
+2026-10-13T22:36:35.395Z  ├ ƒ /prenota                                   15.7 kB         246 kB
+2026-10-13T22:36:35.395Z  ├ ○ /prima-visita                                  0 B         221 kB          1m      1y
+2026-10-13T22:36:35.395Z  ├ ○ /privacy                                       0 B         221 kB          1m      1y
+2026-10-13T22:36:35.395Z  ├ ○ /prodotti                                      0 B         221 kB          1m      1y
+2026-10-13T22:36:35.395Z  ├ ƒ /qr/[id]                                       0 B            0 B
+2026-10-13T22:36:35.396Z  ├ ○ /recensioni                                2.71 kB         224 kB          1m      1y
+2026-10-13T22:36:35.396Z  ├ ƒ /recensioni/nuova                          2.75 kB         224 kB
+2026-10-13T22:36:35.396Z  ├ ○ /register                                  3.75 kB         225 kB          1m      1y
+2026-10-13T22:36:35.396Z  ├ ƒ /reimposta-password                        4.38 kB         226 kB
+2026-10-13T22:36:35.399Z  ├ ○ /robots.txt                                    0 B            0 B
+2026-10-13T22:36:35.399Z  ├ ○ /servizi                                   4.03 kB         225 kB          1m      1y
+2026-10-13T22:36:35.399Z  ├ ○ /sitemap.xml                                   0 B            0 B          5m      1y
+2026-10-13T22:36:35.399Z  ├ ○ /taglio-bambino-foggia                         0 B         221 kB          1m      1y
+2026-10-13T22:36:35.399Z  ├ ○ /taglio-uomo-foggia                            0 B         221 kB          1m      1y
+2026-10-13T22:36:35.399Z  ├ ○ /team                                          0 B         221 kB          1m      1y
+2026-10-13T22:36:35.399Z  └ ƒ /team/[slug]                                   0 B         221 kB
+2026-10-13T22:36:35.399Z  + First Load JS shared by all                   158 kB
+2026-10-13T22:36:35.399Z  ├ chunks/4be1fcce7fcf8e64.js                 17.3 kB
+2026-10-13T22:36:35.399Z  ├ chunks/7bb15ebb87a545d5.js                 12.6 kB
+2026-10-13T22:36:35.399Z  ├ chunks/d7dabadf1e8a079a.js                 17.7 kB
+2026-10-13T22:36:35.399Z  ├ chunks/fa78d6d690d06bd9.js                 59.2 kB
+2026-10-13T22:36:35.399Z  ├ chunks/792925c7bea7369b.css                19.1 kB
+2026-10-13T22:36:35.399Z  └ other shared chunks (total)                31.5 kB
+2026-10-13T22:36:35.400Z  
+2026-10-13T22:36:35.400Z  
+2026-10-13T22:36:35.400Z  ƒ Middleware                                   93.1 kB
+2026-10-13T22:36:35.400Z  
+2026-10-13T22:36:35.400Z  ○  (Static)   prerendered as static content
+2026-10-13T22:36:35.401Z  ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+2026-10-13T22:36:35.401Z  ƒ  (Dynamic)  server-rendered on demand
+2026-10-13T22:36:35.401Z  
+2026-10-13T22:36:36.025Z  Traced Next.js server files in: 63.617ms
+2026-10-13T22:36:38.281Z  Created all serverless functions in: 2.254s
+2026-10-13T22:36:38.433Z  Collected static files (public/, static/, .next/static): 28.565ms
+2026-10-13T22:36:38.661Z  Build Completed in /vercel/output [3m]
+2026-10-13T22:36:38.729Z  Deploying outputs...
+2026-10-13T22:36:58.174Z  Deployment completed
+2026-10-13T22:36:58.179Z  Creating build cache...
+2026-10-13T22:37:21.790Z  Created build cache: 24s
+2026-10-13T22:37:21.791Z  Uploading build cache [174.63 MB]
+2026-10-13T22:37:24.273Z  Build cache uploaded: 2.482s
+status	● Ready
