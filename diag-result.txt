@@ -1,3 +1,12 @@
-nessuna preferenza (default) | giorno: MER 14 ott | etichette: {'Francesco': 15, 'Vittorio': 1, 'Luigi': 1} | errori: []
-Luigi | giorno: MER 14 ott | etichette: {'Luigi': 1} | errori: []
-Vittorio | giorno: MER 14 ott | etichette: {'Vittorio': 13} | errori: []
+ok: True | candidati oggi: 11 | esclusi: {'future': 15, 'optout': 0, 'sent': 0, 'notYet': 43, 'tooOld': 8}
+  - 31 giorni | Vittorio Morlino | Barba rasata / lama
+  - 49 giorni | Luigi Garofalo | Taglio baby
+  - 25 giorni | Francesco Costantino | Barba rasata / lama
+  - 45 giorni | Luigi Garofalo | Taglio e shampoo
+  - 45 giorni | Luigi Garofalo | Taglio e shampoo
+  - 41 giorni | Luigi Garofalo | Taglio e shampoo
+  - 41 giorni | Luigi Garofalo | Taglio e shampoo
+  - 38 giorni | Luigi Garofalo | Taglio e shampoo
+  - 38 giorni | Luigi Garofalo | Taglio e shampoo
+  - 35 giorni | Luigi Garofalo | Taglio e shampoo
+stop link non valido -> 200 True
