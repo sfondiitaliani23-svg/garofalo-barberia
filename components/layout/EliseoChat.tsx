@@ -312,6 +312,7 @@ export function EliseoChat() {
           />
           <button
             type="submit"
+            aria-label="Invia messaggio"
             disabled={!input.trim() || loading}
             className="w-9 h-9 rounded-full bg-[#cd9a4f] hover:bg-[#e5b565] disabled:bg-white/8 disabled:cursor-not-allowed text-black flex items-center justify-center transition-all shrink-0 shadow-lg"
           >

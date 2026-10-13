@@ -45,7 +45,7 @@ export function CookieConsent() {
               consenso, cookie analitici e di preferenza per migliorare l&apos;esperienza e
               comprendere come viene utilizzato il sito. Puoi accettare tutti i cookie, rifiutare
               quelli opzionali o personalizzare le tue scelte.{' '}
-              <Link href="/privacy" className="text-gold underline-offset-2 hover:underline">
+              <Link href="/privacy" className="text-gold underline underline-offset-2">
                 Leggi l&apos;informativa privacy
               </Link>
               .

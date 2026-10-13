@@ -19,7 +19,7 @@ export interface CarouselStats {
 }
 
 const AUTOPLAY_MS = 7000;
-const SIDE_IMAGE = '/assets/gallery/1000313544.jpg';
+const SIDE_IMAGE = '/assets/gallery/web/1000313544.webp';
 
 /** Prima frase come titolo in evidenza, il resto come testo. */
 function splitReview(text: string): { headline: string; body: string } {

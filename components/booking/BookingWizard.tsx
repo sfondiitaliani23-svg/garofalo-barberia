@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { createAppointment } from '@/lib/actions/bookings';
 import {
   getAvailableDates,
@@ -602,7 +602,7 @@ export function BookingWizard({
 
       <Card className="w-full min-w-0 overflow-hidden">
         <CardHeader className="px-4 sm:px-6">
-          <CardTitle>Prenotazione online</CardTitle>
+          <h2 className="font-display text-xl uppercase tracking-wide">Prenotazione online</h2>
           <p className="text-sm text-white/50">Scegli servizio, barbiere e orario — conferma automatica</p>
         </CardHeader>
         <CardContent className="min-w-0 space-y-6 overflow-x-hidden px-4 sm:px-6">

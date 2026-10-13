@@ -8,6 +8,10 @@ import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Expand, 
 import { GALLERY_FILTERS, GALLERY_IMAGES } from '@/lib/data/gallery';
 import './gallery-carousel.css';
 
+
+/** Sfondo sfocato: versione minuscola in WebP (il blur la rende identica, pesa 100 volte meno). */
+const bgOf = (src: string) => src.replace(/^\/assets\/gallery\/([^/]+)\.(jpe?g|png)$/i, '/assets/gallery/bg/$1.webp');
+
 const AUTOPLAY_MS = 6000;
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -160,7 +164,7 @@ export function GalleryCarousel() {
       >
         <div className="gc-slide">
           {/* Sfondo sfocato della stessa foto */}
-          <div key={`bg-${current.src}`} className="gc-bg" style={{ backgroundImage: `url(${current.src})` }} aria-hidden />
+          <div key={`bg-${current.src}`} className="gc-bg" style={{ backgroundImage: `url(${bgOf(current.src)})` }} aria-hidden />
 
           {/* Foto principale */}
           <button
@@ -269,7 +273,7 @@ export function GalleryCarousel() {
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
           >
-            <div className="gc-lightbox-bg" style={{ backgroundImage: `url(${current.src})` }} aria-hidden />
+            <div className="gc-lightbox-bg" style={{ backgroundImage: `url(${bgOf(current.src)})` }} aria-hidden />
             <div className="gc-lightbox-frame" onClick={(e) => e.stopPropagation()}>
               <Image key={current.src} src={current.src} alt={current.alt} fill sizes="92vw" className="object-contain" priority />
             </div>
