@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ContentHero } from '@/components/content/ContentHero';
-import { JOURNAL, formatJournalDate } from '@/lib/data/journal';
+import { formatJournalDate } from '@/lib/data/journal';
+import { getAllArticles } from '@/lib/data/journal-store';
 import '@/components/content/content.css';
 
 export const metadata = {
@@ -10,8 +11,10 @@ export const metadata = {
   alternates: { canonical: '/journal' },
 };
 
-export default function JournalPage() {
-  const articles = [...JOURNAL].sort((a, b) => b.date.localeCompare(a.date));
+export const revalidate = 300;
+
+export default async function JournalPage() {
+  const articles = await getAllArticles();
   return (
     <div className="public-page">
       <ContentHero eyebrow="Journal" title="Consigli dalla poltrona" sub="Brevi letture su capelli, barba e cura. Scritte da chi taglia ogni giorno." />

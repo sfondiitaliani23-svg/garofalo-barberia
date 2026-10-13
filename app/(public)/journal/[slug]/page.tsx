@@ -3,12 +3,14 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { JOURNAL, getArticle, formatJournalDate } from '@/lib/data/journal';
+import { JOURNAL, formatJournalDate } from '@/lib/data/journal';
+import { getAllArticles, getArticleBySlug } from '@/lib/data/journal-store';
 import { SITE_URL, breadcrumbJsonLd } from '@/lib/seo';
 import { SITE_CONFIG } from '@/lib/site-config';
 import '@/components/content/content.css';
 
-export const dynamicParams = false;
+export const dynamicParams = true;
+export const revalidate = 300;
 
 export function generateStaticParams() {
   return JOURNAL.map((a) => ({ slug: a.slug }));
@@ -16,21 +18,21 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const a = getArticle(slug);
+  const a = await getArticleBySlug(slug);
   if (!a) return {};
   return {
     title: a.title,
     description: a.description,
     alternates: { canonical: `/journal/${a.slug}` },
-    openGraph: { type: 'article', title: a.title, description: a.description, images: [{ url: a.image }], publishedTime: a.date },
+    openGraph: { type: 'article', title: a.title, description: a.description, images: a.image.startsWith('data:') ? undefined : [{ url: a.image }], publishedTime: a.date },
   };
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const a = getArticle(slug);
+  const a = await getArticleBySlug(slug);
   if (!a) notFound();
-  const others = JOURNAL.filter((x) => x.slug !== a.slug).slice(0, 3);
+  const others = (await getAllArticles()).filter((x) => x.slug !== a.slug).slice(0, 3);
 
   return (
     <div className="public-page">
@@ -40,7 +42,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           '@type': 'Article',
           headline: a.title,
           description: a.description,
-          image: `${SITE_URL}${a.image}`,
+          image: a.image.startsWith('data:') ? `${SITE_URL}/pwa/icon-512.png` : `${SITE_URL}${a.image}`,
           datePublished: a.date,
           dateModified: a.date,
           inLanguage: 'it-IT',

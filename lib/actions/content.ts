@@ -36,7 +36,8 @@ export async function getActiveSiteBanners(): Promise<SiteContent[]> {
   try {
     const data = await getCachedSiteContent();
     const now = Date.now();
-    return data.filter((item) => isContentVisible(item, now));
+    // Solo i veri avvisi: le righe tecniche (journal:, inbox:, comeback:, optout:) non sono banner.
+    return data.filter((item) => !/^(journal|inbox|comeback|optout):/.test(item.key) && isContentVisible(item, now));
   } catch {
     return [];
   }

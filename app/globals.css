@@ -474,3 +474,16 @@ h2,
 @media (prefers-reduced-motion: reduce) {
   .open-badge--open .open-badge__dot { animation: none; }
 }
+
+/* Campi scuri dell'admin (editor Journal) */
+.input-dark {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #0a0a0a;
+  color: #fff;
+  font-size: 0.95rem;
+}
+.input-dark:focus { outline: none; border-color: var(--color-gold); }

@@ -2,13 +2,14 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { SITE_URL } from '@/lib/seo';
 import { getServices } from '@/lib/actions/bookings';
 import { LOCAL_PAGES } from '@/lib/data/local-pages';
-import { JOURNAL } from '@/lib/data/journal';
+import { getAllArticles } from '@/lib/data/journal-store';
 
 export const revalidate = 3600;
 
 /** Scheda sintetica per gli assistenti AI (formato llms.txt). */
 export async function GET() {
   const services = await getServices().catch(() => []);
+  const articles = await getAllArticles().catch(() => []);
   const euro = (c: number) => `${(c / 100).toFixed(2).replace('.', ',')} €`;
 
   const text = [
@@ -47,7 +48,7 @@ export async function GET() {
     `- [Lavora con noi](${SITE_URL}/lavora-con-noi)`,
     '',
     '## Journal',
-    ...JOURNAL.map((a) => `- [${a.title}](${SITE_URL}/journal/${a.slug}): ${a.description}`),
+    ...articles.map((a) => `- [${a.title}](${SITE_URL}/journal/${a.slug}): ${a.description}`),
     '',
   ].join('\n');
 

@@ -20,6 +20,7 @@ import {
   LogOut,
   MessageSquareWarning,
   Inbox,
+  BookOpen,
 } from 'lucide-react';
 
 const links = [
@@ -33,6 +34,7 @@ const links = [
   { href: '/admin/analytics', label: 'Analytics', icon: TrendingUp },
   { href: '/admin/staff', label: 'Gestione team', icon: UserCog },
   { href: '/admin/messaggi', label: 'Messaggi e QR', icon: Inbox },
+  { href: '/admin/journal', label: 'Journal', icon: BookOpen },
   { href: '/admin/segnalazioni', label: 'Segnalaci il problema', icon: MessageSquareWarning },
 ];
 
