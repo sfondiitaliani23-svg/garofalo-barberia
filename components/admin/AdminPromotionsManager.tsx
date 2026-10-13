@@ -40,12 +40,12 @@ const PROMO_TABS: { id: PromoTab; label: string }[] = [
 
 /** Foto reali del salone per categoria (come nella pagina Servizi). */
 const CATEGORY_IMAGES: Record<string, string> = {
-  taglio: '/assets/gallery/1000313550.jpg',
-  baby: '/assets/gallery/1000313555.jpg',
-  barba: '/assets/gallery/1000313557.jpg',
-  styling: '/assets/gallery/1000313548.jpg',
+  taglio: '/assets/gallery/web/1000313550.webp',
+  baby: '/assets/gallery/web/1000313555.webp',
+  barba: '/assets/gallery/web/1000313557.webp',
+  styling: '/assets/gallery/web/1000313548.webp',
 };
-const DEFAULT_IMAGE = '/assets/gallery/1000313546.jpg';
+const DEFAULT_IMAGE = '/assets/gallery/web/1000313546.webp';
 
 function promotionStatus(promo: Promotion) {
   if (!promo.is_active) return { label: 'Disattiva', className: 'text-white/40 bg-white/5' };

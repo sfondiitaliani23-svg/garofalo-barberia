@@ -10,7 +10,7 @@ export const metadata = { title: 'Admin Dashboard' };
 // cachare riduce drasticamente il carico sul DB e i tempi di risposta.
 export const revalidate = 60;
 
-const BACKGROUND = '/assets/gallery/1000313544.jpg';
+const BACKGROUND = '/assets/gallery/web/1000313544.webp';
 
 export default async function AdminDashboardPage() {
   const [stats, analytics, upcoming, yesterdayAppointments, profile, presence] = await Promise.all([

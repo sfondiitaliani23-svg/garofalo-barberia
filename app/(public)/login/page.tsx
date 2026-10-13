@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from '@/lib/supabase/config';
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Accedi', robots: { index: false, follow: true } };
 
-const HERO_IMAGE = '/assets/gallery/1000313548.jpg';
+const HERO_IMAGE = '/assets/gallery/web/1000313548.webp';
 
 export default function LoginPage() {
   return (

@@ -29,10 +29,10 @@ const CATEGORY_ICONS: Record<ServiceCategory, typeof Scissors> = {
 
 /** Foto reali del salone per ogni categoria. */
 const CATEGORY_IMAGES: Record<ServiceCategory, string> = {
-  taglio: '/assets/gallery/1000313550.jpg',
-  baby: '/assets/gallery/1000313555.jpg',
-  barba: '/assets/gallery/1000313557.jpg',
-  styling: '/assets/gallery/1000313548.jpg',
+  taglio: '/assets/gallery/web/1000313550.webp',
+  baby: '/assets/gallery/web/1000313555.webp',
+  barba: '/assets/gallery/web/1000313557.webp',
+  styling: '/assets/gallery/web/1000313548.webp',
 };
 
 function minPrice(items: ServiceGroup['items']) {
