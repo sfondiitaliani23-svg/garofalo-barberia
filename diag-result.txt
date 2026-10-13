@@ -1,12 +1,14 @@
-/robots.txt 200 User-Agent: * Allow: / Disallow: /admin Disallow: /area-cliente Disallow: /api/ Disallow: /auth/ Disallow: /login/qr Disallow: /reimposta-password  Host: https:
-/sitemap.xml 200 <?xml version="1.0" encoding="UTF-8"?> <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"> <url> <loc>https://barberiagarofalo.it</loc> <lastmod>2026-1
-/llms.txt 200 # Barberia Garofalo  > Barberia a Foggia per uomo, ragazzo e bimbo. Taglio, barba e acconciatura. Viale Ignazio d'Addedda, 236, 71122 Foggia (FG).  ## Contatti 
-/api/open-now 200 {"open":false,"soon":false,"label":"Chiuso · apre alle 15:30","closedDates":[]}
-/ 200 ['HairSalon'] Chiuso · apre alle 15:30 ok
-/servizi 200 [] Chiuso · apre alle 15:30 ok
-/taglio-uomo-foggia 200 ['HairSalon', 'BreadcrumbList', 'FAQPage'] Chiuso · apre alle 15:30 ok
-/barba-foggia 200 ['HairSalon', 'BreadcrumbList', 'FAQPage'] Chiuso · apre alle 15:30 ok
-/taglio-bambino-foggia 200 ['HairSalon', 'BreadcrumbList', 'FAQPage'] Chiuso · apre alle 15:30 ok
-/contatti 200 [] Chiuso · apre alle 15:30 ok
-guida -> https://barberiagarofalo.it/prenota?service=Taglio%20e%20shampoo selezionati: 1
+/qr/vetrina 307 -> https://barberiagarofalo.it/link?qr=vetrina
+/qr/specchio 307 -> https://barberiagarofalo.it/feedback?qr=specchio
+/qr/cassa 307 -> https://barberiagarofalo.it/prenota?qr=cassa
+/sitemap.xml True True True
+/llms.txt True True True
+/prima-visita 200 /prima-visita ['BreadcrumbList'] ok
+/faq 200 /faq ['FAQPage', 'BreadcrumbList'] ok
+/journal 200 /journal [] ok
+/journal/primo-taglio-bambino 200 /journal/primo-taglio-bambino ['Article', 'BreadcrumbList'] ok
+/lavora-con-noi 200 /lavora-con-noi ['BreadcrumbList'] ok
+/feedback 200 /feedback [] ok
+/link 200 /link [] ok
+/admin/messaggi 200 /admin/login [] ok
 errori: []
