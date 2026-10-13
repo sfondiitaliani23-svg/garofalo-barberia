@@ -2,7 +2,7 @@ import { LoginForm } from '@/components/auth/LoginForm';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Accedi' };
+export const metadata = { title: 'Accedi', robots: { index: false, follow: true } };
 
 const HERO_IMAGE = '/assets/gallery/1000313548.jpg';
 

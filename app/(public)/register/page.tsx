@@ -1,6 +1,6 @@
 import { RegisterForm } from '@/components/auth/RegisterForm';
 
-export const metadata = { title: 'Registrati' };
+export const metadata = { title: 'Registrati', robots: { index: false, follow: true } };
 
 export default function RegisterPage() {
   return (

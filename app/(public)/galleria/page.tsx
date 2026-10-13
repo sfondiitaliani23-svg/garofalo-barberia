@@ -2,7 +2,11 @@ import Link from 'next/link';
 import { GalleryCarousel } from '@/components/galleria/GalleryCarousel';
 import '../public-pages.css';
 
-export const metadata = { title: 'Galleria' };
+export const metadata = {
+  title: 'Galleria tagli e barbe',
+  description: "Foto di tagli, sfumature e barbe realizzati alla Barberia Garofalo di Foggia.",
+  alternates: { canonical: '/galleria' },
+};
 
 export default function GalleriaPage() {
   return (

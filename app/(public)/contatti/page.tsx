@@ -1,3 +1,4 @@
+import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import { ArrowRight, Clock, Mail, Phone } from 'lucide-react';
 import { ContactForm } from '@/components/contatti/ContactForm';
 import { InstagramFeed } from '@/components/contatti/InstagramFeed';
@@ -6,7 +7,11 @@ import { SITE_CONFIG, getWhatsAppLink } from '@/lib/site-config';
 import '../public-pages.css';
 import './contatti.css';
 
-export const metadata = { title: 'Contatti' };
+export const metadata = {
+  title: 'Contatti e orari',
+  description: "Indirizzo, orari, telefono e WhatsApp della Barberia Garofalo, Viale Ignazio d'Addedda 236, Foggia. Mappa e indicazioni.",
+  alternates: { canonical: '/contatti' },
+};
 
 export default function ContattiPage() {
   return (
@@ -67,6 +72,7 @@ export default function ContattiPage() {
           <div className="ct-col">
             <Clock className="ct-icon" size={26} strokeWidth={1.4} aria-hidden />
             <p className="ct-col-title">Orari di apertura</p>
+            <OpenNowBadge className="mb-3" />
             <dl className="ct-hours">
               {SITE_CONFIG.hours.map((h) => (
                 <div key={h.day} className="ct-hours-row">

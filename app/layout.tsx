@@ -3,6 +3,7 @@ import { Montserrat, Rye } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { SITE_URL } from '@/lib/seo';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
 import { ImageProtection } from '@/components/layout/ImageProtection';
 
@@ -21,6 +22,20 @@ const rye = Rye({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_CONFIG.name,
+  keywords: ['barbiere Foggia', 'barberia Foggia', 'taglio uomo Foggia', 'barba Foggia', 'taglio bambino Foggia', 'Barberia Garofalo'],
+  openGraph: {
+    type: 'website',
+    locale: 'it_IT',
+    siteName: SITE_CONFIG.name,
+    url: SITE_URL,
+    title: `${SITE_CONFIG.name} | Barbiere a Foggia`,
+    description: 'Taglio uomo, ragazzo e bimbo, barba con rasoio o panno caldo. Prenota online in pochi secondi.',
+    images: [{ url: '/assets/sostituisci-immagini/homepage/1.jpg', width: 1200, height: 630, alt: SITE_CONFIG.name }],
+  },
+  twitter: { card: 'summary_large_image' },
+  formatDetection: { telephone: false },
   title: {
     default: `${SITE_CONFIG.name} | Foggia`,
     template: `%s | ${SITE_CONFIG.name}`,

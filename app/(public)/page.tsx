@@ -6,6 +6,10 @@ import { HomeClientEffects } from '@/components/home/HomeClientEffects';
 import { PerfumeCardsGrid } from '@/components/home/PerfumeCardsGrid';
 import { NewsletterForm } from '@/components/home/NewsletterForm';
 import { HomeTicker } from '@/components/home/HomeTicker';
+import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { localBusinessJsonLd } from '@/lib/seo';
+import { getServices } from '@/lib/actions/bookings';
 import { PHOTO_STRIP, PRICE_LIST, PERFUMES } from '@/lib/data/homepage';
 import { getApprovedReviews } from '@/lib/actions/reviews';
 import { unstable_cache } from 'next/cache';
@@ -13,6 +17,13 @@ import { createServiceClient } from '@/lib/supabase/server';
 import './home.css';
 
 export const revalidate = 120;
+
+export const metadata = {
+  title: { absolute: 'Barberia Garofalo | Barbiere a Foggia – Taglio uomo, barba e bimbo' },
+  description:
+    "Barberia Garofalo a Foggia: taglio uomo, ragazzo e bimbo, barba con rasoio, forbici o panno caldo. Viale Ignazio d'Addedda 236. Prenota online.",
+  alternates: { canonical: '/' },
+};
 
 const getCachedHomepageProducts = unstable_cache(
   async () => {
@@ -42,9 +53,10 @@ const getCachedHomepageProducts = unstable_cache(
 );
 
 export default async function HomePage() {
-  const [dbReviews, dbProducts] = await Promise.all([
+  const [dbReviews, dbProducts, services] = await Promise.all([
     getApprovedReviews(),
     getCachedHomepageProducts(),
+    getServices(),
   ]);
 
   const perfumesForGrid = dbProducts.length > 0 ? dbProducts.map((p, idx) => {
@@ -69,6 +81,7 @@ export default async function HomePage() {
 
   return (
     <div className="home-page">
+      <JsonLd data={localBusinessJsonLd(services)} />
       <HomeClientEffects />
 
       <section
@@ -90,6 +103,7 @@ export default async function HomePage() {
             />
           </div>
 
+          <OpenNowBadge className="hero-open-badge" />
           <h1 className="hero-heading">
             La migliore esperienza è solo da<br />Barberia Garofalo
           </h1>

@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/site-config';
 
-export const metadata = { title: 'Privacy e Cookie' };
+export const metadata = {
+  title: 'Privacy e Cookie',
+  description: "Informativa privacy e cookie della Barberia Garofalo.",
+  alternates: { canonical: '/privacy' },
+};
 
 export default function PrivacyPage() {
   return (

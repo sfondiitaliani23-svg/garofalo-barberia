@@ -1,3 +1,4 @@
+import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { CookiePreferencesButton } from '@/components/layout/CookiePreferencesButton';
@@ -28,6 +29,14 @@ function EmailIcon() {
   );
 }
 
+function footerServiceHref(service: string) {
+  const s = service.toLowerCase();
+  if (s.includes('baby')) return '/taglio-bambino-foggia';
+  if (s.includes('barba')) return '/barba-foggia';
+  if (s.includes('taglio')) return '/taglio-uomo-foggia';
+  return '/servizi';
+}
+
 export function SiteFooter() {
   return (
     <footer className="site-footer border-t border-white/10 bg-black py-12 text-white/70">
@@ -37,7 +46,7 @@ export function SiteFooter() {
           <ul className="footer-list space-y-2 text-sm">
             {SITE_CONFIG.services.map((service) => (
               <li key={service}>
-                <Link href="/servizi" className="hover:text-gold-light">
+                <Link href={footerServiceHref(service)} className="hover:text-gold-light">
                   {service}
                 </Link>
               </li>
@@ -48,6 +57,7 @@ export function SiteFooter() {
         <div>
           <h3 className="footer-heading mb-4 font-display text-sm uppercase tracking-wider text-white">Contatti</h3>
           <p className="footer-location-name mb-2 text-sm font-semibold text-white/80">Foggia</p>
+          <OpenNowBadge className="mb-3" />
           <ul className="footer-contact-list">
             <li className="footer-contact-item">
               <a href={`tel:${SITE_CONFIG.phone}`} className="footer-contact-link">

@@ -1,0 +1,139 @@
+/* Pagine locali (taglio uomo / barba / bimbo a Foggia) */
+.lp-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+.lp-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: border-color 0.2s, color 0.2s;
+}
+.lp-ghost:hover { border-color: var(--color-gold); color: var(--color-gold-light); }
+.lp-badge { margin-top: 1.25rem; }
+
+.lp-split {
+  display: grid;
+  gap: 2rem;
+  align-items: center;
+}
+@media (min-width: 900px) {
+  .lp-split { grid-template-columns: 420px 1fr; gap: 3.5rem; }
+}
+.lp-photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.lp-points { display: grid; gap: 1.25rem; }
+.lp-point {
+  padding: 1.1rem 1.25rem;
+  border-left: 2px solid var(--color-gold);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0 10px 10px 0;
+}
+.lp-point-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.25rem;
+}
+.lp-point p { color: rgba(255, 255, 255, 0.65); font-size: 0.925rem; line-height: 1.6; }
+
+.lp-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.5vw, 1.9rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fff;
+  margin-bottom: 1.25rem;
+}
+
+.lp-prices { display: grid; gap: 0.5rem; }
+.lp-price-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #0e0e0e;
+}
+.lp-price-name { color: #fff; font-weight: 600; }
+.lp-price-meta { color: rgba(255, 255, 255, 0.45); font-size: 0.78rem; margin-top: 0.1rem; }
+.lp-price-value { color: var(--color-gold-light); font-weight: 700; font-variant-numeric: tabular-nums; }
+.lp-price-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2.25rem;
+  padding: 0 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(205, 154, 79, 0.5);
+  color: var(--color-gold-light);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.lp-price-cta:hover { background: rgba(205, 154, 79, 0.12); }
+@media (max-width: 480px) {
+  .lp-price-row { grid-template-columns: 1fr auto; }
+  .lp-price-cta { grid-column: 1 / -1; justify-content: center; }
+}
+.lp-note { margin-top: 0.9rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.45); }
+.lp-note a, .lp-link { color: var(--color-gold-light); text-decoration: underline; text-underline-offset: 3px; }
+
+.lp-faq { display: grid; gap: 0.5rem; }
+.lp-faq-item {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #0e0e0e;
+}
+.lp-faq-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 1rem 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.lp-faq-item summary::-webkit-details-marker { display: none; }
+.lp-faq-item summary::after { content: '+'; color: var(--color-gold); font-weight: 700; }
+.lp-faq-item[open] summary::after { content: '–'; }
+.lp-faq-item p { padding: 0 1.1rem 1rem; color: rgba(255, 255, 255, 0.65); line-height: 1.6; font-size: 0.925rem; }
+
+.lp-where { display: grid; gap: 2.5rem; }
+@media (min-width: 800px) { .lp-where { grid-template-columns: 1fr 1fr; } }
+.lp-address { display: flex; align-items: flex-start; gap: 0.5rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 1rem; }
+.lp-address svg { color: var(--color-gold); margin-top: 0.2rem; flex: none; }
+.lp-hours { display: grid; gap: 0.35rem; margin-bottom: 1rem; font-size: 0.9rem; }
+.lp-hours div { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); padding-bottom: 0.35rem; }
+.lp-hours dt { color: rgba(255, 255, 255, 0.6); }
+.lp-hours dd { color: #fff; text-align: right; }
+.lp-others { display: grid; gap: 0.5rem; }
+.lp-others a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 600;
+  transition: border-color 0.2s, color 0.2s;
+}
+.lp-others a:hover { border-color: var(--color-gold); color: var(--color-gold-light); }

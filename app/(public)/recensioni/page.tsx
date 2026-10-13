@@ -1,7 +1,11 @@
 import { getApprovedReviews, getReviewStats } from '@/lib/actions/reviews';
 import { ReviewsCarousel } from '@/components/reviews/ReviewsCarousel';
 
-export const metadata = { title: 'Tutte le recensioni · Garofalo Barberia' };
+export const metadata = {
+  title: 'Recensioni dei clienti',
+  description: "Le recensioni dei clienti della Barberia Garofalo a Foggia. Leggi le opinioni o lascia la tua.",
+  alternates: { canonical: '/recensioni' },
+};
 export const revalidate = 60;
 
 export default async function TutteLeRecensioniPage() {

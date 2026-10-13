@@ -37,6 +37,8 @@ interface BookingWizardProps {
   defaultName?: string;
   defaultPhone?: string;
   defaultEmail?: string;
+  /** Servizi già scelti (da ?service= nel link, es. dalla guida alla scelta). */
+  initialServiceIds?: string[];
 }
 
 const STEPS = ['Servizio', 'Barbiere & Orario', 'Conferma'];
@@ -68,10 +70,11 @@ export function BookingWizard({
   defaultName = '',
   defaultPhone = '',
   defaultEmail = '',
+  initialServiceIds = [],
 }: BookingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(initialServiceIds);
 
   // Tutti i servizi del listino (Taglio, Baby, Barba, Styling)
   const services = rawServices;
