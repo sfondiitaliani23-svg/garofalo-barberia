@@ -1,14 +1,10 @@
-/qr/vetrina 307 -> https://barberiagarofalo.it/link?qr=vetrina
-/qr/specchio 307 -> https://barberiagarofalo.it/feedback?qr=specchio
-/qr/cassa 307 -> https://barberiagarofalo.it/prenota?qr=cassa
-/sitemap.xml True True True
-/llms.txt True True True
-/prima-visita 200 /prima-visita ['BreadcrumbList'] ok
-/faq 200 /faq ['FAQPage', 'BreadcrumbList'] ok
-/journal 200 /journal [] ok
-/journal/primo-taglio-bambino 200 /journal/primo-taglio-bambino ['Article', 'BreadcrumbList'] ok
-/lavora-con-noi 200 /lavora-con-noi ['BreadcrumbList'] ok
-/feedback 200 /feedback [] ok
-/link 200 /link [] ok
-/admin/messaggi 200 /admin/login [] ok
+manifest Barberia Garofalo ['/pwa/icon-192.png', '/pwa/icon-512.png', '/pwa/maskable-512.png']
+/pwa/icon-512.png 200 public, max-age=31536000, immutable
+/offline.html 200 public, max-age=0, must-revalidate
+/sw.js 200 no-cache, no-store, must-revalidate
+/prodotti 200 cards: 4 ok
+/offerte 200 cards: 1 ok
+/ 200 cards: 0 ok
+sw attivo: True
+offline -> SERVIZI & PREZZI
 errori: []
