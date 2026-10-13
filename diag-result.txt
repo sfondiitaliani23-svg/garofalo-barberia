@@ -1,19 +1,18 @@
-SITEMAP 200 26 pagine
-PAGINE NON OK: nessuna
-GET /link 200 
-GET /robots.txt 200 
-GET /llms.txt 200 
-GET /manifest.webmanifest 200 
-GET /sw.js 200 
-GET /offline.html 200 
-GET /login 200 
-GET /registrati 404 
-GET /api/open-now 200 {"open":false,"soon":false,"label":"Chiuso · apre domani alle 08:30","closedDates":[]}
-GET /api/push/key 200 {"publicKey":"BH62aCM7DliPCbP17gMWqMJw6QWSIMtlj_7vIlyE07NgpZFLm1OrCh5uM6xaePz8urwagAbJFGSI
-GET /feedback 200 
-GET /area-cliente 200 
-GET /admin 200 
-CRON /api/cron/comeback?dry=1 200 {"ok":true,"dry":true,"count":11,"skipped":{"future":16,"optout":0,"sent":0,"notYet":42,"tooOld":8},"preview":[{"name":"Mario","lastVisit":"2026-09-12","daysSince":31,"barber":"Vittorio Morlino","services":["Barba rasata / lama"]},{"name":"Giusy","lastVisit":"2026-08-25","daysSince":49,"barber":"Lui
-DESKTOP errori: nessuno
-TELEFONO errori: nessuno
-PRENOTA testo iniziale: ME | NU | HOME | CHI SIAMO | SERVIZI | GALLERIA | RECENSIONI | CONTATTI | INSTALLA APP | ACCEDI | PRENOTA ORA |  | VIALE IGNAZIO D'ADDEDDA, 236 – FOGGIA |  | PRENOTA IL TUO APPUNTAMENTO |  | Scegli servizio, barbiere e orario dispon
+HTML / ['1.20s/1.22s 97kB cache=STALE', '0.37s/0.43s 97kB cache=HIT', '1.25s/1.29s 97kB cache=HIT']
+HTML /prenota ['0.33s/0.37s 56kB cache=MISS', '0.24s/0.27s 56kB cache=MISS', '0.42s/0.44s 56kB cache=MISS']
+HTML /contatti ['0.43s/0.46s 69kB cache=STALE', '0.50s/0.54s 69kB cache=HIT', '0.48s/0.51s 69kB cache=HIT']
+HTML /servizi ['0.42s/0.44s 60kB cache=STALE', '0.36s/0.38s 60kB cache=HIT', '0.41s/0.44s 60kB cache=HIT']
+HTML /area-cliente/dashboard ['0.31s/0.33s 51kB cache=MISS', '0.27s/0.30s 51kB cache=MISS', '0.50s/0.52s 51kB cache=MISS']
+HTML /login ['0.17s/0.20s 51kB cache=MISS', '0.16s/0.18s 51kB cache=MISS', '0.17s/0.19s 51kB cache=MISS']
+RSC  /prenota ['0.19s/0.20s 24kB cache=MISS', '0.14s/0.15s 24kB cache=MISS', '0.17s/0.18s 24kB cache=MISS']
+RSC  /contatti ['0.41s/0.42s 30kB cache=HIT', '0.16s/0.17s 30kB cache=HIT', '0.51s/0.53s 30kB cache=HIT']
+RSC  / ['0.16s/0.19s 40kB cache=HIT', '0.12s/0.15s 40kB cache=HIT', '0.36s/0.37s 40kB cache=HIT']
+home load 1.6s
+home long tasks 6 649 [224, 137, 54, 126, 54, 54]
+tab Contatti  url 0.30s  long tasks 121
+tab Prenota   url 1.11s  long tasks 368
+tab Home      url 0.05s  long tasks 102
+tab Prenota   url 0.27s  long tasks 0
+tab Contatti  url 0.18s  long tasks 0
+richieste lente: ['1.14s /_next/static/chunks/2b23984f852f631b.js', '1.14s /_next/static/chunks/d96012bcfc98706a.js', '1.14s /_next/static/chunks/turbopack-752d34bb559adb0a.js', '1.14s /_next/static/chunks/7c7171d2c11871af.js', '1.14s /_next/static/chunks/64396b544cbf95c0.js', '1.14s /_next/static/chunks/0455297d89e6cc67.js', '1.14s /_next/static/chunks/aaf105c52118202f.js', '1.15s /_next/static/chunks/c03cf2d800022200.js', '1.15s /_next/static/chunks/d7dabadf1e8a079a.js', '1.15s /_next/static/chunks/4664d1433a5aa645.js', '1.15s /_next/static/chunks/2532f69a4166d704.js', '1.22s /_next/static/chunks/f3c0d688d48db501.js', '1.22s /_next/static/chunks/fa78d6d690d06bd9.js', '1.22s /_next/static/chunks/94b3a591ea22b5c3.js', '1.22s /_next/static/chunks/b60b6794ae9219bc.js', '1.27s /_next/static/chunks/7bb15ebb87a545d5.js', '0.83s /', '0.96s /api/analytics/heartbeat', '1.01s /contatti', '0.89s /prenota', '1.49s /api/analytics/heartbeat', '2.08s /', '1.02s /prenota', '1.22s /contatti', '1.22s /api/analytics/heartbeat']
+richieste in 30s da fermo: {'https://static.cdninstagram.com/rsrc.php/v4/yn/r/yFHdK3kd2jy.js': 1, 'https://www.instagram.com/ajax/bootloader-endpoint/': 1}
