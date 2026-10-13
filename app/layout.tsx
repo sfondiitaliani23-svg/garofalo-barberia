@@ -7,6 +7,7 @@ import { SITE_URL } from '@/lib/seo';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
 import { ImageProtection } from '@/components/layout/ImageProtection';
 import { ServiceWorkerRegister } from '@/components/layout/ServiceWorkerRegister';
+import { PresencePing } from '@/components/layout/PresencePing';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LoadingScreen />
         <ImageProtection />
         <ServiceWorkerRegister />
+        <PresencePing />
         {children}
         <Toaster theme="dark" position="top-center" richColors className="!z-[200]" />
       </body>

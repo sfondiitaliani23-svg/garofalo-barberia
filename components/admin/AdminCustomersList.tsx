@@ -5,10 +5,13 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Images, MessageCircle, Phone, Plus, Search } from 'lucide-react';
 import type { Profile } from '@/types/database';
 import type { CustomerActivity } from '@/lib/actions/admin';
+import type { PresenceSnapshot } from '@/lib/utils/presence';
+import { PresenceDot, usePresence } from '@/components/admin/PresencePanel';
 
 interface AdminCustomersListProps {
   customers: Profile[];
   activity?: Record<string, CustomerActivity>;
+  presence?: PresenceSnapshot;
 }
 
 type StatusFilter = 'all' | 'active' | 'upcoming' | 'never';
@@ -50,7 +53,8 @@ function matchesQuery(customer: Profile, query: string) {
   return haystack.includes(query);
 }
 
-export function AdminCustomersList({ customers, activity = {} }: AdminCustomersListProps) {
+export function AdminCustomersList({ customers, activity = {}, presence: presenceInit }: AdminCustomersListProps) {
+  const presence = usePresence(presenceInit ?? { byUser: {}, team: [], onlineCustomers: [], generatedAt: '' });
   const [search, setSearch] = useState('');
   const [service, setService] = useState('all');
   const [period, setPeriod] = useState<PeriodFilter>('all');
@@ -162,13 +166,14 @@ export function AdminCustomersList({ customers, activity = {} }: AdminCustomersL
               <th className="px-4 py-3 font-semibold">Telefono</th>
               <th className="px-4 py-3 font-semibold">Ultima prenotazione</th>
               <th className="px-4 py-3 font-semibold">Stato</th>
+              <th className="px-4 py-3 font-semibold">Sul sito</th>
               <th className="px-4 py-3 font-semibold text-right">Azioni</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-white/45">
+                <td colSpan={7} className="px-4 py-10 text-center text-white/45">
                   {filtersActive ? 'Nessun cliente corrisponde ai filtri.' : 'Nessun cliente registrato.'}
                 </td>
               </tr>
@@ -207,6 +212,9 @@ export function AdminCustomersList({ customers, activity = {} }: AdminCustomersL
                       ) : (
                         <span className="text-[11px] text-white/35">Mai prenotato</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <PresenceDot info={presence.byUser[c.id]} />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">

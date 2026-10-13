@@ -56,6 +56,15 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="font-display text-lg uppercase text-gold">Account: online e ultimo accesso</h2>
+            <p className="mt-2">
+              Se hai un account e sei collegato, mentre usi il sito registriamo solo l&apos;ora dell&apos;ultima attività,
+              per mostrare al salone se sei online e quando hai visitato il sito l&apos;ultima volta. Non registriamo le
+              pagine che visiti né la tua posizione. Lo vedono solo gli amministratori del salone.
+            </p>
+          </section>
+
+          <section>
             <h2 className="font-display text-lg uppercase text-gold">Promemoria “è ora di tornare”</h2>
             <p className="mt-2">
               Se hai prenotato lasciando la tua email, qualche settimana dopo la visita possiamo inviarti un solo

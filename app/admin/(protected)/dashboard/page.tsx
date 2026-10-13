@@ -2,6 +2,8 @@ import { getAdminStats, getUpcomingAdminAppointments, getYesterdayAdminAppointme
 import { getAnalyticsStats } from '@/lib/actions/analytics';
 import { getProfile } from '@/lib/auth';
 import { PremiumDashboard } from '@/components/admin/PremiumDashboard';
+import { PresencePanel } from '@/components/admin/PresencePanel';
+import { getPresenceAction } from '@/lib/actions/presence-admin';
 
 export const metadata = { title: 'Admin Dashboard' };
 // Rivalidazione ogni 60s: le statistiche non cambiano al millisecondo,
@@ -11,12 +13,13 @@ export const revalidate = 60;
 const BACKGROUND = '/assets/gallery/1000313544.jpg';
 
 export default async function AdminDashboardPage() {
-  const [stats, analytics, upcoming, yesterdayAppointments, profile] = await Promise.all([
+  const [stats, analytics, upcoming, yesterdayAppointments, profile, presence] = await Promise.all([
     getAdminStats(),
     getAnalyticsStats(),
     getUpcomingAdminAppointments(5),
     getYesterdayAdminAppointments(5),
     getProfile(),
+    getPresenceAction(),
   ]);
 
   const firstName = profile?.full_name?.trim().split(/\s+/)[0] || 'Admin';
@@ -65,6 +68,8 @@ export default async function AdminDashboardPage() {
           yesterdayAppointments={yesterdayAppointments}
         />
       </div>
+
+      <PresencePanel initial={presence} />
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { AdminCustomersList, NewCustomerBookingButton } from '@/components/admin/AdminCustomersList';
 import { getCustomers, getCustomersActivity } from '@/lib/actions/admin';
+import { getPresenceAction } from '@/lib/actions/presence-admin';
 
 export const metadata = { title: 'Clienti' };
 
 export default async function AdminClientiPage() {
-  const [customers, activity] = await Promise.all([getCustomers(), getCustomersActivity().catch(() => ({}))]);
+  const [customers, activity, presence] = await Promise.all([getCustomers(), getCustomersActivity().catch(() => ({})), getPresenceAction()]);
 
   return (
     <div>
@@ -20,7 +21,7 @@ export default async function AdminClientiPage() {
         <NewCustomerBookingButton />
       </div>
       <div className="mt-6">
-        <AdminCustomersList customers={customers} activity={activity} />
+        <AdminCustomersList customers={customers} activity={activity} presence={presence} />
       </div>
     </div>
   );
