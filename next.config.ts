@@ -42,6 +42,27 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Protezioni standard per tutte le pagine (come sul sito di riferimento).
+        source: '/:path*',
+        headers: [
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value:
+              'camera=(self), microphone=(), geolocation=(), payment=(), usb=(), publickey-credentials-get=(self), publickey-credentials-create=(self)',
+          },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+          {
+            // Regole sicure che non bloccano mappe, Instagram, font o Supabase.
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests",
+          },
+        ],
+      },
+      {
         source: '/sw.js',
         headers: [
           { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },

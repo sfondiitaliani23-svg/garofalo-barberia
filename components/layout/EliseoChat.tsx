@@ -325,6 +325,7 @@ export function EliseoChat() {
         id="eliseo-chat-btn"
         onClick={() => setIsOpen(o => !o)}
         aria-label="Apri assistente Eliseo"
+        data-evt="assistente"
         className={cn(
           "fixed z-[302] group flex flex-col items-center transition-all duration-300 right-6",
           isCustomerArea
