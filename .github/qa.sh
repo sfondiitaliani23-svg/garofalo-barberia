@@ -4,3 +4,4 @@ export CHROME_PATH=$(python -c "from playwright.sync_api import sync_playwright 
 i=0
 for path in servizi servizi prenota galleria contatti ""; do i=$((i+1)); lighthouse "https://barberiagarofalo.it/$path" --quiet --chrome-flags="--headless=new --no-sandbox" --only-categories=performance --output=json --output-path=lh-$i.json >/dev/null 2>&1; done
 python .github/diag.py
+# 1791906346
