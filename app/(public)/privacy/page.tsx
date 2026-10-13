@@ -56,6 +56,16 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="font-display text-lg uppercase text-gold">Feedback e candidature</h2>
+            <p className="mt-2">
+              Il feedback anonimo non raccoglie nome né contatti: salviamo solo voto e commento.
+              Le candidature &quot;Lavora con noi&quot; (nome, telefono, email, link e messaggio) sono usate
+              solo per valutare la candidatura, sono visibili solo al titolare e vengono cancellate a fine selezione.
+              I QR del salone indicano da quale QR arriva una visita, solo se accetti i cookie analitici.
+            </p>
+          </section>
+
+          <section>
             <h2 className="font-display text-lg uppercase text-gold">Diritti dell&apos;utente</h2>
             <p className="mt-2">
               Puoi in qualsiasi momento modificare le preferenze cookie dal banner del sito,

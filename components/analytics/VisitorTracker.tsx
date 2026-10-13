@@ -31,6 +31,16 @@ function sendSessionEnd(sessionId: string) {
   });
 }
 
+/** Aggiunge al percorso l'eventuale QR del salone (?qr=vetrina) per contare le scansioni. */
+function withQr(pathname: string) {
+  try {
+    const qr = new URLSearchParams(window.location.search).get('qr');
+    return qr && /^[a-z0-9-]{1,30}$/i.test(qr) ? `${pathname}?qr=${qr}` : pathname;
+  } catch {
+    return pathname;
+  }
+}
+
 export function VisitorTracker() {
   const pathname = usePathname();
   const lastPath = useRef<string | null>(null);
@@ -43,7 +53,7 @@ export function VisitorTracker() {
     if (!sessionId || pathname === lastPath.current) return;
 
     lastPath.current = pathname;
-    trackPageView(sessionId, pathname);
+    trackPageView(sessionId, withQr(pathname));
     sendHeartbeat(sessionId);
   }, [isAdminArea, pathname]);
 
@@ -89,7 +99,7 @@ export function VisitorTracker() {
       const sessionId = getOrCreateSessionId();
       if (!sessionId || !pathname || pathname === lastPath.current) return;
       lastPath.current = pathname;
-      trackPageView(sessionId, pathname);
+      trackPageView(sessionId, withQr(pathname));
       sendHeartbeat(sessionId);
     };
 

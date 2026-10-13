@@ -28,3 +28,13 @@ export function CustomerFloatingWidgets() {
     </>
   );
 }
+
+/** Solo consenso cookie e statistiche (pagina link senza pulsanti flottanti). */
+export function TrackingOnlyWidgets() {
+  return (
+    <>
+      <CookieConsent />
+      <VisitorTracker />
+    </>
+  );
+}

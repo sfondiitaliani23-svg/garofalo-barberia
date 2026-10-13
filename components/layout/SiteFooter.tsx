@@ -130,6 +130,13 @@ export function SiteFooter() {
           </div>
         </div>
       </div>
+      <nav aria-label="Informazioni" className="container-lux mb-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/55">
+        <Link href="/prima-visita" className="hover:text-gold-light">Prima visita</Link>
+        <Link href="/faq" className="hover:text-gold-light">Domande frequenti</Link>
+        <Link href="/journal" className="hover:text-gold-light">Journal</Link>
+        <Link href="/feedback" className="hover:text-gold-light">Feedback anonimo</Link>
+        <Link href="/lavora-con-noi" className="hover:text-gold-light">Lavora con noi</Link>
+      </nav>
       <div className="footer-copy container-lux flex flex-col items-center gap-2 border-t border-white/10 text-center text-xs leading-relaxed text-white/40">
         <p>© 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.</p>
         <p className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">

@@ -1,0 +1,197 @@
+/* Pagine di contenuto: Prima visita, FAQ, Journal, Lavora con noi, Feedback, Link */
+.cp-wrap { max-width: 46rem; margin: 0 auto; }
+.cp-h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3.4vw, 1.8rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #fff;
+  margin: 0 0 1rem;
+}
+.cp-lead { color: rgba(255, 255, 255, 0.7); line-height: 1.75; font-size: 1rem; }
+
+/* Passi numerati */
+.cp-steps { display: grid; gap: 0.9rem; counter-reset: step; }
+.cp-step {
+  position: relative;
+  padding: 1.15rem 1.25rem 1.15rem 4rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: #0e0e0e;
+}
+.cp-step::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 1.1rem;
+  top: 1.05rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #000;
+  background: var(--color-gold);
+}
+.cp-step h3 { color: #fff; font-weight: 700; margin-bottom: 0.25rem; }
+.cp-step p { color: rgba(255, 255, 255, 0.65); line-height: 1.65; font-size: 0.94rem; }
+.cp-step a, .cp-inline-link { color: var(--color-gold-light); text-decoration: underline; text-underline-offset: 3px; }
+
+/* FAQ */
+.cp-faq-group + .cp-faq-group { margin-top: 2.5rem; }
+.cp-faq { display: grid; gap: 0.5rem; }
+.cp-faq details { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; background: #0e0e0e; }
+.cp-faq summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  color: #fff;
+  font-weight: 600;
+}
+.cp-faq summary::-webkit-details-marker { display: none; }
+.cp-faq summary::after { content: '+'; color: var(--color-gold); font-weight: 700; }
+.cp-faq details[open] summary::after { content: '–'; }
+.cp-faq .cp-faq-a { padding: 0 1.1rem 1rem; color: rgba(255, 255, 255, 0.68); line-height: 1.65; font-size: 0.94rem; }
+.cp-faq .cp-faq-a a { display: inline-block; margin-top: 0.5rem; color: var(--color-gold-light); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+
+/* CTA finale */
+.cp-cta {
+  margin-top: 3rem;
+  padding: 1.75rem;
+  border-radius: 16px;
+  border: 1px solid rgba(205, 154, 79, 0.35);
+  background: linear-gradient(180deg, rgba(205, 154, 79, 0.1), rgba(205, 154, 79, 0.02));
+  text-align: center;
+}
+.cp-cta p { color: rgba(255, 255, 255, 0.75); margin-bottom: 1rem; }
+.cp-cta-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+.cp-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.cp-ghost:hover { border-color: var(--color-gold); color: var(--color-gold-light); }
+
+/* Journal */
+.jr-grid { display: grid; gap: 1.25rem; }
+@media (min-width: 720px) { .jr-grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1080px) { .jr-grid { grid-template-columns: 1fr 1fr 1fr; } }
+.jr-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #0e0e0e;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.jr-card:hover { border-color: rgba(205, 154, 79, 0.6); transform: translateY(-2px); }
+.jr-card-img { position: relative; aspect-ratio: 16 / 10; }
+.jr-card-body { padding: 1.1rem 1.2rem 1.3rem; display: flex; flex-direction: column; gap: 0.45rem; flex: 1; }
+.jr-meta { color: var(--color-gold); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.jr-card-title { color: #fff; font-weight: 700; font-size: 1.08rem; line-height: 1.35; }
+.jr-card-text { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; line-height: 1.6; }
+.jr-more { margin-top: auto; padding-top: 0.5rem; color: var(--color-gold-light); font-size: 0.85rem; font-weight: 600; }
+
+.jr-article { max-width: 44rem; margin: 0 auto; }
+.jr-cover { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; margin-bottom: 2rem; border: 1px solid rgba(255, 255, 255, 0.08); }
+.jr-prose { color: rgba(255, 255, 255, 0.78); font-size: 1.02rem; line-height: 1.8; }
+.jr-prose p { margin: 0 0 1.15rem; }
+.jr-prose h2 { font-family: var(--font-display); color: #fff; font-size: clamp(1.25rem, 3vw, 1.6rem); text-transform: uppercase; letter-spacing: 0.03em; margin: 2.2rem 0 0.9rem; }
+.jr-prose ul { margin: 0 0 1.25rem; padding-left: 1.2rem; list-style: disc; }
+.jr-prose li { margin-bottom: 0.45rem; }
+.jr-prose li::marker { color: var(--color-gold); }
+.jr-prose strong { color: #fff; }
+.jr-tip {
+  margin: 1.5rem 0;
+  padding: 1rem 1.2rem;
+  border-left: 3px solid var(--color-gold);
+  background: rgba(205, 154, 79, 0.07);
+  border-radius: 0 10px 10px 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+.jr-back { display: inline-flex; align-items: center; gap: 0.35rem; color: rgba(255, 255, 255, 0.55); font-size: 0.85rem; margin-bottom: 1.25rem; }
+.jr-back:hover { color: var(--color-gold-light); }
+
+/* Moduli (Lavora con noi, Feedback) */
+.cp-form { display: grid; gap: 1rem; }
+.cp-field label { display: block; margin-bottom: 0.35rem; font-size: 0.85rem; font-weight: 600; color: rgba(255, 255, 255, 0.8); }
+.cp-field input, .cp-field select, .cp-field textarea {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #0b0b0b;
+  color: #fff;
+  font-size: 1rem;
+}
+.cp-field textarea { min-height: 7rem; resize: vertical; }
+.cp-field input:focus, .cp-field select:focus, .cp-field textarea:focus { outline: none; border-color: var(--color-gold); }
+.cp-hint { color: rgba(255, 255, 255, 0.45); font-size: 0.78rem; margin-top: 0.3rem; }
+.cp-check { display: flex; gap: 0.6rem; align-items: flex-start; color: rgba(255, 255, 255, 0.7); font-size: 0.85rem; line-height: 1.5; }
+.cp-check input { margin-top: 0.2rem; width: 1.1rem; height: 1.1rem; accent-color: var(--color-gold); flex: none; }
+.cp-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.cp-error { color: #fca5a5; font-size: 0.88rem; }
+.cp-done {
+  padding: 1.5rem;
+  border-radius: 14px;
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  background: rgba(74, 222, 128, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  text-align: center;
+}
+.cp-done h2 { color: #fff; font-weight: 700; font-size: 1.15rem; margin-bottom: 0.4rem; }
+
+.cp-stars { display: flex; gap: 0.4rem; }
+.cp-star {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #0b0b0b;
+  color: rgba(255, 255, 255, 0.3);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.cp-star.is-on { color: var(--color-gold-light); border-color: rgba(205, 154, 79, 0.6); }
+
+/* Pagina link (Instagram) */
+.lk-page { min-height: 100vh; display: flex; justify-content: center; padding: 2.5rem 1rem 3rem; background: radial-gradient(circle at 50% 0%, rgba(205, 154, 79, 0.16), transparent 55%), #000; }
+.lk-box { width: 100%; max-width: 26rem; text-align: center; }
+.lk-name { font-family: var(--font-display); color: #fff; font-size: 1.6rem; text-transform: uppercase; margin-top: 0.9rem; }
+.lk-sub { color: rgba(255, 255, 255, 0.55); font-size: 0.88rem; margin: 0.25rem 0 1rem; }
+.lk-list { display: grid; gap: 0.7rem; margin-top: 1.25rem; }
+.lk-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.4rem;
+  padding: 0 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  font-weight: 600;
+  transition: border-color 0.2s, background 0.2s;
+}
+.lk-btn:hover { border-color: var(--color-gold); background: rgba(205, 154, 79, 0.08); }
+.lk-btn--main { background: var(--color-gold); border-color: var(--color-gold); color: #000; }
+.lk-btn--main:hover { background: var(--color-gold-light); }
+.lk-foot { margin-top: 2rem; color: rgba(255, 255, 255, 0.35); font-size: 0.75rem; }
+.cp-step--plain { padding-left: 1.25rem; }
+.cp-step--plain::before { content: none; counter-increment: none; }

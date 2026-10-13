@@ -2,6 +2,7 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { SITE_URL } from '@/lib/seo';
 import { getServices } from '@/lib/actions/bookings';
 import { LOCAL_PAGES } from '@/lib/data/local-pages';
+import { JOURNAL } from '@/lib/data/journal';
 
 export const revalidate = 3600;
 
@@ -39,6 +40,12 @@ export async function GET() {
     `- [Recensioni](${SITE_URL}/recensioni)`,
     `- [Contatti e orari](${SITE_URL}/contatti)`,
     ...LOCAL_PAGES.map((p) => `- [${p.h1}](${SITE_URL}/${p.slug})`),
+    `- [Prima visita: come funziona](${SITE_URL}/prima-visita)`,
+    `- [Domande frequenti](${SITE_URL}/faq)`,
+    `- [Lavora con noi](${SITE_URL}/lavora-con-noi)`,
+    '',
+    '## Journal',
+    ...JOURNAL.map((a) => `- [${a.title}](${SITE_URL}/journal/${a.slug}): ${a.description}`),
     '',
   ].join('\n');
 
