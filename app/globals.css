@@ -490,3 +490,10 @@ h2,
 
 /* Banner cookie: nascosto subito se la scelta è già stata fatta */
 html.has-consent [data-cookie-banner] { display: none !important; }
+
+/* Menu del telefono aperto: nascondi i pulsanti fissi che coprirebbero "Prenota ora" */
+body.menu-open #eliseo-chat-btn,
+body.menu-open a[aria-label="WhatsApp"].fixed {
+  opacity: 0;
+  pointer-events: none;
+}

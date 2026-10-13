@@ -7,6 +7,7 @@ import { CalendarDays, X } from 'lucide-react';
 import { SITE_CONFIG } from '@/lib/site-config';
 
 import { createClient } from '@/lib/supabase/client';
+import { InstallAppButton } from '@/components/layout/InstallAppPrompt';
 
 const navLeft = [
   { href: '/', label: 'Home' },
@@ -65,7 +66,8 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
   // Blocca lo scroll del body quando il drawer è aperto
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    document.body.classList.toggle('menu-open', open);
+    return () => { document.body.style.overflow = ''; document.body.classList.remove('menu-open'); };
   }, [open]);
 
   const close = () => setOpen(false);
@@ -239,6 +241,14 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
               {link.label}
             </Link>
           ))}
+
+          {/* Installa l'app (nascosta se il sito è già aperto come app) */}
+          <InstallAppButton
+            always
+            onAction={close}
+            label="Installa App"
+            className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
+          />
 
           {/* Area cliente */}
           {isLoggedIn ? (

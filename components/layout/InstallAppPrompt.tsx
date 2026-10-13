@@ -116,19 +116,30 @@ export function InstallAppPrompt() {
 }
 
 /** Pulsante fisso "Installa l'app" (footer): visibile solo quando l'installazione è possibile. */
-export function InstallAppButton({ className = '' }: { className?: string }) {
-  const [state, setState] = useState<'hidden' | 'native' | 'ios'>('hidden');
+export function InstallAppButton({
+  className = '',
+  always = false,
+  onAction,
+  label = 'Installa l’app',
+}: {
+  className?: string;
+  /** Mostra la voce anche quando il browser non offre la finestra automatica (spiega come fare a mano). */
+  always?: boolean;
+  onAction?: () => void;
+  label?: string;
+}) {
+  const [state, setState] = useState<'hidden' | 'native' | 'ios' | 'generic'>('hidden');
   const [help, setHelp] = useState(false);
 
   useEffect(() => {
     startInstallListener();
     const sync = () => {
       if (isStandalone() || isInAppBrowser()) return setState('hidden');
-      setState(canPromptNative() ? 'native' : isIOS() ? 'ios' : 'hidden');
+      setState(canPromptNative() ? 'native' : isIOS() ? 'ios' : always ? 'generic' : 'hidden');
     };
     sync();
     return onInstallChange(sync);
-  }, []);
+  }, [always]);
 
   if (state === 'hidden') return null;
   return (
@@ -138,26 +149,47 @@ export function InstallAppButton({ className = '' }: { className?: string }) {
         data-evt="installa_app"
         className={className}
         onClick={async () => {
-          if (state === 'native') await promptNativeInstall();
-          else setHelp(true);
+          if (state === 'native') {
+            onAction?.();
+            await promptNativeInstall();
+          } else setHelp(true);
         }}
       >
-        Installa l’app
+        {label}
       </button>
       {help && (
         <div className="ia-sheet" role="dialog" aria-labelledby="ia-help-title">
           <button type="button" className="ia-close" onClick={() => setHelp(false)} aria-label="Chiudi">
             <X size={18} />
           </button>
-          <p id="ia-help-title" className="ia-title">Installa l’app su iPhone</p>
-          <ol className="ia-steps">
-            <li>
-              Tocca <Share size={16} aria-label="Condividi" className="ia-inline" /> <strong>Condividi</strong> in basso nella barra di Safari
-            </li>
-            <li>
-              Scegli <SquarePlus size={16} aria-hidden className="ia-inline" /> <strong>Aggiungi alla schermata Home</strong>
-            </li>
-          </ol>
+          {state === 'ios' ? (
+            <>
+              <p id="ia-help-title" className="ia-title">Installa l’app su iPhone</p>
+              <ol className="ia-steps">
+                <li>
+                  Tocca <Share size={16} aria-label="Condividi" className="ia-inline" /> <strong>Condividi</strong> in basso nella barra di Safari
+                </li>
+                <li>
+                  Scegli <SquarePlus size={16} aria-hidden className="ia-inline" /> <strong>Aggiungi alla schermata Home</strong>
+                </li>
+              </ol>
+            </>
+          ) : (
+            <>
+              <p id="ia-help-title" className="ia-title">Installa l’app</p>
+              <ol className="ia-steps">
+                <li>
+                  Apri il menu del browser <strong>⋮</strong> in alto a destra
+                </li>
+                <li>
+                  Scegli <strong>Installa app</strong> oppure <strong>Aggiungi a schermata Home</strong>
+                </li>
+              </ol>
+              <p className="ia-text" style={{ marginTop: '0.6rem' }}>
+                Se non vedi la voce, apri barberiagarofalo.it con Chrome.
+              </p>
+            </>
+          )}
           <div className="ia-actions">
             <button type="button" className="ia-later" onClick={() => setHelp(false)}>
               Ho capito
