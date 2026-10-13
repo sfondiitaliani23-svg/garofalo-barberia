@@ -2,6 +2,7 @@ import { OpenNowBadge } from '@/components/layout/OpenNowBadge';
 import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { CookiePreferencesButton } from '@/components/layout/CookiePreferencesButton';
+import { InstallAppButton } from '@/components/layout/InstallAppPrompt';
 
 function PhoneIcon() {
   return (
@@ -148,6 +149,7 @@ export function SiteFooter() {
           </Link>
           <span>•</span>
           <CookiePreferencesButton />
+          <InstallAppButton className="hover:text-gold-light underline bg-transparent border-none p-0 cursor-pointer text-xs text-white/60 font-medium" />
         </p>
         <p>
           Sito creato interamente da Eliseo Miraglia (IG.{' '}

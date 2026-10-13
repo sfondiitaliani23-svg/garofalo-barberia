@@ -9,6 +9,8 @@ const EliseoChat = dynamic(() => import('@/components/layout/EliseoChat').then((
 const VisitorTracker = dynamic(() => import('@/components/analytics/VisitorTracker').then((m) => m.VisitorTracker), { ssr: false });
 const ClickTracker = dynamic(() => import('@/components/analytics/ClickTracker').then((m) => m.ClickTracker), { ssr: false });
 
+const InstallAppPrompt = dynamic(() => import('@/components/layout/InstallAppPrompt').then((m) => m.InstallAppPrompt), { ssr: false });
+
 export function ClientFloatingWidgets() {
   return (
     <>
@@ -18,6 +20,7 @@ export function ClientFloatingWidgets() {
       <EliseoChat />
       <VisitorTracker />
       <ClickTracker />
+      <InstallAppPrompt />
     </>
   );
 }
@@ -38,6 +41,7 @@ export function TrackingOnlyWidgets() {
       <CookieConsent />
       <VisitorTracker />
       <ClickTracker />
+      <InstallAppPrompt />
     </>
   );
 }

@@ -7,6 +7,7 @@ export const CLICK_EVENTS = {
   instagram: 'Instagram',
   recensione_google: 'Recensione Google',
   assistente: 'Assistente Eliseo',
+  installa_app: 'Installa app',
 } as const;
 
 export type ClickEvent = keyof typeof CLICK_EVENTS;
