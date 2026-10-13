@@ -1,20 +1,15 @@
-import urllib.request, json
 from playwright.sync_api import sync_playwright
 B='https://barberiagarofalo.it'
-m=json.loads(urllib.request.urlopen(B+'/manifest.webmanifest',timeout=30).read()); print('manifest', m['name'], [i['src'] for i in m['icons']])
-for u in ['/pwa/icon-512.png','/offline.html','/sw.js']:
-    r=urllib.request.urlopen(B+u,timeout=30); print(u, r.status, r.headers.get('cache-control'))
 with sync_playwright() as p:
-    b=p.chromium.launch(); ctx=b.new_context(); pg=ctx.new_page(); errs=[]
+    b=p.chromium.launch(); pg=b.new_page(); errs=[]
     pg.on('pageerror', lambda e: errs.append(str(e)))
-    for path in ['/prodotti','/offerte','/']:
-        r=pg.goto(B+path, wait_until='load', timeout=60000); pg.wait_for_timeout(3000)
-        print(path, r.status, 'cards:', pg.locator('.pr-card, .of-card, .of-empty').count(), 'APPERR' if pg.locator('text=Application error').count() else 'ok')
-    pg.wait_for_timeout(3000)
-    print('sw attivo:', pg.evaluate("navigator.serviceWorker.getRegistration().then(r => !!(r && (r.active||r.installing||r.waiting)))"))
-    ctx.set_offline(True)
-    try:
-        pg.goto(B+'/servizi', wait_until='load', timeout=20000); print('offline ->', pg.locator('h1').first.inner_text())
-    except Exception as e: print('offline nav err', str(e)[:100])
-    ctx.set_offline(False)
+    r=pg.goto(B+'/team', wait_until='load', timeout=60000); pg.wait_for_timeout(2000)
+    links=[a.get_attribute('href') for a in pg.locator('.tm-card').all()]
+    print('/team', r.status, links)
+    for l in links:
+        r=pg.goto(B+l, wait_until='load', timeout=60000); pg.wait_for_timeout(1500)
+        hours=pg.locator('.lp-hours div').all_inner_texts()
+        print(l, r.status, '|', ' ; '.join(h.replace('\n',' ') for h in hours), '| away:', pg.locator('.tm-away').count())
+    pg.goto(B+links[-1], wait_until='load'); pg.locator('a:has-text("Prenota con")').first.click(); pg.wait_for_timeout(3000)
+    print('prenota ->', pg.url.replace(B,''))
     print('errori:', errs); b.close()
