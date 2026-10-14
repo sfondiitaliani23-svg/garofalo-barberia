@@ -33,12 +33,23 @@ export async function checkQrSessionStatus(sessionId: string) {
 
   const { data, error } = await supabase
     .from('qr_login_sessions')
-    .select('status, access_token, refresh_token')
+    .select('status, access_token, refresh_token, expires_at')
     .eq('id', sessionId)
     .single();
 
   if (error) {
     return { status: 'expired' };
+  }
+
+  // Sessione scaduta: niente token, e si cancella tutto.
+  if (new Date(data.expires_at).getTime() < Date.now()) {
+    await supabase.from('qr_login_sessions').delete().eq('id', sessionId);
+    return { status: 'expired' };
+  }
+
+  // I token si consegnano UNA volta sola: appena letti, la riga viene cancellata.
+  if (data.status === 'authenticated' && data.access_token) {
+    await supabase.from('qr_login_sessions').delete().eq('id', sessionId);
   }
 
   return {
@@ -76,7 +87,9 @@ export async function authenticateQrSession(
       access_token: accessToken,
       refresh_token: refreshToken,
     })
-    .eq('id', sessionId);
+    .eq('id', sessionId)
+    .eq('status', 'pending')
+    .gt('expires_at', new Date().toISOString());
 
   if (updateError) {
     console.error('Errore durante l\'aggiornamento della sessione QR:', updateError);
