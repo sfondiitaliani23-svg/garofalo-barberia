@@ -686,6 +686,15 @@ html.is-app .ct-sede { display: none !important; }
   color: #fff;
 }
 .adm-brand em { font-style: normal; color: #e8b96a; }
+.adm-brand-tag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 185, 106, 0.45);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
 .adm-brand-icon {
   display: grid;
   place-items: center;

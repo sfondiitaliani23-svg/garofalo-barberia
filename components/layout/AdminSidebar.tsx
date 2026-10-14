@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/actions/auth';
@@ -86,13 +87,17 @@ export function AdminSidebar() {
     <>
       {/* ── 1. SIDEBAR DESKTOP (lg+) ── */}
       <aside className="adm-side hidden lg:flex fixed left-0 top-0 bottom-0 z-30 h-screen w-60 flex-col overflow-y-auto p-4">
-        <Link href="/admin/dashboard" className="adm-brand">
-          <span className="adm-brand-icon" aria-hidden>
-            <Scissors size={16} />
-          </span>
-          <span>
-            Garofalo <em>Admin</em>
-          </span>
+        <Link href="/admin/dashboard" className="adm-brand" aria-label="Barberia Garofalo · Admin">
+          <Image
+            src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
+            alt="Barberia Garofalo"
+            width={150}
+            height={100}
+            className="h-[56px] w-auto object-contain"
+            style={{ mixBlendMode: 'screen' }}
+            priority
+          />
+          <em className="adm-brand-tag">Admin</em>
         </Link>
         <nav className="flex-1 space-y-1" aria-label="Menu amministrazione">
           {links.map(({ href, label, icon: Icon, exact }) => {
