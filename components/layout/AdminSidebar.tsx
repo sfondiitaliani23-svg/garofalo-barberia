@@ -97,7 +97,13 @@ export function AdminSidebar() {
             style={{ mixBlendMode: 'screen' }}
             priority
           />
-          <em className="adm-brand-tag">Admin</em>
+          <span className="adm-badge">
+            <span className="adm-badge-dot" aria-hidden />
+            <span className="adm-badge-text">
+              <small>Area riservata</small>
+              <strong>Admin</strong>
+            </span>
+          </span>
         </Link>
         <nav className="flex-1 space-y-1" aria-label="Menu amministrazione">
           {links.map(({ href, label, icon: Icon, exact }) => {
