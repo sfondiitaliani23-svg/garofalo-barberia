@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Scissors, RotateCcw, ChevronDown } from 'lucide-react';
+import { X, Send, Scissors, RotateCcw, ChevronDown, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -47,6 +47,31 @@ export function EliseoChat() {
   const pathname = usePathname();
   const isCustomerArea = pathname?.startsWith('/area-cliente') ?? false;
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [hint, setHint] = useState(false);
+
+  // Alla prima visita della sessione il fumetto "Chiedi a Eliseo" compare per qualche secondo
+  useEffect(() => {
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem('gb_ai_hint') === '1';
+    } catch {
+      /* archiviazione non disponibile */
+    }
+    if (seen) return;
+    const show = setTimeout(() => {
+      setHint(true);
+      try {
+        sessionStorage.setItem('gb_ai_hint', '1');
+      } catch {
+        /* archiviazione non disponibile */
+      }
+    }, 2500);
+    const hide = setTimeout(() => setHint(false), 7500);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -329,7 +354,7 @@ export function EliseoChat() {
       <button
         id="eliseo-chat-btn"
         onClick={() => setIsOpen(o => !o)}
-        aria-label="Apri assistente Eliseo"
+        aria-label={isOpen ? "Chiudi assistente Eliseo" : "Apri assistente Eliseo"}
         data-evt="assistente"
         className={cn(
           "fixed z-[302] group flex flex-col items-center transition-all duration-300 right-6",
@@ -342,24 +367,25 @@ export function EliseoChat() {
                 : "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")
         )}
       >
-        <div
-          className={cn(
-            "relative w-14 h-14 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] shadow-[0_4px_22px_rgba(205,154,79,0.55)] flex items-center justify-center transition-all duration-300",
-            isOpen ? 'rotate-0 scale-95' : 'group-hover:scale-110'
-          )}
-        >
-          {isOpen ? (
-            <X size={22} className="text-black" />
-          ) : (
-            <Scissors size={20} className="text-black" />
-          )}
-          {/* Unread dot */}
+        {/* Fumetto "Chiedi a Eliseo": al passaggio del mouse e per pochi secondi alla prima visita */}
+        {!isOpen && (
+          <span className={cn('ai-fab-hint', hint && 'is-shown')} aria-hidden>
+            Chiedi a <strong>Eliseo</strong>
+          </span>
+        )}
+        <span className={cn('ai-fab', isOpen && 'is-open')}>
+          <span className="ai-fab-ring" aria-hidden />
+          <span className="ai-fab-core">
+            {isOpen ? <X size={22} className="text-[#f0c378]" /> : <Sparkles size={22} className="ai-fab-icon" />}
+          </span>
+          {!isOpen && <span className="ai-fab-badge" aria-hidden>AI</span>}
+          {/* Avviso di nuovo messaggio */}
           {unread && !isOpen && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-black text-[9px] font-bold text-white flex items-center justify-center">
+            <span className="absolute -top-1 -left-1 w-4 h-4 bg-red-500 rounded-full border-2 border-black text-[9px] font-bold text-white flex items-center justify-center">
               !
             </span>
           )}
-        </div>
+        </span>
       </button>
     </>
   );

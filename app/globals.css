@@ -740,3 +740,83 @@ html.is-app .ct-sede { display: none !important; }
   box-shadow: 0 0 16px rgba(232, 185, 106, 0.3);
 }
 .adm-promo-btn:hover { filter: brightness(1.06); }
+
+/* ── Pulsante assistente AI: anello oro che gira piano, cuore scuro, scintille ─────────── */
+.ai-fab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+#eliseo-chat-btn:hover .ai-fab { transform: scale(1.07); }
+#eliseo-chat-btn:active .ai-fab { transform: scale(0.94); }
+.ai-fab-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #f0c378, #7a5424 25%, #f6d79a 50%, #8f6520 75%, #f0c378);
+  box-shadow: 0 6px 24px rgba(205, 154, 79, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.6);
+  animation: aiFabSpin 6s linear infinite;
+}
+.ai-fab-core {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #2a241b 0%, #121110 60%, #0b0b0b 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -6px 14px rgba(0, 0, 0, 0.6);
+}
+.ai-fab-icon {
+  color: #f0c378;
+  filter: drop-shadow(0 0 6px rgba(240, 195, 120, 0.7));
+  animation: aiFabTwinkle 2.8s ease-in-out infinite;
+}
+.ai-fab-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -2px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: linear-gradient(140deg, #f0c378, #c48f45);
+  color: #111;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border: 2px solid #000;
+}
+.ai-fab.is-open .ai-fab-ring { animation-play-state: paused; }
+.ai-fab-hint {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translate(6px, -50%);
+  padding: 7px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: #f4efe7;
+  background: rgba(18, 17, 16, 0.96);
+  border: 1px solid rgba(232, 185, 106, 0.4);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.ai-fab-hint strong { color: #f0c378; }
+.ai-fab-hint.is-shown { opacity: 1; transform: translate(0, -50%); }
+@media (hover: hover) {
+  #eliseo-chat-btn:hover .ai-fab-hint { opacity: 1; transform: translate(0, -50%); }
+}
+@keyframes aiFabSpin { to { transform: rotate(360deg); } }
+@keyframes aiFabTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.12) rotate(8deg); opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-fab-ring, .ai-fab-icon { animation: none; }
+}
