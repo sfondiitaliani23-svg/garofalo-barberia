@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Briefcase, Check, MailCheck, MessageSquareHeart, Printer, QrCode, Star, Trash2, BellRing } from 'lucide-react';
+import { Briefcase, Check, MailCheck, MessageSquareHeart, Printer, QrCode, Star, Trash2, BellRing, Sparkles } from 'lucide-react';
+import { AdminAiSettings } from '@/components/admin/AdminAiSettings';
+import type { AiSettingsView } from '@/lib/utils/ai-settings';
 import { toast } from 'sonner';
 import type { InboxItem } from '@/lib/actions/site-inbox';
 import type { ShopQr } from '@/lib/data/qr';
@@ -10,18 +12,18 @@ import type { ComebackStats } from '@/lib/utils/comeback';
 import type { BroadcastLog } from '@/lib/utils/push';
 import { AdminPushBroadcast } from '@/components/admin/AdminPushBroadcast';
 
-type Tab = 'feedback' | 'candidatura' | 'qr' | 'torna' | 'notifiche';
+type Tab = 'feedback' | 'candidatura' | 'qr' | 'torna' | 'notifiche' | 'ai';
 
 const fmt = (iso: string) =>
   new Date(iso).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
 
-export function AdminInbox({ items: initial, qrs, scans, comeback, push }: { items: InboxItem[]; qrs: ShopQr[]; scans: Record<string, number>; comeback: ComebackStats; push: { devices: number; users: number; history: BroadcastLog[] } }) {
+export function AdminInbox({ items: initial, qrs, scans, comeback, push, ai }: { items: InboxItem[]; qrs: ShopQr[]; scans: Record<string, number>; comeback: ComebackStats; push: { devices: number; users: number; history: BroadcastLog[] }; ai: AiSettingsView }) {
   const [items, setItems] = useState(initial);
   const [tab, setTab] = useState<Tab>('feedback');
   // Apertura diretta di una scheda dal link (es. ?tab=notifiche dalla barra laterale)
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab') as Tab | null;
-    if (t && ['feedback', 'candidatura', 'qr', 'torna', 'notifiche'].includes(t)) setTab(t);
+    if (t && ['feedback', 'candidatura', 'qr', 'torna', 'notifiche', 'ai'].includes(t)) setTab(t);
   }, []);
   const [, start] = useTransition();
 
@@ -56,6 +58,7 @@ export function AdminInbox({ items: initial, qrs, scans, comeback, push }: { ite
     { id: 'qr', label: 'QR del salone', icon: QrCode },
     { id: 'torna', label: 'È ora di tornare', icon: MailCheck },
     { id: 'notifiche', label: 'Notifiche ai clienti', icon: BellRing },
+    { id: 'ai', label: 'Assistente AI', icon: Sparkles },
   ];
 
   return (
@@ -140,6 +143,7 @@ export function AdminInbox({ items: initial, qrs, scans, comeback, push }: { ite
         </section>
       )}
 
+      {tab === 'ai' && <AdminAiSettings initial={ai} />}
       {tab === 'notifiche' && <AdminPushBroadcast devices={push.devices} users={push.users} history={push.history} />}
 
       {tab === 'torna' && (

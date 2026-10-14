@@ -93,6 +93,18 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="font-display text-lg uppercase text-gold">Assistente della chat</h2>
+            <p className="mt-2">
+              L&apos;assistente &quot;Eliseo&quot; può usare servizi di intelligenza artificiale di terze parti
+              (Google Gemini e Groq, piani gratuiti) per capire le domande e rispondere. Inviamo solo il testo
+              della conversazione e le informazioni pubbliche del salone, senza nome, account o altri dati.
+              Questi servizi possono conservare i messaggi e usarli per migliorare i loro sistemi: per questo
+              ti chiediamo di non scrivere nella chat dati personali (telefono, email, informazioni sulla salute).
+              Per le prenotazioni usa la pagina Prenota o WhatsApp.
+            </p>
+          </section>
+
+          <section>
             <h2 className="font-display text-lg uppercase text-gold">Diritti dell&apos;utente</h2>
             <p className="mt-2">
               Puoi in qualsiasi momento modificare le preferenze cookie dal banner del sito,

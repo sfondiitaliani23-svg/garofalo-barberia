@@ -3,6 +3,26 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { getBarbers, getServices } from '@/lib/actions/bookings';
 import { getActivePromotions } from '@/lib/actions/promotions';
 import { respond, type ChatHistoryItem, type ChatKnowledge } from '@/lib/chat/assistant';
+import { askAi } from '@/lib/chat/ai';
+import { createServiceClient } from '@/lib/supabase/server';
+
+/** Conteggio giornaliero delle risposte per fonte (per la scheda in admin). Mai bloccante. */
+async function countAnswer(source: 'gemini' | 'groq' | 'regole') {
+  try {
+    const supabase = await createServiceClient();
+    if (!supabase) return;
+    const day = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Rome' });
+    const key = `aistat:${day}`;
+    const { data } = await supabase.from('site_content').select('id, body').eq('key', key).maybeSingle();
+    const stats: Record<string, number> = data?.body ? JSON.parse(data.body) : {};
+    stats[source] = (stats[source] ?? 0) + 1;
+    const body = JSON.stringify(stats);
+    if (data) await supabase.from('site_content').update({ body, updated_at: new Date().toISOString() }).eq('id', data.id);
+    else await supabase.from('site_content').insert({ key, title: 'statistiche assistente', body, is_active: false, updated_at: new Date().toISOString() });
+  } catch {
+    /* le statistiche non devono mai rompere la chat */
+  }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +83,15 @@ export async function POST(request: NextRequest) {
     const knowledge = await loadKnowledge();
     const result = respond(message, history, knowledge);
 
+    // AI gratuita (Gemini → Groq); se non disponibile resta la risposta a regole.
+    if (message.trim().length >= 2) {
+      const ai = await askAi(message, history, knowledge, result.replies.join('\n\n')).catch(() => null);
+      if (ai) {
+        await countAnswer(ai.provider);
+        return NextResponse.json({ ...result, replies: [ai.text], source: 'ai' });
+      }
+    }
+    await countAnswer('regole');
     return NextResponse.json(result);
   } catch (error) {
     console.error('[api/chat]', error);

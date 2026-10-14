@@ -319,6 +319,10 @@ export function EliseoChat() {
             <Send size={14} className={!input.trim() || loading ? 'opacity-30' : ''} />
           </button>
         </form>
+        <p className="shrink-0 bg-[#0e0e0e] px-4 pb-2 text-center text-[10px] leading-snug text-white/45">
+          Risposte automatiche, anche con AI. Non scrivere dati personali ·{' '}
+          <a href="/privacy" className="underline underline-offset-2 hover:text-white/70">Privacy</a>
+        </p>
       </div>
 
       {/* ── FAB toggle button ── */}
