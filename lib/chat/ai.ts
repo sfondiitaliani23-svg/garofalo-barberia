@@ -25,6 +25,31 @@ const DEFAULT_MODELS: Record<AiProvider, string> = {
   groq: 'llama-3.3-70b-versatile',
 };
 
+/** Modelli di riserva dello stesso servizio: se uno è sovraccarico (503) o non esiste più (404), si prova il successivo. */
+const FALLBACK_MODELS: Record<AiProvider, string[]> = {
+  gemini: ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'],
+  groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-20b'],
+};
+
+function modelsFor(provider: AiProvider, preferred?: string) {
+  const list = FALLBACK_MODELS[provider];
+  return preferred && !list.includes(preferred) ? [preferred, ...list] : preferred ? [preferred, ...list.filter((m) => m !== preferred)] : list;
+}
+
+/** Prova i modelli del servizio uno dopo l'altro. Chiave sbagliata (401/403) o limite (429): si smette subito. */
+async function callWithModels(provider: AiProvider, key: string, preferred: string | undefined, messages: Msg[], timeoutMs: number, maxModels = 3) {
+  let last: Error | null = null;
+  for (const model of modelsFor(provider, preferred).slice(0, maxModels)) {
+    try {
+      return { text: await callProvider(provider, key, model, messages, timeoutMs), model };
+    } catch (e) {
+      last = e as Error;
+      if (/\b(401|403|429)\b/.test(last.message)) break;
+    }
+  }
+  throw last ?? new Error(`${provider} non disponibile`);
+}
+
 const ENDPOINTS: Record<AiProvider, string> = {
   gemini: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
   groq: 'https://api.groq.com/openai/v1/chat/completions',
@@ -150,7 +175,7 @@ export async function askAi(message: string, history: ChatHistoryItem[], k: Chat
   for (const step of chain) {
     if (!step.key) continue;
     try {
-      const text = await callProvider(step.provider, step.key, step.model, messages, 9000);
+      const { text } = await callWithModels(step.provider, step.key, step.model, messages, 7000, 2);
       return { text, provider: step.provider };
     } catch (e) {
       console.warn('[chat-ai]', step.provider, (e as Error).message);
@@ -160,9 +185,9 @@ export async function askAi(message: string, history: ChatHistoryItem[], k: Chat
 }
 
 /** Prova un singolo servizio (per il tasto "Prova" in admin). */
-export async function testProvider(provider: AiProvider, key: string, model?: string): Promise<{ ok: boolean; text?: string; error?: string }> {
+export async function testProvider(provider: AiProvider, key: string, model?: string): Promise<{ ok: boolean; text?: string; error?: string; model?: string }> {
   try {
-    const text = await callProvider(
+    const r = await callWithModels(
       provider,
       key,
       model || DEFAULT_MODELS[provider],
@@ -170,9 +195,10 @@ export async function testProvider(provider: AiProvider, key: string, model?: st
         { role: 'system', content: 'Rispondi in italiano con una sola frase breve.' },
         { role: 'user', content: 'Saluta i clienti della barberia.' },
       ],
-      12000
+      12000,
+      5
     );
-    return { ok: true, text };
+    return { ok: true, text: r.text, model: r.model };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }

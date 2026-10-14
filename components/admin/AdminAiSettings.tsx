@@ -187,7 +187,7 @@ export function AdminAiSettings({ initial }: { initial: AiSettingsView }) {
         })}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3 pb-24">
         <p className="text-xs text-white/50">Le chiavi restano private: non sono mai mostrate per intero né inviate ai clienti.</p>
         <button
           type="button"

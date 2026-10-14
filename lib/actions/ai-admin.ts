@@ -79,7 +79,9 @@ export async function testAiAction(provider: AiProvider, key?: string): Promise<
         ? 'Limite gratuito raggiunto per ora: riprova più tardi (intanto la chat usa la riserva).'
         : /abort/i.test(code)
           ? 'Il servizio non ha risposto in tempo.'
-          : `Errore: ${code}`;
+          : /\b(500|502|503|504)\b/.test(code)
+            ? 'Il servizio è sovraccarico in questo momento. La chiave è salvabile: la chat riproverà da sola.'
+            : `Errore: ${code}`;
     return { ok: false, error: human };
   }
   return r;
