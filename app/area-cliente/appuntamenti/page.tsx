@@ -1,11 +1,15 @@
 import { createClient } from '@/lib/supabase/server';
-import { getProfile } from '@/lib/auth';
+import { getProfile, getSession } from '@/lib/auth';
+import { claimGuestAppointments } from '@/lib/auth/ensure-profile';
 import { AppointmentCard } from '@/components/customer/AppointmentCard';
 import { groupComboAppointments } from '@/lib/utils/group-appointments';
 
 export const metadata = { title: 'I miei appuntamenti' };
 
 export default async function CustomerAppointmentsPage() {
+  // Collega le prenotazioni fatte senza account (stessa email verificata), anche per chi era già dentro.
+  const user = await getSession();
+  if (user) await claimGuestAppointments(user);
   const profile = await getProfile();
   const supabase = await createClient();
   if (!supabase) {
