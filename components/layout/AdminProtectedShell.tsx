@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { AdminSidebar } from '@/components/layout/AdminSidebar';
 import { AdminFloatingSaveButton } from '@/components/admin/AdminFloatingSaveButton';
 import { AdminSaveProvider } from '@/components/admin/AdminSaveContext';
+import { AutoRefreshOnUpdate } from '@/components/layout/AutoRefreshOnUpdate';
 import './admin-skin.css';
 
 /** Etichetta della sezione mostrata sopra il titolo di ogni pagina (come "Dashboard" nella dashboard). */
@@ -27,6 +28,7 @@ export function AdminProtectedShell({ children, readOnly = false }: { children: 
   const section = wide ? null : SECTIONS.find(([p]) => pathname === p || pathname.startsWith(`${p}/`))?.[1] ?? null;
   return (
     <AdminSaveProvider>
+      <AutoRefreshOnUpdate />
       <div className="flex min-h-screen bg-black print:bg-white">
         <div className="contents print:hidden">
           <AdminSidebar />

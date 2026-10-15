@@ -1,7 +1,12 @@
 import type { NextConfig } from 'next';
 
+// Identificativo della versione pubblicata: serve a far ricaricare da sola la scheda dell'admin
+// quando esce una versione nuova (vedi components/layout/AutoRefreshOnUpdate.tsx).
+const BUILD_ID = process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || 'dev';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  env: { NEXT_PUBLIC_BUILD_ID: BUILD_ID },
   compress: true,
   poweredByHeader: false,
   experimental: {
