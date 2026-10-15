@@ -33,7 +33,7 @@ export function AdminProtectedShell({ children, readOnly = false }: { children: 
         <div className="contents print:hidden">
           <AdminSidebar />
         </div>
-        <main className="adm-skin relative min-w-0 flex-1 p-6 pb-24 lg:ml-60 lg:p-8 lg:pb-24 print:ml-0 print:p-0">
+        <main className="adm-skin relative min-w-0 flex-1 p-6 pb-24 lg:ml-[198px] lg:p-8 lg:pb-24 print:ml-0 print:p-0">
           <div className={`mx-auto w-full ${wide ? 'max-w-[1500px]' : 'max-w-5xl'}`}>
             {section && <p className="adm-eyebrow print:hidden">{section}</p>}
             {children}

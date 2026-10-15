@@ -682,7 +682,7 @@ html.is-app .ct-sede { display: none !important; }
   align-items: center;
   gap: 0.65rem;
   min-width: 0;
-  margin: 0.2rem 0.3rem 1.6rem;
+  margin: 0.1rem 0.2rem 1rem;
   font-weight: 800;
   font-size: 0.98rem;
   color: #fff;
@@ -754,10 +754,10 @@ html.is-app .ct-sede { display: none !important; }
 .adm-link {
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  padding: 0.6rem 0.8rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
+  gap: 0.55rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 9px;
+  font-size: 0.8rem;
   font-weight: 500;
   color: rgba(244, 239, 231, 0.62);
   transition: background-color 0.15s, color 0.15s;
@@ -771,8 +771,8 @@ html.is-app .ct-sede { display: none !important; }
 }
 .adm-link.is-active svg { color: #e8b96a; }
 .adm-promo {
-  margin-top: 1.2rem;
-  padding: 1rem;
+  margin-top: 0.8rem;
+  padding: 0.7rem;
   border-radius: 14px;
   border: 1px solid rgba(232, 185, 106, 0.3);
   background:
@@ -784,11 +784,11 @@ html.is-app .ct-sede { display: none !important; }
 .adm-promo-text { margin-top: 0.25rem; font-size: 0.74rem; line-height: 1.45; color: rgba(244, 239, 231, 0.6); }
 .adm-promo-btn {
   display: block;
-  margin-top: 0.8rem;
-  padding: 0.55rem;
+  margin-top: 0.55rem;
+  padding: 0.45rem;
   border-radius: 9px;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 700;
   color: #111;
   background: linear-gradient(140deg, #f0c378, #c48f45);

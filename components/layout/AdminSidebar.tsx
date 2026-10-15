@@ -86,14 +86,14 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── 1. SIDEBAR DESKTOP (lg+) ── */}
-      <aside className="adm-side hidden lg:flex fixed left-0 top-0 bottom-0 z-30 h-screen w-60 flex-col overflow-y-auto overflow-x-hidden p-4">
+      <aside className="adm-side hidden lg:flex fixed left-0 top-0 bottom-0 z-30 h-screen w-[198px] flex-col overflow-y-auto overflow-x-hidden p-3">
         <Link href="/admin/dashboard" className="adm-brand" aria-label="Barberia Garofalo · Admin">
           <Image
             src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"
             alt="Barberia Garofalo"
             width={150}
             height={100}
-            className="h-[56px] w-auto object-contain"
+            className="h-[44px] w-auto object-contain"
             style={{ mixBlendMode: 'screen' }}
             priority
           />
@@ -105,7 +105,7 @@ export function AdminSidebar() {
             </span>
           </span>
         </Link>
-        <nav className="flex-1 space-y-1" aria-label="Menu amministrazione">
+        <nav className="flex-1 space-y-0.5" aria-label="Menu amministrazione">
           {links.map(({ href, label, icon: Icon, exact }) => {
             const isActive = exact
               ? pathname === href
@@ -119,7 +119,7 @@ export function AdminSidebar() {
                 aria-current={isActive ? 'page' : undefined}
                 className={cn('adm-link', isActive && 'is-active')}
               >
-                <Icon size={17} />
+                <Icon size={16} />
                 {label}
               </Link>
             );
@@ -130,8 +130,7 @@ export function AdminSidebar() {
             <BellRing size={18} />
           </span>
           <p className="adm-promo-title">Avvisa i clienti</p>
-          <p className="adm-promo-text">Manda una notifica a chi ha l&apos;app: offerte, posti liberi, chiusure.</p>
-          <Link href="/admin/messaggi?tab=notifiche" className="adm-promo-btn">
+                    <Link href="/admin/messaggi?tab=notifiche" className="adm-promo-btn">
             Scrivi ora
           </Link>
         </div>
