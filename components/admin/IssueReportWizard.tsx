@@ -354,50 +354,48 @@ export function IssueReportWizard({ initialReports, readOnly = false }: { initia
         {reports.length === 0 ? (
           <p className="mt-3 text-sm text-white/45">Nessuna segnalazione inviata.</p>
         ) : (
-          <div className="mt-4 space-y-4">
+          <div className="mt-3 space-y-2.5">
             {reports.map((r) => {
               const st = STATUS[r.status] ?? STATUS.in_analisi;
               const pr = PRIORITIES.find((x) => x.id === r.priority);
               const closed = r.status === 'risolto_manuale' || r.status === 'chiuso';
               return (
-                <article key={r.id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#121212] to-[#0a0a0a]">
-                  <div className="flex flex-wrap items-center gap-2 px-5 pt-4 text-[11px]">
-                    <span className={cn('rounded-full border px-2.5 py-0.5 font-semibold', st.cls)}>{st.label}</span>
-                    {pr && <span className={cn('rounded-full border px-2.5 py-0.5 font-semibold uppercase tracking-wider', pr.cls)}>{pr.label}</span>}
+                <article key={r.id} className="rounded-xl border border-white/10 bg-[#0e0e0e] px-4 py-3">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
+                    <span className={cn('rounded-full border px-2 py-px font-semibold', st.cls)}>{st.label}</span>
+                    {pr && <span className={cn('rounded-full border px-2 py-px font-semibold uppercase tracking-wider', pr.cls)}>{pr.label}</span>}
                     <span className="text-white/45">{r.areaName}</span>
-                    <span className="ml-auto text-white/40">
-                      {new Date(r.createdAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' })}
+                    <span className="ml-auto text-white/35">
+                      {new Date(r.createdAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Rome' })}
                     </span>
                   </div>
-                  <div className="px-5 pb-4 pt-2">
-                    <h3 className="text-lg font-semibold text-white">{r.title}</h3>
-                    <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-white/60">{r.description}</p>
-                  </div>
+                  <h3 className="mt-1.5 text-[15px] font-semibold leading-snug text-white">{r.title}</h3>
+                  <p className="mt-0.5 line-clamp-2 whitespace-pre-wrap text-[13px] leading-snug text-white/55">{r.description}</p>
                   {!closed && (
-                    <div className="border-t border-white/8 bg-black/30 px-5 py-4">
+                    <div className="mt-2.5 border-t border-white/8 pt-2.5">
                       <IssueAssistantPanel reportId={r.id} initial={r.aiProposal} readOnly={readOnly} />
                     </div>
                   )}
-                  <div className="flex items-center justify-between gap-2 border-t border-white/8 px-5 py-3">
+                  <div className="mt-2.5 flex items-center justify-between gap-2">
                     <button
                       type="button"
                       onClick={() => remove(r)}
                       disabled={pending}
-                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-white/40 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                      className="inline-flex items-center gap-1 rounded-full py-1 text-[11px] text-white/35 transition hover:text-red-400 disabled:opacity-40"
                       aria-label={`Elimina ${r.title}`}
                     >
-                      <Trash2 size={13} aria-hidden /> Elimina
+                      <Trash2 size={12} aria-hidden /> Elimina
                     </button>
                     <button
                       type="button"
                       onClick={() => setStatus(r, closed ? 'in_analisi' : 'risolto_manuale')}
                       disabled={pending}
                       className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition disabled:opacity-40',
+                        'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition disabled:opacity-40',
                         closed ? 'border border-white/15 text-white/60 hover:text-white' : 'bg-gold text-black hover:bg-gold-light'
                       )}
                     >
-                      {!closed && <Check size={13} aria-hidden />}
+                      {!closed && <Check size={12} aria-hidden />}
                       {closed ? 'Riapri' : 'Segna risolta'}
                     </button>
                   </div>
