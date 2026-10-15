@@ -1,11 +1,13 @@
-import { AdminCustomersList, NewCustomerBookingButton } from '@/components/admin/AdminCustomersList';
+import { AdminCustomersList } from '@/components/admin/AdminCustomersList';
+import { getProfile } from '@/lib/auth';
 import { getCustomers, getCustomersActivity } from '@/lib/actions/admin';
 import { getPresenceAction } from '@/lib/actions/presence-admin';
 
 export const metadata = { title: 'Clienti' };
 
 export default async function AdminClientiPage() {
-  const [customers, activity, presence] = await Promise.all([getCustomers(), getCustomersActivity().catch(() => ({})), getPresenceAction()]);
+  const [customers, activity, presence, me] = await Promise.all([getCustomers(), getCustomersActivity().catch(() => ({})), getPresenceAction(), getProfile()]);
+  const readOnly = me?.role === 'tester';
 
   return (
     <div>
@@ -18,10 +20,9 @@ export default async function AdminClientiPage() {
             Elenco completo dei clienti registrati · {customers.length} {customers.length === 1 ? 'cliente' : 'clienti'}
           </p>
         </div>
-        <NewCustomerBookingButton />
       </div>
       <div className="mt-6">
-        <AdminCustomersList customers={customers} activity={activity} presence={presence} />
+        <AdminCustomersList customers={customers} activity={activity} presence={presence} readOnly={readOnly} />
       </div>
     </div>
   );

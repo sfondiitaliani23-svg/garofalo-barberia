@@ -593,6 +593,72 @@ export async function getCustomers() {
   return tester ? maskForTester(data ?? []) : (data ?? []);
 }
 
+export interface AdminCustomerInput {
+  fullName: string;
+  phone?: string;
+  hairPreferences?: string;
+  personalNotes?: string;
+}
+
+/** Modifica i dati di un cliente (solo admin). L'email non si cambia da qui: è quella con cui accede. */
+export async function updateAdminCustomer(customerId: string, input: AdminCustomerInput): Promise<{ ok: boolean; error?: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+
+  const fullName = input.fullName?.trim() ?? '';
+  if (fullName.length < 2) return { ok: false, error: 'Scrivi il nome del cliente.' };
+  if (fullName.length > 120) return { ok: false, error: 'Il nome è troppo lungo.' };
+  const phone = input.phone?.trim() ?? '';
+  if (phone && !/^[+\d][\d\s().-]{5,24}$/.test(phone)) return { ok: false, error: 'Il numero di telefono non sembra valido.' };
+
+  const { data: target } = await supabase.from('profiles').select('id, role').eq('id', customerId).maybeSingle();
+  if (!target) return { ok: false, error: 'Cliente non trovato.' };
+  if (target.role !== 'customer') return { ok: false, error: 'Puoi modificare solo i clienti.' };
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: fullName,
+      phone: phone || null,
+      hair_preferences: input.hairPreferences?.trim().slice(0, 1000) || null,
+      personal_notes: input.personalNotes?.trim().slice(0, 2000) || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', customerId);
+  if (error) return { ok: false, error: 'Non sono riuscito a salvare. Riprova.' };
+
+  revalidatePath('/admin/clienti');
+  revalidateTag('admin-overview');
+  return { ok: true };
+}
+
+/**
+ * Elimina un cliente (solo admin): toglie l'account e il profilo, e con essi la sua galleria.
+ * Le sue prenotazioni restano nel calendario e nello storico con nome e telefono, ma senza collegamento all'account.
+ */
+export async function deleteAdminCustomer(customerId: string): Promise<{ ok: boolean; error?: string }> {
+  const admin = await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
+  if (customerId === admin.id) return { ok: false, error: 'Non puoi eliminare il tuo account.' };
+
+  const { data: target } = await supabase.from('profiles').select('id, role').eq('id', customerId).maybeSingle();
+  if (!target) return { ok: false, error: 'Cliente non trovato.' };
+  if (target.role !== 'customer') return { ok: false, error: 'Puoi eliminare solo i clienti.' };
+
+  const { error } = await supabase.auth.admin.deleteUser(customerId);
+  if (error) return { ok: false, error: 'Non sono riuscito a eliminare il cliente. Riprova.' };
+
+  // Se il profilo non è sparito da solo (nessun legame a cascata), lo tolgo io.
+  await supabase.from('profiles').delete().eq('id', customerId).eq('role', 'customer');
+
+  revalidatePath('/admin/clienti');
+  revalidatePath('/admin/prenotazioni');
+  revalidateTag('admin-overview');
+  return { ok: true };
+}
+
 export interface CustomerActivity {
   /** Data dell'ultima prenotazione non annullata (passata o futura). */
   lastAppointmentAt: string | null;

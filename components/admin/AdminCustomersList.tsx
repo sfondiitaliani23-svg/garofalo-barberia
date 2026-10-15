@@ -2,16 +2,19 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Images, MessageCircle, Phone, Plus, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Images, MessageCircle, Pencil, Phone, Search, Trash2 } from 'lucide-react';
 import type { Profile } from '@/types/database';
 import type { CustomerActivity } from '@/lib/actions/admin';
 import type { PresenceSnapshot } from '@/lib/utils/presence';
 import { PresenceDot, usePresence } from '@/components/admin/PresencePanel';
+import { DeleteCustomerDialog, EditCustomerDialog } from '@/components/admin/AdminCustomerDialogs';
 
 interface AdminCustomersListProps {
   customers: Profile[];
   activity?: Record<string, CustomerActivity>;
   presence?: PresenceSnapshot;
+  /** Il tester guarda ma non modifica: niente pulsanti Modifica/Elimina. */
+  readOnly?: boolean;
 }
 
 type StatusFilter = 'all' | 'active' | 'upcoming' | 'never';
@@ -53,7 +56,7 @@ function matchesQuery(customer: Profile, query: string) {
   return haystack.includes(query);
 }
 
-export function AdminCustomersList({ customers, activity = {}, presence: presenceInit }: AdminCustomersListProps) {
+export function AdminCustomersList({ customers, activity = {}, presence: presenceInit, readOnly = false }: AdminCustomersListProps) {
   const presence = usePresence(presenceInit ?? { byUser: {}, team: [], onlineCustomers: [], generatedAt: '' });
   const [search, setSearch] = useState('');
   // Ricerca arrivata dalla dashboard (?q=...)
@@ -65,6 +68,8 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
   const [period, setPeriod] = useState<PeriodFilter>('all');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
+  const [editing, setEditing] = useState<Profile | null>(null);
+  const [deleting, setDeleting] = useState<Profile | null>(null);
 
   const now = Date.now();
   const isActive = (id: string) => {
@@ -248,6 +253,28 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
                         >
                           <Images size={15} />
                         </Link>
+                        {!readOnly && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setEditing(c)}
+                              className="rounded-md p-2 text-white/55 transition hover:bg-white/5 hover:text-gold"
+                              title="Modifica cliente"
+                              aria-label={`Modifica ${c.full_name ?? 'cliente'}`}
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleting(c)}
+                              className="rounded-md p-2 text-white/55 transition hover:bg-red-500/10 hover:text-red-400"
+                              title="Elimina cliente"
+                              aria-label={`Elimina ${c.full_name ?? 'cliente'}`}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -290,18 +317,9 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
           </nav>
         )}
       </div>
-    </div>
-  );
-}
 
-export function NewCustomerBookingButton() {
-  return (
-    <Link
-      href="/admin/prenotazioni"
-      className="inline-flex h-10 items-center gap-2 rounded-full bg-gold px-5 text-sm font-semibold text-black transition hover:bg-gold-light"
-    >
-      <Plus size={16} aria-hidden />
-      Nuova prenotazione
-    </Link>
+      {editing && <EditCustomerDialog key={editing.id} customer={editing} onClose={() => setEditing(null)} />}
+      {deleting && <DeleteCustomerDialog customer={deleting} hasUpcoming={!!activity[deleting.id]?.hasUpcoming} onClose={() => setDeleting(null)} />}
+    </div>
   );
 }
