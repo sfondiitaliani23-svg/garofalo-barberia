@@ -3,6 +3,7 @@
 import { requireAdminView } from '@/lib/auth';
 import { maskForTester } from '@/lib/utils/tester-mask';
 import { unstable_cache } from 'next/cache';
+import { fetchAllRows } from '@/lib/utils/fetch-all';
 import { createServiceClient } from '@/lib/supabase/server';
 import type { OverviewData, OverviewApt } from '@/lib/utils/dashboard-overview';
 
@@ -35,7 +36,10 @@ async function buildOverview(): Promise<OverviewData> {
   const [servicesRes, barbersRes, customersRes, recentRes, unreadRes] = await Promise.all([
     supabase.from('services').select('id, name, category, price_cents, duration_minutes'),
     supabase.from('barbers').select('id, name, image_url, is_active, sort_order').order('sort_order'),
-    supabase.from('profiles').select('created_at').eq('role', 'customer').gte('created_at', from).limit(20000),
+    fetchAllRows<{ created_at: string }>(
+      () => supabase.from('profiles').select('id', { head: true, count: 'exact' }).eq('role', 'customer').gte('created_at', from),
+      (a, b) => supabase.from('profiles').select('created_at').eq('role', 'customer').gte('created_at', from).order('created_at').order('id').range(a, b)
+    ),
     supabase
       .from('appointments')
       .select('id, customer_name, starts_at, created_at, status, discount_cents, service:services(name, price_cents), barber:barbers(name)')
@@ -121,7 +125,7 @@ async function buildOverview(): Promise<OverviewData> {
     services,
     barbers,
     apts,
-    customers: (customersRes.data ?? []).map((c) => new Date(c.created_at as string).getTime()),
+    customers: customersRes.map((c) => new Date(c.created_at as string).getTime()),
     recent,
     unread: unreadRes.count ?? 0,
   };

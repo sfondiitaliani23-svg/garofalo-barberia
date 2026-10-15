@@ -3,6 +3,7 @@
 import { unstable_cache } from 'next/cache';
 import { requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
+import { fetchAllRows } from '@/lib/utils/fetch-all';
 import {
   countLiveVisitors,
   endVisitorSession,
@@ -166,18 +167,19 @@ async function buildAnalyticsStats(): Promise<AnalyticsStats> {
 
   // Esegue SOLO 3 query aggregate invece di 12 query separate
   const [viewsRes, sessionsRes, liveVisitors] = await Promise.all([
-    supabase
-      .from('page_views')
-      .select('viewed_at')
-      .gte('viewed_at', cutoff.toISOString()),
-    supabase
-      .from('visitor_sessions')
-      .select('gender, age_range'),
+    fetchAllRows<{ viewed_at: string }>(
+      () => supabase.from('page_views').select('id', { head: true, count: 'exact' }).gte('viewed_at', cutoff.toISOString()),
+      (from, to) => supabase.from('page_views').select('viewed_at').gte('viewed_at', cutoff.toISOString()).order('viewed_at').order('id').range(from, to)
+    ),
+    fetchAllRows<{ gender: string | null; age_range: string | null }>(
+      () => supabase.from('visitor_sessions').select('id', { head: true, count: 'exact' }),
+      (from, to) => supabase.from('visitor_sessions').select('gender, age_range').order('id').range(from, to)
+    ),
     countLiveVisitors(),
   ]);
 
-  const allViews = viewsRes.data ?? [];
-  const allSessions = sessionsRes.data ?? [];
+  const allViews = viewsRes;
+  const allSessions = sessionsRes;
 
   let dailyVisits = 0;
   let yesterdayVisits = 0;
@@ -329,13 +331,13 @@ export async function getLiveTrafficData(): Promise<LiveTrafficData> {
 
   const [
     liveCount,
-    { data: pageViews }
+    pageViews
   ] = await Promise.all([
     countLiveVisitors(),
-    supabase
-      .from('page_views')
-      .select('session_id, viewed_at')
-      .gte('viewed_at', cutoff31.toISOString())
+    fetchAllRows<{ session_id: string; viewed_at: string }>(
+      () => supabase.from('page_views').select('id', { head: true, count: 'exact' }).gte('viewed_at', cutoff31.toISOString()),
+      (from, to) => supabase.from('page_views').select('session_id, viewed_at').gte('viewed_at', cutoff31.toISOString()).order('viewed_at').order('id').range(from, to)
+    ),
   ]);
 
   const todayHourlyCount = Array(24).fill(0);
