@@ -26,6 +26,7 @@ const rye = Rye({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   applicationName: SITE_CONFIG.name,
+  verification: { google: '4ezO--bP8Gm5YWvpCklo0AIUa4OORx8yFxQ7dgmVWbg' },
   keywords: ['barbiere Foggia', 'barberia Foggia', 'taglio uomo Foggia', 'barba Foggia', 'taglio bambino Foggia', 'Barberia Garofalo'],
   openGraph: {
     type: 'website',
