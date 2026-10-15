@@ -23,7 +23,8 @@ export function AdminFloatingSaveButton() {
           Prenotazione Istantanea
         </button>
 
-        {/* Bottone Salva */}
+        {/* Bottone Salva: visibile solo quando ci sono modifiche */}
+        {(isDirty || isSaving) && (
         <button
           type="button"
           onClick={() => void saveAll()}
@@ -39,6 +40,7 @@ export function AdminFloatingSaveButton() {
           <Save size={18} />
           {isSaving ? 'Salvataggio...' : 'Salva'}
         </button>
+        )}
       </div>
 
       <AdminInstantBookingModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
