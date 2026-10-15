@@ -21,7 +21,7 @@ export default async function AdminDashboardPage() {
   const firstTwo = name.split(/\s+/).slice(0, 2).join(' ');
 
   return (
-    <AdminOverview data={overview} visitsHistory={analytics.visitsHistory ?? []} userName={firstTwo} userRole="Amministratore">
+    <AdminOverview data={overview} visitsHistory={analytics.visitsHistory ?? []} userName={firstTwo} userRole={profile?.role === 'tester' ? 'Tester' : 'Amministratore'}>
       <DashboardLive presence={presence} />
     </AdminOverview>
   );

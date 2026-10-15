@@ -1,6 +1,6 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { emailHash, findComebackCandidates, type ComebackStats } from '@/lib/utils/comeback';
 
@@ -11,7 +11,7 @@ import { emailHash, findComebackCandidates, type ComebackStats } from '@/lib/uti
  * Una email conta come "tornato" se lo stesso indirizzo prenota entro 30 giorni dall'invio.
  */
 export async function getComebackStatsAction(): Promise<ComebackStats> {
-  await requireAdmin();
+  await requireAdminView();
   const empty: ComebackStats = { sent30: 0, sent90: 0, booked90: 0, rate90: 0, optouts: 0, nextRun: 0, recent: [] };
   const supabase = await createServiceClient();
   if (!supabase) return empty;

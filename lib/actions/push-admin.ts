@@ -1,12 +1,12 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { pushAudience, sendPushToAll, type BroadcastLog } from '@/lib/utils/push';
 
 
 export async function getPushOverviewAction(): Promise<{ devices: number; users: number; history: BroadcastLog[] }> {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   const audience = await pushAudience();
   if (!supabase) return { ...audience, history: [] };

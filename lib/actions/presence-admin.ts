@@ -1,12 +1,13 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminView } from '@/lib/auth';
+import { maskForTester } from '@/lib/utils/tester-mask';
 import { createServiceClient } from '@/lib/supabase/server';
 import { ONLINE_WINDOW_MS, type PresenceInfo, type PresenceSnapshot } from '@/lib/utils/presence';
 
 /** Chi è sul sito adesso e l'ultimo accesso di ogni utente registrato. Solo admin. */
 export async function getPresenceAction(): Promise<PresenceSnapshot> {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const now = Date.now();
   const empty: PresenceSnapshot = { byUser: {}, team: [], onlineCustomers: [], generatedAt: new Date(now).toISOString() };
   const supabase = await createServiceClient();
@@ -37,8 +38,8 @@ export async function getPresenceAction(): Promise<PresenceSnapshot> {
     };
     byUser[p.id] = info;
     const name = (p.full_name as string | null) || (p.email as string | null) || 'Utente';
-    if (p.role === 'admin') team.push({ id: p.id, name, email: p.email as string | null, presence: info });
-    else if (info.online) onlineCustomers.push({ id: p.id, name });
+    if (p.role === 'admin') team.push({ id: p.id, name: tester && name === p.email ? 'Admin' : name, email: tester ? null : (p.email as string | null), presence: info });
+    else if (info.online) onlineCustomers.push({ id: p.id, name: tester ? 'Cliente' : name });
   }
   return { byUser, team, onlineCustomers, generatedAt: new Date(now).toISOString() };
 }

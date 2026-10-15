@@ -1,6 +1,6 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { clearAiConfigCache, readAiConfig, testProvider, type AiProvider } from '@/lib/chat/ai';
 import type { AiSettingsView } from '@/lib/utils/ai-settings';
@@ -8,7 +8,7 @@ import type { AiSettingsView } from '@/lib/utils/ai-settings';
 const mask = (k?: string) => (k ? `${k.slice(0, 4)}••••${k.slice(-4)}` : null);
 
 export async function getAiSettingsAction(): Promise<AiSettingsView> {
-  await requireAdmin();
+  await requireAdminView();
   const cfg = await readAiConfig(true);
   const supabase = await createServiceClient();
   const days: AiSettingsView['days'] = [];

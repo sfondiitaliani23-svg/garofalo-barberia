@@ -2,7 +2,8 @@
 
 import { addDays, addMinutes, parseISO, startOfWeek } from 'date-fns';
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAdminView } from '@/lib/auth';
+import { maskForTester } from '@/lib/utils/tester-mask';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
 import { parseBookingDateTime, getShopDateString, getShopTimeString, getShopDayBounds, getShopTimezoneOffset } from '@/lib/utils/booking-datetime';
@@ -52,7 +53,7 @@ function revalidateAppointmentPaths() {
 }
 
 export async function getAdminStats() {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) {
     return {
@@ -176,7 +177,7 @@ export async function getAdminStats() {
 }
 
 export async function getAdminAppointments(from: string, to: string, barberId?: string) {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -190,7 +191,7 @@ export async function getAdminAppointments(from: string, to: string, barberId?: 
   if (barberId && barberId !== 'all') query = query.eq('barber_id', barberId);
 
   const { data } = await query;
-  return data ?? [];
+  return tester ? maskForTester(data ?? []) : (data ?? []);
 }
 
 export async function getAdminWeekAppointments(weekStartDate: string, barberId?: string) {
@@ -201,7 +202,7 @@ export async function getAdminWeekAppointments(weekStartDate: string, barberId?:
 }
 
 export async function getUpcomingAdminAppointments(limit = 1500) {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -216,11 +217,11 @@ export async function getUpcomingAdminAppointments(limit = 1500) {
     .order('starts_at', { ascending: true })
     .limit(limit);
 
-  return data ?? [];
+  return tester ? maskForTester(data ?? []) : (data ?? []);
 }
 
 export async function getPastAdminAppointments(limit = 500) {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -235,11 +236,11 @@ export async function getPastAdminAppointments(limit = 500) {
     .order('starts_at', { ascending: false })
     .limit(limit);
 
-  return data ?? [];
+  return tester ? maskForTester(data ?? []) : (data ?? []);
 }
 
 export async function getAllAdminAppointments(limit = 2000) {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -250,11 +251,11 @@ export async function getAllAdminAppointments(limit = 2000) {
     .order('starts_at', { ascending: false })
     .limit(limit);
 
-  return data ?? [];
+  return tester ? maskForTester(data ?? []) : (data ?? []);
 }
 
 export async function getYesterdayAdminAppointments(limit = 200) {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -273,7 +274,7 @@ export async function getYesterdayAdminAppointments(limit = 200) {
     .order('starts_at', { ascending: true })
     .limit(limit);
 
-  return data ?? [];
+  return tester ? maskForTester(data ?? []) : (data ?? []);
 }
 
 export async function createAdminAppointment(input: AdminAppointmentInput): Promise<CreateAdminAppointmentResult> {
@@ -577,7 +578,7 @@ export async function updateAppointmentStatus(id: string, status: string) {
 }
 
 export async function getCustomers() {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -588,7 +589,7 @@ export async function getCustomers() {
     .order('created_at', { ascending: false })
     .limit(1000);
 
-  return data ?? [];
+  return tester ? maskForTester(data ?? []) : (data ?? []);
 }
 
 export interface CustomerActivity {
@@ -604,7 +605,7 @@ export interface CustomerActivity {
 
 /** Attività di prenotazione per ogni cliente registrato (chiave: id profilo). */
 export async function getCustomersActivity(): Promise<Record<string, CustomerActivity>> {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return {};
 
@@ -659,7 +660,7 @@ export interface AdminServiceInput {
 const SERVICE_CATEGORIES = ['taglio', 'barba', 'styling', 'baby'] as const;
 
 export async function getAdminServices() {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -782,7 +783,7 @@ const DEFAULT_WEEKLY_SCHEDULE: AdminDayScheduleInput[] = [2, 3, 4, 5, 6].map((da
 
 
 export async function getAdminTimeOffForWeek(weekStartDate: string) {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -801,7 +802,7 @@ export async function getAdminTimeOffForWeek(weekStartDate: string) {
 }
 
 export async function getAdminTeamData() {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) {
     return { barbers: [], availability: [], timeOff: [] };
@@ -1050,7 +1051,7 @@ function revalidatePromotionPaths() {
 }
 
 export async function getAdminPromotions() {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return { promotions: [], services: [] };
 
@@ -1169,7 +1170,7 @@ export interface AdminProductInput {
 const PRODUCT_CATEGORIES = ['perfume', 'cosmetic', 'accessory', 'other'] as const;
 
 export async function getAdminProducts() {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 

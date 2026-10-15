@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getAllArticles, type AdminArticle } from '@/lib/data/journal-store';
 import { blocksToText, readMinutes, slugify, textToBlocks } from '@/lib/data/journal-text';
@@ -9,7 +9,7 @@ import { blocksToText, readMinutes, slugify, textToBlocks } from '@/lib/data/jou
 
 
 export async function getAdminArticlesAction(): Promise<AdminArticle[]> {
-  await requireAdmin();
+  await requireAdminView();
   const all = await getAllArticles({ includeDrafts: true, fresh: true });
   return all.map((a) => ({
     slug: a.slug,

@@ -1,6 +1,6 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 
 /** Clic importanti degli ultimi N giorni: totali per tipo e pagine che li generano. */
@@ -9,7 +9,7 @@ export async function getClickStatsAction(days = 30): Promise<{
   prev: Record<string, number>;
   topPages: Record<string, { path: string; n: number }[]>;
 }> {
-  await requireAdmin();
+  await requireAdminView();
   const empty = { totals: {}, prev: {}, topPages: {} };
   const supabase = await createServiceClient();
   if (!supabase) return empty;

@@ -2,7 +2,7 @@
 
 import { format, subMonths } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 
 export interface ServiceRanking {
@@ -83,7 +83,7 @@ function unwrapRelation<T>(value: T | T[] | null): T | null {
 }
 
 export async function getBookingAnalytics(): Promise<BookingAnalytics> {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return emptyAnalytics();
 
@@ -248,7 +248,7 @@ const PLACEHOLDER_NAMES = /^(chiusura|chiuso|pausa|ferie|blocco|bloccato|riserva
 
 /** Tutte le prenotazioni degli ultimi 24 mesi, senza il tetto di 1000 righe. */
 export async function getAnalyticsRows(): Promise<{ configured: boolean; rows: AnalyticsRow[] }> {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return { configured: false, rows: [] };
 

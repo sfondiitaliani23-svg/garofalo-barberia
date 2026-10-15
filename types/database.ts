@@ -1,4 +1,4 @@
-export type UserRole = 'customer' | 'admin';
+export type UserRole = 'customer' | 'admin' | 'tester';
 export type AppointmentStatus = 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 export type PhotoType = 'before' | 'after';
 export type ServiceCategory = 'taglio' | 'barba' | 'styling' | 'baby';

@@ -1,6 +1,7 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAdminView } from '@/lib/auth';
+import { maskForTester } from '@/lib/utils/tester-mask';
 import { describeGreenApiError, normalizeItalianPhone } from '@/lib/utils/phone';
 
 function getGreenApiCredentials() {
@@ -23,7 +24,7 @@ export async function getWhatsAppStatusAction(): Promise<{
   instanceId?: string;
   error?: string;
 }> {
-  await requireAdmin();
+  await requireAdminView();
   const creds = getGreenApiCredentials();
   if (!creds) {
     return { ok: false, state: 'not_configured', error: 'Green API non configurato nelle variabili d\'ambiente' };
@@ -55,7 +56,8 @@ export async function getWhatsAppQrAction(): Promise<{
   qrBase64?: string;
   error?: string;
 }> {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
+  if (tester) return { ok: false, type: 'error', error: 'Modalità tester: il codice QR di WhatsApp non è visibile.' };
   const creds = getGreenApiCredentials();
   if (!creds) {
     return { ok: false, error: 'Green API non configurato' };
@@ -161,7 +163,7 @@ export async function rebootWhatsAppInstanceAction(): Promise<{ ok: boolean; err
  * Numero WhatsApp collegato all'istanza (getWaSettings di Green API).
  */
 export async function getWhatsAppNumberAction(): Promise<{ ok: boolean; phone?: string }> {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const creds = getGreenApiCredentials();
   if (!creds) return { ok: false };
   try {
@@ -169,7 +171,7 @@ export async function getWhatsAppNumberAction(): Promise<{ ok: boolean; phone?: 
     if (!res.ok) return { ok: false };
     const data = await res.json();
     const phone = typeof data?.phone === 'string' ? data.phone : undefined;
-    return { ok: !!phone, phone };
+    return { ok: !!phone, phone: tester && phone ? '+39 ••• ••• ••••' : phone };
   } catch {
     return { ok: false };
   }
@@ -179,7 +181,7 @@ export async function getWhatsAppNumberAction(): Promise<{ ok: boolean; phone?: 
  * Promemoria WhatsApp realmente inviati (da appointments.reminder_whatsapp_sent_at).
  */
 export async function getWhatsAppReminderStatsAction(): Promise<{ today: number; week: number; pendingTonight: number; lastSentAt: string | null }> {
-  await requireAdmin();
+  await requireAdminView();
   const { createServiceClient } = await import('@/lib/supabase/server');
   const supabase = await createServiceClient();
   const empty = { today: 0, week: 0, pendingTonight: 0, lastSentAt: null };
@@ -232,7 +234,7 @@ export interface TomorrowReminderItem {
  * già scritto, da inviare gratis dal WhatsApp del salone con un tocco.
  */
 export async function getTomorrowWhatsAppQueueAction(): Promise<TomorrowReminderItem[]> {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const { createServiceClient } = await import('@/lib/supabase/server');
   const { addDays } = await import('date-fns');
   const { getShopDateString, getShopDayBounds, parseBookingDateTime, getShopTimeString } = await import('@/lib/utils/booking-datetime');
@@ -255,7 +257,7 @@ export async function getTomorrowWhatsAppQueueAction(): Promise<TomorrowReminder
     .order('starts_at', { ascending: true });
 
   const groups = groupAppointmentsForReminders((data ?? []) as never);
-  return groups.map((g) => ({
+  const queue = groups.map((g) => ({
     ids: g.ids,
     name: g.primary.customer_name,
     phone: g.primary.customer_phone,
@@ -270,6 +272,7 @@ export async function getTomorrowWhatsAppQueueAction(): Promise<TomorrowReminder
       startsAt: new Date(g.primary.starts_at),
     }),
   }));
+  return tester ? maskForTester(queue) : queue;
 }
 
 /** Segna come avvisati tutti gli appuntamenti di un cliente (combo). */

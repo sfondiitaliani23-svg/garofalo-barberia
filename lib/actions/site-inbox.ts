@@ -2,7 +2,8 @@
 
 import { randomUUID } from 'node:crypto';
 import { cookies } from 'next/headers';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireAdminView } from '@/lib/auth';
+import { maskForTester } from '@/lib/utils/tester-mask';
 import { createServiceClient } from '@/lib/supabase/server';
 
 /**
@@ -119,7 +120,7 @@ export async function submitApplicationAction(input: {
 // ─── Admin ──────────────────────────────────────────────────────────────────
 
 export async function getInboxAction(): Promise<InboxItem[]> {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
   const { data } = await supabase
@@ -128,7 +129,7 @@ export async function getInboxAction(): Promise<InboxItem[]> {
     .like('key', `${PREFIX}%`)
     .order('updated_at', { ascending: false })
     .limit(500);
-  return (data ?? []).map((row) => {
+  const items = (data ?? []).map((row) => {
     let parsed: Record<string, string | number | boolean | null> = {};
     try {
       parsed = JSON.parse(row.body ?? '{}');
@@ -139,6 +140,8 @@ export async function getInboxAction(): Promise<InboxItem[]> {
     const { read, ...rest } = parsed;
     return { id: row.id as string, kind, createdAt: row.updated_at as string, read: read === true, data: rest };
   });
+  // Tester: nomi e testi di chi ha scritto restano nascosti.
+  return tester ? maskForTester(items, ['name', 'message', 'role', 'experience']) : items;
 }
 
 export async function markInboxReadAction(id: string): Promise<{ ok: boolean }> {
@@ -167,7 +170,7 @@ export async function deleteInboxItemAction(id: string): Promise<{ ok: boolean }
 
 /** Scansioni dei QR negli ultimi 90 giorni (visite con ?qr=..., solo con consenso statistiche). */
 export async function getQrScanCountsAction(): Promise<Record<string, number>> {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return {};
   const since = new Date(Date.now() - 90 * 86_400_000).toISOString();

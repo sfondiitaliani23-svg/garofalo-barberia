@@ -39,8 +39,12 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   return null;
 });
 
+export const TESTER_BLOCK_MESSAGE = 'Modalità tester: puoi guardare tutto, ma non modificare.';
+
 export const requireRole = cache(async (role: UserRole) => {
   const profile = await getProfile();
+  // Il tester guarda ma non cambia nulla: ogni azione che modifica passa da qui e lo ferma.
+  if (role === 'admin' && profile?.role === 'tester') throw new Error(TESTER_BLOCK_MESSAGE);
   if (!profile || profile.role !== role) {
     if (role === 'admin') {
       redirect('/admin/login');
@@ -54,3 +58,10 @@ export const requireRole = cache(async (role: UserRole) => {
 export const requireAdmin = cache(async () => requireRole('admin'));
 
 export const requireCustomer = cache(async () => requireRole('customer'));
+
+/** Come requireAdmin, ma accetta anche il tester. Solo per azioni che LEGGONO: chi legge deve poi nascondere i dati personali se `tester` è true. */
+export const requireAdminView = cache(async (): Promise<{ profile: Profile; tester: boolean }> => {
+  const profile = await getProfile();
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'tester')) redirect('/admin/login');
+  return { profile, tester: profile.role === 'tester' };
+});

@@ -1,6 +1,6 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import {
   countLiveVisitors,
@@ -84,7 +84,7 @@ export async function trackSessionEnd(sessionId: string) {
 }
 
 export async function getLiveVisitorsCount(): Promise<number> {
-  await requireAdmin();
+  await requireAdminView();
   return countLiveVisitors();
 }
 
@@ -125,7 +125,7 @@ export async function saveDemographics(
 }
 
 export async function getAnalyticsStats(): Promise<AnalyticsStats> {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return emptyStats();
 
@@ -253,7 +253,7 @@ export interface LiveTrafficData {
 }
 
 export async function getLiveTrafficData(): Promise<LiveTrafficData> {
-  await requireAdmin();
+  await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) {
     return {

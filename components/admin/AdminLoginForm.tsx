@@ -50,7 +50,7 @@ function AdminLoginFormInner() {
       .eq('id', data.user.id)
       .single();
 
-    if (profile?.role !== 'admin') {
+    if (profile?.role !== 'admin' && profile?.role !== 'tester') {
       await supabase.auth.signOut();
       setError('Questo account non ha permessi admin.');
       setLoading(false);

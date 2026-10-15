@@ -26,8 +26,8 @@ export async function ensureProfileForAuthUser(user: User) {
     .eq('id', user.id)
     .single();
 
-  const metaRole = user.user_metadata?.role;
-  const role = existingProfile?.role || (metaRole === 'admin' ? 'admin' : 'customer');
+  // Il ruolo non si legge mai dai dati dell'utente (li scrive lui): chi non ha ancora un profilo è cliente.
+  const role = existingProfile?.role || 'customer';
 
   await supabase.from('profiles').upsert(
     {

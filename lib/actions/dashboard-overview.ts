@@ -1,6 +1,7 @@
 'use server';
 
-import { requireAdmin } from '@/lib/auth';
+import { requireAdminView } from '@/lib/auth';
+import { maskForTester } from '@/lib/utils/tester-mask';
 import { createServiceClient } from '@/lib/supabase/server';
 import type { OverviewData, OverviewApt } from '@/lib/utils/dashboard-overview';
 
@@ -13,7 +14,7 @@ const STATUS_CODE: Record<string, 0 | 1 | 2 | 3> = { confirmed: 0, completed: 1,
  * periodo è istantaneo.
  */
 export async function getDashboardOverviewAction(): Promise<OverviewData> {
-  await requireAdmin();
+  const { tester } = await requireAdminView();
   const now = new Date();
   const empty: OverviewData = { now: now.toISOString(), services: [], barbers: [], apts: [], customers: [], recent: [], unread: 0 };
   const supabase = await createServiceClient();
@@ -89,7 +90,7 @@ export async function getDashboardOverviewAction(): Promise<OverviewData> {
     const brb = (Array.isArray(a.barber) ? a.barber[0] : a.barber) as { name?: string } | null;
     return {
       id: a.id as string,
-      name: (a.customer_name as string) ?? 'Cliente',
+      name: tester ? 'Cliente' : ((a.customer_name as string) ?? 'Cliente'),
       service: svc?.name ?? '',
       barber: brb?.name ?? '',
       amount: Math.max(0, (svc?.price_cents ?? 0) - ((a.discount_cents as number) ?? 0)),
