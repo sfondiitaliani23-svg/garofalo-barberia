@@ -1,7 +1,10 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { translateMessage } from '@/lib/i18n/content-booking';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { signInWithEmail, requestPasswordReset } from '@/lib/actions/auth';
@@ -21,6 +24,7 @@ function LoginFormInner({
   qrSessionId?: string;
 }) {
   const router = useRouter();
+  const lang = useLang();
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
   const redirect = searchParams.get('redirect') ?? '/area-cliente/dashboard';
@@ -113,11 +117,11 @@ function LoginFormInner({
           const { signInWithQrTokens } = await import('@/lib/actions/auth');
           const serverRes = await signInWithQrTokens(res.accessToken, res.refreshToken);
           if (serverRes.ok) {
-            toast.success('Accesso autorizzato tramite QR Code!');
+            toast.success(L(lang, 'Accesso autorizzato tramite QR Code!', 'Sign-in authorised with QR code!'));
             router.push(redirect);
             router.refresh();
           } else {
-            toast.error(serverRes.error || 'Errore di sincronizzazione della sessione');
+            toast.error(translateMessage(lang, serverRes.error || 'Errore di sincronizzazione della sessione'));
           }
         } else if (res.status === 'expired') {
           clearInterval(interval);
@@ -132,22 +136,22 @@ function LoginFormInner({
 
     interval = setInterval(poll, 2500);
     return () => clearInterval(interval);
-  }, [qrSessionIdState, qrStatus, redirect, router]);
+  }, [qrSessionIdState, qrStatus, redirect, router, lang]);
 
   useEffect(() => {
     if (error) {
       toast.error(
         isCredentialError
-          ? 'Credenziali non corrette. Verifica email e password.'
-          : safeDecodeURIComponent(error)
+          ? L(lang, 'Credenziali non corrette. Verifica email e password.', 'Incorrect credentials. Please check your email and password.')
+          : translateMessage(lang, safeDecodeURIComponent(error))
       );
     }
-  }, [error, isCredentialError]);
+  }, [error, isCredentialError, lang]);
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail || !resetEmail.includes('@')) {
-      setResetError('Inserisci un indirizzo email valido');
+      setResetError(L(lang, 'Inserisci un indirizzo email valido', 'Please enter a valid email address'));
       return;
     }
     setResetLoading(true);
@@ -155,13 +159,13 @@ function LoginFormInner({
     try {
       const res = await requestPasswordReset(resetEmail);
       if (res.error) {
-        setResetError(res.error);
+        setResetError(translateMessage(lang, res.error));
       } else {
         setResetSuccess(true);
-        toast.success('Email di reimpostazione inviata!');
+        toast.success(L(lang, 'Email di reimpostazione inviata!', 'Reset email sent!'));
       }
     } catch {
-      setResetError('Errore durante l\'invio della richiesta. Riprova più tardi.');
+      setResetError(L(lang, 'Errore durante l\'invio della richiesta. Riprova più tardi.', 'Something went wrong while sending your request. Please try again later.'));
     } finally {
       setResetLoading(false);
     }
@@ -171,7 +175,7 @@ function LoginFormInner({
     return (
       <div className="login-bar login-bar--center" aria-busy="true">
         <Loader2 className="h-7 w-7 animate-spin text-gold" />
-        <span className="sr-only">Caricamento in corso...</span>
+        <span className="sr-only">{L(lang, 'Caricamento in corso...', 'Loading...')}</span>
       </div>
     );
   }
@@ -183,7 +187,7 @@ function LoginFormInner({
   const handleSendWhatsAppOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (phoneNumber.replace(/\D/g, '').length < 9) {
-      toast.error('Inserisci un numero di telefono valido');
+      toast.error(L(lang, 'Inserisci un numero di telefono valido', 'Please enter a valid phone number'));
       return;
     }
     setLoading(true);
@@ -191,12 +195,12 @@ function LoginFormInner({
       const { requestWhatsAppCode } = await import('@/lib/actions/passwordless');
       const res = await requestWhatsAppCode(phoneNumber);
       if (!res.ok) {
-        toast.error(res.error);
+        toast.error(translateMessage(lang, res.error));
         return;
       }
       setOtpCode('');
       setWhatsAppStep('otp');
-      toast.success(res.message ?? 'Codice inviato su WhatsApp.');
+      toast.success(translateMessage(lang, res.message ?? 'Codice inviato su WhatsApp.'));
     } finally {
       setLoading(false);
     }
@@ -205,7 +209,7 @@ function LoginFormInner({
   const handleVerifyWhatsAppOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otpCode.length < 6) {
-      toast.error('Inserisci il codice di 6 cifre');
+      toast.error(L(lang, 'Inserisci il codice di 6 cifre', 'Please enter the 6-digit code'));
       return;
     }
     setLoading(true);
@@ -213,10 +217,10 @@ function LoginFormInner({
       const { verifyWhatsAppCode } = await import('@/lib/actions/passwordless');
       const res = await verifyWhatsAppCode(phoneNumber, otpCode);
       if (!res.ok) {
-        toast.error(res.error);
+        toast.error(translateMessage(lang, res.error));
         return;
       }
-      toast.success('Accesso effettuato.');
+      toast.success(L(lang, 'Accesso effettuato.', 'You are signed in.'));
       router.push(afterLogin);
       router.refresh();
     } finally {
@@ -231,7 +235,7 @@ function LoginFormInner({
     try {
       const { browserSupportsWebAuthn, startAuthentication } = await import('@simplewebauthn/browser');
       if (!browserSupportsWebAuthn()) {
-        toast.error('Questo browser non supporta le Passkey.');
+        toast.error(L(lang, 'Questo browser non supporta le Passkey.', 'This browser does not support Passkeys.'));
         setAuthMethod('email');
         return;
       }
@@ -240,16 +244,20 @@ function LoginFormInner({
       const assertion = await startAuthentication({ optionsJSON });
       const res = await passkeyLoginVerify(assertion);
       if (!res.ok) {
-        toast.error(res.error);
+        toast.error(translateMessage(lang, res.error));
         setAuthMethod('email');
         return;
       }
-      toast.success('Accesso effettuato con Passkey.');
+      toast.success(L(lang, 'Accesso effettuato con Passkey.', 'Signed in with Passkey.'));
       router.push(afterLogin);
       router.refresh();
     } catch (err) {
       const name = (err as { name?: string })?.name;
-      toast.error(name === 'NotAllowedError' ? 'Accesso con Passkey annullato.' : 'Passkey non disponibile su questo dispositivo.');
+      toast.error(
+        name === 'NotAllowedError'
+          ? L(lang, 'Accesso con Passkey annullato.', 'Passkey sign-in cancelled.')
+          : L(lang, 'Passkey non disponibile su questo dispositivo.', 'Passkey is not available on this device.')
+      );
       setAuthMethod('email');
     } finally {
       setLoading(false);
@@ -269,9 +277,9 @@ function LoginFormInner({
       <div className="login-bar login-bar--center">
         <div className="flex flex-col items-center justify-center py-2 space-y-6">
           <div className="text-center space-y-1">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Accedi rapidamente</h3>
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">{L(lang, 'Accedi rapidamente', 'Quick sign-in')}</h3>
             <p className="text-xs text-white/50 max-w-[280px] mx-auto">
-              Inquadra questo QR Code con il tuo telefono per accedere all&apos;istante con Google o Passkey.
+              {L(lang, 'Inquadra questo QR Code con il tuo telefono per accedere all\'istante con Google o Passkey.', 'Scan this QR code with your phone to sign in instantly with Google or Passkey.')}
             </p>
           </div>
 
@@ -279,27 +287,27 @@ function LoginFormInner({
             {qrSessionIdState ? (
               <img
                 src={qrImageUrl}
-                alt="QR Code per il login"
+                alt={L(lang, 'QR Code per il login', 'QR code to sign in')}
                 className="h-[180px] w-[180px] rounded-lg transition-opacity duration-300"
               />
             ) : (
               <div className="flex flex-col items-center justify-center space-y-2 text-white/60">
                 <Loader2 className="h-6 w-6 animate-spin text-gold" />
-                <span className="text-[10px]">Generazione codice...</span>
+                <span className="text-[10px]">{L(lang, 'Generazione codice...', 'Generating code...')}</span>
               </div>
             )}
             
             {qrStatus === 'scanned' && (
               <div className="absolute inset-0 bg-[#111]/90 rounded-2xl flex flex-col items-center justify-center text-center p-4 space-y-2">
                 <Loader2 className="h-6 w-6 animate-spin text-gold" />
-                <p className="text-xs font-semibold text-white">QR Code letto!</p>
-                <p className="text-[10px] text-white/50">Completa l&apos;accesso sul tuo cellulare.</p>
+                <p className="text-xs font-semibold text-white">{L(lang, 'QR Code letto!', 'QR code scanned!')}</p>
+                <p className="text-[10px] text-white/50">{L(lang, 'Completa l\'accesso sul tuo cellulare.', 'Finish signing in on your phone.')}</p>
               </div>
             )}
             
             {qrStatus === 'expired' && (
               <div className="absolute inset-0 bg-[#111]/95 rounded-2xl flex flex-col items-center justify-center text-center p-4 space-y-2">
-                <p className="text-xs font-semibold text-red-400">QR Code scaduto</p>
+                <p className="text-xs font-semibold text-red-400">{L(lang, 'QR Code scaduto', 'QR code expired')}</p>
                 <Button
                   onClick={() => {
                     setQrSessionIdState(null);
@@ -307,7 +315,7 @@ function LoginFormInner({
                   }}
                   className="bg-gold text-black text-[10px] font-bold h-7 px-3 rounded-full hover:bg-gold-light border-none"
                 >
-                  Rigenera QR
+                  {L(lang, 'Rigenera QR', 'Get a new QR')}
                 </Button>
               </div>
             )}
@@ -318,7 +326,7 @@ function LoginFormInner({
             onClick={() => setShowClassicOnDesktop(true)}
             className="text-xs text-gold hover:underline block mx-auto mt-4 transition-all"
           >
-            Oppure usa le credenziali su questo computer
+            {L(lang, 'Oppure usa le credenziali su questo computer', 'Or sign in with your email and password on this computer')}
           </button>
         </div>
       </div>
@@ -328,7 +336,7 @@ function LoginFormInner({
   // Se siamo su cellulare, o se l'utente ha scelto di mostrare il form classico su Desktop
   return (
     <div className="login-bar">
-      <h2 className="sr-only">Accedi all&apos;area cliente</h2>
+      <h2 className="sr-only">{L(lang, 'Accedi all\'area cliente', 'Sign in to your account')}</h2>
       <div className="space-y-4">
         {isCredentialError ? (
           <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 space-y-2.5 text-xs">
@@ -336,10 +344,10 @@ function LoginFormInner({
               <svg className="h-4 w-4 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <span>Credenziali non corrette. Email o password errata.</span>
+              <span>{L(lang, 'Credenziali non corrette. Email o password errata.', 'Incorrect credentials. Wrong email or password.')}</span>
             </div>
             <div className="pt-2 flex items-center justify-between border-t border-red-500/20 text-[11px]">
-              <span className="text-white/70">Hai dimenticato la password?</span>
+              <span className="text-white/70">{L(lang, 'Hai dimenticato la password?', 'Forgot your password?')}</span>
               <button
                 type="button"
                 onClick={() => {
@@ -350,13 +358,13 @@ function LoginFormInner({
                 }}
                 className="text-gold hover:text-gold-light hover:underline font-semibold flex items-center gap-1 cursor-pointer"
               >
-                Reimposta password →
+                {L(lang, 'Reimposta password →', 'Reset password →')}
               </button>
             </div>
           </div>
         ) : error ? (
           <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-            {safeDecodeURIComponent(error)}
+            {translateMessage(lang, safeDecodeURIComponent(error))}
           </p>
         ) : null}
 
@@ -374,7 +382,7 @@ function LoginFormInner({
                   type="email" 
                   required 
                   autoComplete="email" 
-                  placeholder="Inserisci la tua email"
+                  placeholder={L(lang, 'Inserisci la tua email', 'Enter your email')}
                   value={emailValue}
                   onChange={(e) => {
                     setEmailValue(e.target.value);
@@ -391,7 +399,7 @@ function LoginFormInner({
                   type="password"
                   required
                   autoComplete="current-password"
-                  placeholder="Inserisci la tua password"
+                  placeholder={L(lang, 'Inserisci la tua password', 'Enter your password')}
                   className="login-input"
                 />
                 <div className="login-forgot">
@@ -405,12 +413,12 @@ function LoginFormInner({
                     }}
                     className="text-xs text-gold/80 hover:text-gold hover:underline transition-colors cursor-pointer"
                   >
-                    Password dimenticata?
+                    {L(lang, 'Password dimenticata?', 'Forgot your password?')}
                   </button>
                 </div>
               </div>
               <button type="submit" className="login-submit">
-                Accedi
+                {L(lang, 'Accedi', 'Sign in')}
               </button>
             </form>
 
@@ -429,10 +437,10 @@ function LoginFormInner({
           <div className="space-y-4 py-1">
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-white uppercase tracking-wider">
-                Reimposta la tua password
+                {L(lang, 'Reimposta la tua password', 'Reset your password')}
               </h3>
               <p className="text-xs text-white/60">
-                Inserisci l&apos;email del tuo account. Ti invieremo un link per impostare una nuova password.
+                {L(lang, 'Inserisci l\'email del tuo account. Ti invieremo un link per impostare una nuova password.', 'Enter the email of your account. We will send you a link to set a new password.')}
               </p>
             </div>
 
@@ -444,9 +452,11 @@ function LoginFormInner({
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-white">Email inviata con successo!</p>
+                  <p className="text-xs font-semibold text-white">{L(lang, 'Email inviata con successo!', 'Email sent!')}</p>
                   <p className="text-[11px] text-white/70 mt-1">
-                    Abbiamo inviato un link a <strong className="text-gold">{resetEmail}</strong>. Controlla la tua casella di posta (inclusa la cartella spam) per reimpostare la password.
+                    {lang === 'en'
+                      ? <>We have sent a link to <strong className="text-gold">{resetEmail}</strong>. Check your inbox (including your spam folder) to reset your password.</>
+                      : <>Abbiamo inviato un link a <strong className="text-gold">{resetEmail}</strong>. Controlla la tua casella di posta (inclusa la cartella spam) per reimpostare la password.</>}
                   </p>
                 </div>
                 <Button
@@ -457,7 +467,7 @@ function LoginFormInner({
                   }}
                   className="w-full bg-gold hover:bg-gold-light text-black py-4 font-semibold text-xs border-none"
                 >
-                  Torna all&apos;accesso
+                  {L(lang, 'Torna all\'accesso', 'Back to sign in')}
                 </Button>
               </div>
             ) : (
@@ -468,13 +478,13 @@ function LoginFormInner({
                   </p>
                 )}
                 <div>
-                  <Label htmlFor="reset-email" className="text-xs text-white/70">Email dell&apos;account</Label>
+                  <Label htmlFor="reset-email" className="text-xs text-white/70">{L(lang, 'Email dell\'account', 'Account email')}</Label>
                   <Input
                     id="reset-email"
                     type="email"
                     required
                     autoComplete="email"
-                    placeholder="nome@esempio.it"
+                    placeholder={L(lang, 'nome@esempio.it', 'name@example.com')}
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     className="mt-1 bg-[#1a1a1a] border-white/10 text-white placeholder-white/30 focus:border-gold/50"
@@ -487,10 +497,10 @@ function LoginFormInner({
                 >
                   {resetLoading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" /> Invio in corso...
+                      <Loader2 className="h-4 w-4 animate-spin" /> {L(lang, 'Invio in corso...', 'Sending...')}
                     </span>
                   ) : (
-                    'Invia link di reimpostazione'
+                    L(lang, 'Invia link di reimpostazione', 'Send reset link')
                   )}
                 </Button>
                 <button
@@ -501,7 +511,7 @@ function LoginFormInner({
                   }}
                   className="text-xs text-gold hover:underline block mx-auto mt-2"
                 >
-                  ← Torna all&apos;accesso con password
+                  {L(lang, '← Torna all\'accesso con password', '← Back to sign in with password')}
                 </button>
               </form>
             )}
@@ -514,14 +524,14 @@ function LoginFormInner({
             {whatsAppStep === 'phone' ? (
               <form onSubmit={handleSendWhatsAppOTP} className="space-y-4">
                 <p className="text-sm text-white/60">
-                  Inserisci il numero salvato nel tuo profilo. Ti mandiamo su WhatsApp un codice di 6 cifre, valido 5 minuti.
+                  {L(lang, 'Inserisci il numero salvato nel tuo profilo. Ti mandiamo su WhatsApp un codice di 6 cifre, valido 5 minuti.', 'Enter the number saved in your profile. We will send you a 6-digit code on WhatsApp, valid for 5 minutes.')}
                 </p>
                 <div>
-                  <Label htmlFor="whatsapp-phone" className="text-xs text-white/70">Numero di telefono</Label>
+                  <Label htmlFor="whatsapp-phone" className="text-xs text-white/70">{L(lang, 'Numero di telefono', 'Phone number')}</Label>
                   <Input
                     id="whatsapp-phone"
                     type="tel"
-                    placeholder="Es. +39 347 1234567"
+                    placeholder={L(lang, 'Es. +39 347 1234567', 'e.g. +39 347 1234567')}
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     required
@@ -533,16 +543,18 @@ function LoginFormInner({
                   disabled={loading}
                   className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-5 font-semibold transition-all duration-300 border-none"
                 >
-                  {loading ? 'Invio in corso...' : 'Invia codice su WhatsApp'}
+                  {loading ? L(lang, 'Invio in corso...', 'Sending...') : L(lang, 'Invia codice su WhatsApp', 'Send code on WhatsApp')}
                 </Button>
               </form>
             ) : (
               <form onSubmit={handleVerifyWhatsAppOTP} className="space-y-4">
                 <p className="text-sm text-white/60">
-                  Inserisci il codice di verifica inviato al numero <strong>{phoneNumber}</strong>.
+                  {lang === 'en'
+                    ? <>Enter the verification code sent to the number <strong>{phoneNumber}</strong>.</>
+                    : <>Inserisci il codice di verifica inviato al numero <strong>{phoneNumber}</strong>.</>}
                 </p>
                 <div>
-                  <Label htmlFor="whatsapp-otp" className="text-xs text-white/70">Codice OTP</Label>
+                  <Label htmlFor="whatsapp-otp" className="text-xs text-white/70">{L(lang, 'Codice OTP', 'OTP code')}</Label>
                   <Input
                     id="whatsapp-otp"
                     type="text"
@@ -559,14 +571,14 @@ function LoginFormInner({
                   disabled={loading}
                   className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-5 font-semibold transition-all duration-300 border-none"
                 >
-                  {loading ? 'Verifica in corso...' : 'Verifica codice'}
+                  {loading ? L(lang, 'Verifica in corso...', 'Verifying...') : L(lang, 'Verifica codice', 'Verify code')}
                 </Button>
                 <button
                   type="button"
                   onClick={() => setWhatsAppStep('phone')}
                   className="text-xs text-white/60 hover:text-gold block mx-auto underline mt-2"
                 >
-                  Cambia numero di telefono
+                  {L(lang, 'Cambia numero di telefono', 'Change phone number')}
                 </button>
               </form>
             )}
@@ -576,7 +588,7 @@ function LoginFormInner({
               onClick={() => setAuthMethod('email')}
               className="text-xs text-gold hover:underline block mx-auto mt-4"
             >
-              ← Torna all&apos;accesso classico con email
+              {L(lang, '← Torna all\'accesso classico con email', '← Back to sign in with email')}
             </button>
           </div>
         )}
@@ -591,17 +603,17 @@ function LoginFormInner({
               </svg>
             </div>
             <p className="text-sm font-medium text-white/80">
-              Verifica della Passkey in corso...
+              {L(lang, 'Verifica della Passkey in corso...', 'Checking your Passkey...')}
             </p>
             <p className="text-xs text-white/60">
-              Usa il tuo volto (FaceID) o impronta (TouchID) per accedere.
+              {L(lang, 'Usa il tuo volto (FaceID) o impronta (TouchID) per accedere.', 'Use your face (FaceID) or fingerprint (TouchID) to sign in.')}
             </p>
             <button
               type="button"
               onClick={() => setAuthMethod('email')}
               className="text-xs text-gold hover:underline block mx-auto pt-4"
             >
-              Annulla e usa email
+              {L(lang, 'Annulla e usa email', 'Cancel and use email')}
             </button>
           </div>
         )}
@@ -613,15 +625,15 @@ function LoginFormInner({
             onClick={() => setShowClassicOnDesktop(false)}
             className="text-xs text-gold/80 hover:text-gold hover:underline block mx-auto"
           >
-            Hai il telefono a portata di mano? Accedi con il QR Code
+            {L(lang, 'Hai il telefono a portata di mano? Accedi con il QR Code', 'Have your phone handy? Sign in with the QR code')}
           </button>
         )}
 
         {/* Footer */}
         <p className="text-center text-xs text-white/60 border-t border-white/5 pt-4 mt-2">
-          Non hai un account?{' '}
+          {L(lang, 'Non hai un account?', 'Don\'t have an account?')}{' '}
           <Link href="/register" className="text-gold hover:underline font-semibold">
-            Registrati ora
+            {L(lang, 'Registrati ora', 'Sign up now')}
           </Link>
         </p>
       </div>

@@ -4,15 +4,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/actions/auth';
+import { useLang } from '@/components/i18n/LangProvider';
+import { CookieLanguageSwitch } from '@/components/i18n/CookieLanguageSwitch';
+import { L, localHref } from '@/lib/i18n';
 import { LayoutDashboard, Calendar, History, Image, User, HelpCircle, LogOut, Home as HomeIcon } from 'lucide-react';
 
 const links = [
-  { href: '/area-cliente/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/area-cliente/appuntamenti', label: 'Appuntamenti', icon: Calendar },
-  { href: '/area-cliente/storico', label: 'Storico', icon: History },
-  { href: '/area-cliente/galleria', label: 'Galleria', icon: Image },
-  { href: '/area-cliente/profilo', label: 'Profilo', icon: User },
-  { href: '/area-cliente/assistenza', label: 'Assistenza', icon: HelpCircle },
+  { href: '/area-cliente/dashboard', label: 'Dashboard', labelEn: 'Dashboard', icon: LayoutDashboard },
+  { href: '/area-cliente/appuntamenti', label: 'Appuntamenti', labelEn: 'Appointments', icon: Calendar },
+  { href: '/area-cliente/storico', label: 'Storico', labelEn: 'History', icon: History },
+  { href: '/area-cliente/galleria', label: 'Galleria', labelEn: 'Gallery', icon: Image },
+  { href: '/area-cliente/profilo', label: 'Profilo', labelEn: 'Profile', icon: User },
+  { href: '/area-cliente/assistenza', label: 'Assistenza', labelEn: 'Support', icon: HelpCircle },
 ];
 
 interface CustomerSidebarProps {
@@ -21,6 +24,7 @@ interface CustomerSidebarProps {
 
 export function CustomerSidebar({ profile }: CustomerSidebarProps) {
   const pathname = usePathname();
+  const lang = useLang();
 
   const getInitials = () => {
     if (!profile?.full_name) return '?';
@@ -36,7 +40,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
       {/* ── Sidebar Desktop (lg+) ── */}
       <aside className="hidden lg:flex w-56 flex-col border-r border-white/10 bg-[#0a0a0a] p-4 fixed left-0 top-0 bottom-0 h-screen z-30">
         <Link href="/area-cliente/dashboard" className="font-display text-sm uppercase tracking-wider text-gold hover:opacity-90 transition-opacity">
-          Il mio account
+          {L(lang, 'Il mio account', 'My account')}
         </Link>
 
         {/* Widget Profilo Utente */}
@@ -48,14 +52,14 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
               getInitials()
             )}
           </div>
-          <p className="text-[10px] font-bold text-gold/60 uppercase tracking-[0.2em] leading-none mb-1">Benvenuto</p>
+          <p className="text-[10px] font-bold text-gold/60 uppercase tracking-[0.2em] leading-none mb-1">{L(lang, 'Benvenuto', 'Welcome')}</p>
           <p className="text-sm font-bold text-white max-w-[180px] truncate" title={profile?.full_name ?? ''}>
-            {profile?.full_name ? profile.full_name : 'Cliente'}
+            {profile?.full_name ? profile.full_name : L(lang, 'Cliente', 'Customer')}
           </p>
         </div>
 
         <nav className="flex-1 space-y-1">
-          {links.map(({ href, label, icon: Icon }) => {
+          {links.map(({ href, label, labelEn, icon: Icon }) => {
             const isProfileLink = label === 'Profilo';
             return (
               <Link
@@ -77,17 +81,20 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
                 ) : (
                   <Icon size={16} />
                 )}
-                {label}
+                {L(lang, label, labelEn)}
               </Link>
             );
           })}
         </nav>
-        <Link href="/prenota" className="mb-2 rounded-lg bg-gold px-3 py-2 text-center text-sm font-semibold text-black hover:bg-gold-light transition-colors">
-          Prenota ora
+        <Link href={localHref(lang, '/prenota')} className="mb-2 rounded-lg bg-gold px-3 py-2 text-center text-sm font-semibold text-black hover:bg-gold-light transition-colors">
+          {L(lang, 'Prenota ora', 'Book now')}
         </Link>
+        <div className="mb-2 px-3 py-2">
+          <CookieLanguageSwitch />
+        </div>
         <form action={signOut}>
           <button type="submit" className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/50 hover:bg-white/5 transition-colors cursor-pointer">
-            Esci
+            {L(lang, 'Esci', 'Log out')}
           </button>
         </form>
       </aside>
@@ -96,13 +103,13 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
       <nav className="fixed bottom-0 left-0 right-0 z-[200] lg:hidden bg-[#0a0a0a] border-t border-white/10 flex items-stretch justify-around safe-b h-16">
         {/* Solo nell'app installata: torna al sito (non c'è la barra del browser) */}
         <Link
-          href="/"
+          href={localHref(lang, '/')}
           className="app-only flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-white/60"
         >
           <HomeIcon size={20} strokeWidth={1.75} aria-hidden />
           <span className="leading-none mt-0.5">Home</span>
         </Link>
-        {links.slice(0, 5).map(({ href, label, icon: Icon }) => {
+        {links.slice(0, 5).map(({ href, label, labelEn, icon: Icon }) => {
           const isActive = pathname === href;
           const isProfileLink = label === 'Profilo';
           return (
@@ -128,7 +135,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
               ) : (
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
               )}
-              <span className="leading-none mt-0.5">{label === 'Appuntamenti' ? 'Prenota' : label}</span>
+              <span className="leading-none mt-0.5">{label === 'Appuntamenti' ? L(lang, 'Prenota', 'Book') : L(lang, label, labelEn)}</span>
             </Link>
           );
         })}
@@ -141,7 +148,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
           )}
         >
           <HelpCircle size={20} strokeWidth={pathname === '/area-cliente/assistenza' ? 2.5 : 1.75} />
-          <span className="leading-none mt-0.5">Aiuto</span>
+          <span className="leading-none mt-0.5">{L(lang, 'Aiuto', 'Help')}</span>
         </Link>
       </nav>
 

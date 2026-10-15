@@ -3,6 +3,9 @@
 import { PinchZoom } from '@/components/ui/PinchZoom';
 import { useState } from 'react';
 import { X, Calendar, MessageSquare, Maximize2, Download } from 'lucide-react';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { dateLocale } from '@/lib/i18n/content-customer';
 
 interface Photo {
   id: string;
@@ -16,6 +19,7 @@ interface CustomerGalleryViewerProps {
 }
 
 export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
+  const lang = useLang();
   const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
 
   const handleDownload = async (e: React.MouseEvent, photoUrl: string, id: string) => {
@@ -26,7 +30,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `taglio-barberia-garofalo-${id.slice(0, 8)}.jpg`;
+      link.download = `${L(lang, 'taglio', 'haircut')}-barberia-garofalo-${id.slice(0, 8)}.jpg`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -40,8 +44,8 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
     <div className="space-y-6 customer-gallery-authorized">
       {photos.length === 0 ? (
         <div className="rounded-2xl border border-white/10 bg-[#0e0e0e] p-12 text-center text-white/50">
-          <p className="font-medium">Nessuna foto ancora presente nella tua galleria.</p>
-          <p className="mt-1 text-sm text-white/60">L'amministratore caricherà qui le foto dei tuoi tagli migliori!</p>
+          <p className="font-medium">{L(lang, 'Nessuna foto ancora presente nella tua galleria.', 'There are no photos in your gallery yet.')}</p>
+          <p className="mt-1 text-sm text-white/60">{L(lang, "L'amministratore caricherà qui le foto dei tuoi tagli migliori!", 'The shop will upload photos of your best haircuts here!')}</p>
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -55,7 +59,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
               <div className="relative aspect-square w-full overflow-hidden bg-black/20">
                 <img
                   src={photo.photo_url}
-                  alt={photo.caption || 'Foto del mio taglio'}
+                  alt={photo.caption || L(lang, 'Foto del mio taglio', 'Photo of my haircut')}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
@@ -74,7 +78,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
                   <div className="flex items-center gap-2 text-[10px] text-gold font-bold uppercase tracking-wider">
                     <Calendar size={12} />
                     <span>
-                      {new Date(photo.created_at).toLocaleDateString('it-IT', {
+                      {new Date(photo.created_at).toLocaleDateString(dateLocale(lang), {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
@@ -86,10 +90,10 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
                     type="button"
                     onClick={(e) => handleDownload(e, photo.photo_url, photo.id)}
                     className="inline-flex items-center gap-1 rounded-full bg-gold/15 px-2.5 py-1 text-[11px] font-semibold text-gold border border-gold/30 transition hover:bg-gold/25"
-                    title="Scarica foto sul tuo dispositivo"
+                    title={L(lang, 'Scarica foto sul tuo dispositivo', 'Download the photo to your device')}
                   >
                     <Download size={12} />
-                    <span>Scarica</span>
+                    <span>{L(lang, 'Scarica', 'Download')}</span>
                   </button>
                 </div>
                 {photo.caption ? (
@@ -97,7 +101,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
                     {photo.caption}
                   </p>
                 ) : (
-                  <p className="text-xs italic text-white/60">Senza didascalia</p>
+                  <p className="text-xs italic text-white/60">{L(lang, 'Senza didascalia', 'No caption')}</p>
                 )}
               </div>
             </div>
@@ -116,7 +120,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
             type="button"
             onClick={() => setActivePhoto(null)}
             className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-            aria-label="Chiudi ingrandimento"
+            aria-label={L(lang, 'Chiudi ingrandimento', 'Close enlarged view')}
           >
             <X size={20} />
           </button>
@@ -131,7 +135,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
               <PinchZoom resetKey={activePhoto.photo_url} className="flex max-h-[70vh] items-center justify-center">
                 <img
                   src={activePhoto.photo_url}
-                  alt={activePhoto.caption || 'Ingrandimento foto taglio'}
+                  alt={activePhoto.caption || L(lang, 'Ingrandimento foto taglio', 'Enlarged haircut photo')}
                   className="max-h-[70vh] w-auto max-w-full object-contain"
                 />
               </PinchZoom>
@@ -143,8 +147,8 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
                 <div className="flex items-center gap-2 text-xs text-gold font-bold uppercase tracking-wider">
                   <Calendar size={14} />
                   <span>
-                    Caricata il:{' '}
-                    {new Date(activePhoto.created_at).toLocaleDateString('it-IT', {
+                    {L(lang, 'Caricata il:', 'Uploaded on:')}{' '}
+                    {new Date(activePhoto.created_at).toLocaleDateString(dateLocale(lang), {
                       day: 'numeric',
                       month: 'long',
                       year: 'numeric',
@@ -165,7 +169,7 @@ export function CustomerGalleryViewer({ photos }: CustomerGalleryViewerProps) {
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-gold px-5 py-2.5 text-xs font-bold text-black transition hover:bg-gold-light shrink-0 shadow-md shadow-gold/20"
               >
                 <Download size={15} />
-                <span>Scarica foto originale</span>
+                <span>{L(lang, 'Scarica foto originale', 'Download original photo')}</span>
               </button>
             </div>
           </div>

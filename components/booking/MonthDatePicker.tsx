@@ -2,7 +2,9 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { format, parseISO } from 'date-fns';
-import { it } from 'date-fns/locale';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { dfLocale } from '@/lib/i18n/content-booking';
 import { cn } from '@/lib/utils';
 import { groupDatesByMonth } from '@/lib/utils/booking-months';
 
@@ -23,8 +25,10 @@ export function MonthDatePicker({
   onToggleDate,
   loading,
 }: MonthDatePickerProps) {
+  const lang = useLang();
+  const locale = dfLocale(lang);
   const sortedDates = useMemo(() => [...dates].sort(), [dates]);
-  const monthOptions = useMemo(() => groupDatesByMonth(sortedDates), [sortedDates]);
+  const monthOptions = useMemo(() => groupDatesByMonth(sortedDates, lang), [sortedDates, lang]);
 
   const [activeMonth, setActiveMonth] = useState<string | null>(() => {
     if (selectedDate) return selectedDate.slice(0, 7);
@@ -171,11 +175,11 @@ export function MonthDatePicker({
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-white/50">Caricamento giorni disponibili...</p>;
+    return <p className="text-sm text-white/50">{L(lang, 'Caricamento giorni disponibili...', 'Loading available days...')}</p>;
   }
 
   if (sortedDates.length === 0) {
-    return <p className="text-sm text-white/50">Nessun giorno disponibile al momento.</p>;
+    return <p className="text-sm text-white/50">{L(lang, 'Nessun giorno disponibile al momento.', 'No days available at the moment.')}</p>;
   }
 
   return (
@@ -183,7 +187,7 @@ export function MonthDatePicker({
       {/* 1. Riga MESE: scorciatoie con smooth scroll */}
       {monthOptions.length > 1 && (
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">Mese</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">{L(lang, 'Mese', 'Month')}</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {monthOptions.map((month) => {
               const isActive = activeMonth === month.value;
@@ -213,7 +217,7 @@ export function MonthDatePicker({
 
       {/* 2. Riga GIORNO: striscia UNICA e continua di tutti i giorni prenotabili */}
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">Giorno</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/60">{L(lang, 'Giorno', 'Day')}</p>
         <div
           ref={daysContainerRef}
           className="flex items-center gap-2 overflow-x-auto pb-2 scroll-smooth"
@@ -221,8 +225,8 @@ export function MonthDatePicker({
           {sortedDates.map((d, index) => {
             const isSelected = selectedDates ? selectedDates.includes(d) : selectedDate === d;
             const parsed = parseISO(d);
-            const dayOfWeek = format(parsed, 'EEE', { locale: it });
-            const dayAndMonth = format(parsed, 'd MMM', { locale: it });
+            const dayOfWeek = format(parsed, 'EEE', { locale });
+            const dayAndMonth = format(parsed, 'd MMM', { locale });
             const isFirstOfNewMonth = index > 0 && d.slice(0, 7) !== sortedDates[index - 1].slice(0, 7);
 
             return (
@@ -231,7 +235,7 @@ export function MonthDatePicker({
                   <div
                     className="flex flex-shrink-0 items-center px-1.5 self-stretch"
                     aria-hidden="true"
-                    title={`Inizio ${format(parsed, 'MMMM yyyy', { locale: it })}`}
+                    title={L(lang, `Inizio ${format(parsed, 'MMMM yyyy', { locale })}`, `Start of ${format(parsed, 'MMMM yyyy', { locale })}`)}
                   >
                     <div className="h-10 w-px bg-gradient-to-b from-white/5 via-gold/40 to-white/5" />
                   </div>

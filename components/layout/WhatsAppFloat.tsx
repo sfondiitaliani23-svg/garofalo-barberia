@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation';
 import { getWhatsAppLink } from '@/lib/site-config';
 import { useCookieBannerVisible } from '@/components/layout/CookieConsent';
 import { cn } from '@/lib/utils';
+import { useLang } from '@/components/i18n/LangProvider';
 
 export function WhatsAppFloat() {
+  const lang = useLang();
   const cookieBannerVisible = useCookieBannerVisible();
   const pathname = usePathname();
   const isCustomerArea = pathname?.startsWith('/area-cliente') ?? false;
@@ -15,7 +17,7 @@ export function WhatsAppFloat() {
 
   return (
     <a
-      href={getWhatsAppLink()}
+      href={getWhatsAppLink(undefined, lang)}
       aria-label="WhatsApp"
       target="_blank"
       rel="noopener noreferrer"

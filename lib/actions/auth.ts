@@ -1,11 +1,17 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { clearCustomerSessionExpiryCookie, setCustomerSessionExpiryCookie } from '@/lib/auth/customer-session';
 import { createClient } from '@/lib/supabase/server';
 import { resolveSiteOriginFromHeaders } from '@/lib/utils/site-origin';
+
+/** Pagina pubblica (login, registrazione) nella lingua scelta dal visitatore: se ha scelto l'inglese va a /en. */
+async function langPath(path: '/login' | '/register') {
+  const lang = (await cookies()).get('gb_lang')?.value;
+  return lang === 'en' ? `/en${path}` : path;
+}
 
 async function getSiteOrigin() {
   const headersList = await headers();
@@ -14,14 +20,14 @@ async function getSiteOrigin() {
 
 export async function signInWithEmail(formData: FormData) {
   const supabase = await createClient();
-  if (!supabase) redirect('/login?error=Database%20non%20configurato');
+  if (!supabase) redirect(`${await langPath('/login')}?error=Database%20non%20configurato`);
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const redirectTo = (formData.get('redirect') as string) || '/area-cliente/dashboard';
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    const loginPath = redirectTo.startsWith('/admin') ? '/admin/login' : '/login';
+    const loginPath = redirectTo.startsWith('/admin') ? '/admin/login' : await langPath('/login');
     redirect(`${loginPath}?error=${encodeURIComponent(error.message)}&email=${encodeURIComponent(email)}`);
   }
 
@@ -47,7 +53,7 @@ export async function signInWithEmail(formData: FormData) {
 
 export async function signUpWithEmail(formData: FormData) {
   const supabase = await createClient();
-  if (!supabase) redirect('/register?error=Database%20non%20configurato');
+  if (!supabase) redirect(`${await langPath('/register')}?error=Database%20non%20configurato`);
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const fullName = formData.get('full_name') as string;
@@ -62,7 +68,7 @@ export async function signUpWithEmail(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/register?error=${encodeURIComponent(error.message)}`);
+    redirect(`${await langPath('/register')}?error=${encodeURIComponent(error.message)}`);
   }
 
   if (phone) {
@@ -97,13 +103,13 @@ export async function signInWithOAuth(formData: FormData) {
   const redirectTo = (formData.get('redirect') as string) || '/area-cliente/dashboard';
 
   if (provider !== 'google' && provider !== 'github' && provider !== 'apple' && provider !== 'facebook') {
-    redirect('/login?error=Provider%20non%20valido');
+    redirect(`${await langPath('/login')}?error=Provider%20non%20valido`);
   }
 
   const supabase = await createClient();
   if (!supabase) {
     redirect(
-      `/login?error=${encodeURIComponent(`Accesso con ${OAUTH_LABELS[provider]} non disponibile: database non configurato su Vercel.`)}`
+      `${await langPath('/login')}?error=${encodeURIComponent(`Accesso con ${OAUTH_LABELS[provider]} non disponibile: database non configurato su Vercel.`)}`
     );
   }
 
@@ -125,12 +131,12 @@ export async function signInWithOAuth(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    redirect(`${await langPath('/login')}?error=${encodeURIComponent(error.message)}`);
   }
 
   if (!data?.url) {
     redirect(
-      `/login?error=${encodeURIComponent(`Impossibile avviare ${OAUTH_LABELS[provider]}. Abilita il provider in Supabase → Authentication → Providers.`)}`
+      `${await langPath('/login')}?error=${encodeURIComponent(`Impossibile avviare ${OAUTH_LABELS[provider]}. Abilita il provider in Supabase → Authentication → Providers.`)}`
     );
   }
 
@@ -155,7 +161,7 @@ export async function updateProfile(formData: FormData) {
   const supabase = await createClient();
   if (!supabase) redirect('/area-cliente/profilo?error=Database%20non%20configurato');
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  if (!user) redirect(await langPath('/login'));
 
   const avatarUrl = formData.get('avatar_url') as string | null;
   const updateData: any = {

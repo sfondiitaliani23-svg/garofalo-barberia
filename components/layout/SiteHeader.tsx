@@ -1,6 +1,9 @@
 'use client';
 
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { LanguageSwitch } from '@/components/i18n/LanguageSwitch';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { CalendarDays, X } from 'lucide-react';
@@ -9,26 +12,19 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { createClient } from '@/lib/supabase/client';
 import { InstallAppButton } from '@/components/layout/InstallAppPrompt';
 
-const navLeft = [
-  { href: '/', label: 'Home' },
-  { href: '/chi-siamo', label: 'Chi siamo' },
-  { href: '/servizi', label: 'Servizi' },
-  { href: '/galleria', label: 'Galleria' },
-];
-
-const navRight = [
-  { href: '/recensioni', label: 'Recensioni' },
-  { href: '/contatti', label: 'Contatti' },
-];
-
-const allNavLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/chi-siamo', label: 'Chi siamo' },
-  { href: '/servizi', label: 'Servizi' },
-  { href: '/galleria', label: 'Galleria' },
-  { href: '/recensioni', label: 'Recensioni' },
-  { href: '/contatti', label: 'Contatti' },
-];
+function navLinks(lang: 'it' | 'en') {
+  const home = { href: '/', label: 'Home' };
+  const about = { href: '/chi-siamo', label: L(lang, 'Chi siamo', 'About us') };
+  const services = { href: '/servizi', label: L(lang, 'Servizi', 'Services') };
+  const gallery = { href: '/galleria', label: L(lang, 'Galleria', 'Gallery') };
+  const reviews = { href: '/recensioni', label: L(lang, 'Recensioni', 'Reviews') };
+  const contacts = { href: '/contatti', label: L(lang, 'Contatti', 'Contact') };
+  return {
+    navLeft: [home, about, services, gallery],
+    navRight: [reviews, contacts],
+    allNavLinks: [home, about, services, gallery, reviews, contacts],
+  };
+}
 
 interface SiteHeaderProps {
   isLoggedIn?: boolean;
@@ -36,6 +32,8 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: initialUserLabel }: SiteHeaderProps) {
+  const lang = useLang();
+  const { navLeft, navRight, allNavLinks } = navLinks(lang);
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
@@ -54,7 +52,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
     });
   }, [initialLoggedIn]);
 
-  const accountLabel = userLabel ? `Ciao, ${userLabel}` : 'Area cliente';
+  const accountLabel = userLabel ? L(lang, `Ciao, ${userLabel}`, `Hi, ${userLabel}`) : L(lang, 'Area cliente', 'My account');
 
   // Sticky scroll effect
   useEffect(() => {
@@ -85,7 +83,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
 
           {/* ── Navigazione sinistra (Desktop - 4 elementi) ───────────────── */}
           <nav
-            aria-label="Navigazione principale sinistra"
+            aria-label={L(lang, 'Navigazione principale sinistra', 'Main navigation, left')}
             className="hidden lg:flex items-center justify-end gap-3 xl:gap-7 pr-4 xl:pr-8"
           >
             {navLeft.map((link) => (
@@ -132,7 +130,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
 
           {/* ── Navigazione destra (Desktop - 4 elementi) ─────────────────── */}
           <nav
-            aria-label="Navigazione principale destra"
+            aria-label={L(lang, 'Navigazione principale destra', 'Main navigation, right')}
             className="hidden lg:flex items-center justify-start gap-3 xl:gap-7 pl-4 xl:pl-8"
           >
             {navRight.map((link) => (
@@ -158,12 +156,13 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
                 prefetch
                 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70 transition-colors hover:text-gold-light whitespace-nowrap"
               >
-                Accedi
+                {L(lang, 'Accedi', 'Sign in')}
               </Link>
             )}
+            <LanguageSwitch className="ml-1" />
             <Link href="/prenota" className="btn-book-outline shrink-0 ml-1">
               <CalendarDays size={15} strokeWidth={1.75} aria-hidden />
-              Prenota
+              {L(lang, 'Prenota', 'Book')}
             </Link>
           </nav>
 
@@ -172,7 +171,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             type="button"
             className="relative z-[151] lg:hidden flex flex-col items-center justify-center border border-white/20 hover:border-gold rounded-lg w-12 h-14 bg-black/50 text-white p-1 transition-all duration-200"
             onClick={() => setOpen((o) => !o)}
-            aria-label={open ? 'Chiudi menu' : 'Apri menu'}
+            aria-label={open ? L(lang, 'Chiudi menu', 'Close menu') : L(lang, 'Apri menu', 'Open menu')}
             aria-expanded={open}
           >
             {open ? (
@@ -208,7 +207,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
         className={`fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col lg:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
-        aria-label="Menu di navigazione"
+        aria-label={L(lang, 'Menu di navigazione', 'Navigation menu')}
       >
         {/* Header drawer con logo e chiusura */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
@@ -223,7 +222,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           <button
             onClick={close}
             className="w-9 h-9 flex items-center justify-center rounded-lg border border-white/10 hover:border-gold/40 text-white/60 hover:text-gold transition-all"
-            aria-label="Chiudi menu"
+            aria-label={L(lang, 'Chiudi menu', 'Close menu')}
           >
             <X size={18} />
           </button>
@@ -246,7 +245,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           <InstallAppButton
             always
             onAction={close}
-            label="Installa App"
+            label={L(lang, 'Installa App', 'Install app')}
             className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
           />
 
@@ -265,9 +264,12 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
               className="flex items-center gap-3 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
               onClick={close}
             >
-              Accedi
+              {L(lang, 'Accedi', 'Sign in')}
             </Link>
           )}
+          <div className="px-6 py-4 border-b border-white/5">
+            <LanguageSwitch onNavigate={close} />
+          </div>
         </nav>
 
         {/* CTA Prenota in fondo */}
@@ -277,7 +279,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             className="btn-primary w-full text-center uppercase tracking-[0.15em] text-[10px] py-4 font-bold block"
             onClick={close}
           >
-            Prenota ora
+            {L(lang, 'Prenota ora', 'Book now')}
           </Link>
           <p className="text-[10px] text-white/60 tracking-widest uppercase text-center mt-4">
             Viale Ignazio D&apos;Addedda, 236 – Foggia

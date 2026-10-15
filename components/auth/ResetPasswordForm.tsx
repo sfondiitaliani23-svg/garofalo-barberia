@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { translateMessage } from '@/lib/i18n/content-booking';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { updateUserPassword } from '@/lib/actions/auth';
@@ -13,6 +16,7 @@ import { Loader2, CheckCircle2, Lock } from 'lucide-react';
 
 export function ResetPasswordForm() {
   const router = useRouter();
+  const lang = useLang();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,12 +28,12 @@ export function ResetPasswordForm() {
     setError(null);
 
     if (password.length < 6) {
-      setError('La nuova password deve contenere almeno 6 caratteri.');
+      setError(L(lang, 'La nuova password deve contenere almeno 6 caratteri.', 'The new password must be at least 6 characters long.'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Le due password inserite non coincidono.');
+      setError(L(lang, 'Le due password inserite non coincidono.', 'The two passwords do not match.'));
       return;
     }
 
@@ -38,17 +42,17 @@ export function ResetPasswordForm() {
     try {
       const res = await updateUserPassword(password);
       if (res.error) {
-        setError(res.error);
+        setError(translateMessage(lang, res.error));
       } else {
         setSuccess(true);
-        toast.success('Password aggiornata con successo!');
+        toast.success(L(lang, 'Password aggiornata con successo!', 'Password updated successfully!'));
         setTimeout(() => {
           router.push('/area-cliente/dashboard');
           router.refresh();
         }, 1500);
       }
     } catch {
-      setError('Si è verificato un errore durante l\'aggiornamento. Riprova più tardi.');
+      setError(L(lang, 'Si è verificato un errore durante l\'aggiornamento. Riprova più tardi.', 'Something went wrong while updating your password. Please try again later.'));
     } finally {
       setLoading(false);
     }
@@ -61,13 +65,13 @@ export function ResetPasswordForm() {
       <CardHeader className="space-y-1">
         <div className="flex items-center gap-2 text-gold mb-1">
           <Lock className="h-5 w-5" />
-          <span className="text-xs uppercase tracking-widest text-white/50 font-semibold">Sicurezza Account</span>
+          <span className="text-xs uppercase tracking-widest text-white/50 font-semibold">{L(lang, 'Sicurezza Account', 'Account security')}</span>
         </div>
         <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">
-          Nuova Password
+          {L(lang, 'Nuova Password', 'New password')}
         </CardTitle>
         <p className="text-xs text-white/60">
-          Inserisci la nuova password per il tuo account Garofalo Barberia.
+          {L(lang, 'Inserisci la nuova password per il tuo account Garofalo Barberia.', 'Enter the new password for your Garofalo Barberia account.')}
         </p>
       </CardHeader>
 
@@ -78,9 +82,9 @@ export function ResetPasswordForm() {
               <CheckCircle2 className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">Password aggiornata con successo!</p>
+              <p className="text-sm font-semibold text-white">{L(lang, 'Password aggiornata con successo!', 'Password updated successfully!')}</p>
               <p className="text-xs text-white/70 mt-1">
-                Ti stiamo reindirizzando alla tua area personale...
+                {L(lang, 'Ti stiamo reindirizzando alla tua area personale...', 'We are taking you to your account area...')}
               </p>
             </div>
             <div className="flex justify-center pt-2">
@@ -97,7 +101,7 @@ export function ResetPasswordForm() {
 
             <div>
               <Label htmlFor="new-password" className="text-xs text-white/70">
-                Nuova Password (min. 6 caratteri)
+                {L(lang, 'Nuova Password (min. 6 caratteri)', 'New password (min. 6 characters)')}
               </Label>
               <Input
                 id="new-password"
@@ -113,7 +117,7 @@ export function ResetPasswordForm() {
 
             <div>
               <Label htmlFor="confirm-password" className="text-xs text-white/70">
-                Conferma Nuova Password
+                {L(lang, 'Conferma Nuova Password', 'Confirm new password')}
               </Label>
               <Input
                 id="confirm-password"
@@ -134,16 +138,16 @@ export function ResetPasswordForm() {
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Aggiornamento in corso...
+                  <Loader2 className="h-4 w-4 animate-spin" /> {L(lang, 'Aggiornamento in corso...', 'Updating...')}
                 </span>
               ) : (
-                'Aggiorna Password'
+                L(lang, 'Aggiorna Password', 'Update password')
               )}
             </Button>
 
             <p className="text-center text-xs text-white/60 pt-2">
               <Link href="/login" className="text-gold hover:underline">
-                ← Torna alla pagina di accesso
+                {L(lang, '← Torna alla pagina di accesso', '← Back to the sign-in page')}
               </Link>
             </p>
           </form>

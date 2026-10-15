@@ -14,6 +14,8 @@ import {
   promptNativeInstall,
   startInstallListener,
 } from '@/lib/utils/install-app';
+import { useLang } from '@/components/i18n/LangProvider';
+import { installText } from '@/lib/i18n/content-widgets';
 import './install-app.css';
 
 const DISMISS_KEY = 'gb_install_dismissed';
@@ -25,6 +27,7 @@ const DELAY_MS = 2500;
  * Compare dopo la scelta sui cookie, mai insieme al banner; se chiuso, torna dopo 14 giorni.
  */
 export function InstallAppPrompt() {
+  const t = installText(useLang());
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'native' | 'ios' | null>(null);
 
@@ -74,39 +77,39 @@ export function InstallAppPrompt() {
 
   return (
     <div className="ia-sheet" role="dialog" aria-labelledby="ia-title" aria-describedby="ia-text">
-      <button type="button" className="ia-close" onClick={dismiss} aria-label="Chiudi">
+      <button type="button" className="ia-close" onClick={dismiss} aria-label={t.close}>
         <X size={18} />
       </button>
       <div className="ia-head">
         <Image src="/pwa/icon-192.png" alt="" width={56} height={56} className="ia-icon" />
         <div>
-          <p id="ia-title" className="ia-title">Garofalo sul tuo telefono</p>
-          <p id="ia-text" className="ia-text">Prenota in un tocco, come un’app. Gratis, senza store, occupa pochissimo spazio.</p>
+          <p id="ia-title" className="ia-title">{t.title}</p>
+          <p id="ia-text" className="ia-text">{t.text}</p>
         </div>
       </div>
 
       {mode === 'native' ? (
         <div className="ia-actions">
           <button type="button" className="btn-primary ia-btn" onClick={install} data-evt="installa_app">
-            Installa l’app
+            {t.install}
           </button>
           <button type="button" className="ia-later" onClick={dismiss}>
-            Non ora
+            {t.notNow}
           </button>
         </div>
       ) : (
         <>
           <ol className="ia-steps">
             <li>
-              Tocca <Share size={16} aria-label="Condividi" className="ia-inline" /> <strong>Condividi</strong> in basso nella barra di Safari
+              {t.tapShare1} <Share size={16} aria-label={t.share} className="ia-inline" /> <strong>{t.share}</strong> {t.tapShare2}
             </li>
             <li>
-              Scegli <SquarePlus size={16} aria-hidden className="ia-inline" /> <strong>Aggiungi alla schermata Home</strong>
+              {t.choose} <SquarePlus size={16} aria-hidden className="ia-inline" /> <strong>{t.addHome}</strong>
             </li>
           </ol>
           <div className="ia-actions">
             <button type="button" className="ia-later" onClick={dismiss}>
-              Ho capito
+              {t.gotIt}
             </button>
           </div>
         </>
@@ -120,7 +123,7 @@ export function InstallAppButton({
   className = '',
   always = false,
   onAction,
-  label = 'Installa l’app',
+  label,
 }: {
   className?: string;
   /** Mostra la voce anche quando il browser non offre la finestra automatica (spiega come fare a mano). */
@@ -128,6 +131,7 @@ export function InstallAppButton({
   onAction?: () => void;
   label?: string;
 }) {
+  const t = installText(useLang());
   const [state, setState] = useState<'hidden' | 'native' | 'ios' | 'generic'>('hidden');
   const [help, setHelp] = useState(false);
 
@@ -155,44 +159,44 @@ export function InstallAppButton({
           } else setHelp(true);
         }}
       >
-        {label}
+        {label ?? t.install}
       </button>
       {help && (
         <div className="ia-sheet" role="dialog" aria-labelledby="ia-help-title">
-          <button type="button" className="ia-close" onClick={() => setHelp(false)} aria-label="Chiudi">
+          <button type="button" className="ia-close" onClick={() => setHelp(false)} aria-label={t.close}>
             <X size={18} />
           </button>
           {state === 'ios' ? (
             <>
-              <p id="ia-help-title" className="ia-title">Installa l’app su iPhone</p>
+              <p id="ia-help-title" className="ia-title">{t.iosTitle}</p>
               <ol className="ia-steps">
                 <li>
-                  Tocca <Share size={16} aria-label="Condividi" className="ia-inline" /> <strong>Condividi</strong> in basso nella barra di Safari
+                  {t.tapShare1} <Share size={16} aria-label={t.share} className="ia-inline" /> <strong>{t.share}</strong> {t.tapShare2}
                 </li>
                 <li>
-                  Scegli <SquarePlus size={16} aria-hidden className="ia-inline" /> <strong>Aggiungi alla schermata Home</strong>
+                  {t.choose} <SquarePlus size={16} aria-hidden className="ia-inline" /> <strong>{t.addHome}</strong>
                 </li>
               </ol>
             </>
           ) : (
             <>
-              <p id="ia-help-title" className="ia-title">Installa l’app</p>
+              <p id="ia-help-title" className="ia-title">{t.install}</p>
               <ol className="ia-steps">
                 <li>
-                  Apri il menu del browser <strong>⋮</strong> in alto a destra
+                  {t.menuOpen1} <strong>⋮</strong> {t.menuOpen2}
                 </li>
                 <li>
-                  Scegli <strong>Installa app</strong> oppure <strong>Aggiungi a schermata Home</strong>
+                  {t.choose} <strong>{t.installApp}</strong> {t.or} <strong>{t.addHomeAlt}</strong>
                 </li>
               </ol>
               <p className="ia-text" style={{ marginTop: '0.6rem' }}>
-                Se non vedi la voce, apri barberiagarofalo.it con Chrome.
+                {t.noEntry}
               </p>
             </>
           )}
           <div className="ia-actions">
             <button type="button" className="ia-later" onClick={() => setHelp(false)}>
-              Ho capito
+              {t.gotIt}
             </button>
           </div>
         </div>

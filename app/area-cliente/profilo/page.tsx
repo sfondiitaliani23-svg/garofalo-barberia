@@ -4,10 +4,16 @@ import { ProfileForm } from '@/components/customer/ProfileForm';
 import { SavedToast } from '@/components/customer/SavedToast';
 import { PasskeyManager } from '@/components/customer/PasskeyManager';
 import { PushManager } from '@/components/customer/PushManager';
+import { getCustomerLang } from '../_lang';
+import { L } from '@/lib/i18n';
 
-export const metadata = { title: 'Profilo' };
+export async function generateMetadata() {
+  const lang = await getCustomerLang();
+  return { title: L(lang, 'Profilo', 'Profile') };
+}
 
 export default async function CustomerProfiloPage() {
+  const lang = await getCustomerLang();
   const profile = await getProfile();
 
   return (
@@ -17,8 +23,8 @@ export default async function CustomerProfiloPage() {
         <SavedToast />
       </Suspense>
 
-      <h1 className="font-display text-3xl uppercase">Profilo</h1>
-      <p className="mt-1 text-white/50">I tuoi dati e preferenze</p>
+      <h1 className="font-display text-3xl uppercase">{L(lang, 'Profilo', 'Profile')}</h1>
+      <p className="mt-1 text-white/50">{L(lang, 'I tuoi dati e preferenze', 'Your details and preferences')}</p>
       
       <ProfileForm profile={profile} />
       <PasskeyManager />

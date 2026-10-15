@@ -5,6 +5,7 @@ import { getActivePromotions } from '@/lib/actions/promotions';
 import { respond, type ChatHistoryItem, type ChatKnowledge } from '@/lib/chat/assistant';
 import { askAi } from '@/lib/chat/ai';
 import { createServiceClient } from '@/lib/supabase/server';
+import { isLang, type Lang } from '@/lib/i18n';
 
 /** Conteggio giornaliero delle risposte per fonte (per la scheda in admin). Mai bloccante. */
 async function countAnswer(source: 'gemini' | 'groq' | 'regole') {
@@ -75,17 +76,19 @@ function sanitizeHistory(raw: unknown): ChatHistoryItem[] {
 }
 
 export async function POST(request: NextRequest) {
+  let lang: Lang = 'it';
   try {
     const body = await request.json().catch(() => ({}));
     const message = typeof body?.message === 'string' ? body.message.slice(0, MAX_MESSAGE_LENGTH) : '';
     const history = sanitizeHistory(body?.history);
+    lang = isLang(body?.lang) ? body.lang : 'it';
 
     const knowledge = await loadKnowledge();
-    const result = respond(message, history, knowledge);
+    const result = respond(message, history, knowledge, lang);
 
     // AI gratuita (Gemini → Groq); se non disponibile resta la risposta a regole.
     if (message.trim().length >= 2) {
-      const ai = await askAi(message, history, knowledge, result.replies.join('\n\n')).catch(() => null);
+      const ai = await askAi(message, history, knowledge, result.replies.join('\n\n'), undefined, lang).catch(() => null);
       if (ai) {
         await countAnswer(ai.provider);
         return NextResponse.json({ ...result, replies: [ai.text], source: 'ai' });
@@ -97,8 +100,12 @@ export async function POST(request: NextRequest) {
     console.error('[api/chat]', error);
     return NextResponse.json(
       {
-        replies: [`Mi dispiace, c'è stato un errore. Scrivici su WhatsApp al **${SITE_CONFIG.phoneDisplay}** 📱`],
-        actions: [{ label: 'Scrivi su WhatsApp', href: `https://wa.me/${SITE_CONFIG.whatsapp}` }],
+        replies: [
+          lang === 'en'
+            ? `Sorry, something went wrong. Message us on WhatsApp at **${SITE_CONFIG.phoneDisplay}** 📱`
+            : `Mi dispiace, c'è stato un errore. Scrivici su WhatsApp al **${SITE_CONFIG.phoneDisplay}** 📱`,
+        ],
+        actions: [{ label: lang === 'en' ? 'Message us on WhatsApp' : 'Scrivi su WhatsApp', href: `https://wa.me/${SITE_CONFIG.whatsapp}` }],
         suggestions: [],
       },
       { status: 500 }

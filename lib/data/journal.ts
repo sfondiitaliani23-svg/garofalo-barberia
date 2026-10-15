@@ -143,6 +143,6 @@ export function getArticle(slug: string) {
   return JOURNAL.find((a) => a.slug === slug);
 }
 
-export function formatJournalDate(date: string) {
-  return new Date(`${date}T12:00:00`).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+export function formatJournalDate(date: string, lang: 'it' | 'en' = 'it') {
+  return new Date(`${date}T12:00:00`).toLocaleDateString(lang === 'en' ? 'en-GB' : 'it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
 }

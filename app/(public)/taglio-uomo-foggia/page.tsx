@@ -1,8 +1,8 @@
 import { LocalLandingPage, localPageMetadata } from '@/components/seo/LocalLandingPage';
 
 export const revalidate = 300;
-export const metadata = localPageMetadata('taglio-uomo-foggia');
+export const metadata = localPageMetadata('taglio-uomo-foggia', 'it');
 
 export default function Page() {
-  return <LocalLandingPage slug="taglio-uomo-foggia" />;
+  return <LocalLandingPage slug="taglio-uomo-foggia" lang="it" />;
 }

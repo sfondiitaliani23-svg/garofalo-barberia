@@ -6,6 +6,9 @@
  * Non inventa nulla: se non sa, rimanda a WhatsApp/telefono.
  */
 import { SITE_CONFIG } from '@/lib/site-config';
+import type { Lang } from '@/lib/i18n';
+import { barberRole } from '@/lib/i18n/content-team';
+import { dayName, serviceName, timeText } from '@/lib/i18n/content-en';
 
 // ─── Tipi ──────────────────────────────────────────────────────────────────────
 
@@ -107,7 +110,163 @@ const ACTIONS = {
   leaveReview: { label: 'Lascia una recensione', href: SITE_CONFIG.googleReviewUrl },
 } satisfies Record<string, ChatAction>;
 
+const ACTIONS_EN = {
+  book: { label: 'Book now', href: '/prenota' },
+  services: { label: 'Services and prices', href: '/servizi' },
+  whatsapp: { label: 'Message us on WhatsApp', href: WA_LINK },
+  call: { label: `Call ${PHONE}`, href: `tel:${SITE_CONFIG.phone}` },
+  maps: { label: 'Open in Maps', href: SITE_CONFIG.googleMapsUrl },
+  contacts: { label: 'Contact', href: '/contatti' },
+  about: { label: 'About us', href: '/chi-siamo' },
+  gallery: { label: 'Gallery', href: '/galleria' },
+  reviews: { label: 'Reviews', href: '/recensioni' },
+  login: { label: 'Log in', href: '/login' },
+  register: { label: 'Sign up', href: '/register' },
+  appointments: { label: 'My appointments', href: '/area-cliente/appuntamenti' },
+  instagram: { label: 'Instagram', href: SITE_CONFIG.instagram },
+  leaveReview: { label: 'Leave a review', href: SITE_CONFIG.googleReviewUrl },
+} satisfies Record<keyof typeof ACTIONS, ChatAction>;
+
 const DEFAULT_SUGGESTIONS = ['Orari', 'Prezzi', 'Come prenoto?', 'Dove siete?'];
+const DEFAULT_SUGGESTIONS_EN = ['Opening hours', 'Prices', 'How do I book?', 'Where are you?'];
+
+// ─── Inglese: parole chiave, giorni, testi ────────────────────────────────────
+
+const DAY_NAMES_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_STEMS_EN = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+/** Parole chiave inglesi (usate al posto di quelle italiane quando la pagina è /en). */
+const INTENTS_EN: IntentDef[] = [
+  {
+    id: 'hours',
+    stems: ['hour', 'opening', 'open', 'close', 'closing', 'closed', 'schedule', 'holiday', 'weekend', 'timetable', 'lunch'],
+    phrases: ['what time', 'which days', 'what days', 'until when', 'when are you', 'when do you'],
+  },
+  {
+    id: 'openNow',
+    phrases: ['are you open', 'are you open now', 'open now', 'open today', 'open right now', 'right now', 'now', 'at the moment'],
+    weight: 2,
+  },
+  {
+    id: 'prices',
+    stems: ['price', 'pric', 'cost', 'tariff'],
+    phrases: ['fee', 'fees', 'rate', 'rates', 'how much', 'how much is', 'how much does', 'pay', 'euro', 'euros', '€'],
+  },
+  {
+    id: 'services',
+    stems: ['service', 'treatment'],
+    phrases: ['what do you do', 'what do you offer', 'what services', 'do you do', 'do you offer', 'do you have'],
+  },
+  {
+    id: 'duration',
+    stems: ['duration', 'minute'],
+    phrases: ['how long', 'how much time', 'how many minutes', 'take long'],
+    weight: 2,
+  },
+  {
+    id: 'booking',
+    stems: ['book', 'appointment', 'reserv', 'availab', 'slot'],
+    phrases: ['make an appointment', 'free slot', 'any space', 'any room', 'come today', 'come tomorrow', 'how do i book'],
+  },
+  {
+    id: 'cancel',
+    stems: ['cancel', 'resched', 'postpon', 'chang', 'modif'],
+    phrases: ['late', 'cant come', 'can not come', 'cannot come', 'change my appointment', 'change the time', 'move my appointment', 'running late'],
+    weight: 2,
+  },
+  {
+    id: 'location',
+    stems: ['address', 'locat', 'direction', 'map', 'maps', 'navigat'],
+    phrases: ['where', 'where are you', 'where is', 'how do i get', 'how to get', 'find you', 'find the shop'],
+  },
+  {
+    id: 'contacts',
+    stems: ['phone', 'call', 'number', 'contact', 'whatsapp', 'email', 'mail', 'mobile'],
+    phrases: ['write to you', 'reach you', 'get in touch', 'message you'],
+  },
+  {
+    id: 'payment',
+    stems: ['payment', 'card', 'cash', 'satispay', 'transfer', 'deposit', 'prepay', 'credit', 'debit'],
+    phrases: ['pay by', 'pay with', 'do you take', 'do you accept', 'pos'],
+    weight: 2,
+  },
+  {
+    id: 'kids',
+    stems: ['kid', 'child', 'baby', 'daughter', 'toddler'],
+    phrases: ['son', 'boy', 'girl', 'first haircut', 'my son', 'my daughter', 'kids haircut', 'baby haircut'],
+  },
+  {
+    id: 'team',
+    stems: ['barber', 'staff', 'team', 'luigi', 'vittorio', 'francesco', 'owner', 'employee'],
+    phrases: ['who works', 'who cuts', 'how many of you', 'who are you'],
+  },
+  {
+    id: 'account',
+    stems: ['account', 'regist', 'login', 'log in', 'password', 'profile', 'sign', 'passkey', 'credential'],
+    phrases: ['customer area', 'my account', 'log in', 'sign in', 'sign up'],
+  },
+  {
+    id: 'promo',
+    stems: ['promo', 'discount', 'offer', 'deal', 'coupon', 'code', 'voucher'],
+    weight: 2,
+  },
+  {
+    id: 'social',
+    stems: ['instagram', 'social', 'photo', 'galler', 'picture'],
+    phrases: ['ig', 'insta', 'your work', 'see your work'],
+  },
+  {
+    id: 'reviews',
+    stems: ['review', 'opinion', 'feedback', 'rating'],
+    phrases: ['star', 'stars'],
+  },
+  {
+    id: 'parking',
+    stems: ['park', 'motorbike', 'scooter', 'garage'],
+    phrases: ['car', 'bus', 'by car', 'by bus'],
+  },
+  {
+    id: 'walkin',
+    phrases: ['without appointment', 'without booking', 'without an appointment', 'walk in', 'walk ins', 'just drop in', 'just pass by', 'drop by', 'queue', 'wait', 'waiting'],
+    weight: 2,
+  },
+  {
+    id: 'site',
+    phrases: ['who made the website', 'who built the website', 'who made the site', 'who built the site', 'who created the website', 'who designed the website', 'website made by', 'site made by'],
+    weight: 3,
+  },
+  {
+    id: 'who',
+    stems: ['eliseo', 'robot', 'human'],
+    phrases: ['who are you', 'are you a bot', 'are you a person', 'are you real', 'your name', 'what can you do', 'artificial intelligence'],
+    weight: 2,
+  },
+  {
+    id: 'greeting',
+    stems: ['hello', 'hola', 'ciao', 'salve', 'greetings'],
+    phrases: ['hi', 'hey', 'good morning', 'good evening', 'good afternoon'],
+  },
+  {
+    id: 'thanks',
+    stems: ['thank', 'thanks', 'bye', 'goodbye', 'cheers', 'grazie'],
+    phrases: ['see you', 'see you soon', 'ok thanks', 'perfect', 'great', 'sounds good'],
+  },
+  {
+    id: 'howAreYou',
+    phrases: ['how are you', 'how is it going', 'hows it going', 'whats up'],
+    weight: 2,
+  },
+];
+
+const CATEGORY_STEMS_EN: Record<string, string[]> = {
+  taglio: ['haircut', 'cut', 'fade', 'hair'],
+  baby: ['baby', 'kid', 'child', 'toddler', 'son', 'daughter'],
+  barba: ['beard', 'shave', 'razor', 'moustache', 'mustache', 'goatee'],
+  styling: ['styling', 'style', 'shampoo', 'wash'],
+};
+
+const enPrice = (cents: number) =>
+  `€${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
 
 // ─── Orari ─────────────────────────────────────────────────────────────────────
 
@@ -178,23 +337,24 @@ const CATEGORY_STEMS: Record<string, string[]> = {
   styling: ['acconciat', 'piega', 'styling', 'shampoo', 'lavaggio'],
 };
 
-const STOPWORDS = new Set(['e', 'a', 'con', 'di', 'il', 'la', 'le', 'lo', 'per']);
+const STOPWORDS = new Set(['e', 'a', 'con', 'di', 'il', 'la', 'le', 'lo', 'per', 'and', 'the', 'with', 'for', 'of']);
 
 /** Trova i servizi citati nel messaggio. Restituisce i più pertinenti. */
-function findServices(tokens: string[], services: ChatService[]): ChatService[] {
+function findServices(tokens: string[], services: ChatService[], lang: Lang = 'it'): ChatService[] {
   const scored = services
     .map((s) => {
       let score = 0;
-      for (const w of tokenize(s.name)) {
+      const names = lang === 'en' ? [...tokenize(s.name), ...tokenize(serviceName('en', s.name))] : tokenize(s.name);
+      for (const w of names) {
         if (STOPWORDS.has(w) || w.length < 3) continue;
         const stem = w.length <= 5 ? w : w.slice(0, w.length - 2);
         if (hasStem(tokens, stem)) score += 2;
       }
-      for (const stem of CATEGORY_STEMS[s.category] ?? []) {
+      for (const stem of [...(CATEGORY_STEMS[s.category] ?? []), ...(lang === 'en' ? CATEGORY_STEMS_EN[s.category] ?? [] : [])]) {
         if (hasStem(tokens, stem)) score += 1;
       }
       // "taglio baby" vince su "taglio e shampoo" quando si parla di bimbi
-      if (s.category === 'taglio' && CATEGORY_STEMS.baby.some((x) => hasStem(tokens, x))) score -= 2;
+      if (s.category === 'taglio' && [...CATEGORY_STEMS.baby, ...(lang === 'en' ? CATEGORY_STEMS_EN.baby : [])].some((x) => hasStem(tokens, x))) score -= 2;
       return { s, score };
     })
     .filter((x) => x.score > 0);
@@ -367,8 +527,8 @@ const INTENTS: IntentDef[] = [
   },
 ];
 
-function scoreIntents(norm: string, tokens: string[]): { id: IntentId; score: number }[] {
-  return INTENTS.map((def) => {
+function scoreIntents(norm: string, tokens: string[], lang: Lang = 'it'): { id: IntentId; score: number }[] {
+  return (lang === 'en' ? INTENTS_EN : INTENTS).map((def) => {
     let score = 0;
     for (const stem of def.stems ?? []) if (hasStem(tokens, stem)) score += 1;
     for (const phrase of def.phrases ?? []) if (hasPhrase(norm, phrase)) score += phrase.includes(' ') ? 1.5 : 1;
@@ -400,6 +560,7 @@ function cutBookingNote(): string {
 }
 
 function answer(id: IntentId, ctx: Ctx, r: Reply) {
+  if (ctx.lang === 'en') return answerEn(id, ctx, r);
   const { k, tokens, norm, mentioned } = ctx;
   const now = k.now ?? new Date();
 
@@ -629,7 +790,279 @@ function answer(id: IntentId, ctx: Ctx, r: Reply) {
   }
 }
 
+
+// ─── Risposte in inglese ───────────────────────────────────────────────────────
+
+function periodsText(periods: Period[]): string {
+  if (periods.length === 0) return 'closed';
+  return periods.map((p) => `${p.start}–${p.end}`).join(' and ');
+}
+
+function openStatusEn(now: Date): string {
+  const { dow, hhmm } = romeNow(now);
+  const today = periodsForDay(dow);
+  const current = today.find((p) => hhmm >= p.start && hhmm < p.end);
+  if (current) return `🟢 **We’re open right now.** Today we close at ${current.end}.`;
+
+  const later = today.find((p) => hhmm < p.start);
+  if (later) return `🔴 **We’re closed right now.** Today we reopen at ${later.start}.`;
+
+  for (let i = 1; i <= 7; i++) {
+    const d = (dow + i) % 7;
+    const periods = periodsForDay(d);
+    if (periods.length > 0) {
+      const when = i === 1 ? 'tomorrow' : DAY_NAMES_EN[d];
+      return `🔴 **We’re closed right now.** We reopen ${when} at ${periods[0].start}.`;
+    }
+  }
+  return '🔴 **We’re closed right now.**';
+}
+
+function hoursTableEn(): string {
+  return SITE_CONFIG.hours.map((h) => `• **${dayName('en', h.day)}:** ${timeText('en', h.time.replace(/ – /g, '–'))}`).join('\n');
+}
+
+function serviceLineEn(s: ChatService): string {
+  return `• ${serviceName('en', s.name)}: **${enPrice(s.price_cents)}** · ${s.duration_minutes} min`;
+}
+
+function priceListEn(services: ChatService[]): string {
+  return services.map(serviceLineEn).join('\n');
+}
+
+const cutBookingNoteEn = () =>
+  'Online you can book **all services**, haircuts included, with the barber you prefer: **Luigi**, **Vittorio** or **Francesco**.';
+
+function answerEn(id: IntentId, ctx: Ctx, r: Reply) {
+  const { k, tokens, norm, mentioned } = ctx;
+  const now = k.now ?? new Date();
+  const A = ACTIONS_EN;
+
+  switch (id) {
+    case 'hours': {
+      const askedDays = DAY_STEMS_EN.map((s, i) => (hasStem(tokens, s) ? i : -1)).filter((i) => i >= 0);
+      if (hasPhrase(norm, 'today')) askedDays.push(romeNow(now).dow);
+      if (hasPhrase(norm, 'tomorrow')) askedDays.push((romeNow(now).dow + 1) % 7);
+      const unique = [...new Set(askedDays)];
+      if (unique.length > 0 && unique.length <= 2) {
+        const lines = unique.map((d) => `• **${DAY_NAMES_EN[d]}:** ${periodsText(periodsForDay(d))}`);
+        r.add(`⏰ ${lines.join('\n')}`);
+      } else {
+        r.add(`⏰ **Opening hours:**\n\n${hoursTableEn()}`);
+      }
+      r.add(openStatusEn(now), A.book);
+      r.suggest('How do I book?', 'Where are you?');
+      return;
+    }
+
+    case 'openNow': {
+      r.add(openStatusEn(now));
+      r.add(`Full opening hours:\n${hoursTableEn()}`, A.book);
+      r.suggest('How do I book?', 'Where are you?');
+      return;
+    }
+
+    case 'prices': {
+      if (mentioned.length > 0) {
+        r.add(`💈 ${mentioned.length === 1 ? 'Price' : 'Prices'}:\n\n${priceListEn(mentioned)}`, A.book);
+      } else {
+        r.add(`💈 **Price list:**\n\n${priceListEn(k.services)}\n\nShampoo and styling advice are included with every haircut. No hidden extras.`, A.services, A.book);
+      }
+      if (k.promotions.length > 0) r.add(`🎁 There are **active offers**: write "offers" for the details.`);
+      r.suggest('How do I book?', 'Opening hours');
+      return;
+    }
+
+    case 'services': {
+      if (mentioned.length > 0) {
+        r.add(`Yes, we do! ✂️\n\n${priceListEn(mentioned)}`, A.book);
+      } else {
+        r.add(`💈 **Our services:**\n\n${priceListEn(k.services)}`, A.services, A.book);
+      }
+      r.suggest('How do I book?', 'Who are the barbers?');
+      return;
+    }
+
+    case 'duration': {
+      const list = mentioned.length > 0 ? mentioned : k.services;
+      r.add(`⏱️ **Approximate duration:**\n\n${list.map((s) => `• ${serviceName('en', s.name)}: **${s.duration_minutes} min**`).join('\n')}`, A.book);
+      r.suggest('Prices', 'How do I book?');
+      return;
+    }
+
+    case 'booking': {
+      r.add(
+        `📅 **How to book:**\n\n1. Go to **Book**\n2. Choose a service, a day and a free time\n3. Enter your details and confirm\n\nYou’ll get a confirmation by email. No advance payment: you pay at the salon.\n\n${cutBookingNoteEn()}`,
+        A.book
+      );
+      r.add(`Prefer to do it by message? Write to us on WhatsApp at **${PHONE}**.`, A.whatsapp);
+      r.suggest('Can I cancel?', 'Opening hours');
+      return;
+    }
+
+    case 'cancel': {
+      r.add(
+        `🔁 **Changes and cancellations:**\n\nIt’s free up to **${SITE_CONFIG.cancellationMinutes} minutes before** your appointment.\n\n• From the **Customer Area** → "Appointments" → "Edit" or "Cancel"\n• Or on WhatsApp at **${PHONE}**\n\nIf you’re running late, let us know on WhatsApp so we can organise ourselves.`,
+        A.appointments,
+        A.whatsapp
+      );
+      r.suggest('How do I book?');
+      return;
+    }
+
+    case 'location': {
+      r.add(`📍 **Where we are:**\n\n${SITE_CONFIG.addressShort}\n${SITE_CONFIG.addressCity}`, A.maps);
+      r.suggest('Opening hours', 'Parking?');
+      return;
+    }
+
+    case 'contacts': {
+      r.add(
+        `📞 **Contact:**\n\n• **Phone / WhatsApp:** ${PHONE}\n• **Email:** ${SITE_CONFIG.email}\n• **Instagram:** ${SITE_CONFIG.instagramHandle}`,
+        A.whatsapp,
+        A.call
+      );
+      r.suggest('Opening hours', 'Where are you?');
+      return;
+    }
+
+    case 'payment': {
+      r.add(
+        `💳 **Payment:**\n\nYou pay at the salon **after the service**: cash, debit card or credit card.\nNo advance payment when you book online.`
+      );
+      r.suggest('Prices', 'How do I book?');
+      return;
+    }
+
+    case 'kids': {
+      const baby = k.services.filter((s) => s.category === 'baby');
+      const line = baby.length ? `\n\n${priceListEn(baby)}` : '';
+      r.add(
+        `👶 **Kids:**\n\nChildren are always welcome here. We take all the time needed: no rush, no pressure.${line}\n\nIf it’s the **first haircut**, mention it in the notes when you book.`,
+        A.book
+      );
+      r.suggest('Opening hours', 'How do I book?');
+      return;
+    }
+
+    case 'team': {
+      const list = k.barbers.map((b) => `• **${b.name}** — ${barberRole('en', b.role)}`).join('\n');
+      r.add(
+        `👨‍💈 **The team:**\n\n${list}\n\nLuigi has been doing this job since 2012 and opened his own Barberia after 13 years of learning the trade.\n\n${cutBookingNoteEn()}`,
+        A.about,
+        A.book
+      );
+      r.suggest('Prices', 'How do I book?');
+      return;
+    }
+
+    case 'barber': {
+      const b = k.barbers.find((x) => hasStem(tokens, normalize(x.name).split(' ')[0]));
+      if (!b) return;
+      const first = b.name.split(' ')[0];
+      const isLuigi = /luigi/i.test(b.name);
+      r.add(
+        isLuigi
+          ? `✂️ **${b.name}** is the owner. With him you can book **all services** online, haircuts included.`
+          : `✂️ With **${first}** you can book **all services** online, haircuts included. When you book, choose ${first} as your barber.`,
+        A.book,
+        A.whatsapp
+      );
+      r.suggest('Prices', 'Opening hours');
+      return;
+    }
+
+    case 'account': {
+      r.add(
+        `👤 **Customer Area:**\n\nWith an account you can:\n• see and manage your appointments\n• edit or cancel them\n• check your haircut history\n• log in with a Passkey (fingerprint or face)\n\nForgot your password? Use "Forgot password" on the login page.`,
+        A.login,
+        A.register
+      );
+      r.suggest('How do I book?');
+      return;
+    }
+
+    case 'promo': {
+      if (k.promotions.length === 0) {
+        r.add(`🎁 There are no active offers at the moment.\nFollow us on Instagram **${SITE_CONFIG.instagramHandle}** so you don’t miss the next ones.`, A.instagram);
+      } else {
+        const lines = k.promotions.map((p) => {
+          const value = p.discount_type === 'percent' ? `-${p.discount_value}%` : `-${enPrice(p.discount_value)}`;
+          const on = p.serviceName ? ` on ${serviceName('en', p.serviceName)}` : '';
+          const code = p.code ? ` · code **${p.code}**` : '';
+          const until = p.ends_at ? ` · until ${new Date(p.ends_at).toLocaleDateString('en-GB', { timeZone: 'Europe/Rome' })}` : '';
+          return `• **${p.title}** (${value}${on})${code}${until}`;
+        });
+        r.add(`🎁 **Active offers:**\n\n${lines.join('\n')}`, A.services, A.book);
+      }
+      r.suggest('Prices');
+      return;
+    }
+
+    case 'social': {
+      r.add(`📸 See our work in the **Gallery** and on Instagram **${SITE_CONFIG.instagramHandle}**.`, A.gallery, A.instagram);
+      r.suggest('Prices', 'How do I book?');
+      return;
+    }
+
+    case 'reviews': {
+      r.add(`⭐ Read what our clients say on the **Reviews** page.\nHave you been to see us? We’d love to hear your opinion!`, A.reviews, A.leaveReview);
+      return;
+    }
+
+    case 'parking': {
+      r.add(
+        `🚗 You’ll find us at **${SITE_CONFIG.addressShort}**, Foggia.\nFor info on parking and how to get here, write to us on WhatsApp at **${PHONE}**.`,
+        A.maps,
+        A.whatsapp
+      );
+      return;
+    }
+
+    case 'walkin': {
+      r.add(
+        `We recommend **booking**: that way your time is guaranteed, with no waiting.\nTo find out if there’s space right now, write to us on WhatsApp at **${PHONE}**.`,
+        A.book,
+        A.whatsapp
+      );
+      r.add(openStatusEn(now));
+      return;
+    }
+
+    case 'site': {
+      r.add(`💻 The website and graphics were made by **Eliseo Miraglia** (IG @eliseomiraglia).`, { label: '@eliseomiraglia', href: 'https://www.instagram.com/eliseomiraglia' });
+      return;
+    }
+
+    case 'who': {
+      r.add(
+        `I’m **Eliseo**, the virtual assistant of Barberia Garofalo 🤖✂️\n\nI can help with opening hours, services, prices, bookings and contacts.\nFor anything else, the staff are on WhatsApp at **${PHONE}**.`
+      );
+      r.suggest(...DEFAULT_SUGGESTIONS_EN);
+      return;
+    }
+
+    case 'greeting': {
+      r.add(`Hi! 👋 I’m **Eliseo**, the assistant of Barberia Garofalo.\nHow can I help you?`);
+      r.suggest(...DEFAULT_SUGGESTIONS_EN);
+      return;
+    }
+
+    case 'howAreYou': {
+      r.add(`All good, thank you! 😊 I’m here to help. What do you need?`);
+      r.suggest(...DEFAULT_SUGGESTIONS_EN);
+      return;
+    }
+
+    case 'thanks': {
+      r.add(`You’re welcome! 😊 If you need anything else, I’m here. See you soon at Barberia Garofalo ✂️`, A.book);
+      return;
+    }
+  }
+}
+
 interface Ctx {
+  lang: Lang;
   k: ChatKnowledge;
   tokens: string[];
   norm: string;
@@ -638,17 +1071,23 @@ interface Ctx {
 
 // ─── Entry point ───────────────────────────────────────────────────────────────
 
-export function respond(message: string, history: ChatHistoryItem[], k: ChatKnowledge): ChatResult {
+export function respond(message: string, history: ChatHistoryItem[], k: ChatKnowledge, lang: Lang = 'it'): ChatResult {
+  const en = lang === 'en';
+  const dayStems = en ? DAY_STEMS_EN : DAY_STEMS;
   const norm = normalize(message);
   const tokens = norm.split(' ').filter(Boolean);
   const r = new Reply();
 
   if (!norm) {
-    return { replies: ['Scrivi pure la tua domanda 😊'], actions: [], suggestions: DEFAULT_SUGGESTIONS };
+    return {
+      replies: [en ? 'Go ahead and write your question 😊' : 'Scrivi pure la tua domanda 😊'],
+      actions: [],
+      suggestions: en ? DEFAULT_SUGGESTIONS_EN : DEFAULT_SUGGESTIONS,
+    };
   }
 
-  let mentioned = findServices(tokens, k.services);
-  let ranked = scoreIntents(norm, tokens);
+  let mentioned = findServices(tokens, k.services, lang);
+  let ranked = scoreIntents(norm, tokens, lang);
 
   // Domanda di seguito ("e la barba?", "quanto?") → riusa il contesto dell'ultima domanda.
   const lastUser = [...history].reverse().find((m) => m.role === 'user')?.content ?? '';
@@ -656,18 +1095,18 @@ export function respond(message: string, history: ChatHistoryItem[], k: ChatKnow
   if (isShortFollowUp && lastUser) {
     const prevTokens = tokenize(lastUser);
     const prevNorm = normalize(lastUser);
-    const prevIntents = scoreIntents(prevNorm, prevTokens).filter((x) => !SOCIAL_ONLY.includes(x.id));
+    const prevIntents = scoreIntents(prevNorm, prevTokens, lang).filter((x) => !SOCIAL_ONLY.includes(x.id));
     const onlySocialOrNone = ranked.every((x) => SOCIAL_ONLY.includes(x.id));
 
     if (onlySocialOrNone && mentioned.length > 0 && prevIntents.length > 0) {
       // "e la barba?" dopo "quanto costa un taglio?"
       ranked = [{ id: prevIntents[0].id, score: 1 }, ...ranked];
-    } else if (onlySocialOrNone && DAY_STEMS.some((s) => hasStem(tokens, s)) && prevIntents.some((x) => x.id === 'hours' || x.id === 'openNow')) {
+    } else if (onlySocialOrNone && dayStems.some((s) => hasStem(tokens, s)) && prevIntents.some((x) => x.id === 'hours' || x.id === 'openNow')) {
       // "e sabato?" dopo una domanda sugli orari
       ranked = [{ id: 'hours', score: 1 }, ...ranked];
     }
     if (mentioned.length === 0 && ranked.some((x) => ['prices', 'duration'].includes(x.id))) {
-      mentioned = findServices(prevTokens, k.services);
+      mentioned = findServices(prevTokens, k.services, lang);
     }
   }
 
@@ -677,7 +1116,7 @@ export function respond(message: string, history: ChatHistoryItem[], k: ChatKnow
   }
 
   // Un giorno della settimana da solo ("sabato?") → orari.
-  if (ranked.length === 0 && DAY_STEMS.some((s) => hasStem(tokens, s))) {
+  if (ranked.length === 0 && dayStems.some((s) => hasStem(tokens, s))) {
     ranked = [{ id: 'hours', score: 1 }];
   }
 
@@ -686,7 +1125,7 @@ export function respond(message: string, history: ChatHistoryItem[], k: ChatKnow
     ranked = ranked.filter((x) => x.id !== 'prices');
   }
   // "domenica siete aperti?" → orari di quel giorno, non "adesso".
-  const namesDay = DAY_STEMS.some((st) => hasStem(tokens, st)) || hasPhrase(norm, 'domani');
+  const namesDay = dayStems.some((st) => hasStem(tokens, st)) || hasPhrase(norm, en ? 'tomorrow' : 'domani');
   if (namesDay && ranked.some((x) => x.id === 'openNow')) {
     ranked = ranked.filter((x) => x.id !== 'openNow');
     if (!ranked.some((x) => x.id === 'hours')) ranked = [{ id: 'hours', score: 1 }, ...ranked];
@@ -705,13 +1144,13 @@ export function respond(message: string, history: ChatHistoryItem[], k: ChatKnow
   // Senza appuntamento → risposta dedicata.
   if (ranked.some((x) => x.id === 'walkin')) ranked = ranked.filter((x) => x.id !== 'booking');
   // "Quanto dura?" → durata, non listino.
-  if (ranked.some((x) => x.id === 'duration') && !hasStem(tokens, 'prezz') && !['costa', 'costo', 'costi'].some((w) => tokens.includes(w))) {
+  if (ranked.some((x) => x.id === 'duration') && !hasStem(tokens, en ? 'pric' : 'prezz') && !(en ? ['cost', 'costs', 'much'] : ['costa', 'costo', 'costi']).some((w) => tokens.includes(w))) {
     ranked = ranked.filter((x) => x.id !== 'prices');
   }
   // Prezzo + servizi elencati: una sola risposta.
   if (ranked.some((x) => x.id === 'prices')) ranked = ranked.filter((x) => x.id !== 'services');
   // "Pago con carta?" → pagamento, non listino.
-  if (ranked.some((x) => x.id === 'payment') && !hasStem(tokens, 'prezz') && !hasStem(tokens, 'cost') && mentioned.length === 0) {
+  if (ranked.some((x) => x.id === 'payment') && !hasStem(tokens, en ? 'pric' : 'prezz') && !hasStem(tokens, 'cost') && mentioned.length === 0) {
     ranked = ranked.filter((x) => x.id !== 'prices');
   }
 
@@ -719,14 +1158,22 @@ export function respond(message: string, history: ChatHistoryItem[], k: ChatKnow
   const chosen: IntentId[] = business.length > 0 ? business.slice(0, 3).map((x) => x.id) : ranked.slice(0, 1).map((x) => x.id);
 
   if (chosen.length === 0) {
+    if (en) {
+      r.add(
+        `I don’t have information on that 😅\n\nI can help you with:\n• ⏰ Opening hours\n• 💈 Services and prices\n• 📅 Bookings and cancellations\n• 📍 Where we are\n• 📞 Contact\n\nFor anything else, write to the staff on WhatsApp at **${PHONE}**.`,
+        ACTIONS_EN.whatsapp
+      );
+      r.suggest(...DEFAULT_SUGGESTIONS_EN);
+    } else {
     r.add(
       `Su questo non ho informazioni 😅\n\nPosso aiutarti con:\n• ⏰ Orari\n• 💈 Servizi e prezzi\n• 📅 Prenotazioni e disdette\n• 📍 Dove siamo\n• 📞 Contatti\n\nPer altro, scrivi allo staff su WhatsApp al **${PHONE}**.`,
       ACTIONS.whatsapp
     );
     r.suggest(...DEFAULT_SUGGESTIONS);
+    }
   } else {
     // Saluto + domanda ("ciao, quanto costa la barba?") → rispondi direttamente.
-    for (const id of chosen) answer(id, { k, tokens, norm, mentioned }, r);
+    for (const id of chosen) answer(id, { lang, k, tokens, norm, mentioned }, r);
   }
 
   return {

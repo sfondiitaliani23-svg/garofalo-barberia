@@ -2,7 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Scissors, RotateCcw, ChevronDown, Sparkles } from 'lucide-react';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { localHref } from '@/lib/i18n';
+import { chatText } from '@/lib/i18n/content-widgets';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/site-config';
@@ -19,28 +22,29 @@ interface Message {
   actions?: ChatAction[];
 }
 
-const WELCOME: Message = {
-  id: '0',
-  role: 'assistant',
-  content: 'Ciao! 👋 Sono **Eliseo**, l\'assistente virtuale della Barberia Garofalo.\n\nPosso aiutarti con:\n• Orari e prenotazioni\n• Servizi e prezzi\n• Disdette e modifiche\n• Come raggiungerci',
-};
-
-const QUICK_QUESTIONS = [
-  'Quali sono gli orari?',
-  'Quanto costa un taglio?',
-  'Come prenoto?',
-  'Dove siete?',
-];
 
 const URL_RE = /(https?:\/\/[^\s)]+)/g;
 
 export function EliseoChat() {
+  const lang = useLang();
+  const t = chatText(lang);
+  const WELCOME: Message = { id: '0', role: 'assistant', content: t.welcome };
+  const QUICK_QUESTIONS = t.quick;
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [unread, setUnread] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>(QUICK_QUESTIONS);
+  const langRef = useRef(lang);
+
+  // Se la lingua cambia (es. passaggio IT/EN), la chat riparte con il saluto nella nuova lingua
+  useEffect(() => {
+    if (langRef.current === lang) return;
+    langRef.current = lang;
+    setMessages([{ id: '0', role: 'assistant', content: chatText(lang).welcome }]);
+    setSuggestions(chatText(lang).quick);
+  }, [lang]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -118,12 +122,13 @@ export function EliseoChat() {
         body: JSON.stringify({
           message: text.trim(),
           history: messages.map(m => ({ role: m.role, content: m.content })),
+          lang,
         }),
       });
       const data = await res.json();
 
       const replies: string[] =
-        Array.isArray(data.replies) && data.replies.length > 0 ? data.replies : ['Mi dispiace, riprova tra poco.'];
+        Array.isArray(data.replies) && data.replies.length > 0 ? data.replies : [t.retry];
       const actions: ChatAction[] = Array.isArray(data.actions) ? data.actions : [];
 
       for (let i = 0; i < replies.length; i++) {
@@ -148,8 +153,8 @@ export function EliseoChat() {
         {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: `Scusami, si è verificato un errore. Contattaci su WhatsApp al **${SITE_CONFIG.phoneDisplay}** 📱`,
-          actions: [{ label: 'Scrivi su WhatsApp', href: `https://wa.me/${SITE_CONFIG.whatsapp}` }],
+          content: t.errorMsg(SITE_CONFIG.phoneDisplay),
+          actions: [{ label: t.errorAction, href: `https://wa.me/${SITE_CONFIG.whatsapp}` }],
         },
       ]);
     } finally {
@@ -246,14 +251,14 @@ export function EliseoChat() {
             </div>
             <div>
               <p className="font-bold text-white text-sm leading-none">Eliseo</p>
-              <p className="text-[10px] text-[#cd9a4f]/60 leading-none mt-0.5">Assistente Barberia Garofalo</p>
+              <p className="text-[10px] text-[#cd9a4f]/60 leading-none mt-0.5">{t.subtitle}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={resetChat} title="Nuova chat" aria-label="Nuova chat" className="text-white/55 hover:text-white transition-colors p-1">
+            <button onClick={resetChat} title={t.newChat} aria-label={t.newChat} className="text-white/55 hover:text-white transition-colors p-1">
               <RotateCcw size={13} />
             </button>
-            <button onClick={() => setIsOpen(false)} aria-label="Chiudi assistente" className="text-white/55 hover:text-white transition-colors p-1">
+            <button onClick={() => setIsOpen(false)} aria-label={t.closeAssistant} className="text-white/55 hover:text-white transition-colors p-1">
               <ChevronDown size={18} />
             </button>
           </div>
@@ -330,14 +335,14 @@ export function EliseoChat() {
             ref={inputRef}
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Scrivi un messaggio..."
+            placeholder={t.placeholder}
             maxLength={500}
             disabled={loading}
             className="flex-1 bg-[#1a1a1a] border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder:text-white/60 focus:outline-none focus:border-[#cd9a4f]/40 transition-colors"
           />
           <button
             type="submit"
-            aria-label="Invia messaggio"
+            aria-label={t.send}
             disabled={!input.trim() || loading}
             className="w-9 h-9 rounded-full bg-[#cd9a4f] hover:bg-[#e5b565] disabled:bg-white/8 disabled:cursor-not-allowed text-black flex items-center justify-center transition-all shrink-0 shadow-lg"
           >
@@ -345,8 +350,8 @@ export function EliseoChat() {
           </button>
         </form>
         <p className="shrink-0 bg-[#0e0e0e] px-4 pb-2 text-center text-[10px] leading-snug text-white/45">
-          Risposte automatiche, anche con AI. Non scrivere dati personali ·{' '}
-          <a href="/privacy" className="underline underline-offset-2 hover:text-white/70">Privacy</a>
+          {t.disclaimer}
+          <a href={localHref(lang, '/privacy')} className="underline underline-offset-2 hover:text-white/70">{t.privacy}</a>
         </p>
       </div>
 
@@ -354,7 +359,7 @@ export function EliseoChat() {
       <button
         id="eliseo-chat-btn"
         onClick={() => setIsOpen(o => !o)}
-        aria-label={isOpen ? "Chiudi assistente Eliseo" : "Apri assistente Eliseo"}
+        aria-label={isOpen ? t.closeEliseo : t.openEliseo}
         data-evt="assistente"
         className={cn(
           "fixed z-[302] group flex flex-col items-center transition-all duration-300 right-6",
@@ -370,7 +375,7 @@ export function EliseoChat() {
         {/* Fumetto "Chiedi a Eliseo": al passaggio del mouse e per pochi secondi alla prima visita */}
         {!isOpen && (
           <span className={cn('ai-fab-hint', hint && 'is-shown')} aria-hidden>
-            Chiedi a <strong>Eliseo</strong>
+            {t.askPrefix}<strong>Eliseo</strong>
           </span>
         )}
         <span className={cn('ai-fab', isOpen && 'is-open')}>

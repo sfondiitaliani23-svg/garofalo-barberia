@@ -25,10 +25,13 @@ import { formatPrice, formatDuration, formatBarberRole } from '@/lib/utils';
 import { isValidCustomerEmail } from '@/lib/utils/customer-email';
 import type { Barber, Service } from '@/types/database';
 import { format, parseISO } from 'date-fns';
-import { it } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L, localHref } from '@/lib/i18n';
+import { serviceName } from '@/lib/i18n/content-en';
+import { barberRole, dfLocale, fallbackBarberLabel, translateMessage } from '@/lib/i18n/content-booking';
 import { Calendar, CheckCircle2, Clock, CreditCard, Star, User, Sparkles, AlertCircle } from 'lucide-react';
 
 interface BookingWizardProps {
@@ -42,8 +45,6 @@ interface BookingWizardProps {
   /** Barbiere già scelto (da ?barber= nel link, es. dalla pagina del team). */
   initialBarberId?: string | null;
 }
-
-const STEPS = ['Servizio', 'Barbiere & Orario', 'Conferma'];
 
 interface AppliedPromotion {
   title: string;
@@ -76,6 +77,11 @@ export function BookingWizard({
   initialBarberId = null,
 }: BookingWizardProps) {
   const router = useRouter();
+  const lang = useLang();
+  const locale = dfLocale(lang);
+  const STEPS = [L(lang, 'Servizio', 'Service'), L(lang, 'Barbiere & Orario', 'Barber & Time'), L(lang, 'Conferma', 'Confirm')];
+  const svcName = (name: string) => serviceName(lang, name);
+  const svcNames = (names: string) => names.split(' + ').map(svcName).join(' + ');
   const [step, setStep] = useState(1);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(initialServiceIds);
 
@@ -283,7 +289,7 @@ export function BookingWizard({
 
   async function handleApplyPromoCode() {
     if (selectedServiceIds.length === 0 || !promoCode.trim()) {
-      toast.error('Inserisci un codice promozionale');
+      toast.error(L(lang, 'Inserisci un codice promozionale', 'Please enter a promo code'));
       return;
     }
 
@@ -292,12 +298,12 @@ export function BookingWizard({
     setValidatingPromo(false);
 
     if (!result.ok) {
-      toast.error(result.error);
+      toast.error(translateMessage(lang, result.error));
       return;
     }
 
     if (!result.promotion || result.discountCents <= 0) {
-      toast.error('Codice valido ma nessuno sconto applicabile');
+      toast.error(L(lang, 'Codice valido ma nessuno sconto applicabile', 'Valid code, but no discount applies'));
       return;
     }
 
@@ -308,7 +314,7 @@ export function BookingWizard({
       code: result.promotion.code ?? promoCode.trim().toUpperCase(),
     });
     setPromoSource('code');
-    toast.success('Codice applicato');
+    toast.success(L(lang, 'Codice applicato', 'Code applied'));
   }
 
   function handleRemovePromoCode() {
@@ -347,16 +353,16 @@ export function BookingWizard({
       const b = barbers.find((item) => item.id === barberId);
       if (b) return b.name;
     }
-    return defaultBarber?.name ?? 'Collaboratore di sala';
-  }, [selectedSlotInfo, barberId, barbers, defaultBarber]);
+    return defaultBarber?.name ?? fallbackBarberLabel(lang);
+  }, [selectedSlotInfo, barberId, barbers, defaultBarber, lang]);
 
   function handleSubmit() {
     if (selectedServiceIds.length === 0 || !date || !time || !name.trim() || !phone.trim()) {
-      toast.error('Compila tutti i campi obbligatori');
+      toast.error(L(lang, 'Compila tutti i campi obbligatori', 'Please fill in all required fields'));
       return;
     }
     if (!isValidCustomerEmail(email)) {
-      toast.error('Inserisci un’email valida: è obbligatoria per ricevere la conferma della prenotazione.');
+      toast.error(L(lang, 'Inserisci un’email valida: è obbligatoria per ricevere la conferma della prenotazione.', 'Please enter a valid email address: we need it to send your booking confirmation.'));
       return;
     }
 
@@ -384,7 +390,7 @@ export function BookingWizard({
             return;
           }
 
-          toast.error(result?.error ?? 'Impossibile confermare la prenotazione. Riprova.');
+          toast.error(translateMessage(lang, result?.error ?? 'Impossibile confermare la prenotazione. Riprova.'));
           if (result?.error?.includes('disponibile')) {
             setStep(2);
             setTime(null);
@@ -407,7 +413,7 @@ export function BookingWizard({
           promotionTitle: result.promotionTitle,
         });
       } catch {
-        toast.error('Errore di connessione durante la conferma. Ricarica la pagina e riprova.');
+        toast.error(L(lang, 'Errore di connessione durante la conferma. Ricarica la pagina e riprova.', 'Connection error while confirming. Please reload the page and try again.'));
       }
     });
   }
@@ -432,9 +438,13 @@ export function BookingWizard({
       };
       
       const dates = `${formatGCalDate(start)}/${formatGCalDate(end)}`;
-      const text = encodeURIComponent('Appuntamento @ Barberia Garofalo');
+      const text = encodeURIComponent(L(lang, 'Appuntamento @ Barberia Garofalo', 'Appointment @ Barberia Garofalo'));
       const details = encodeURIComponent(
-        `Dettagli prenotazione:\n💈 Servizi: ${confirmation.serviceName}\n👤 Barbiere: ${confirmation.barberName}\n⏱️ Durata: ${totalDuration} min\n💶 Prezzo: ${formatPrice(confirmation.priceCents)}\n\n📍 Indirizzo: ${SITE_CONFIG.address}`
+        L(
+          lang,
+          `Dettagli prenotazione:\n💈 Servizi: ${confirmation.serviceName}\n👤 Barbiere: ${confirmation.barberName}\n⏱️ Durata: ${totalDuration} min\n💶 Prezzo: ${formatPrice(confirmation.priceCents)}\n\n📍 Indirizzo: ${SITE_CONFIG.address}`,
+          `Booking details:\n💈 Services: ${svcNames(confirmation.serviceName)}\n👤 Barber: ${confirmation.barberName}\n⏱️ Duration: ${totalDuration} min\n💶 Price: ${formatPrice(confirmation.priceCents)}\n\n📍 Address: ${SITE_CONFIG.address}`
+        )
       );
       const location = encodeURIComponent(SITE_CONFIG.address);
       
@@ -443,7 +453,7 @@ export function BookingWizard({
       console.error('Errore nella generazione del link Google Calendar', err);
       return '';
     }
-  }, [confirmation, totalDuration]);
+  }, [confirmation, totalDuration, lang]);
 
   if (confirmation) {
     return (
@@ -456,23 +466,23 @@ export function BookingWizard({
                 <CheckCircle2 className="h-9 w-9" />
               </div>
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full mb-3">
-                Prenotazione confermata
+                {L(lang, 'Prenotazione confermata', 'Booking confirmed')}
               </p>
               <h2 className="text-2xl font-display uppercase font-bold text-gold tracking-wide">
                 {SITE_CONFIG.name}
               </h2>
               <p className="text-xs text-white/60 mt-1 font-mono">
-                {confirmation.appointmentId ? `Rif: #${confirmation.appointmentId.replace('appointment_', '').substring(0, 10).toUpperCase()}` : 'Confermato'}
+                {confirmation.appointmentId ? `${L(lang, 'Rif', 'Ref')}: #${confirmation.appointmentId.replace('appointment_', '').substring(0, 10).toUpperCase()}` : L(lang, 'Confermato', 'Confirmed')}
               </p>
               <p className="mt-3 max-w-md text-sm text-white/70">
-                La conferma è in arrivo su {confirmation.customerEmail}
+                {L(lang, 'La conferma è in arrivo su', 'Your confirmation is on its way to')} {confirmation.customerEmail}
               </p>
               
               <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-white/80">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4.5 w-4.5 text-gold" />
                   <span>
-                    {format(parseISO(confirmation.date), "EEEE d MMMM yyyy", { locale: it })} alle {confirmation.time}
+                    {format(parseISO(confirmation.date), "EEEE d MMMM yyyy", { locale })} {L(lang, 'alle', 'at')} {confirmation.time}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -491,23 +501,23 @@ export function BookingWizard({
                 className="w-full border border-gold/50 text-gold hover:bg-gold hover:text-black flex items-center justify-center gap-2.5 py-3 px-4 rounded-lg font-semibold transition-all shadow-md cursor-pointer text-center"
               >
                 <Calendar className="h-5 w-5 shrink-0" />
-                Aggiungi a Google Calendar
+                {L(lang, 'Aggiungi a Google Calendar', 'Add to Google Calendar')}
               </a>
             </div>
 
             {/* Dettagli della prenotazione */}
             <div className="py-6 border-b border-white/10">
               <h3 className="text-base font-bold uppercase tracking-wider text-gold mb-4">
-                Dettagli della prenotazione
+                {L(lang, 'Dettagli della prenotazione', 'Booking details')}
               </h3>
               <div className="space-y-4">
                 {selectedServices.map((service) => (
                   <div key={service.id} className="flex justify-between items-start gap-4">
                     <div>
-                      <h4 className="font-semibold text-white text-base">{service.name}</h4>
+                      <h4 className="font-semibold text-white text-base">{svcName(service.name)}</h4>
                       <div className="flex items-center gap-1.5 text-sm text-white/70 mt-1">
                         <User className="h-3.5 w-3.5 text-gold" />
-                        <span>Operatore: <strong className="text-white">{confirmation.barberName}</strong></span>
+                        <span>{L(lang, 'Operatore', 'Barber')}: <strong className="text-white">{confirmation.barberName}</strong></span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-white/60 mt-0.5">
                         <Clock className="h-3 w-3" />
@@ -527,17 +537,17 @@ export function BookingWizard({
               {confirmation.discountCents > 0 ? (
                 <>
                   <div className="flex justify-between text-sm text-white/60">
-                    <span>Prezzo originale</span>
+                    <span>{L(lang, 'Prezzo originale', 'Original price')}</span>
                     <span className="line-through">{formatPrice(confirmation.originalPriceCents)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-emerald-400 font-medium">
-                    <span>Sconto {confirmation.promotionTitle ? `(${confirmation.promotionTitle})` : ''}</span>
+                    <span>{L(lang, 'Sconto', 'Discount')} {confirmation.promotionTitle ? `(${confirmation.promotionTitle})` : ''}</span>
                     <span>-{formatPrice(confirmation.discountCents)}</span>
                   </div>
                 </>
               ) : null}
               <div className="flex justify-between items-center text-lg font-bold text-white pt-1">
-                <span>Totale</span>
+                <span>{L(lang, 'Totale', 'Total')}</span>
                 <span className="text-gold text-2xl font-extrabold">{formatPrice(confirmation.priceCents)}</span>
               </div>
             </div>
@@ -547,10 +557,10 @@ export function BookingWizard({
               <div className="flex items-start gap-3 rounded-lg border border-gold/20 bg-gold/5 p-4">
                 <CreditCard className="h-5 w-5 text-gold shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs text-gold uppercase tracking-wider font-bold">Metodo di pagamento</p>
-                  <p className="text-sm font-semibold text-white mt-0.5">Paga direttamente in salone</p>
+                  <p className="text-xs text-gold uppercase tracking-wider font-bold">{L(lang, 'Metodo di pagamento', 'Payment method')}</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">{L(lang, 'Paga direttamente in salone', 'Pay directly at the barbershop')}</p>
                   <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                    Nessun pagamento anticipato. Salderai il conto in sede dopo il servizio (contanti, bancomat o carta).
+                    {L(lang, 'Nessun pagamento anticipato. Salderai il conto in sede dopo il servizio (contanti, bancomat o carta).', 'No advance payment. You pay at the barbershop after your service (cash, debit card or credit card).')}
                   </p>
                 </div>
               </div>
@@ -564,14 +574,14 @@ export function BookingWizard({
                 className="inline-flex items-center justify-center gap-2 text-gold hover:text-gold/80 hover:underline transition-all py-1 font-semibold text-sm"
               >
                 <Star className="h-5 w-5 fill-gold text-gold shrink-0" />
-                {SITE_CONFIG.googleReviewUrl.includes('google') || SITE_CONFIG.googleReviewUrl.includes('g.page') ? 'Lasciaci una recensione su Google' : 'Lasciaci una recensione'}
+                {SITE_CONFIG.googleReviewUrl.includes('google') || SITE_CONFIG.googleReviewUrl.includes('g.page') ? L(lang, 'Lasciaci una recensione su Google', 'Leave us a review on Google') : L(lang, 'Lasciaci una recensione', 'Leave us a review')}
               </a>
             </div>
 
             {/* Bottone Home */}
             <div className="pt-6">
-              <Button className="w-full cursor-pointer py-6 font-bold" onClick={() => router.push('/')}>
-                Torna alla home
+              <Button className="w-full cursor-pointer py-6 font-bold" onClick={() => router.push(localHref(lang, '/'))}>
+                {L(lang, 'Torna alla home', 'Back to home')}
               </Button>
             </div>
           </CardContent>
@@ -602,8 +612,8 @@ export function BookingWizard({
 
       <Card className="w-full min-w-0 overflow-hidden">
         <CardHeader className="px-4 sm:px-6">
-          <h2 className="font-display text-xl uppercase tracking-wide">Prenotazione online</h2>
-          <p className="text-sm text-white/50">Scegli servizio, barbiere e orario — conferma automatica</p>
+          <h2 className="font-display text-xl uppercase tracking-wide">{L(lang, 'Prenotazione online', 'Online booking')}</h2>
+          <p className="text-sm text-white/50">{L(lang, 'Scegli servizio, barbiere e orario — conferma automatica', 'Choose your service, barber and time — instant confirmation')}</p>
         </CardHeader>
         <CardContent className="min-w-0 space-y-6 overflow-x-hidden px-4 sm:px-6">
           {step === 1 && (
@@ -622,7 +632,7 @@ export function BookingWizard({
                       )}
                     >
                       <div>
-                        <p className="font-medium text-white">{s.name}</p>
+                        <p className="font-medium text-white">{svcName(s.name)}</p>
                         <p className="text-sm text-gold">{formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}</p>
                       </div>
                       <div className={cn(
@@ -643,13 +653,13 @@ export function BookingWizard({
               {selectedServices.length > 0 && (
                 <div className="rounded-lg border border-gold/20 bg-gold/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="text-sm text-white/50">Servizi selezionati ({selectedServices.length})</p>
+                    <p className="text-sm text-white/50">{L(lang, 'Servizi selezionati', 'Selected services')} ({selectedServices.length})</p>
                     <p className="font-medium text-gold mt-0.5">
-                      {selectedServices.map(s => s.name).join(' + ')}
+                      {selectedServices.map(s => svcName(s.name)).join(' + ')}
                     </p>
                   </div>
                   <div className="text-left sm:text-right shrink-0">
-                    <p className="text-sm text-white/50">Totale stimato</p>
+                    <p className="text-sm text-white/50">{L(lang, 'Totale stimato', 'Estimated total')}</p>
                     <p className="text-lg font-bold text-white mt-0.5">
                       {formatDuration(totalDuration)} · {formatPrice(totalOriginalPrice)}
                     </p>
@@ -664,22 +674,24 @@ export function BookingWizard({
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gold">
-                    Con chi vuoi prenotare?
+                    {L(lang, 'Con chi vuoi prenotare?', 'Who would you like to book with?')}
                   </h3>
                   {defaultBarber && (
                     <span className="text-xs text-white/60">
-                      Seleziona il tuo barbiere
+                      {L(lang, 'Seleziona il tuo barbiere', 'Choose your barber')}
                     </span>
                   )}
                 </div>
 
                 <p className="mb-3 text-xs text-white/60">
-                  Scegli il barbiere che preferisci, oppure &quot;Nessuna preferenza&quot; per il primo orario libero.
+                  {lang === 'en'
+                    ? <>Choose the barber you prefer, or &quot;No preference&quot; for the first free time.</>
+                    : <>Scegli il barbiere che preferisci, oppure &quot;Nessuna preferenza&quot; per il primo orario libero.</>}
                 </p>
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {loadingBarberStatuses && (
-                    <p className="text-sm text-white/50 sm:col-span-2">Verifica disponibilità team...</p>
+                    <p className="text-sm text-white/50 sm:col-span-2">{L(lang, 'Verifica disponibilità team...', 'Checking team availability...')}</p>
                   )}
                   {barbers.map((b) => {
                     const isSelected = barberId === b.id;
@@ -708,7 +720,7 @@ export function BookingWizard({
                             </span>
                           </div>
                           <p className="text-sm text-gold mt-0.5">
-                            {formatBarberRole(b.role)}
+                            {barberRole(lang, formatBarberRole(b.role))}
                           </p>
                         </div>
                         {b.image_url && (
@@ -734,14 +746,14 @@ export function BookingWizard({
                       barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/40'
                     )}
                   >
-                    <p className="font-medium text-white">Nessuna preferenza (Primo disponibile)</p>
-                    <p className="text-sm text-white/50">Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco</p>
+                    <p className="font-medium text-white">{L(lang, 'Nessuna preferenza (Primo disponibile)', 'No preference (first available)')}</p>
+                    <p className="text-sm text-white/50">{L(lang, 'Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco', 'Automatically assigned from the free times of Luigi, Vittorio and Francesco')}</p>
                   </button>
                 </div>
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-gold">Scegli il giorno</h3>
+                <h3 className="mb-3 text-sm font-semibold text-gold">{L(lang, 'Scegli il giorno', 'Choose a day')}</h3>
                 <MonthDatePicker
                   dates={dates}
                   selectedDate={date}
@@ -752,10 +764,10 @@ export function BookingWizard({
 
               <div>
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-gold">Orari disponibili</h3>
+                  <h3 className="text-sm font-semibold text-gold">{L(lang, 'Orari disponibili', 'Available times')}</h3>
                   {date && (
                     <span className="text-xs text-white/50">
-                      {format(parseISO(date), "EEEE d MMMM", { locale: it })}
+                      {format(parseISO(date), "EEEE d MMMM", { locale })}
                     </span>
                   )}
                 </div>
@@ -765,28 +777,34 @@ export function BookingWizard({
                   <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3.5 text-sm text-amber-200">
                     <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-amber-300">Luigi non è disponibile in questa data</p>
+                      <p className="font-semibold text-amber-300">{L(lang, 'Luigi non è disponibile in questa data', 'Luigi is not available on this date')}</p>
                       <p className="text-xs text-white/80 mt-0.5 leading-relaxed">
-                        Ti proponiamo gli orari liberi con i collaboratori esperti del salone (<strong>Francesco</strong> e <strong>Vittorio</strong>).
+                        {lang === 'en'
+                          ? <>We are showing the free times with the barbershop&apos;s experienced team members (<strong>Francesco</strong> and <strong>Vittorio</strong>).</>
+                          : <>Ti proponiamo gli orari liberi con i collaboratori esperti del salone (<strong>Francesco</strong> e <strong>Vittorio</strong>).</>}
                       </p>
                     </div>
                   </div>
                 )}
 
                 {loadingSlots ? (
-                  <p className="text-sm text-white/50">Caricamento orari...</p>
+                  <p className="text-sm text-white/50">{L(lang, 'Caricamento orari...', 'Loading times...')}</p>
                 ) : slotsUnavailable && date ? (
                   <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} />
                 ) : slots.length === 0 ? (
                   <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-center">
                     <p className="text-sm text-white/70">
                       {barberId
-                        ? `${barbers.find((b) => b.id === barberId)?.name.split(' ')[0] ?? 'Il barbiere scelto'} è al completo in questo giorno.`
-                        : 'Nessun orario disponibile per questo giorno.'}
+                        ? L(
+                            lang,
+                            `${barbers.find((b) => b.id === barberId)?.name.split(' ')[0] ?? 'Il barbiere scelto'} è al completo in questo giorno.`,
+                            `${barbers.find((b) => b.id === barberId)?.name.split(' ')[0] ?? 'The barber you chose'} is fully booked on this day.`
+                          )
+                        : L(lang, 'Nessun orario disponibile per questo giorno.', 'No times available on this day.')}
                     </p>
                     {alternatives.length > 0 ? (
                       <div className="mt-3 space-y-2">
-                        <p className="text-xs text-white/50">Liberi lo stesso giorno:</p>
+                        <p className="text-xs text-white/50">{L(lang, 'Liberi lo stesso giorno:', 'Free on the same day:')}</p>
                         {alternatives.map((a) => (
                           <button
                             key={a.barberId}
@@ -800,13 +818,13 @@ export function BookingWizard({
                             <span className="font-semibold text-white">{a.barberName}</span>
                             <span className="text-xs text-gold-light">
                               {a.slots.slice(0, 4).join(' · ')}
-                              {a.slots.length > 4 ? ' …' : ''} → Scegli
+                              {a.slots.length > 4 ? ' …' : ''} → {L(lang, 'Scegli', 'Choose')}
                             </span>
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-white/60 mt-1">Seleziona un&apos;altra data dal calendario in alto.</p>
+                      <p className="text-xs text-white/60 mt-1">{L(lang, 'Seleziona un\'altra data dal calendario in alto.', 'Please pick another date from the calendar above.')}</p>
                     )}
                   </div>
                 ) : (
@@ -857,12 +875,12 @@ export function BookingWizard({
                             ✂️
                           </div>
                           <div>
-                            <p className="text-xs text-white/60">Orario e Operatore selezionati:</p>
+                            <p className="text-xs text-white/60">{L(lang, 'Orario e Operatore selezionati:', 'Selected time and barber:')}</p>
                             <p className="text-sm font-bold text-white">
-                              {time} — Con <span className="text-gold">{assignedBarberName}</span>
+                              {time} — {L(lang, 'Con', 'With')} <span className="text-gold">{assignedBarberName}</span>
                               {selectedSlotInfo?.isFallback && (
                                 <span className="ml-2 inline-block rounded bg-amber-500/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-300">
-                                  Collaboratore
+                                  {L(lang, 'Collaboratore', 'Team member')}
                                 </span>
                               )}
                             </p>
@@ -873,7 +891,7 @@ export function BookingWizard({
                           onClick={() => setStep(3)}
                           className="w-full sm:w-auto font-bold shrink-0"
                         >
-                          Continua alla conferma
+                          {L(lang, 'Continua alla conferma', 'Continue to confirmation')}
                         </Button>
                       </div>
                     )}
@@ -886,35 +904,35 @@ export function BookingWizard({
           {step === 3 && selectedServices.length > 0 && date && time && (
             <div className="space-y-4">
               <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-sm space-y-2">
-                <p><strong>Servizi selezionati:</strong> {selectedServices.map(s => s.name).join(' + ')}</p>
-                <p><strong>Durata totale:</strong> {formatDuration(totalDuration)}</p>
+                <p><strong>{L(lang, 'Servizi selezionati', 'Selected services')}:</strong> {selectedServices.map(s => svcName(s.name)).join(' + ')}</p>
+                <p><strong>{L(lang, 'Durata totale', 'Total duration')}:</strong> {formatDuration(totalDuration)}</p>
                 {appliedPromotion && appliedPromotion.discountCents > 0 ? (
                   <>
                     <p>
-                      <strong>Prezzo complessivo:</strong>{' '}
+                      <strong>{L(lang, 'Prezzo complessivo', 'Total price')}:</strong>{' '}
                       <span className="line-through text-white/60">{formatPrice(totalOriginalPrice)}</span>{' '}
                       <span className="text-gold font-semibold">{formatPrice(appliedPromotion.finalCents)}</span>
                     </p>
                     <p className="text-emerald-400/90 text-xs">
-                      Sconto {formatPrice(appliedPromotion.discountCents)} — {appliedPromotion.title}
+                      {L(lang, 'Sconto', 'Discount')} {formatPrice(appliedPromotion.discountCents)} — {appliedPromotion.title}
                       {appliedPromotion.code ? ` (${appliedPromotion.code})` : ''}
                     </p>
                   </>
                 ) : (
-                  <p><strong>Prezzo complessivo:</strong> {formatPrice(totalOriginalPrice)}</p>
+                  <p><strong>{L(lang, 'Prezzo complessivo', 'Total price')}:</strong> {formatPrice(totalOriginalPrice)}</p>
                 )}
-                <p><strong>Data:</strong> {format(parseISO(date), "EEEE d MMMM yyyy", { locale: it })} alle {time}</p>
+                <p><strong>{L(lang, 'Data', 'Date')}:</strong> {format(parseISO(date), "EEEE d MMMM yyyy", { locale })} {L(lang, 'alle', 'at')} {time}</p>
                 <div className="pt-1 border-t border-white/10 flex items-center justify-between">
                   <div>
-                    <span className="text-white/60">Operatore: </span>
+                    <span className="text-white/60">{L(lang, 'Operatore', 'Barber')}: </span>
                     <strong className="text-gold text-base">{assignedBarberName}</strong>
                     {selectedSlotInfo?.isFallback ? (
                       <span className="ml-2 inline-block rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-bold text-amber-300">
-                        Collaboratore
+                        {L(lang, 'Collaboratore', 'Team member')}
                       </span>
                     ) : (
                       <span className="ml-2 inline-block rounded bg-gold/20 px-2 py-0.5 text-[11px] font-bold text-gold">
-                        Titolare
+                        {L(lang, 'Titolare', 'Owner')}
                       </span>
                     )}
                   </div>
@@ -922,19 +940,19 @@ export function BookingWizard({
               </div>
 
               <div>
-                <Label htmlFor="promo-code">Codice promozionale (opzionale)</Label>
+                <Label htmlFor="promo-code">{L(lang, 'Codice promozionale (opzionale)', 'Promo code (optional)')}</Label>
                 <div className="mt-1 flex flex-col gap-2 sm:flex-row">
                   <Input
                     id="promo-code"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                    placeholder="Es. PRIMAVERA20"
+                    placeholder={L(lang, 'Es. PRIMAVERA20', 'e.g. PRIMAVERA20')}
                     className="font-mono uppercase bg-[#1a1a1a] border-white/15"
                     disabled={promoSource === 'code'}
                   />
                   {promoSource === 'code' ? (
                     <Button type="button" variant="outline" onClick={handleRemovePromoCode} className="w-full shrink-0 sm:w-auto">
-                      Rimuovi
+                      {L(lang, 'Rimuovi', 'Remove')}
                     </Button>
                   ) : (
                     <Button
@@ -944,19 +962,19 @@ export function BookingWizard({
                       disabled={validatingPromo}
                       className="w-full shrink-0 sm:w-auto"
                     >
-                      {validatingPromo ? '...' : 'Applica'}
+                      {validatingPromo ? '...' : L(lang, 'Applica', 'Apply')}
                     </Button>
                   )}
                 </div>
               </div>
               <div>
-                <Label htmlFor="name">Nome e cognome *</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Mario Rossi" className="mt-1 bg-[#1a1a1a] border-white/15" />
+                <Label htmlFor="name">{L(lang, 'Nome e cognome *', 'Full name *')}</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder={L(lang, 'Mario Rossi', 'John Smith')} className="mt-1 bg-[#1a1a1a] border-white/15" />
               </div>
               <div>
-                <Label htmlFor="phone">Telefono *</Label>
+                <Label htmlFor="phone">{L(lang, 'Telefono *', 'Phone *')}</Label>
                 <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="320 188 6277" className="mt-1 bg-[#1a1a1a] border-white/15" />
-                <p className="mt-1 text-xs text-white/60">Per il promemoria WhatsApp 6 ore prima dell&apos;appuntamento</p>
+                <p className="mt-1 text-xs text-white/60">{L(lang, 'Per il promemoria WhatsApp 6 ore prima dell\'appuntamento', 'For your WhatsApp reminder 6 hours before your appointment')}</p>
               </div>
               <div>
                 <Label htmlFor="email">Email *</Label>
@@ -966,20 +984,20 @@ export function BookingWizard({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tua@email.com"
+                  placeholder={L(lang, 'tua@email.com', 'you@email.com')}
                   autoComplete="email"
                   className="mt-1 bg-[#1a1a1a] border-white/15"
                 />
-                <p className="mt-1 text-xs text-white/60">Obbligatoria: qui ricevi la conferma della prenotazione</p>
+                <p className="mt-1 text-xs text-white/60">{L(lang, 'Obbligatoria: qui ricevi la conferma della prenotazione', 'Required: your booking confirmation will be sent here')}</p>
               </div>
               <div>
-                <Label htmlFor="notes">Note (opzionale)</Label>
+                <Label htmlFor="notes">{L(lang, 'Note (opzionale)', 'Notes (optional)')}</Label>
                 <textarea
                   id="notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
-                  placeholder="Es. primo taglio bimbo 4 anni"
+                  placeholder={L(lang, 'Es. primo taglio bimbo 4 anni', 'e.g. first haircut, boy aged 4')}
                   className="mt-1 flex w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2 text-sm text-white"
                 />
               </div>
@@ -998,7 +1016,7 @@ export function BookingWizard({
                 onClick={() => setStep(step - 1)}
                 className="w-full max-w-full min-w-0 md:w-auto"
               >
-                Indietro
+                {L(lang, 'Indietro', 'Back')}
               </Button>
             ) : (
               <div className="hidden md:block" />
@@ -1015,7 +1033,7 @@ export function BookingWizard({
                   (step === 1 ? selectedServiceIds.length === 0 : (step === 2 && !time)) && 'opacity-50'
                 )}
               >
-                Avanti
+                {L(lang, 'Avanti', 'Next')}
               </Button>
             ) : (
               <Button
@@ -1023,7 +1041,7 @@ export function BookingWizard({
                 disabled={pending}
                 className="h-auto min-h-11 w-full max-w-full min-w-0 whitespace-normal px-4 py-2.5 text-center text-sm font-bold leading-snug"
               >
-                {pending ? 'Conferma in corso...' : 'Conferma prenotazione'}
+                {pending ? L(lang, 'Conferma in corso...', 'Confirming...') : L(lang, 'Conferma prenotazione', 'Confirm booking')}
               </Button>
             )}
           </div>

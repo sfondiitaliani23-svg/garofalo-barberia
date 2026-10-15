@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
 import { ArrowRight, Baby, CalendarDays, Clock, Scissors, Sparkles, Wind, X } from 'lucide-react';
 import { BABY_NOTE } from '@/lib/data/services';
+import { BABY_NOTE_EN } from '@/lib/i18n/content-servizi';
+import { L } from '@/lib/i18n';
 import { formatDuration, formatPrice } from '@/lib/utils';
 import type { ServiceCategory } from '@/types/database';
 import './services-grid.css';
@@ -40,6 +43,7 @@ function minPrice(items: ServiceGroup['items']) {
 }
 
 export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
+  const lang = useLang();
   const [open, setOpen] = useState<ServiceCategory | null>(null);
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -69,12 +73,12 @@ export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
     <div className="svc-grid-wrap">
       <div className="svc-grid-head">
         <div>
-          <h2 className="svc-grid-title">Scegli il tuo servizio</h2>
-          <p className="svc-grid-sub">Ogni dettaglio è pensato per esaltare il tuo stile.</p>
+          <h2 className="svc-grid-title">{L(lang, 'Scegli il tuo servizio', 'Choose your service')}</h2>
+          <p className="svc-grid-sub">{L(lang, 'Ogni dettaglio è pensato per esaltare il tuo stile.', 'Every detail is designed to bring out your style.')}</p>
         </div>
         <Link href="/prenota" className="svc-book-btn">
           <CalendarDays size={16} strokeWidth={1.75} aria-hidden />
-          Prenota ora
+          {L(lang, 'Prenota ora', 'Book now')}
           <ArrowRight size={14} aria-hidden />
         </Link>
       </div>
@@ -103,7 +107,7 @@ export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
                 <span className="svc-card-subtitle">{group.subtitle}</span>
                 <span className="svc-card-foot">
                   <span className="svc-card-from">
-                    A partire da <strong>{minPrice(group.items)}</strong>
+                    {L(lang, 'A partire da', 'From')} <strong>{minPrice(group.items)}</strong>
                   </span>
                   <span className="svc-card-arrow" aria-hidden>
                     <ArrowRight size={14} />
@@ -120,7 +124,7 @@ export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
         ref={detailRef}
         className={`svc-detail ${active ? 'is-open' : ''}`}
         role="region"
-        aria-label={active?.label ?? 'Dettaglio servizi'}
+        aria-label={active?.label ?? L(lang, 'Dettaglio servizi', 'Service details')}
       >
         <div className="svc-detail-inner">
           {active && ActiveIcon && (
@@ -132,15 +136,19 @@ export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
                 <div className="svc-detail-heading">
                   <p className="svc-detail-label">{active.label}</p>
                   <p className="svc-detail-meta">
-                    {active.items.length} {active.items.length === 1 ? 'servizio' : 'servizi'} · {active.subtitle}
+                    {active.items.length}{' '}
+                    {lang === 'en'
+                      ? active.items.length === 1 ? 'service' : 'services'
+                      : active.items.length === 1 ? 'servizio' : 'servizi'}{' '}
+                    · {active.subtitle}
                   </p>
                 </div>
-                <button type="button" className="svc-detail-close" onClick={() => select(active.category)} aria-label="Chiudi">
+                <button type="button" className="svc-detail-close" onClick={() => select(active.category)} aria-label={L(lang, 'Chiudi', 'Close')}>
                   <X size={18} />
                 </button>
               </div>
 
-              {active.category === 'baby' && <p className="svc-detail-note">{BABY_NOTE}</p>}
+              {active.category === 'baby' && <p className="svc-detail-note">{L(lang, BABY_NOTE, BABY_NOTE_EN)}</p>}
 
               <ul className="svc-list">
                 {active.items.map((service, index) => (
@@ -155,7 +163,7 @@ export function ServicesGrid({ groups }: { groups: ServiceGroup[] }) {
                     </div>
                     <span className="svc-item-price">{formatPrice(service.price_cents)}</span>
                     <Link href="/prenota" className="svc-item-book">
-                      Prenota
+                      {L(lang, 'Prenota', 'Book')}
                       <ArrowRight size={13} aria-hidden />
                     </Link>
                   </li>

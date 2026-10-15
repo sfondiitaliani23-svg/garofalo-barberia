@@ -1,6 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L, type Lang } from '@/lib/i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, MessageSquare, MessagesSquare, ShieldCheck, Star } from 'lucide-react';
 import './reviews-carousel.css';
@@ -30,9 +32,9 @@ function splitReview(text: string): { headline: string; body: string } {
   return { headline: clean, body: '' };
 }
 
-function Stars({ rating, size = 16 }: { rating: number; size?: number }) {
+function Stars({ rating, size = 16, lang }: { rating: number; size?: number; lang: Lang }) {
   return (
-    <span className="rc-stars" role="img" aria-label={`${rating} stelle su 5`}>
+    <span className="rc-stars" role="img" aria-label={L(lang, `${rating} stelle su 5`, `${rating} out of 5 stars`)}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Star key={i} size={size} className={i < rating ? 'is-on' : 'is-off'} aria-hidden />
       ))}
@@ -41,6 +43,7 @@ function Stars({ rating, size = 16 }: { rating: number; size?: number }) {
 }
 
 export function ReviewsCarousel({ reviews, stats }: { reviews: CarouselReview[]; stats: CarouselStats }) {
+  const lang = useLang();
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -131,10 +134,10 @@ export function ReviewsCarousel({ reviews, stats }: { reviews: CarouselReview[];
             <article
               key={`${current.author}-${index}`}
               className="rc-card"
-              aria-roledescription="recensione"
-              aria-label={`Recensione ${index + 1} di ${total}`}
+              aria-roledescription={L(lang, 'recensione', 'review')}
+              aria-label={L(lang, `Recensione ${index + 1} di ${total}`, `Review ${index + 1} of ${total}`)}
             >
-              <Stars rating={current.rating || 5} />
+              <Stars rating={current.rating || 5} lang={lang} />
               <blockquote className="rc-quote">&ldquo;{parts.headline}&rdquo;</blockquote>
               {parts.body && <p className="rc-body">{parts.body}</p>}
               <div className="rc-foot">
@@ -144,20 +147,22 @@ export function ReviewsCarousel({ reviews, stats }: { reviews: CarouselReview[];
                 </div>
                 <Link href="/recensioni/nuova" className="rc-cta">
                   <MessageSquare size={15} strokeWidth={1.75} aria-hidden />
-                  Lascia una recensione
+                  {L(lang, 'Lascia una recensione', 'Leave a review')}
                 </Link>
               </div>
             </article>
           ) : (
             <article className="rc-card">
-              <p className="rc-eyebrow">Le voci dei clienti</p>
-              <blockquote className="rc-quote">Ancora nessuna recensione pubblicata.</blockquote>
-              <p className="rc-body">Sei stato da noi? Raccontaci com&apos;è andata: la tua sarà la prima.</p>
+              <p className="rc-eyebrow">{L(lang, 'Le voci dei clienti', 'What our clients say')}</p>
+              <blockquote className="rc-quote">{L(lang, 'Ancora nessuna recensione pubblicata.', 'No reviews published yet.')}</blockquote>
+              <p className="rc-body">
+                {lang === 'en' ? 'Been to see us? Tell us how it went: yours will be the first.' : <>Sei stato da noi? Raccontaci com&apos;è andata: la tua sarà la prima.</>}
+              </p>
               <div className="rc-foot">
                 <span />
                 <Link href="/recensioni/nuova" className="rc-cta">
                   <MessageSquare size={15} strokeWidth={1.75} aria-hidden />
-                  Lascia una recensione
+                  {L(lang, 'Lascia una recensione', 'Leave a review')}
                 </Link>
               </div>
             </article>
@@ -169,7 +174,7 @@ export function ReviewsCarousel({ reviews, stats }: { reviews: CarouselReview[];
                 type="button"
                 className={`rc-nav rc-nav-prev${pressed === 'prev' ? ' is-pressed' : ''}`}
                 onClick={() => step('prev')}
-                aria-label="Recensione precedente"
+                aria-label={L(lang, 'Recensione precedente', 'Previous review')}
                 aria-keyshortcuts="ArrowLeft"
               >
                 <ChevronLeft size={18} />
@@ -178,19 +183,19 @@ export function ReviewsCarousel({ reviews, stats }: { reviews: CarouselReview[];
                 type="button"
                 className={`rc-nav rc-nav-next${pressed === 'next' ? ' is-pressed' : ''}`}
                 onClick={() => step('next')}
-                aria-label="Recensione successiva"
+                aria-label={L(lang, 'Recensione successiva', 'Next review')}
                 aria-keyshortcuts="ArrowRight"
               >
                 <ChevronRight size={18} />
               </button>
-              <div className="rc-dots" role="tablist" aria-label="Scegli recensione">
+              <div className="rc-dots" role="tablist" aria-label={L(lang, 'Scegli recensione', 'Choose a review')}>
                 {reviews.map((r, i) => (
                   <button
                     key={`${r.author}-${i}`}
                     type="button"
                     role="tab"
                     aria-selected={i === index}
-                    aria-label={`Recensione ${i + 1}`}
+                    aria-label={L(lang, `Recensione ${i + 1}`, `Review ${i + 1}`)}
                     className={`rc-dot${i === index ? ' is-active' : ''}`}
                     onClick={() => setIndex(i)}
                   />
@@ -206,22 +211,22 @@ export function ReviewsCarousel({ reviews, stats }: { reviews: CarouselReview[];
           <div className="rc-stat">
             <Star size={20} strokeWidth={1.5} aria-hidden />
             <div>
-              <p className="rc-stat-value">{stats.average.toFixed(1).replace('.', ',')}</p>
-              <p className="rc-stat-label">Media recensioni</p>
+              <p className="rc-stat-value">{lang === 'en' ? stats.average.toFixed(1) : stats.average.toFixed(1).replace('.', ',')}</p>
+              <p className="rc-stat-label">{L(lang, 'Media recensioni', 'Average rating')}</p>
             </div>
           </div>
           <div className="rc-stat">
             <MessagesSquare size={20} strokeWidth={1.5} aria-hidden />
             <div>
               <p className="rc-stat-value">{stats.total}</p>
-              <p className="rc-stat-label">{stats.total === 1 ? 'Recensione totale' : 'Recensioni totali'}</p>
+              <p className="rc-stat-label">{lang === 'en' ? (stats.total === 1 ? 'Review in total' : 'Total reviews') : stats.total === 1 ? 'Recensione totale' : 'Recensioni totali'}</p>
             </div>
           </div>
           <div className="rc-stat">
             <ShieldCheck size={20} strokeWidth={1.5} aria-hidden />
             <div>
               <p className="rc-stat-value">{stats.satisfiedPercent}%</p>
-              <p className="rc-stat-label">Clienti soddisfatti (4-5 stelle)</p>
+              <p className="rc-stat-label">{L(lang, 'Clienti soddisfatti (4-5 stelle)', 'Satisfied clients (4–5 stars)')}</p>
             </div>
           </div>
         </div>

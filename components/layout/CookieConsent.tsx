@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { cookieText } from '@/lib/i18n/content-widgets';
 import { hasCookieConsentDecision, saveCookieConsent } from '@/lib/consent/cookie-consent';
 
 export function CookieConsent() {
+  const t = cookieText(useLang());
   // Visibile già nell'HTML del server: se c'è già una scelta, la nasconde subito il CSS
   // (classe html.has-consent impostata prima del disegno), poi l'effetto sotto la toglie.
   const [visible, setVisible] = useState(true);
@@ -34,16 +37,16 @@ export function CookieConsent() {
       data-cookie-banner="visible"
       className="fixed inset-x-0 bottom-0 z-[100] border-t border-white/10 bg-[#0d0d0d]/95 px-4 py-4 shadow-[0_-8px_32px_rgba(0,0,0,0.45)] backdrop-blur-sm pb-[calc(1rem+env(safe-area-inset-bottom))]"
       role="dialog"
-      aria-label="Informativa cookie"
+      aria-label={t.ariaLabel}
     >
       <div className="mx-auto w-full max-w-3xl">
         {!customizeOpen ? (
           <>
-            <p className="text-sm font-medium text-white">Cookie</p>
+            <p className="text-sm font-medium text-white">{t.title}</p>
             <p className="mt-1 text-xs leading-relaxed text-white/60">
-              Cookie tecnici sempre attivi; statistiche e preferenze solo se acconsenti.{' '}
+              {t.intro}{' '}
               <Link href="/privacy" className="text-gold underline underline-offset-2">
-                Privacy
+                {t.privacy}
               </Link>
             </p>
 
@@ -53,38 +56,38 @@ export function CookieConsent() {
                 onClick={() => accept(true, true)}
                 className="btn-primary w-full px-5 py-2.5 text-xs sm:w-auto"
               >
-                Accetta tutti
+                {t.acceptAll}
               </button>
               <button
                 type="button"
                 onClick={() => accept(false, false)}
                 className="btn-outline w-full px-5 py-2.5 text-xs sm:w-auto"
               >
-                Solo necessari
+                {t.necessaryOnly}
               </button>
               <button
                 type="button"
                 onClick={() => setCustomizeOpen(true)}
                 className="rounded-full px-4 py-2.5 text-xs text-white/55 transition hover:text-white/80"
               >
-                Personalizza
+                {t.customize}
               </button>
             </div>
           </>
         ) : (
           <>
-            <p className="text-sm font-medium text-white">Preferenze cookie</p>
+            <p className="text-sm font-medium text-white">{t.prefsTitle}</p>
             <p className="mt-1 text-xs text-white/55">
-              Scegli quali categorie autorizzare. I cookie necessari sono sempre attivi.
+              {t.prefsIntro}
             </p>
 
             <div className="mt-4 space-y-3">
               <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-[#151515] p-3">
                 <input type="checkbox" checked disabled className="mt-0.5 accent-gold" />
                 <span>
-                  <span className="block text-sm text-white">Necessari</span>
+                  <span className="block text-sm text-white">{t.necessary}</span>
                   <span className="mt-0.5 block text-xs text-white/50">
-                    Sessione, sicurezza e funzioni essenziali del sito.
+                    {t.necessaryDesc}
                   </span>
                 </span>
               </label>
@@ -97,9 +100,9 @@ export function CookieConsent() {
                   className="mt-0.5 accent-gold"
                 />
                 <span>
-                  <span className="block text-sm text-white">Analitici</span>
+                  <span className="block text-sm text-white">{t.analytics}</span>
                   <span className="mt-0.5 block text-xs text-white/50">
-                    Statistiche anonime su visite e utilizzo del sito.
+                    {t.analyticsDesc}
                   </span>
                 </span>
               </label>
@@ -112,9 +115,9 @@ export function CookieConsent() {
                   className="mt-0.5 accent-gold"
                 />
                 <span>
-                  <span className="block text-sm text-white">Preferenze</span>
+                  <span className="block text-sm text-white">{t.preferences}</span>
                   <span className="mt-0.5 block text-xs text-white/50">
-                    Salvataggio di scelte come il sondaggio visitatori.
+                    {t.preferencesDesc}
                   </span>
                 </span>
               </label>
@@ -126,14 +129,14 @@ export function CookieConsent() {
                 onClick={() => accept(analytics, preferences)}
                 className="btn-primary w-full px-5 py-2.5 text-xs sm:w-auto"
               >
-                Salva preferenze
+                {t.save}
               </button>
               <button
                 type="button"
                 onClick={() => setCustomizeOpen(false)}
                 className="rounded-full px-4 py-2.5 text-xs text-white/55 transition hover:text-white/80"
               >
-                Indietro
+                {t.back}
               </button>
             </div>
           </>

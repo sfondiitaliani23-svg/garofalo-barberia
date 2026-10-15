@@ -1,7 +1,10 @@
 'use client';
 
 import { Suspense, useEffect } from 'react';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { translateMessage } from '@/lib/i18n/content-booking';
 import { useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { signUpWithEmail } from '@/lib/actions/auth';
@@ -12,14 +15,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { safeDecodeURIComponent } from '@/lib/utils/site-origin';
 
 function RegisterFormInner() {
+  const lang = useLang();
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
 
   useEffect(() => {
     if (error) {
-      toast.error(safeDecodeURIComponent(error));
+      toast.error(translateMessage(lang, safeDecodeURIComponent(error)));
     }
-  }, [error]);
+  }, [error, lang]);
 
   return (
     <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
@@ -27,18 +31,18 @@ function RegisterFormInner() {
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
 
       <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">Crea account</CardTitle>
-        <p className="text-xs text-white/60">Prenota più velocemente e vedi il tuo storico</p>
+        <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">{L(lang, 'Crea account', 'Create account')}</CardTitle>
+        <p className="text-xs text-white/60">{L(lang, 'Prenota più velocemente e vedi il tuo storico', 'Book faster and see your history')}</p>
       </CardHeader>
       <CardContent>
         {error && (
           <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-            {safeDecodeURIComponent(error)}
+            {translateMessage(lang, safeDecodeURIComponent(error))}
           </p>
         )}
         <form action={signUpWithEmail} className="space-y-4">
           <div>
-            <Label htmlFor="full_name" className="text-xs text-white/70">Nome e cognome</Label>
+            <Label htmlFor="full_name" className="text-xs text-white/70">{L(lang, 'Nome e cognome', 'Full name')}</Label>
             <Input 
               id="full_name" 
               name="full_name" 
@@ -47,7 +51,7 @@ function RegisterFormInner() {
             />
           </div>
           <div>
-            <Label htmlFor="phone" className="text-xs text-white/70">Telefono</Label>
+            <Label htmlFor="phone" className="text-xs text-white/70">{L(lang, 'Telefono', 'Phone')}</Label>
             <Input 
               id="phone" 
               name="phone" 
@@ -78,13 +82,13 @@ function RegisterFormInner() {
             />
           </div>
           <Button type="submit" className="w-full bg-gold hover:bg-gold-light text-black py-5 font-semibold transition-all duration-300">
-            Registrati
+            {L(lang, 'Registrati', 'Sign up')}
           </Button>
         </form>
         <p className="mt-4 text-center text-xs text-white/60 border-t border-white/5 pt-4">
-          Hai già un account?{' '}
+          {L(lang, 'Hai già un account?', 'Already have an account?')}{' '}
           <Link href="/login" className="text-gold hover:underline font-semibold">
-            Accedi
+            {L(lang, 'Accedi', 'Sign in')}
           </Link>
         </p>
       </CardContent>

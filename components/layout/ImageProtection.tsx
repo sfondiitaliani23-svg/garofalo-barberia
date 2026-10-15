@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { toast } from 'sonner';
+import { useLang } from '@/components/i18n/LangProvider';
+import { imageProtectionText } from '@/lib/i18n/content-widgets';
 
 /**
  * Protezione immagini leggera: tasto destro e trascinamento bloccati con due soli
@@ -13,6 +15,7 @@ import { toast } from 'sonner';
  */
 export function ImageProtection() {
   const pathname = usePathname();
+  const lang = useLang();
   const lastToastTimeRef = useRef<number>(0);
 
   useEffect(() => {
@@ -25,9 +28,9 @@ export function ImageProtection() {
       const now = Date.now();
       if (now - lastToastTimeRef.current < 2000) return;
       lastToastTimeRef.current = now;
-      toast.warning('🔒 Immagine e Contenuti Protetti da Privacy', {
-        description:
-          'Per questioni di riservatezza e diritto d’autore, non è possibile scaricare, copiare o salvare le immagini del sito.',
+      const txt = imageProtectionText(lang);
+      toast.warning(txt.title, {
+        description: txt.description,
         duration: 3500,
       });
     };
@@ -43,7 +46,7 @@ export function ImageProtection() {
       document.removeEventListener('contextmenu', block, true);
       document.removeEventListener('dragstart', block, true);
     };
-  }, [pathname]);
+  }, [pathname, lang]);
 
   return null;
 }

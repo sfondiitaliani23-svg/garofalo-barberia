@@ -1,3 +1,7 @@
+'use client';
+
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 export function InactiveTimeSlotGrid({
@@ -7,6 +11,7 @@ export function InactiveTimeSlotGrid({
   slots: string[];
   className?: string;
 }) {
+  const lang = useLang();
   if (slots.length === 0) return null;
 
   return (
@@ -15,7 +20,7 @@ export function InactiveTimeSlotGrid({
         'grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6',
         className
       )}
-      aria-label="Orari non disponibili"
+      aria-label={L(lang, 'Orari non disponibili', 'Unavailable times')}
     >
       {slots.map((time) => (
         <div

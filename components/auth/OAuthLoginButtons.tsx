@@ -3,6 +3,8 @@
 import { useFormStatus } from 'react-dom';
 import { signInWithOAuth } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 // SVGs dei loghi ufficiali per un look ultra-premium
 const GoogleIcon = () => (
@@ -106,30 +108,32 @@ export function OAuthLoginButtons({
   /** 'row': tutte le alternative su una riga (pagina Accedi, concept 03). */
   layout?: 'stack' | 'row';
 }) {
+  const lang = useLang();
+  const openingLabel = L(lang, 'Apertura...', 'Opening...');
   if (layout === 'row' && !disabled) {
     return (
       <div className="login-alt">
         <div className="login-alt-sep" aria-hidden="true">
-          <span>Oppure accedi con</span>
+          <span>{L(lang, 'Oppure accedi con', 'Or sign in with')}</span>
         </div>
         <div className="login-alt-row">
           <form action={signInWithOAuth}>
             <input type="hidden" name="provider" value="google" />
             <input type="hidden" name="redirect" value={redirectTo} />
-            <OAuthSubmitButton provider="google" label="Google" pendingLabel="Apertura..." icon={<GoogleIcon />} row />
+            <OAuthSubmitButton provider="google" label="Google" pendingLabel={openingLabel} icon={<GoogleIcon />} row />
           </form>
           {process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === 'true' && (
             <form action={signInWithOAuth}>
               <input type="hidden" name="provider" value="apple" />
               <input type="hidden" name="redirect" value={redirectTo} />
-              <OAuthSubmitButton provider="apple" label="Apple" pendingLabel="Apertura..." icon={<AppleIcon />} row />
+              <OAuthSubmitButton provider="apple" label="Apple" pendingLabel={openingLabel} icon={<AppleIcon />} row />
             </form>
           )}
           {process.env.NEXT_PUBLIC_ENABLE_FACEBOOK_AUTH === 'true' && (
             <form action={signInWithOAuth}>
               <input type="hidden" name="provider" value="facebook" />
               <input type="hidden" name="redirect" value={redirectTo} />
-              <OAuthSubmitButton provider="facebook" label="Facebook" pendingLabel="Apertura..." icon={<FacebookIcon />} row />
+              <OAuthSubmitButton provider="facebook" label="Facebook" pendingLabel={openingLabel} icon={<FacebookIcon />} row />
             </form>
           )}
           {onPasskeyClick && (
@@ -141,7 +145,7 @@ export function OAuthLoginButtons({
           {onWhatsAppClick && (
             <button type="button" onClick={onWhatsAppClick} className={ROW_BTN}>
               <WhatsAppIcon />
-              Accedi tramite WhatsApp (OTP)
+              {L(lang, 'Accedi tramite WhatsApp (OTP)', 'Sign in with WhatsApp (OTP)')}
             </button>
           )}
         </div>
@@ -153,13 +157,13 @@ export function OAuthLoginButtons({
     return (
       <div className="space-y-3">
         <Button type="button" variant="outline" className="w-full py-6 text-sm font-medium opacity-50 cursor-not-allowed" disabled>
-          <GoogleIcon /> Accedi con Google
+          <GoogleIcon /> {L(lang, 'Accedi con Google', 'Sign in with Google')}
         </Button>
         <Button type="button" variant="outline" className="w-full py-6 text-sm font-medium opacity-50 cursor-not-allowed" disabled>
-          <AppleIcon /> Accedi con Apple
+          <AppleIcon /> {L(lang, 'Accedi con Apple', 'Sign in with Apple')}
         </Button>
         <Button type="button" variant="outline" className="w-full py-6 text-sm font-medium opacity-50 cursor-not-allowed" disabled>
-          <FacebookIcon /> Accedi con Facebook
+          <FacebookIcon /> {L(lang, 'Accedi con Facebook', 'Sign in with Facebook')}
         </Button>
       </div>
     );
@@ -173,7 +177,7 @@ export function OAuthLoginButtons({
           <div className="w-full border-t border-white/10"></div>
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#111] px-3 text-white/60">Oppure accedi con</span>
+          <span className="bg-[#111] px-3 text-white/60">{L(lang, 'Oppure accedi con', 'Or sign in with')}</span>
         </div>
       </div>
 
@@ -185,7 +189,7 @@ export function OAuthLoginButtons({
           <OAuthSubmitButton
             provider="google"
             label="Google"
-            pendingLabel="Apertura..."
+            pendingLabel={openingLabel}
             icon={<GoogleIcon />}
           />
         </form>
@@ -198,7 +202,7 @@ export function OAuthLoginButtons({
             <OAuthSubmitButton
               provider="apple"
               label="Apple"
-              pendingLabel="Apertura..."
+              pendingLabel={openingLabel}
               icon={<AppleIcon />}
             />
           </form>
@@ -212,7 +216,7 @@ export function OAuthLoginButtons({
             <OAuthSubmitButton
               provider="facebook"
               label="Facebook"
-              pendingLabel="Apertura..."
+              pendingLabel={openingLabel}
               icon={<FacebookIcon />}
             />
           </form>
@@ -241,7 +245,7 @@ export function OAuthLoginButtons({
           className="w-full bg-[#161616] hover:bg-white/5 border-white/10 hover:border-gold/30 transition-all duration-300 py-6 text-sm font-medium"
         >
           <WhatsAppIcon />
-          Accedi tramite WhatsApp (OTP)
+          {L(lang, 'Accedi tramite WhatsApp (OTP)', 'Sign in with WhatsApp (OTP)')}
         </Button>
       )}
     </div>

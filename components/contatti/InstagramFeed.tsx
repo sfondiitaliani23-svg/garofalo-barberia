@@ -3,8 +3,9 @@ import { Play } from 'lucide-react';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { fetchInstagramPosts } from '@/lib/instagram/fetch-posts';
 import { InstagramEmbedFallback } from '@/components/contatti/InstagramEmbedFallback';
+import { L, type Lang } from '@/lib/i18n';
 
-export async function InstagramFeed() {
+export async function InstagramFeed({ lang = 'it' }: { lang?: Lang }) {
   const posts = await fetchInstagramPosts(6);
 
   return (
@@ -24,7 +25,7 @@ export async function InstagramFeed() {
         </div>
         <div>
           <p className="contatti-instagram-handle">{SITE_CONFIG.instagramHandle}</p>
-          <p className="contatti-instagram-text">Seguici per tagli, barba e novità dal salone.</p>
+          <p className="contatti-instagram-text">{L(lang, 'Seguici per tagli, barba e novità dal salone.', 'Follow us for haircuts, beards and news from the barbershop.')}</p>
         </div>
       </div>
 
@@ -37,11 +38,11 @@ export async function InstagramFeed() {
               target="_blank"
               rel="noopener noreferrer"
               className="contatti-instagram-post"
-              aria-label={post.caption ? `Post Instagram: ${post.caption}` : 'Apri post Instagram'}
+              aria-label={post.caption ? `${L(lang, 'Post Instagram', 'Instagram post')}: ${post.caption}` : L(lang, 'Apri post Instagram', 'Open Instagram post')}
             >
               <Image
                 src={post.mediaUrl}
-                alt={post.caption ?? 'Post Instagram Barberia Garofalo'}
+                alt={post.caption ?? L(lang, 'Post Instagram Barberia Garofalo', 'Instagram post from Barberia Garofalo')}
                 fill
                 sizes="(max-width: 640px) 50vw, 150px"
                 className="object-cover"
@@ -65,7 +66,7 @@ export async function InstagramFeed() {
         rel="noopener noreferrer"
         className="btn-primary contatti-instagram-btn"
       >
-        Segui
+        {L(lang, 'Segui', 'Follow')}
       </a>
     </div>
   );

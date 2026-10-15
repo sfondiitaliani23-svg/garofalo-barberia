@@ -2,15 +2,21 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { parseISO } from 'date-fns';
-import { formatShopDateTimeShort } from '@/lib/utils/booking-datetime';
+import { displayServiceName, fmtDateTimeShort, statusLabel } from '@/lib/i18n/content-customer';
 import { Calendar, Scissors, Clock, Star, ChevronRight } from 'lucide-react';
 import { LogoutCard } from '@/components/customer/LogoutCard';
 import { groupComboAppointments } from '@/lib/utils/group-appointments';
 import { PushManager } from '@/components/customer/PushManager';
+import { getCustomerLang } from '../_lang';
+import { L, localHref } from '@/lib/i18n';
 
-export const metadata = { title: 'La mia Dashboard | Barberia Garofalo' };
+export async function generateMetadata() {
+  const lang = await getCustomerLang();
+  return { title: L(lang, 'La mia Dashboard | Barberia Garofalo', 'My Dashboard | Barberia Garofalo') };
+}
 
 export default async function CustomerDashboardPage() {
+  const lang = await getCustomerLang();
   const profile = await getProfile();
   const supabase = await createClient();
   const customerId = profile?.id ?? '';
@@ -38,9 +44,14 @@ export default async function CustomerDashboardPage() {
   const upcoming = groupComboAppointments(rawUpcoming).slice(0, 3);
   const totalCount = countResult.count ?? 0;
 
-  const firstName = profile?.full_name?.split(' ')[0] ?? 'Cliente';
+  const firstName = profile?.full_name?.split(' ')[0] ?? L(lang, 'Cliente', 'Customer');
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Buongiorno' : hour < 18 ? 'Buon pomeriggio' : 'Buonasera';
+  const greeting =
+    hour < 12
+      ? L(lang, 'Buongiorno', 'Good morning')
+      : hour < 18
+        ? L(lang, 'Buon pomeriggio', 'Good afternoon')
+        : L(lang, 'Buonasera', 'Good evening');
 
   return (
     <div className="space-y-8">
@@ -63,7 +74,7 @@ export default async function CustomerDashboardPage() {
             {firstName} <span className="text-gold">✂</span>
           </h1>
           <p className="mt-1 text-white/60 text-sm">
-            Benvenuto nel tuo spazio riservato — Barberia Garofalo, Foggia
+            {L(lang, 'Benvenuto nel tuo spazio riservato — Barberia Garofalo, Foggia', 'Welcome to your private area — Barberia Garofalo, Foggia')}
           </p>
 
           {/* Stats compatte */}
@@ -71,14 +82,14 @@ export default async function CustomerDashboardPage() {
             <div className="flex items-center gap-2 bg-white/5 rounded-lg px-4 py-2.5 border border-white/8">
               <Scissors size={15} className="text-gold" />
               <div>
-                <p className="text-xs text-white/60 leading-none">Tagli effettuati</p>
+                <p className="text-xs text-white/60 leading-none">{L(lang, 'Tagli effettuati', 'Haircuts done')}</p>
                 <p className="text-base font-bold text-white leading-tight">{totalCount}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 bg-white/5 rounded-lg px-4 py-2.5 border border-white/8">
               <Star size={15} className="text-gold fill-gold" />
               <div>
-                <p className="text-xs text-white/60 leading-none">Cliente fedele</p>
+                <p className="text-xs text-white/60 leading-none">{L(lang, 'Cliente fedele', 'Loyalty level')}</p>
                 <p className="text-base font-bold text-gold leading-tight">
                   {totalCount >= 10 ? 'Gold' : totalCount >= 5 ? 'Silver' : 'New'}
                 </p>
@@ -93,25 +104,25 @@ export default async function CustomerDashboardPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
             <Calendar size={15} className="text-gold" />
-            Prossimi appuntamenti
+            {L(lang, 'Prossimi appuntamenti', 'Upcoming appointments')}
           </h2>
           <Link
             href="/area-cliente/storico"
             className="text-xs text-white/60 hover:text-gold transition-colors flex items-center gap-1"
           >
-            Vedi tutti <ChevronRight size={12} />
+            {L(lang, 'Vedi tutti', 'View all')} <ChevronRight size={12} />
           </Link>
         </div>
 
         {upcoming.length === 0 ? (
           <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-8 text-center">
             <Clock size={28} className="text-white/20 mx-auto mb-3" />
-            <p className="text-white/60 text-sm">Nessun appuntamento in programma.</p>
+            <p className="text-white/60 text-sm">{L(lang, 'Nessun appuntamento in programma.', 'No upcoming appointments.')}</p>
             <Link
-              href="/prenota"
+              href={localHref(lang, '/prenota')}
               className="mt-4 inline-flex items-center gap-2 bg-gold hover:bg-[#ffb949] text-black font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-full transition-all"
             >
-              Prenota ora
+              {L(lang, 'Prenota ora', 'Book now')}
             </Link>
           </div>
         ) : (
@@ -129,15 +140,15 @@ export default async function CustomerDashboardPage() {
                       <Scissors size={16} className="text-gold" />
                     </div>
                     <div>
-                      <p className="font-semibold text-white text-sm">{service?.name}</p>
+                      <p className="font-semibold text-white text-sm">{service?.name ? displayServiceName(lang, service.name) : service?.name}</p>
                       <p className="text-xs text-white/60 mt-0.5">
-                        {formatShopDateTimeShort(parseISO(apt.starts_at))} · con{' '}
+                        {fmtDateTimeShort(lang, parseISO(apt.starts_at))} · {L(lang, 'con', 'with')}{' '}
                         <span className="text-gold">{barber?.name}</span>
                       </p>
                     </div>
                   </div>
                   <span className="shrink-0 text-[10px] font-bold text-gold border border-gold/20 bg-gold/5 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    Confermato
+                    {statusLabel(lang, 'confirmed')}
                   </span>
                 </div>
               );
@@ -151,10 +162,10 @@ export default async function CustomerDashboardPage() {
       {/* Accesso rapido sezioni */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { href: '/area-cliente/storico', label: 'Storico', sub: 'Le tue prenotazioni', icon: '📋' },
-          { href: '/area-cliente/profilo', label: 'Profilo', sub: 'I tuoi dati', icon: '👤' },
-          { href: '/area-cliente/galleria', label: 'Galleria', sub: 'I tuoi tagli', icon: '🖼️' },
-          { href: '/area-cliente/assistenza', label: 'Assistenza', sub: 'Hai bisogno di aiuto?', icon: '💬' },
+          { href: '/area-cliente/storico', label: L(lang, 'Storico', 'History'), sub: L(lang, 'Le tue prenotazioni', 'Your bookings'), icon: '📋' },
+          { href: '/area-cliente/profilo', label: L(lang, 'Profilo', 'Profile'), sub: L(lang, 'I tuoi dati', 'Your details'), icon: '👤' },
+          { href: '/area-cliente/galleria', label: L(lang, 'Galleria', 'Gallery'), sub: L(lang, 'I tuoi tagli', 'Your haircuts'), icon: '🖼️' },
+          { href: '/area-cliente/assistenza', label: L(lang, 'Assistenza', 'Support'), sub: L(lang, 'Hai bisogno di aiuto?', 'Need help?'), icon: '💬' },
         ].map(({ href, label, sub, icon }) => (
           <Link
             key={href}

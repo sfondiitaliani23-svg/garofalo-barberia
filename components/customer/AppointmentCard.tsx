@@ -1,15 +1,9 @@
 import { parseISO } from 'date-fns';
 import Link from 'next/link';
 import { AppointmentActions } from '@/components/customer/AppointmentActions';
-import { formatShopDateTimeLong } from '@/lib/utils/booking-datetime';
+import { L, localHref, type Lang } from '@/lib/i18n';
+import { displayBarberName, displayServiceName, fmtDateTimeLong, statusLabel } from '@/lib/i18n/content-customer';
 import type { AppointmentStatus } from '@/types/database';
-
-const STATUS_LABELS: Record<AppointmentStatus, string> = {
-  confirmed: 'Confermato',
-  completed: 'Completato',
-  cancelled: 'Disdetto',
-  no_show: 'Non presentato',
-};
 
 const STATUS_COLORS: Record<AppointmentStatus, string> = {
   confirmed: 'text-gold bg-gold/10 border-gold/20',
@@ -25,6 +19,7 @@ interface AppointmentCardProps {
   serviceName: string;
   barberName: string;
   showActions?: boolean;
+  lang?: Lang;
 }
 
 // Genera un riferimento d'ordine unico deterministico a partire dall'ID dell'appuntamento
@@ -44,13 +39,14 @@ export function AppointmentCard({
   serviceName,
   barberName,
   showActions = false,
+  lang = 'it',
 }: AppointmentCardProps) {
   const isFuture = new Date(startsAt) > new Date();
   const canShowActions = showActions && status === 'confirmed' && isFuture;
   const orderCode = generateOrderCode(id);
 
   // Formatta la data in stile Treatwell "24 giugno, 19:00"
-  const formattedDate = formatShopDateTimeLong(parseISO(startsAt));
+  const formattedDate = fmtDateTimeLong(lang, parseISO(startsAt));
 
   return (
     <div className="rounded-xl border border-white/10 bg-[#111] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition-all hover:border-white/15">
@@ -63,17 +59,17 @@ export function AppointmentCard({
 
           {/* Nome Servizio in grassetto grande */}
           <h3 className="text-lg font-bold text-white tracking-wide">
-            {serviceName}
+            {displayServiceName(lang, serviceName)}
           </h3>
 
           {/* Dettagli Barberia e Barbieri */}
           <p className="text-sm text-white/60">
-            Barberia Garofalo — <span className="text-gold font-medium">{barberName}</span>
+            Barberia Garofalo — <span className="text-gold font-medium">{displayBarberName(lang, barberName)}</span>
           </p>
 
           {/* Riferimento Ordine in stile Treatwell */}
           <div className="flex items-center gap-2 mt-3 pt-2 border-t border-white/5 text-xs text-white/60">
-            <span>Riferimento ordine:</span>
+            <span>{L(lang, 'Riferimento ordine:', 'Order reference:')}</span>
             <span className="font-mono bg-white/5 px-2 py-0.5 rounded text-white/70 border border-white/10">
               {orderCode}
             </span>
@@ -83,7 +79,7 @@ export function AppointmentCard({
         {/* Badge di Stato in alto a destra */}
         <div className="self-start">
           <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${STATUS_COLORS[status]}`}>
-            {STATUS_LABELS[status]}
+            {statusLabel(lang, status)}
           </span>
         </div>
       </div>
@@ -99,16 +95,16 @@ export function AppointmentCard({
       {status === 'completed' && (
         <div className="mt-5 border-t border-white/5 pt-4 flex flex-wrap items-center justify-between gap-4">
           <Link
-            href="/recensioni/nuova"
+            href={localHref(lang, '/recensioni/nuova')}
             className="text-xs font-bold text-gold hover:text-gold-light transition-colors underline decoration-gold/30 underline-offset-4"
           >
-            Lascia una recensione (accumula 10 punti)
+            {L(lang, 'Lascia una recensione (accumula 10 punti)', 'Leave a review (earn 10 points)')}
           </Link>
           <Link
-            href={`/prenota?service=${encodeURIComponent(serviceName)}`}
+            href={localHref(lang, `/prenota?service=${encodeURIComponent(serviceName)}`)}
             className="inline-flex items-center justify-center rounded-lg border border-gold hover:bg-gold/15 text-gold font-semibold text-xs px-4 py-2.5 transition-all uppercase tracking-wider"
           >
-            Prenota di nuovo
+            {L(lang, 'Prenota di nuovo', 'Book again')}
           </Link>
         </div>
       )}
@@ -117,10 +113,10 @@ export function AppointmentCard({
       {(status === 'cancelled' || status === 'no_show') && (
         <div className="mt-5 border-t border-white/5 pt-4 flex justify-end">
           <Link
-            href="/prenota"
+            href={localHref(lang, '/prenota')}
             className="inline-flex items-center justify-center rounded-lg border border-gold hover:bg-gold/15 text-gold font-semibold text-xs px-4 py-2.5 transition-all uppercase tracking-wider"
           >
-            Prenota di nuovo
+            {L(lang, 'Prenota di nuovo', 'Book again')}
           </Link>
         </div>
       )}

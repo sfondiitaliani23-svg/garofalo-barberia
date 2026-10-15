@@ -5,8 +5,13 @@ import { RescheduleForm } from '@/components/customer/RescheduleForm';
 import { canManageAppointment } from '@/lib/utils/appointments';
 import { getShopDateString, getShopTimeString } from '@/lib/utils/booking-datetime';
 import { parseISO } from 'date-fns';
+import { getCustomerLang } from '../../../_lang';
+import { L } from '@/lib/i18n';
 
-export const metadata = { title: 'Modifica prenotazione' };
+export async function generateMetadata() {
+  const lang = await getCustomerLang();
+  return { title: L(lang, 'Modifica prenotazione', 'Edit booking') };
+}
 
 export default async function ModificaAppuntamentoPage({
   params,
@@ -14,6 +19,7 @@ export default async function ModificaAppuntamentoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const lang = await getCustomerLang();
   const apt = await getAppointmentForCustomer(id);
 
   if (!apt || apt.status !== 'confirmed') notFound();
@@ -31,7 +37,7 @@ export default async function ModificaAppuntamentoPage({
   return (
     <div>
       <Link href="/area-cliente/storico" className="mb-6 inline-block text-sm text-white/50 hover:text-gold">
-        ← Torna allo storico
+        {L(lang, '← Torna allo storico', '← Back to history')}
       </Link>
       <RescheduleForm
         appointmentId={apt.id}

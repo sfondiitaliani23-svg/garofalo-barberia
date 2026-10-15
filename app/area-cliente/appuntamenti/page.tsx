@@ -3,10 +3,16 @@ import { getProfile, getSession } from '@/lib/auth';
 import { claimGuestAppointments } from '@/lib/auth/ensure-profile';
 import { AppointmentCard } from '@/components/customer/AppointmentCard';
 import { groupComboAppointments } from '@/lib/utils/group-appointments';
+import { getCustomerLang } from '../_lang';
+import { L } from '@/lib/i18n';
 
-export const metadata = { title: 'I miei appuntamenti' };
+export async function generateMetadata() {
+  const lang = await getCustomerLang();
+  return { title: L(lang, 'I miei appuntamenti', 'My appointments') };
+}
 
 export default async function CustomerAppointmentsPage() {
+  const lang = await getCustomerLang();
   // Collega le prenotazioni fatte senza account (stessa email verificata), anche per chi era già dentro.
   const user = await getSession();
   if (user) await claimGuestAppointments(user);
@@ -15,8 +21,8 @@ export default async function CustomerAppointmentsPage() {
   if (!supabase) {
     return (
       <div>
-        <h1 className="font-display text-3xl uppercase">Appuntamenti</h1>
-        <p className="mt-4 text-white/50">Database non ancora configurato.</p>
+        <h1 className="font-display text-3xl uppercase">{L(lang, 'Appuntamenti', 'Appointments')}</h1>
+        <p className="mt-4 text-white/50">{L(lang, 'Database non ancora configurato.', 'Database not configured yet.')}</p>
       </div>
     );
   }
@@ -38,14 +44,16 @@ export default async function CustomerAppointmentsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">Appuntamenti</h1>
+      <h1 className="font-display text-3xl uppercase">{L(lang, 'Appuntamenti', 'Appointments')}</h1>
       <p className="mt-1 text-white/50">
-        Modifica o disdici fino a 30 minuti prima dell&apos;orario
+        {lang === 'en'
+          ? 'Edit or cancel up to 30 minutes before the appointment time'
+          : <>Modifica o disdici fino a 30 minuti prima dell&apos;orario</>}
       </p>
 
       {upcoming.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gold">In programma</h2>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gold">{L(lang, 'In programma', 'Upcoming')}</h2>
           <div className="space-y-3">
             {upcoming.map((apt) => {
               const barber = apt.barber as { name: string } | null;
@@ -59,6 +67,7 @@ export default async function CustomerAppointmentsPage() {
                   serviceName={service?.name ?? 'Servizio'}
                   barberName={barber?.name ?? 'Barbiere'}
                   showActions
+                  lang={lang}
                 />
               );
             })}
@@ -67,12 +76,12 @@ export default async function CustomerAppointmentsPage() {
       )}
 
       <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">Storico</h2>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">{L(lang, 'Storico', 'History')}</h2>
         <div className="space-y-3">
           {past.length === 0 && upcoming.length === 0 ? (
-            <p className="text-white/50">Nessun appuntamento ancora.</p>
+            <p className="text-white/50">{L(lang, 'Nessun appuntamento ancora.', 'No appointments yet.')}</p>
           ) : past.length === 0 ? (
-            <p className="text-white/50">Nessun appuntamento passato.</p>
+            <p className="text-white/50">{L(lang, 'Nessun appuntamento passato.', 'No past appointments.')}</p>
           ) : (
             past.map((apt) => {
               const barber = apt.barber as { name: string } | null;
@@ -85,6 +94,7 @@ export default async function CustomerAppointmentsPage() {
                   status={apt.status}
                   serviceName={service?.name ?? 'Servizio'}
                   barberName={barber?.name ?? 'Barbiere'}
+                  lang={lang}
                 />
               );
             })

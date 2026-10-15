@@ -4,8 +4,11 @@ import { useEffect, useState } from 'react';
 import { ChevronUp } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useLang } from '@/components/i18n/LangProvider';
+import { scrollTopLabel } from '@/lib/i18n/content-widgets';
 
 export function ScrollToTop() {
+  const lang = useLang();
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
   const isCustomerArea = pathname?.startsWith('/area-cliente') ?? false;
@@ -51,7 +54,7 @@ export function ScrollToTop() {
         'flex h-10 w-10 items-center justify-center rounded bg-[#cd9a4f] text-black shadow-lg hover:bg-[#e5b565]',
         isVisible ? 'translate-y-0 opacity-100 animate-in fade-in zoom-in-50' : 'translate-y-10 opacity-0 pointer-events-none'
       )}
-      aria-label="Torna in alto"
+      aria-label={scrollTopLabel(lang)}
     >
       <ChevronUp size={20} strokeWidth={2.5} />
     </button>

@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 type InstagramEmbedFallbackProps = {
   username: string;
@@ -11,6 +13,7 @@ type InstagramEmbedFallbackProps = {
  * il cliente ci arriva vicino scorrendo, non appena apre Contatti.
  */
 export function InstagramEmbedFallback({ username }: InstagramEmbedFallbackProps) {
+  const lang = useLang();
   const boxRef = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState(false);
 
@@ -38,7 +41,7 @@ export function InstagramEmbedFallback({ username }: InstagramEmbedFallbackProps
       {show && (
         <iframe
           src={`https://www.instagram.com/${username}/embed`}
-          title={`Ultimi post Instagram @${username}`}
+          title={L(lang, `Ultimi post Instagram @${username}`, `Latest Instagram posts @${username}`)}
           loading="lazy"
           allowFullScreen
           className="contatti-instagram-embed-frame"

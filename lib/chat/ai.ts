@@ -9,6 +9,7 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { ALL_FAQ } from '@/lib/data/faq';
 import { createServiceClient } from '@/lib/supabase/server';
 import type { ChatHistoryItem, ChatKnowledge } from '@/lib/chat/assistant';
+import type { Lang } from '@/lib/i18n';
 
 export type AiConfig = {
   enabled: boolean;
@@ -116,7 +117,12 @@ export function buildFacts(k: ChatKnowledge): string {
   return lines.join('\n');
 }
 
-function systemPrompt(facts: string, reference: string) {
+/** Istruzione di lingua aggiunta in fondo al prompt quando la pagina è /en. */
+const EN_INSTRUCTION = `
+
+LANGUAGE (overrides any earlier instruction about language): the visitor is using the English version of the website. Reply in clear, warm, simple English, in at most 4-5 short sentences. The SCHEDA and the reference answer may be in Italian: translate what you need, but keep prices, opening hours, names and phone numbers exactly as they are. Never invent anything. When you mention a website page, write its English address: /en/prenota (booking), /en/servizi (services), /en/contatti (contact), /en/galleria (gallery), /en/recensioni (reviews), /en/faq, /en/offerte (offers). The customer area stays at /area-cliente.`;
+
+function systemPrompt(facts: string, reference: string, lang: Lang = 'it') {
   return `Sei "Eliseo", l'assistente virtuale di ${SITE_CONFIG.name}, barberia a Foggia.
 Rispondi in italiano, con tono cordiale e diretto, frasi corte, al massimo 4-5 frasi. Puoi usare **grassetto** e qualche emoji, senza esagerare.
 
@@ -132,7 +138,7 @@ RISPOSTA DI RIFERIMENTO del sistema del salone (affidabile; usala se è pertinen
 """${reference}"""
 
 SCHEDA DEL SALONE:
-${facts}`;
+${facts}${lang === 'en' ? EN_INSTRUCTION : ''}`;
 }
 
 type Msg = { role: 'system' | 'user' | 'assistant'; content: string };
@@ -160,7 +166,7 @@ async function callProvider(provider: AiProvider, key: string, model: string, me
 export type AiAnswer = { text: string; provider: AiProvider } | null;
 
 /** Chiede all'AI gratuita; torna null se nessun servizio è disponibile (si usa il motore a regole). */
-export async function askAi(message: string, history: ChatHistoryItem[], k: ChatKnowledge, reference: string, cfgIn?: AiConfig): Promise<AiAnswer> {
+export async function askAi(message: string, history: ChatHistoryItem[], k: ChatKnowledge, reference: string, cfgIn?: AiConfig, lang: Lang = 'it'): Promise<AiAnswer> {
   const cfg = cfgIn ?? (await readAiConfig());
   if (!cfg.enabled) return null;
   const chain: { provider: AiProvider; key?: string; model: string }[] = [
@@ -168,7 +174,7 @@ export async function askAi(message: string, history: ChatHistoryItem[], k: Chat
     { provider: 'groq', key: cfg.groqKey, model: cfg.groqModel || DEFAULT_MODELS.groq },
   ];
   const messages: Msg[] = [
-    { role: 'system', content: systemPrompt(buildFacts(k), reference) },
+    { role: 'system', content: systemPrompt(buildFacts(k), reference, lang) },
     ...history.slice(-8).map((h) => ({ role: h.role, content: h.content })),
     { role: 'user', content: message },
   ];

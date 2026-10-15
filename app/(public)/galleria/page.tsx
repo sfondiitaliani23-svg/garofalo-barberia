@@ -1,33 +1,12 @@
-import Link from 'next/link';
-import { GalleryCarousel } from '@/components/galleria/GalleryCarousel';
-import '../public-pages.css';
+import GalleriaView from './view';
+import { alternatesFor } from '@/lib/i18n/seo';
 
 export const metadata = {
   title: 'Galleria tagli e barbe',
   description: "Foto di tagli, sfumature e barbe realizzati alla Barberia Garofalo di Foggia.",
-  alternates: { canonical: '/galleria' },
+  alternates: alternatesFor('/galleria', 'it'),
 };
 
-export default function GalleriaPage() {
-  return (
-    <div className="public-page">
-      <section className="page-hero">
-        <div className="container-lux">
-          <h1 className="hero-heading">Galleria</h1>
-          <p className="hero-sub max-w-xl">Il nostro lavoro reale — tagli per uomo, ragazzo e bimbo.</p>
-        </div>
-      </section>
-
-      <section className="section section-white pb-24">
-        <div className="container-lux">
-          <GalleryCarousel />
-          <div className="mt-12 text-center">
-            <Link href="/prenota" className="btn-primary">
-              Prenota il tuo taglio
-            </Link>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+export default function Page() {
+  return <GalleriaView lang="it" />;
 }

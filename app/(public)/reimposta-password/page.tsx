@@ -1,12 +1,14 @@
-import { ResetPasswordForm } from '@/components/auth/ResetPasswordForm';
+import type { Metadata } from 'next';
+import ResetPasswordView from './view';
+import { alternatesFor } from '@/lib/i18n/seo';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Reimposta Password | Garofalo Barberia', robots: { index: false, follow: true } };
+export const metadata: Metadata = {
+  title: 'Reimposta Password | Garofalo Barberia',
+  robots: { index: false, follow: true },
+  alternates: alternatesFor('/reimposta-password', 'it'),
+};
 
-export default function ResetPasswordPage() {
-  return (
-    <section className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-      <ResetPasswordForm />
-    </section>
-  );
+export default function Page() {
+  return <ResetPasswordView />;
 }

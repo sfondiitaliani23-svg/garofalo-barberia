@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
   if (!hasAuthCookie) {
     if (isAreaCliente) {
       const url = request.nextUrl.clone();
-      url.pathname = '/login';
+      url.pathname = request.cookies.get('gb_lang')?.value === 'en' ? '/en/login' : '/login';
       url.searchParams.set('redirect', pathname);
       return NextResponse.redirect(url);
     }
@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest) {
   if (isAreaCliente && isCustomerSessionExpired(sessionUntil)) {
     await supabase.auth.signOut();
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = request.cookies.get('gb_lang')?.value === 'en' ? '/en/login' : '/login';
     url.searchParams.set('redirect', pathname);
     url.searchParams.set('error', 'La sessione è scaduta dopo 2 mesi. Accedi di nuovo.');
     const expiredResponse = NextResponse.redirect(url);
@@ -91,7 +91,7 @@ export async function middleware(request: NextRequest) {
   if (isAreaCliente) {
     if (!user) {
       const url = request.nextUrl.clone();
-      url.pathname = '/login';
+      url.pathname = request.cookies.get('gb_lang')?.value === 'en' ? '/en/login' : '/login';
       url.searchParams.set('redirect', pathname);
       return NextResponse.redirect(url);
     }

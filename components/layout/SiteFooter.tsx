@@ -1,4 +1,6 @@
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { L, type Lang } from '@/lib/i18n';
+import { dayName, serviceName, timeText } from '@/lib/i18n/content-en';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { CookiePreferencesButton } from '@/components/layout/CookiePreferencesButton';
 import { InstallAppButton } from '@/components/layout/InstallAppPrompt';
@@ -37,17 +39,17 @@ function footerServiceHref(service: string) {
   return '/servizi';
 }
 
-export function SiteFooter() {
+export function SiteFooter({ lang = 'it' }: { lang?: Lang }) {
   return (
     <footer className="site-footer border-t border-white/10 bg-black py-12 text-white/70">
       <div className="container-lux footer-grid grid gap-8 md:grid-cols-3">
         <div>
-          <h3 className="footer-heading mb-4 font-display text-sm uppercase tracking-wider text-white">Servizi</h3>
+          <h3 className="footer-heading mb-4 font-display text-sm uppercase tracking-wider text-white">{L(lang, 'Servizi', 'Services')}</h3>
           <ul className="footer-list space-y-2 text-sm">
             {SITE_CONFIG.services.map((service) => (
               <li key={service}>
                 <Link href={footerServiceHref(service)} className="hover:text-gold-light">
-                  {service}
+                  {serviceName(lang, service)}
                 </Link>
               </li>
             ))}
@@ -55,7 +57,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="footer-heading mb-4 font-display text-sm uppercase tracking-wider text-white">Contatti</h3>
+          <h3 className="footer-heading mb-4 font-display text-sm uppercase tracking-wider text-white">{L(lang, 'Contatti', 'Contact')}</h3>
           <p className="footer-location-name mb-2 text-sm font-semibold text-white/80">Foggia</p>
           <ul className="footer-contact-list">
             <li className="footer-contact-item">
@@ -116,31 +118,31 @@ export function SiteFooter() {
 
         <div>
           <h3 className="footer-heading mb-4 font-display text-sm uppercase tracking-wider text-white">
-            Orari di apertura
+            {L(lang, 'Orari di apertura', 'Opening hours')}
           </h3>
           <p className="footer-location-name mb-2 text-sm font-semibold text-white/80">Foggia</p>
           <div className="footer-hours flex flex-col gap-1 text-sm">
             {SITE_CONFIG.detailedHours.map((h) => (
               <div key={h.day} className="footer-hours-row flex justify-between gap-4">
-                <span>{h.day}</span>
-                <span>{h.time}</span>
+                <span>{dayName(lang, h.day)}</span>
+                <span>{timeText(lang, h.time)}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
-      <nav aria-label="Informazioni" className="container-lux mb-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/55">
-        <Link href="/team" className="hover:text-gold-light">Il team</Link>
-        <Link href="/prima-visita" className="hover:text-gold-light">Prima visita</Link>
-        <Link href="/faq" className="hover:text-gold-light">Domande frequenti</Link>
+      <nav aria-label={L(lang, 'Informazioni', 'Information')} className="container-lux mb-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-white/55">
+        <Link href="/team" className="hover:text-gold-light">{L(lang, 'Il team', 'The team')}</Link>
+        <Link href="/prima-visita" className="hover:text-gold-light">{L(lang, 'Prima visita', 'Your first visit')}</Link>
+        <Link href="/faq" className="hover:text-gold-light">{L(lang, 'Domande frequenti', 'FAQ')}</Link>
         <Link href="/journal" className="hover:text-gold-light">Journal</Link>
-        <Link href="/offerte" className="hover:text-gold-light">Offerte</Link>
-        <Link href="/prodotti" className="hover:text-gold-light">Prodotti</Link>
-        <Link href="/feedback" className="hover:text-gold-light">Feedback anonimo</Link>
-        <Link href="/lavora-con-noi" className="hover:text-gold-light">Lavora con noi</Link>
+        <Link href="/offerte" className="hover:text-gold-light">{L(lang, 'Offerte', 'Offers')}</Link>
+        <Link href="/prodotti" className="hover:text-gold-light">{L(lang, 'Prodotti', 'Products')}</Link>
+        <Link href="/feedback" className="hover:text-gold-light">{L(lang, 'Feedback anonimo', 'Anonymous feedback')}</Link>
+        <Link href="/lavora-con-noi" className="hover:text-gold-light">{L(lang, 'Lavora con noi', 'Work with us')}</Link>
       </nav>
       <div className="footer-copy container-lux flex flex-col items-center gap-2 border-t border-white/10 text-center text-xs leading-relaxed text-white/60">
-        <p>© 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.</p>
+        <p>{L(lang, '© 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.', '© 2026 Garofalo Barberia by Elisee Graphic. All rights reserved.')}</p>
         <p className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">
           <Link href="/privacy" className="hover:text-gold-light underline">
             Privacy Policy
@@ -150,7 +152,7 @@ export function SiteFooter() {
           <InstallAppButton className="hover:text-gold-light underline bg-transparent border-none p-0 cursor-pointer text-xs text-white/60 font-medium" />
         </p>
         <p>
-          Sito creato interamente da Eliseo Miraglia (IG.{' '}
+          {L(lang, 'Sito creato interamente da Eliseo Miraglia', 'Website built entirely by Eliseo Miraglia')} (IG.{' '}
           <a
             href="https://www.instagram.com/eliseomiraglia"
             target="_blank"
@@ -162,7 +164,7 @@ export function SiteFooter() {
           )
         </p>
         <p>
-          Reparto grafico curato da Eliseo Miraglia (IG.{' '}
+          {L(lang, 'Reparto grafico curato da Eliseo Miraglia', 'Graphic design by Eliseo Miraglia')} (IG.{' '}
           <a
             href="https://www.instagram.com/elisee_graphic"
             target="_blank"

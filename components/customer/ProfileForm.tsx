@@ -7,6 +7,8 @@ import { updateProfile } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 interface ProfileFormProps {
   profile: any;
@@ -46,6 +48,7 @@ function compressAvatar(file: File, size = 180, quality = 0.85): Promise<string>
 }
 
 export function ProfileForm({ profile }: ProfileFormProps) {
+  const lang = useLang();
   const [pending, startTransition] = useTransition();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url ?? null);
   const [showCamera, setShowCamera] = useState(false);
@@ -67,7 +70,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       })
       .catch((err) => {
         console.error(err);
-        toast.error('Impossibile accedere alla fotocamera. Verifica i permessi del browser.');
+        toast.error(L(lang, 'Impossibile accedere alla fotocamera. Verifica i permessi del browser.', 'Could not access the camera. Please check your browser permissions.'));
         setShowCamera(false);
       });
 
@@ -76,7 +79,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [showCamera]);
+  }, [showCamera, lang]);
 
   // Calcola le iniziali per il segnaposto
   const getInitials = () => {
@@ -92,16 +95,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (!file.type.startsWith('image/')) {
-        toast.error('Seleziona un file immagine valido.');
+        toast.error(L(lang, 'Seleziona un file immagine valido.', 'Please select a valid image file.'));
         return;
       }
       try {
         const base64 = await compressAvatar(file);
         setAvatarUrl(base64);
-        toast.success('Nuova immagine caricata temporaneamente. Clicca su "Salva modifiche" per confermare!');
+        toast.success(L(lang, 'Nuova immagine caricata temporaneamente. Clicca su "Salva modifiche" per confermare!', 'New image loaded temporarily. Click "Save changes" to confirm!'));
       } catch (err: any) {
         console.error(err);
-        toast.error('Errore durante la compressione dell\'immagine.');
+        toast.error(L(lang, 'Errore durante la compressione dell\'immagine.', 'Something went wrong while compressing the image.'));
       }
     }
   };
@@ -109,7 +112,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const handleRemoveAvatar = (e: React.MouseEvent) => {
     e.preventDefault();
     setAvatarUrl(''); // Una stringa vuota indica al backend di impostarlo a NULL
-    toast.info('Immagine rimossa temporaneamente. Clicca su "Salva modifiche" per confermare.');
+    toast.info(L(lang, 'Immagine rimossa temporaneamente. Clicca su "Salva modifiche" per confermare.', 'Image removed temporarily. Click "Save changes" to confirm.'));
   };
 
   const handleCapturePhoto = () => {
@@ -137,11 +140,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
           const base64 = canvas.toDataURL('image/jpeg', 0.85);
           setAvatarUrl(base64);
-          toast.success('Foto scattata! Clicca su "Salva modifiche" per confermare.');
+          toast.success(L(lang, 'Foto scattata! Clicca su "Salva modifiche" per confermare.', 'Photo taken! Click "Save changes" to confirm.'));
         }
       } catch (err) {
         console.error(err);
-        toast.error('Errore durante lo scatto della foto.');
+        toast.error(L(lang, 'Errore durante lo scatto della foto.', 'Something went wrong while taking the photo.'));
       }
       setShowCamera(false);
     }
@@ -159,7 +162,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       try {
         await updateProfile(formData);
       } catch (err: any) {
-        toast.error('Errore durante il salvataggio delle modifiche.');
+        toast.error(L(lang, 'Errore durante il salvataggio delle modifiche.', 'Something went wrong while saving your changes.'));
       }
     });
   };
@@ -171,7 +174,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6 border-b border-white/10 pb-6">
           <div className="relative group w-24 h-24 rounded-full overflow-hidden border-2 border-gold/30 hover:border-gold transition-all duration-300 shadow-lg shadow-black/45 shrink-0">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              <img src={avatarUrl} alt={L(lang, 'Avatar', 'Avatar')} className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full bg-gradient-to-br from-[#1c140c] to-[#0c0a06] flex items-center justify-center text-gold font-display text-2xl font-bold">
                 {getInitials()}
@@ -185,14 +188,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               disabled={pending}
             >
               <Camera size={18} className="text-gold" />
-              <span>SFOGLIA</span>
+              <span>{L(lang, 'SFOGLIA', 'BROWSE')}</span>
             </button>
           </div>
 
           <div className="flex flex-col items-center sm:items-start gap-2">
-            <p className="text-sm font-semibold text-white">Immagine del profilo</p>
+            <p className="text-sm font-semibold text-white">{L(lang, 'Immagine del profilo', 'Profile picture')}</p>
             <p className="text-xs text-white/60 max-w-xs text-center sm:text-left leading-relaxed">
-              Scegli se scattare una foto al volo con la tua fotocamera o caricarne una dal tuo dispositivo.
+              {L(lang, 'Scegli se scattare una foto al volo con la tua fotocamera o caricarne una dal tuo dispositivo.', 'Take a quick photo with your camera or upload one from your device.')}
             </p>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 mt-1.5">
               <button
@@ -201,7 +204,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 className="inline-flex items-center gap-1 text-xs text-gold font-semibold hover:underline bg-transparent border-none cursor-pointer"
                 disabled={pending}
               >
-                Sfoglia galleria
+                {L(lang, 'Sfoglia galleria', 'Browse gallery')}
               </button>
               <span className="text-white/20 text-xs">•</span>
               <button
@@ -210,7 +213,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 className="inline-flex items-center gap-1 text-xs text-gold font-semibold hover:underline bg-transparent border-none cursor-pointer"
                 disabled={pending}
               >
-                Scatta foto
+                {L(lang, 'Scatta foto', 'Take photo')}
               </button>
               {avatarUrl !== null && avatarUrl !== '' && (
                 <>
@@ -222,7 +225,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     disabled={pending}
                   >
                     <Trash2 size={12} />
-                    Rimuovi foto
+                    {L(lang, 'Rimuovi foto', 'Remove photo')}
                   </button>
                 </>
               )}
@@ -243,7 +246,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         {/* Campi Form standard */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="full_name">Nome e cognome *</Label>
+            <Label htmlFor="full_name">{L(lang, 'Nome e cognome *', 'Full name *')}</Label>
             <Input
               id="full_name"
               name="full_name"
@@ -255,7 +258,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="phone">Telefono</Label>
+            <Label htmlFor="phone">{L(lang, 'Telefono', 'Phone')}</Label>
             <Input
               id="phone"
               name="phone"
@@ -267,27 +270,27 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="hair_preferences">Preferenze di taglio (opzionale)</Label>
+            <Label htmlFor="hair_preferences">{L(lang, 'Preferenze di taglio (opzionale)', 'Haircut preferences (optional)')}</Label>
             <textarea
               id="hair_preferences"
               name="hair_preferences"
               defaultValue={profile?.hair_preferences ?? ''}
               rows={3}
               className="mt-1 flex w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2 text-sm text-white focus:border-gold/50 focus:outline-none"
-              placeholder="Es. sfumato alto, ciuffo lungo, riga a sinistra..."
+              placeholder={L(lang, 'Es. sfumato alto, ciuffo lungo, riga a sinistra...', 'E.g. high fade, long top, parting on the left...')}
               disabled={pending}
             />
           </div>
 
           <div>
-            <Label htmlFor="personal_notes">Note personali (visibili solo a te)</Label>
+            <Label htmlFor="personal_notes">{L(lang, 'Note personali (visibili solo a te)', 'Personal notes (only visible to you)')}</Label>
             <textarea
               id="personal_notes"
               name="personal_notes"
               defaultValue={profile?.personal_notes ?? ''}
               rows={3}
               className="mt-1 flex w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 py-2 text-sm text-white focus:border-gold/50 focus:outline-none"
-              placeholder="Aggiungi dettagli o note personali..."
+              placeholder={L(lang, 'Aggiungi dettagli o note personali...', 'Add details or personal notes...')}
               disabled={pending}
             />
           </div>
@@ -302,10 +305,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             {pending ? (
               <>
                 <Loader2 size={16} className="animate-spin mr-2" />
-                Salvataggio...
+                {L(lang, 'Salvataggio...', 'Saving...')}
               </>
             ) : (
-              'Salva modifiche'
+              L(lang, 'Salva modifiche', 'Save changes')
             )}
           </Button>
         </div>
@@ -322,10 +325,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-              <h3 className="font-display text-base uppercase text-gold font-bold">Scatta Foto</h3>
+              <h3 className="font-display text-base uppercase text-gold font-bold">{L(lang, 'Scatta Foto', 'Take Photo')}</h3>
               <button
                 type="button"
                 onClick={() => setShowCamera(false)}
+                aria-label={L(lang, 'Chiudi', 'Close')}
                 className="text-white/50 hover:text-white"
               >
                 ✕
@@ -347,14 +351,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 onClick={() => setShowCamera(false)}
                 className="flex-1 border border-white/10 text-white/70 hover:bg-white/5 py-2.5 rounded-full font-semibold text-xs transition cursor-pointer"
               >
-                Annulla
+                {L(lang, 'Annulla', 'Cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleCapturePhoto}
                 className="flex-1 bg-gold text-black hover:bg-gold-light py-2.5 rounded-full font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                Scatta
+                {L(lang, 'Scatta', 'Capture')}
               </button>
             </div>
           </div>

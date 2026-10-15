@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Bell, BellOff, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 type State = 'loading' | 'unsupported' | 'ios-install' | 'off' | 'on' | 'denied';
 
@@ -21,6 +23,7 @@ const standalone = () => window.matchMedia('(display-mode: standalone)').matches
  * variant "banner": riquadro compatto che compare solo se le notifiche non sono ancora attive.
  */
 export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' }) {
+  const lang = useLang();
   const [state, setState] = useState<State>('loading');
   const [busy, setBusy] = useState(false);
 
@@ -59,9 +62,9 @@ export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' 
       if (!res.ok) throw new Error('save');
       setState('on');
       await fetch('/api/push/test', { method: 'POST' });
-      toast.success('Notifiche attive. Ti abbiamo mandato una notifica di prova.');
+      toast.success(L(lang, 'Notifiche attive. Ti abbiamo mandato una notifica di prova.', 'Notifications are on. We have sent you a test notification.'));
     } catch {
-      toast.error('Non è stato possibile attivare le notifiche su questo dispositivo.');
+      toast.error(L(lang, 'Non è stato possibile attivare le notifiche su questo dispositivo.', 'We could not turn on notifications on this device.'));
     } finally {
       setBusy(false);
     }
@@ -77,7 +80,7 @@ export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' 
         await sub.unsubscribe();
       }
       setState('off');
-      toast.success('Notifiche disattivate su questo dispositivo.');
+      toast.success(L(lang, 'Notifiche disattivate su questo dispositivo.', 'Notifications turned off on this device.'));
     } finally {
       setBusy(false);
     }
@@ -88,11 +91,11 @@ export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' 
 
   const text: Record<State, string> = {
     loading: '',
-    unsupported: 'Questo browser non supporta le notifiche.',
-    'ios-install': 'Su iPhone le notifiche funzionano dall’app: aggiungi il sito alla schermata Home (Condividi → Aggiungi alla schermata Home), poi aprilo dall’icona.',
-    off: 'Ricevi sul telefono il promemoria del tuo appuntamento e le novità del salone. Gratis, le spegni quando vuoi.',
-    on: 'Attive su questo dispositivo: promemoria appuntamenti e novità del salone.',
-    denied: 'Le notifiche sono bloccate nelle impostazioni del browser. Riattivale da lì per riceverle.',
+    unsupported: L(lang, 'Questo browser non supporta le notifiche.', 'This browser does not support notifications.'),
+    'ios-install': L(lang, 'Su iPhone le notifiche funzionano dall’app: aggiungi il sito alla schermata Home (Condividi → Aggiungi alla schermata Home), poi aprilo dall’icona.', 'On iPhone, notifications work from the app: add the site to your Home Screen (Share → Add to Home Screen), then open it from the icon.'),
+    off: L(lang, 'Ricevi sul telefono il promemoria del tuo appuntamento e le novità del salone. Gratis, le spegni quando vuoi.', 'Get your appointment reminder and news from the barbershop on your phone. Free, and you can turn it off whenever you like.'),
+    on: L(lang, 'Attive su questo dispositivo: promemoria appuntamenti e novità del salone.', 'On for this device: appointment reminders and news from the barbershop.'),
+    denied: L(lang, 'Le notifiche sono bloccate nelle impostazioni del browser. Riattivale da lì per riceverle.', 'Notifications are blocked in your browser settings. Turn them back on there to receive them.'),
   };
 
   return (
@@ -104,19 +107,19 @@ export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' 
           </span>
           <div>
             <h2 id="push-title" className="font-semibold text-white">
-              Notifiche sul telefono
+              {L(lang, 'Notifiche sul telefono', 'Phone notifications')}
             </h2>
             <p className="mt-0.5 max-w-md text-sm text-white/65">{text[state]}</p>
           </div>
         </div>
         {state === 'off' && (
           <button type="button" onClick={enable} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2 text-sm font-semibold text-black disabled:opacity-50">
-            {busy && <Loader2 size={14} className="animate-spin" aria-hidden />} Attiva notifiche
+            {busy && <Loader2 size={14} className="animate-spin" aria-hidden />} {L(lang, 'Attiva notifiche', 'Turn on notifications')}
           </button>
         )}
         {state === 'on' && (
           <button type="button" onClick={disable} disabled={busy} className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/80 disabled:opacity-50">
-            Disattiva
+            {L(lang, 'Disattiva', 'Turn off')}
           </button>
         )}
       </div>

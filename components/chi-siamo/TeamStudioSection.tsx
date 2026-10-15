@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 import { useEffect, useRef } from 'react';
 import { barberSlug, firstName } from '@/lib/utils/barber-slug';
 
@@ -18,6 +20,7 @@ interface TeamStudioSectionProps {
 }
 
 export function TeamStudioSection({ members }: TeamStudioSectionProps) {
+  const lang = useLang();
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,14 +68,14 @@ export function TeamStudioSection({ members }: TeamStudioSectionProps) {
     <section className="section section-white team-studio-section">
       <div className="container-lux">
         <div className="team-studio-header">
-          <h2 className="team-studio-title">Il nostro Team</h2>
+          <h2 className="team-studio-title">{L(lang, 'Il nostro Team', 'Our Team')}</h2>
           <div className="diamond-divider team-studio-divider">
             <div className="diamond-line" />
             <div className="diamond-block" />
             <div className="diamond-line" />
           </div>
           <p className="team-studio-subtitle">
-            I nostri esperti sono qui per aiutarti a migliorare il tuo stile.
+            {L(lang, 'I nostri esperti sono qui per aiutarti a migliorare il tuo stile.', 'Our experts are here to help you improve your style.')}
           </p>
         </div>
 
@@ -99,7 +102,7 @@ export function TeamStudioSection({ members }: TeamStudioSectionProps) {
                 <p className="team-studio-role">{member.role}</p>
               </div>
               <Link href={`/team/${barberSlug(member.name)}`} className="team-studio-book-btn">
-                Prenota con {firstName(member.name)}
+                {L(lang, 'Prenota con', 'Book with')} {firstName(member.name)}
               </Link>
             </div>
           ))}
@@ -107,7 +110,7 @@ export function TeamStudioSection({ members }: TeamStudioSectionProps) {
 
         <div className="text-center mt-12">
           <Link href="/contatti" className="btn-primary">
-            Vieni a trovarci
+            {L(lang, 'Vieni a trovarci', 'Come and see us')}
           </Link>
         </div>
       </div>

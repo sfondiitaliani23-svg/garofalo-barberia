@@ -2,7 +2,10 @@
 
 import { PinchZoom } from '@/components/ui/PinchZoom';
 import Image from 'next/image';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { GALLERY_FILTERS_EN, galleryEn } from '@/lib/i18n/content-team';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Expand, X } from 'lucide-react';
@@ -18,6 +21,7 @@ const AUTOPLAY_MS = 6000;
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export function GalleryCarousel() {
+  const lang = useLang();
   const [filter, setFilter] = useState<string>('tutti');
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -31,7 +35,8 @@ export function GalleryCarousel() {
   const pressTimer = useRef<number | null>(null);
   const touchX = useRef<number | null>(null);
 
-  const images = filter === 'tutti' ? GALLERY_IMAGES : GALLERY_IMAGES.filter((img) => img.category === filter);
+  const allImages = lang === 'en' ? GALLERY_IMAGES.map((img) => ({ ...img, ...(galleryEn(img.src) ?? {}) })) : GALLERY_IMAGES;
+  const images = filter === 'tutti' ? allImages : allImages.filter((img) => img.category === filter);
   const total = images.length;
   const current = images[Math.min(index, total - 1)];
   const copy = current;
@@ -139,7 +144,7 @@ export function GalleryCarousel() {
 
   return (
     <div className="gc" ref={rootRef}>
-      <div className="gc-filters" role="group" aria-label="Filtra le foto">
+      <div className="gc-filters" role="group" aria-label={L(lang, 'Filtra le foto', 'Filter photos')}>
         {GALLERY_FILTERS.map((f) => (
           <button
             key={f.id}
@@ -148,7 +153,7 @@ export function GalleryCarousel() {
             aria-pressed={filter === f.id}
             onClick={() => changeFilter(f.id)}
           >
-            {f.label}
+            {lang === 'en' ? GALLERY_FILTERS_EN[f.id] ?? f.label : f.label}
           </button>
         ))}
       </div>
@@ -156,8 +161,8 @@ export function GalleryCarousel() {
       <div
         className="gc-stage"
         role="region"
-        aria-roledescription="carosello"
-        aria-label="Galleria dei nostri lavori"
+        aria-roledescription={L(lang, 'carosello', 'carousel')}
+        aria-label={L(lang, 'Galleria dei nostri lavori', 'Gallery of our work')}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onFocusCapture={() => setPaused(true)}
@@ -174,7 +179,7 @@ export function GalleryCarousel() {
             onClick={() => setLightbox(true)}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
-            aria-label={`Apri a schermo intero: ${current.alt}`}
+            aria-label={L(lang, `Apri a schermo intero: ${current.alt}`, `Open full screen: ${current.alt}`)}
           >
             <Image
               key={current.src}
@@ -201,7 +206,7 @@ export function GalleryCarousel() {
             <p className="gc-desc">{copy.text}</p>
             <p className="gc-caption">{current.alt}</p>
             <Link href="/prenota" className="gc-cta">
-              Prenota ora
+              {L(lang, 'Prenota ora', 'Book now')}
               <ArrowRight size={14} aria-hidden />
             </Link>
 
@@ -219,7 +224,7 @@ export function GalleryCarousel() {
             type="button"
             className={`gc-nav gc-nav-prev${pressed === 'prev' ? ' is-pressed' : ''}`}
             onClick={() => step('prev')}
-            aria-label="Foto precedente"
+            aria-label={L(lang, 'Foto precedente', 'Previous photo')}
             aria-keyshortcuts="ArrowLeft"
           >
             <ChevronLeft size={22} />
@@ -228,7 +233,7 @@ export function GalleryCarousel() {
             type="button"
             className={`gc-nav gc-nav-next${pressed === 'next' ? ' is-pressed' : ''}`}
             onClick={() => step('next')}
-            aria-label="Foto successiva"
+            aria-label={L(lang, 'Foto successiva', 'Next photo')}
             aria-keyshortcuts="ArrowRight"
           >
             <ChevronRight size={22} />
@@ -237,7 +242,7 @@ export function GalleryCarousel() {
 
         {/* Miniature */}
         <div className="gc-thumbs-col">
-          <button type="button" className="gc-thumbs-arrow" onClick={() => go(-1)} aria-label="Foto precedente">
+          <button type="button" className="gc-thumbs-arrow" onClick={() => go(-1)} aria-label={L(lang, 'Foto precedente', 'Previous photo')}>
             <ChevronUp size={16} />
           </button>
           <div ref={thumbsRef} className="gc-thumbs">
@@ -248,14 +253,14 @@ export function GalleryCarousel() {
                 data-idx={i}
                 className={`gc-thumb${i === index ? ' is-active' : ''}`}
                 onClick={() => setIndex(i)}
-                aria-label={`Foto ${i + 1}: ${img.alt}`}
+                aria-label={L(lang, `Foto ${i + 1}: ${img.alt}`, `Photo ${i + 1}: ${img.alt}`)}
                 aria-current={i === index}
               >
                 <Image src={img.src} alt="" fill sizes="96px" className="object-cover" />
               </button>
             ))}
           </div>
-          <button type="button" className="gc-thumbs-arrow" onClick={() => go(1)} aria-label="Foto successiva">
+          <button type="button" className="gc-thumbs-arrow" onClick={() => go(1)} aria-label={L(lang, 'Foto successiva', 'Next photo')}>
             <ChevronDown size={16} />
           </button>
         </div>
@@ -280,7 +285,7 @@ export function GalleryCarousel() {
                 <Image key={current.src} src={current.src} alt={current.alt} fill sizes="92vw" className="object-contain" priority />
               </PinchZoom>
             </div>
-            <button type="button" className="gc-lb-btn gc-lb-close" onClick={() => setLightbox(false)} aria-label="Chiudi">
+            <button type="button" className="gc-lb-btn gc-lb-close" onClick={() => setLightbox(false)} aria-label={L(lang, 'Chiudi', 'Close')}>
               <X size={18} />
             </button>
             <button
@@ -290,7 +295,7 @@ export function GalleryCarousel() {
                 e.stopPropagation();
                 go(-1);
               }}
-              aria-label="Foto precedente"
+              aria-label={L(lang, 'Foto precedente', 'Previous photo')}
             >
               <ChevronLeft size={22} />
             </button>
@@ -301,7 +306,7 @@ export function GalleryCarousel() {
                 e.stopPropagation();
                 go(1);
               }}
-              aria-label="Foto successiva"
+              aria-label={L(lang, 'Foto successiva', 'Next photo')}
             >
               <ChevronRight size={22} />
             </button>

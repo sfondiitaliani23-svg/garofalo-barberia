@@ -1,8 +1,11 @@
 'use client';
 
 import { SITE_CONFIG } from '@/lib/site-config';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 export function NewsletterForm() {
+  const lang = useLang();
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -10,9 +13,13 @@ export function NewsletterForm() {
     const email = input?.value?.trim();
     if (!email) return;
 
-    const subject = encodeURIComponent('Iscrizione newsletter — Garofalo Barberia');
+    const subject = encodeURIComponent(L(lang, 'Iscrizione newsletter — Garofalo Barberia', 'Newsletter sign-up — Garofalo Barberia'));
     const body = encodeURIComponent(
-      `Ciao, vorrei iscrivermi alla newsletter di Garofalo Barberia.\n\nEmail: ${email}`
+      L(
+        lang,
+        `Ciao, vorrei iscrivermi alla newsletter di Garofalo Barberia.\n\nEmail: ${email}`,
+        `Hello, I would like to subscribe to the Garofalo Barberia newsletter.\n\nEmail: ${email}`,
+      )
     );
     window.open(
       `https://mail.google.com/mail/?view=cm&fs=1&to=${SITE_CONFIG.email}&su=${subject}&body=${body}`,
@@ -29,11 +36,11 @@ export function NewsletterForm() {
         id="newsletter-email"
         name="email"
         className="newsletter-input"
-        placeholder="Inserisci la tua email"
+        placeholder={L(lang, 'Inserisci la tua email', 'Enter your email')}
         required
         autoComplete="email"
       />
-      <button type="submit" className="newsletter-submit">Invia</button>
+      <button type="submit" className="newsletter-submit">{L(lang, 'Invia', 'Send')}</button>
     </form>
   );
 }

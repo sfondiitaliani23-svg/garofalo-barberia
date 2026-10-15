@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
 import { usePathname } from 'next/navigation';
+import { useLang } from '@/components/i18n/LangProvider';
+import { stripLang } from '@/lib/i18n';
+import { tabBarText } from '@/lib/i18n/content-widgets';
 import { CalendarCheck, Home, MapPin } from 'lucide-react';
 
 /**
@@ -11,7 +14,9 @@ import { CalendarCheck, Home, MapPin } from 'lucide-react';
  * Visibile solo quando il sito è aperto dall'icona sulla schermata Home (html.is-app) e da telefono.
  */
 export function AppTabBar() {
-  const pathname = usePathname() ?? '/';
+  const lang = useLang();
+  const t = tabBarText(lang);
+  const pathname = stripLang(usePathname() ?? '/');
   const [tip, setTip] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -23,16 +28,16 @@ export function AppTabBar() {
   );
 
   const tabs = [
-    { href: '/', label: 'Home', icon: Home, active: pathname === '/' },
+    { href: '/', label: t.home, icon: Home, active: pathname === '/' },
     {
       href: '/prenota',
-      label: 'Prenota',
+      label: t.book,
       icon: CalendarCheck,
       active: pathname.startsWith('/prenota'),
     },
     {
       href: '/contatti',
-      label: 'Contatti',
+      label: t.contact,
       icon: MapPin,
       active: pathname.startsWith('/contatti'),
     },
@@ -45,7 +50,7 @@ export function AppTabBar() {
   };
 
   return (
-    <nav className="app-tabbar" aria-label="Navigazione app">
+    <nav className="app-tabbar" aria-label={t.nav}>
       <div className="app-dock">
         {tabs.map(({ href, label, icon: Icon, active }) => (
           <Link

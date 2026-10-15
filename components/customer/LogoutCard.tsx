@@ -2,8 +2,11 @@
 
 import { LogOut } from 'lucide-react';
 import { signOut } from '@/lib/actions/auth';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 export function LogoutCard() {
+  const lang = useLang();
   return (
     <form action={signOut}>
       <button
@@ -12,8 +15,8 @@ export function LogoutCard() {
       >
         <span className="text-2xl">🚪</span>
         <div className="text-left">
-          <p className="font-bold text-white/70 group-hover:text-red-400 text-sm transition-colors">Esci dall&apos;account</p>
-          <p className="text-[11px] text-white/60">Disconnetti la sessione</p>
+          <p className="font-bold text-white/70 group-hover:text-red-400 text-sm transition-colors">{lang === 'en' ? 'Log out of your account' : <>Esci dall&apos;account</>}</p>
+          <p className="text-[11px] text-white/60">{L(lang, 'Disconnetti la sessione', 'Sign out of this session')}</p>
         </div>
         <LogOut size={16} className="ml-auto text-white/20 group-hover:text-red-400 transition-colors shrink-0" />
       </button>

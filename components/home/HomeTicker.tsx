@@ -1,15 +1,18 @@
 'use client';
 
-import Link from 'next/link';
+import { LocLink as Link } from '@/components/i18n/LocLink';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 export function HomeTicker() {
+  const lang = useLang();
   const items = [
     { label: 'Barberia Garofalo', href: '/' },
-    { label: 'Chi Siamo', href: '/chi-siamo' },
+    { label: L(lang, 'Chi Siamo', 'About Us'), href: '/chi-siamo' },
     { label: 'Gallery', href: '/galleria' },
-    { label: 'Contatti', href: '/contatti' },
-    { label: 'Dove siamo', href: '/contatti' },
-    { label: 'Accedi', href: '/login' },
+    { label: L(lang, 'Contatti', 'Contact'), href: '/contatti' },
+    { label: L(lang, 'Dove siamo', 'Find Us'), href: '/contatti' },
+    { label: L(lang, 'Accedi', 'Sign In'), href: '/login' },
   ];
 
   // Duplichiamo la lista 4 volte per evitare spazi vuoti su schermi molto grandi (2K/4K)

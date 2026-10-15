@@ -1,5 +1,7 @@
 import { SITE_CONFIG } from '@/lib/site-config';
 import { publicPeriodsForDay } from '@/lib/utils/open-now';
+import { serviceName } from '@/lib/i18n/content-en';
+import type { Lang } from '@/lib/i18n';
 
 /** Indirizzo pubblico principale del sito (usato da sitemap, canonical e dati strutturati). */
 export const SITE_URL = 'https://barberiagarofalo.it';
@@ -20,14 +22,18 @@ export function openingHoursSpecification() {
 type SeoService = { name: string; price_cents: number; duration_minutes?: number };
 
 /** Scheda "attività locale" per Google (HairSalon). */
-export function localBusinessJsonLd(services: SeoService[] = []) {
+export function localBusinessJsonLd(services: SeoService[] = [], lang: Lang = 'it') {
+  const en = lang === 'en';
+  const base = en ? `${SITE_URL}/en` : SITE_URL;
   return {
     '@context': 'https://schema.org',
     '@type': 'HairSalon',
     '@id': `${SITE_URL}/#barberia`,
     name: SITE_CONFIG.name,
-    description: 'Barberia a Foggia: taglio uomo, taglio ragazzo e bimbo, barba con rasoio, forbici o panno caldo. Prenotazione online.',
-    url: SITE_URL,
+    description: en
+      ? 'Barbershop in Foggia: men’s, teen and kids’ haircuts, beard care with razor, scissors or hot towel. Book online.'
+      : 'Barberia a Foggia: taglio uomo, taglio ragazzo e bimbo, barba con rasoio, forbici o panno caldo. Prenotazione online.',
+    url: base,
     telephone: SITE_CONFIG.phone,
     image: `${SITE_URL}/icon.png`,
     logo: `${SITE_URL}/icon.png`,
@@ -47,19 +53,19 @@ export function localBusinessJsonLd(services: SeoService[] = []) {
     openingHoursSpecification: openingHoursSpecification(),
     potentialAction: {
       '@type': 'ReserveAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/prenota`, inLanguage: 'it-IT' },
-      result: { '@type': 'Reservation', name: 'Appuntamento in barberia' },
+      target: { '@type': 'EntryPoint', urlTemplate: `${base}/prenota`, inLanguage: en ? 'en-GB' : 'it-IT' },
+      result: { '@type': 'Reservation', name: en ? 'Barbershop appointment' : 'Appuntamento in barberia' },
     },
     ...(services.length > 0
       ? {
           hasOfferCatalog: {
             '@type': 'OfferCatalog',
-            name: 'Listino servizi',
+            name: en ? 'Service price list' : 'Listino servizi',
             itemListElement: services.map((s) => ({
               '@type': 'Offer',
               price: (s.price_cents / 100).toFixed(2),
               priceCurrency: 'EUR',
-              itemOffered: { '@type': 'Service', name: s.name },
+              itemOffered: { '@type': 'Service', name: serviceName(lang, s.name) },
             })),
           },
         }

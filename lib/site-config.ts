@@ -48,9 +48,12 @@ export const SITE_CONFIG = {
   ],
 } as const;
 
-export function getWhatsAppLink(message?: string) {
+export function getWhatsAppLink(message?: string, lang: 'it' | 'en' = 'it') {
   const text = encodeURIComponent(
-    message ?? 'Ciao! Vorrei prenotare un appuntamento a Garofalo Barberia. Potete aiutarmi?'
+    message ??
+      (lang === 'en'
+        ? 'Hello! I’d like to book an appointment at Garofalo Barberia. Can you help me?'
+        : 'Ciao! Vorrei prenotare un appuntamento a Garofalo Barberia. Potete aiutarmi?')
   );
   return `https://wa.me/${SITE_CONFIG.whatsapp}?text=${text}`;
 }

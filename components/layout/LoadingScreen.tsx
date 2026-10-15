@@ -4,8 +4,11 @@ import { storageGet, storageSet } from '@/lib/utils/safe-storage';
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 export function LoadingScreen() {
+  const lang = useLang();
   const loaderRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const [shouldRender, setShouldRender] = useState(false);
@@ -13,7 +16,7 @@ export function LoadingScreen() {
   useEffect(() => {
     // Se la schermata di caricamento è già stata mostrata in questa sessione, non bloccare la navigazione
     // Solo sulla home: chi arriva direttamente su Servizi, Prenota ecc. (spesso da Google) vede subito la pagina.
-    if (window.location.pathname !== '/' || document.documentElement.classList.contains('is-app') || storageGet('gbf_loader_shown', 'session')) {
+    if ((window.location.pathname !== '/' && window.location.pathname !== '/en') || document.documentElement.classList.contains('is-app') || storageGet('gbf_loader_shown', 'session')) {
       return;
     }
 
@@ -122,7 +125,7 @@ export function LoadingScreen() {
             margin: 0,
           }}
         >
-          DAL 2025
+          {L(lang, 'DAL 2025', 'SINCE 2025')}
         </p>
       </div>
 

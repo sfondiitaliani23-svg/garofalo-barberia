@@ -2,21 +2,26 @@
 
 import { QRCodeSVG } from 'qrcode.react';
 import Image from 'next/image';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
 
 const BOOKING_URL = 'https://barberiagarofalo.it/prenota'; // punta all'area prenotazioni
+const BOOKING_URL_EN = 'https://barberiagarofalo.it/en/prenota';
 
 export function BookingQRCard() {
+  const lang = useLang();
+  const bookingUrl = L(lang, BOOKING_URL, BOOKING_URL_EN);
   return (
     <div className="booking-qr-section">
       {/* Eyebrow */}
       <div className="eyebrow mb-6">
         <div className="eyebrow-line" />
-        <span className="eyebrow-text">Prenota con un click</span>
+        <span className="eyebrow-text">{L(lang, 'Prenota con un click', 'Book in one click')}</span>
       </div>
 
       <div className="booking-qr-wrapper">
         {/* Card stile portachiave */}
-        <div className="booking-qr-card" aria-label="QR Code per prenotare">
+        <div className="booking-qr-card" aria-label={L(lang, 'QR Code per prenotare', 'QR code to book')}>
           {/* Foro portachiave */}
           <div className="qr-keychain-hole" aria-hidden="true" />
 
@@ -31,7 +36,7 @@ export function BookingQRCard() {
             />
             <p className="qr-brand-name">BARBERIA<br />GAROFALO</p>
             <div className="qr-divider" />
-            <p className="qr-tagline">Foggia · dal 2025</p>
+            <p className="qr-tagline">{L(lang, 'Foggia · dal 2025', 'Foggia · since 2025')}</p>
           </div>
         </div>
 
@@ -49,41 +54,45 @@ export function BookingQRCard() {
         </div>
 
         {/* Card stile portachiave - Retro QR */}
-        <div className="booking-qr-card" aria-label="QR Code prenotazione">
+        <div className="booking-qr-card" aria-label={L(lang, 'QR Code prenotazione', 'Booking QR code')}>
           {/* Foro portachiave */}
           <div className="qr-keychain-hole" aria-hidden="true" />
 
           {/* Lato RETRO: QR Code */}
           <div className="qr-card-back">
-            <p className="qr-scan-label">SCANSIONA</p>
+            <p className="qr-scan-label">{L(lang, 'SCANSIONA', 'SCAN')}</p>
             <div className="qr-code-wrap">
               <QRCodeSVG
-                value={BOOKING_URL}
+                value={bookingUrl}
                 size={140}
                 bgColor="transparent"
                 fgColor="#c5a859"
                 level="M"
               />
             </div>
-            <p className="qr-scan-sub">per prenotare il tuo appuntamento</p>
+            <p className="qr-scan-sub">{L(lang, 'per prenotare il tuo appuntamento', 'to book your appointment')}</p>
             <div className="qr-divider" />
-            <p className="qr-url-text">barberiagarofalo.it/prenota</p>
+            <p className="qr-url-text">{L(lang, 'barberiagarofalo.it/prenota', 'barberiagarofalo.it/en/prenota')}</p>
           </div>
         </div>
       </div>
 
       {/* CTA testo sotto */}
       <p className="qr-cta-text">
-        Inquadra il QR con la fotocamera del tuo smartphone e prenota il tuo appuntamento — senza telefonate.
+        {L(
+          lang,
+          'Inquadra il QR con la fotocamera del tuo smartphone e prenota il tuo appuntamento — senza telefonate.',
+          'Point your smartphone camera at the QR code and book your appointment — no phone calls needed.',
+        )}
       </p>
 
       {/* Bottone diretto */}
       <a
-        href={BOOKING_URL}
+        href={bookingUrl}
         className="qr-direct-btn"
-        aria-label="Prenota ora"
+        aria-label={L(lang, 'Prenota ora', 'Book now')}
       >
-        Prenota ora
+        {L(lang, 'Prenota ora', 'Book now')}
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { cancelAppointment } from '@/lib/actions/bookings';
 import { canManageAppointment } from '@/lib/utils/appointments';
-
-const DELETE_WORD = 'Disdici';
-const EDIT_WORD   = 'Modifica';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { translateMessage } from '@/lib/i18n/content-customer';
 
 interface AppointmentActionsProps {
   appointmentId: string;
@@ -18,6 +18,9 @@ type Phase = 'idle' | 'eating' | 'editing' | 'success' | 'error';
 
 export function AppointmentActions({ appointmentId, startsAt }: AppointmentActionsProps) {
   const router = useRouter();
+  const lang = useLang();
+  const DELETE_WORD = L(lang, 'Disdici', 'Cancel');
+  const EDIT_WORD   = L(lang, 'Modifica', 'Edit');
   const [serverPending, startTransition] = useTransition();
   const manageable = canManageAppointment(startsAt);
 
@@ -35,13 +38,13 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
     startTransition(async () => {
       const result = await cancelAppointment(appointmentId);
       if (!result.ok) {
-        toast.error(result.error);
+        toast.error(translateMessage(lang, result.error));
         setPhase('error');
         setTimeout(() => setPhase('idle'), 600);
         return;
       }
       setPhase('success');
-      toast.success('Prenotazione disdetta');
+      toast.success(L(lang, 'Prenotazione disdetta', 'Booking cancelled'));
       setTimeout(() => { router.refresh(); }, 950);
     });
   }
@@ -53,7 +56,7 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
 
   function handleCancel() {
     if (phase !== 'idle' || serverPending) return;
-    const ok = window.confirm("Vuoi disdire questa prenotazione? L'azione non è reversibile.");
+    const ok = window.confirm(L(lang, "Vuoi disdire questa prenotazione? L'azione non è reversibile.", 'Do you want to cancel this booking? This cannot be undone.'));
     if (!ok) return;
     setPhase('eating');
   }
@@ -67,7 +70,9 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
   if (!manageable) {
     return (
       <p className="text-xs text-white/60">
-        Modifica o disdetta non più disponibile (meno di 30 minuti all&apos;appuntamento)
+        {lang === 'en'
+          ? 'Editing or cancelling is no longer available (less than 30 minutes before the appointment)'
+          : <>Modifica o disdetta non più disponibile (meno di 30 minuti all&apos;appuntamento)</>}
       </p>
     );
   }
@@ -176,7 +181,7 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
               >{char}</span>
             );
           })}
-          <span>&nbsp;prenotazione</span>
+          <span>&nbsp;{L(lang, 'prenotazione', 'booking')}</span>
         </span>
       </button>
 
@@ -242,7 +247,7 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
               >{char}</span>
             );
           })}
-          <span>&nbsp;prenotazione</span>
+          <span>&nbsp;{L(lang, 'prenotazione', 'booking')}</span>
         </span>
 
         {serverPending && <span style={{ fontSize: '0.75rem', opacity: 0.7 }}>…</span>}

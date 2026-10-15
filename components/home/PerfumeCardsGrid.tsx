@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { PERFUMES } from '@/lib/data/homepage';
+import { useLang } from '@/components/i18n/LangProvider';
+import { L } from '@/lib/i18n';
+import { perfumes as perfumesFor } from '@/lib/i18n/content-home';
 export interface PerfumeNote {
   label: string;
   value: string;
@@ -40,6 +42,7 @@ function getTargetRect(): FlightRect {
 }
 
 function PerfumeCardFace({ perfume }: { perfume: Perfume }) {
+  const lang = useLang();
   return (
     <>
       <div className="perfume-card-front service-card-luxury">
@@ -52,7 +55,7 @@ function PerfumeCardFace({ perfume }: { perfume: Perfume }) {
         />
         <div className="service-card-body">
           <h3>{perfume.name}</h3>
-          <span>Scopri di più</span>
+          <span>{L(lang, 'Scopri di più', 'Learn more')}</span>
         </div>
       </div>
       <div className="perfume-card-back">
@@ -71,7 +74,8 @@ function PerfumeCardFace({ perfume }: { perfume: Perfume }) {
 }
 
 export function PerfumeCardsGrid({ items }: { items?: Perfume[] }) {
-  const displayPerfumes = items && items.length > 0 ? items : (PERFUMES as unknown as Perfume[]);
+  const lang = useLang();
+  const displayPerfumes = items && items.length > 0 ? items : (perfumesFor(lang) as Perfume[]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [canHover, setCanHover] = useState(false);
   const [flippedMobile, setFlippedMobile] = useState<number | null>(null);

@@ -1,11 +1,13 @@
-import { RegisterForm } from '@/components/auth/RegisterForm';
+import type { Metadata } from 'next';
+import RegisterView from './view';
+import { alternatesFor } from '@/lib/i18n/seo';
 
-export const metadata = { title: 'Registrati', robots: { index: false, follow: true } };
+export const metadata: Metadata = {
+  title: 'Registrati',
+  robots: { index: false, follow: true },
+  alternates: alternatesFor('/register', 'it'),
+};
 
-export default function RegisterPage() {
-  return (
-    <section className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-      <RegisterForm />
-    </section>
-  );
+export default function Page() {
+  return <RegisterView />;
 }

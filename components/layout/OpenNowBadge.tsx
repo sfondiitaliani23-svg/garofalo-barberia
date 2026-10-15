@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { getOpenStatus, type OpenStatus } from '@/lib/utils/open-now';
+import { useLang } from '@/components/i18n/LangProvider';
+import { openLabel } from '@/lib/i18n/content-widgets';
 
 /**
  * Badge "Aperto ora / Chiuso". Calcolato nel browser con gli orari pubblici,
  * poi corretto dal server con ferie e chiusure straordinarie.
  */
 export function OpenNowBadge({ className = '' }: { className?: string }) {
+  const lang = useLang();
   const [status, setStatus] = useState<OpenStatus | null>(null);
 
   useEffect(() => {
@@ -36,7 +39,7 @@ export function OpenNowBadge({ className = '' }: { className?: string }) {
   return (
     <span className={`open-badge open-badge--${tone} ${className}`} role="status" aria-live="polite">
       <span className="open-badge__dot" aria-hidden />
-      {status.label}
+      {openLabel(lang, status.label)}
     </span>
   );
 }
