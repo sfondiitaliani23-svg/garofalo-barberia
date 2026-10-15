@@ -81,7 +81,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ServiceWorkerRegister />
         <PresencePing />
         {children}
-        <Toaster theme="dark" position="top-center" richColors className="!z-[200]" />
+        <Toaster
+          theme="dark"
+          position="top-center"
+          className="!z-[200]"
+          toastOptions={{
+            classNames: {
+              toast: '!rounded-xl !border !border-[#c9a45c]/40 !bg-[#0c0c0c] !text-white/90 !shadow-[0_10px_40px_rgba(0,0,0,0.6)] !text-[13px] !font-medium',
+              success: '!border-[#c9a45c]/60 [&_[data-icon]]:!text-[#c9a45c]',
+              error: '!border-red-500/50 [&_[data-icon]]:!text-red-400',
+              icon: '!text-[#c9a45c]',
+            },
+          }}
+        />
       </body>
     </html>
   );
