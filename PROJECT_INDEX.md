@@ -1,227 +1,39 @@
-# 📑 Garofalo Barberia - Project Index
+# Garofalo Barberia · Indice del progetto
+Ultima modifica: 2026-10-15
 
-## 📁 Struttura Cartelle
+Sito Next.js 15 + Supabase, pubblicato su Vercel. Dominio: barberiagarofalo.it. (La vecchia versione in HTML è in `legacy/`.)
 
-```
-BARBERIA GAROFALO SITO/
-│
-├── 📄 HTML PAGES (6 files)
-│   ├── index.html              → Home page
-│   ├── servizi.html            → Services & pricing
-│   ├── prenota.html            → Booking (Fresha + WhatsApp)
-│   ├── galleria.html           → Gallery with filters
-│   ├── chi-siamo.html          → About company
-│   └── contatti.html           → Contact & location
-│
-├── 📚 CSS
-│   └── css/custom.css          → All custom styles (350+ lines)
-│
-├── ⚙️ JAVASCRIPT
-│   ├── js/config.js            → Site configuration (centralized)
-│   └── js/main.js              → Functionality (280 lines)
-│
-├── 🗂️ ASSETS
-│   ├── assets/gallery/         → Gallery images folder
-│   └── assets/team/            → Team photos folder
-│
-└── 📖 DOCUMENTATION
-    ├── README.md               → Complete documentation
-    ├── QUICK_START.md          → Quick launch guide
-    ├── DEPLOY_VERCEL.md        → Vercel deployment (step-by-step)
-    ├── OPTIMIZATION_GUIDE.md   → Performance tips
-    ├── DELIVERY.md             → Project completion summary
-    ├── PROJECT_INDEX.md        → This file
-    ├── DEPLOYMENT_CHECKLIST.md → Pre-launch checklist
-    └── .gitignore              → Git configuration
-```
+## Cartelle
+| Cartella | Cosa contiene |
+|---|---|
+| `app/(public)` | Pagine pubbliche: home, servizi, prenota, team, galleria, recensioni, journal, FAQ, privacy, contatti, feedback, offerte, lavora con noi |
+| `app/area-cliente` | Area del cliente: appuntamenti, storico, profilo, galleria personale, assistenza |
+| `app/admin` | Pannello admin: dashboard, prenotazioni, clienti, servizi, promozioni, inventario, analytics, staff, messaggi, journal, segnalazioni |
+| `app/api` | Percorsi del server: chat (assistente Eliseo), cron (promemoria, monitor), push, presenza, statistiche, salute |
+| `lib/actions` | Azioni del server (leggono e scrivono su Supabase). Ogni azione controlla il ruolo |
+| `lib/chat` | Assistente Eliseo con IA (Gemini, poi Groq, poi risposte automatiche) |
+| `lib/auth.ts` | Ruoli e controlli di accesso (`requireAdmin`, `requireAdminView`) |
+| `lib/utils/tester-mask.ts` | Nasconde i dati dei clienti al ruolo tester |
+| `supabase/migrations` | Migrazioni del database, in ordine numerico |
+| `tests` | Test automatici (`npm test`) |
+| `scripts` | Script di servizio (migrazioni, backup, prove) |
 
----
+## Ruoli
+- **customer**: il cliente. Chi si iscrive è sempre cliente.
+- **admin**: gestisce tutto.
+- **tester**: vede tutte le schermate dell'admin ma non modifica nulla e non vede i dati personali dei clienti. Si assegna dal SQL Editor di Supabase (vedi `supabase/migrations/012_ruolo_tester.sql`).
+Il ruolo si cambia solo da Supabase (SQL Editor o chiave segreta del server), mai dal browser.
 
-## 🔍 File Guide
+## Comandi
+- `npm run dev`: prova in locale.
+- `npm run build`: controllo prima della pubblicazione.
+- `npm test`: test automatici.
 
-### HTML Pages
+## Documenti storici (possono essere vecchi)
+`README.md`, `QUICK_START.md`, `START_HERE.md`, `DEPLOY_VERCEL.md`, `DEPLOYMENT_CHECKLIST.md`, `OPTIMIZATION_GUIDE.md`, `DELIVERY.md` descrivono la prima versione. Per lo stato reale vale questo file.
 
-| File | Purpose | Key Sections |
-|------|---------|--------------|
-| **index.html** | Landing page | Hero, Quick Services, Reviews, CTA, Footer |
-| **servizi.html** | Service catalog | Uomo, Ragazzo, Bimbo, Barba, Family Package |
-| **prenota.html** | Booking funnel | Fresha embed, WhatsApp CTA, Team cards |
-| **galleria.html** | Portfolio | Filter buttons, Image grid, Privacy notice |
-| **chi-siamo.html** | Company story | History, Values, Team profiles, Mission |
-| **contatti.html** | Contact hub | Maps, Contact form, Hours, Directions |
-
-### Configuration Files
-
-| File | Purpose | What to Edit |
-|------|---------|--------------|
-| **js/config.js** | Centralized settings | Phone, email, address, Fresha URL, GA4 ID |
-| **js/main.js** | All JavaScript | Event handlers, form logic, filters |
-| **css/custom.css** | Styling | Colors, fonts, animations, responsive |
-
----
-
-## 🎨 Color Variables (css/custom.css)
-
-```css
-:root {
-  --forest: #1b4332;      /* Dark green - primary */
-  --gold: #c9a227;        /* Gold accent - highlights */
-  --dark: #0d0d0d;        /* Black - background */
-  --dark-card: #1a1a1a;   /* Dark card - sections */
-}
-```
-
-**To change theme:** Edit these 4 variables in `css/custom.css` line 3-8
-
----
-
-## 🔤 Fonts
-
-- **Headings:** Playfair Display (Google Fonts)
-- **Body text:** Inter (Google Fonts)
-- **Icons:** Inline SVG
-
----
-
-## 📱 Responsive Breakpoints
-
-```css
-Mobile-first:
-- Mobile: 320px - 767px
-- Tablet: 768px - 1023px
-- Desktop: 1024px+
-```
-
-**CSS used:** Tailwind utility classes (md:, lg: prefixes)
-
----
-
-## 🚀 Quick Navigation
-
-### For Developers
-- Want to understand architecture? → Read **README.md**
-- Want to customize colors/fonts? → Edit **css/custom.css**
-- Want to change site data? → Edit **js/config.js**
-- Want to add new features? → Modify **js/main.js**
-
-### For Content Updates
-- Change services/prices → **servizi.html** or **js/config.js**
-- Update team info → **chi-siamo.html** + **js/config.js**
-- Change contact info → **js/config.js**
-- Add gallery images → Place in **assets/gallery/**
-
-### For Deployment
-- Ready to launch? → Follow **DEPLOY_VERCEL.md**
-- Pre-launch checklist? → Use **DEPLOYMENT_CHECKLIST.md**
-- Need quick start? → See **QUICK_START.md**
-
----
-
-## 📊 Key Stats
-
-- **Total files:** 18
-- **HTML pages:** 6
-- **CSS lines:** 350+
-- **JavaScript lines:** 280+
-- **Total code:** ~3,000 lines
-- **Page size:** < 1MB
-- **Dependencies:** 0 (pure HTML/CSS/JS)
-- **External scripts:** 2 (Tailwind CDN, Google Fonts)
-
----
-
-## ✅ Implementation Checklist
-
-### Content Ready
-- [x] 6 HTML pages complete
-- [x] Navigation structure
-- [x] Footer on all pages
-- [x] WhatsApp integration points
-
-### Design Complete
-- [x] Color scheme applied
-- [x] Typography set
-- [x] Responsive layouts
-- [x] Accessibility features
-
-### Functionality Done
-- [x] Mobile menu toggle
-- [x] Gallery filters
-- [x] Contact form
-- [x] WhatsApp links
-- [x] Analytics setup
-
-### Documentation Complete
-- [x] README.md
-- [x] QUICK_START.md
-- [x] DEPLOY_VERCEL.md
-- [x] OPTIMIZATION_GUIDE.md
-- [x] DELIVERY.md
-- [x] This file
-
----
-
-## 🔧 Common Edits
-
-### Change Price
-```html
-<!-- servizi.html or prenota.html -->
-<span class="text-gold font-bold">€18</span>  ← Change number
-```
-
-### Update Phone Number
-```javascript
-// js/config.js line 11
-phone: '+39 333 123 4567',  ← Edit this
-```
-
-### Add Team Member
-```html
-<!-- chi-siamo.html - copy/paste a team card and edit -->
-<h3 class="...">Name</h3>
-<p class="...">Role</p>
-```
-
-### Change Hero Image
-```html
-<!-- index.html - update background image URL -->
-style="background-image: url('path/to/image.jpg')"
-```
-
----
-
-## 📞 Support Resources
-
-| Issue | Solution |
-|-------|----------|
-| "Where do I add my images?" | → `assets/gallery/` or `assets/team/` |
-| "How do I change colors?" | → Edit `:root` in `css/custom.css` |
-| "How do I add services?" | → Edit `servizi.html` or `SITE_CONFIG.services` |
-| "How do I launch?" | → Follow `DEPLOY_VERCEL.md` |
-| "My WhatsApp link doesn't work" | → Check `js/config.js` phone number |
-| "Gallery filter not working" | → Check `js/main.js` has no errors (F12) |
-| "Form not submitting" | → Verify phone number in `js/config.js` |
-
----
-
-## 🎯 Next Steps
-
-1. **Today:** Add your real images to `assets/`
-2. **Today:** Update Fresha URL in `js/config.js`
-3. **Today:** Follow `DEPLOY_VERCEL.md` to launch
-4. **Tomorrow:** Share link on WhatsApp/Instagram
-5. **This week:** Monitor analytics & collect feedback
-
----
-
-## 📈 Version History
-
-- **v1.0 (2024)** - MVP launch: 6 pages, WhatsApp integration, gallery filters
-- **v1.1 (Future)** - Fresha API, email notifications, blog
-- **v2.0 (Future)** - Loyalty program, video testimonials, virtual tour
-
----
-
-**Last updated:** 2024  
-**Status:** ✅ Ready for production  
-**Live URL:** Will be `https://garofalo-barberia.vercel.app` (or custom domain)
+## Da fare
+- Eseguire la migrazione 012 su Supabase e assegnare il ruolo tester a Maurizio.
+- Aggiornare Next.js (15.5.27) con `yarn.lock` allineato.
+- Versione in inglese e pagina Termini: da decidere.
+- Chiavi IA: Gemini da riprovare, Groq da aggiungere.

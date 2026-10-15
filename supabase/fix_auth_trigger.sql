@@ -11,10 +11,7 @@ DECLARE
   resolved_role public.user_role := 'customer';
   meta_role TEXT;
 BEGIN
-  meta_role := NEW.raw_user_meta_data->>'role';
-  IF meta_role IN ('customer', 'admin') THEN
-    resolved_role := meta_role::public.user_role;
-  END IF;
+  -- Il ruolo NON si legge dai dati inviati dall'utente (li scrive lui): chi si iscrive è sempre cliente.
 
   INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (

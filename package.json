@@ -8,6 +8,7 @@
     "build:webpack": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --test tests/*.test.mjs",
     "setup:db": "node scripts/setup-database.mjs",
     "backup": "powershell -ExecutionPolicy Bypass -File scripts/backup.ps1",
     "db:check": "node scripts/check-migrations.mjs",

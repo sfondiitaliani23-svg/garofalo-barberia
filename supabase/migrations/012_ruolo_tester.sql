@@ -10,8 +10,20 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.profiles (id, email, full_name, role)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', ''), 'customer')
-  on conflict (id) do nothing;
+  values (
+    new.id,
+    new.email,
+    nullif(trim(coalesce(
+      nullif(new.raw_user_meta_data->>'full_name', ''),
+      nullif(new.raw_user_meta_data->>'name', ''),
+      nullif(new.raw_user_meta_data->>'given_name', ''),
+      ''
+    )), ''),
+    'customer'
+  )
+  on conflict (id) do update
+    set email = excluded.email,
+        full_name = coalesce(excluded.full_name, public.profiles.full_name);
   return new;
 end;
 $$ language plpgsql security definer set search_path = public;
