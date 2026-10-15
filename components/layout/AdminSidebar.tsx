@@ -86,7 +86,7 @@ export function AdminSidebar() {
   return (
     <>
       {/* ── 1. SIDEBAR DESKTOP (lg+) ── */}
-      <aside className="adm-side hidden lg:flex fixed left-0 top-0 bottom-0 z-30 h-screen w-60 flex-col overflow-y-auto p-4">
+      <aside className="adm-side hidden lg:flex fixed left-0 top-0 bottom-0 z-30 h-screen w-60 flex-col overflow-y-auto overflow-x-hidden p-4">
         <Link href="/admin/dashboard" className="adm-brand" aria-label="Barberia Garofalo · Admin">
           <Image
             src="/assets/sostituisci-immagini/icone/barberia_garofalo.png"

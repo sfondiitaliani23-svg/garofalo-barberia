@@ -11,7 +11,7 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
           Modalità tester: puoi guardare tutte le funzioni, ma non puoi modificare nulla e i dati dei clienti sono nascosti.
         </div>
       )}
-      <AdminProtectedShell>{children}</AdminProtectedShell>
+      <AdminProtectedShell readOnly={tester}>{children}</AdminProtectedShell>
     </>
   );
 }

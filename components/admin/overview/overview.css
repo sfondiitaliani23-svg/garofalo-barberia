@@ -209,7 +209,7 @@
   gap: 0.8rem;
 }
 @media (min-width: 900px) { .ov-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (min-width: 1280px) { .ov-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (min-width: 1700px) { .ov-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .ov-kpi {
   display: flex;
   flex-direction: column;
@@ -235,6 +235,7 @@
 }
 .ov-kpi-body { padding-left: 3.1rem; min-height: 4.6rem; }
 .ov-kpi-label { font-size: 0.78rem; font-weight: 600; color: var(--ov-muted); }
+.ov-kpi-label { overflow-wrap: anywhere; }
 .ov-kpi-value {
   margin: 0.15rem 0 0.3rem;
   font-size: clamp(1.25rem, 2vw, 1.6rem);
@@ -256,7 +257,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   color: var(--ov-muted);
-  white-space: nowrap;
+  flex-wrap: wrap;
 }
 .ov-change--good { color: var(--ov-good); }
 .ov-change--bad { color: var(--ov-bad); }

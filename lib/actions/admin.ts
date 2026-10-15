@@ -1,7 +1,7 @@
 'use server';
 
 import { addDays, addMinutes, parseISO, startOfWeek } from 'date-fns';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { maskForTester } from '@/lib/utils/tester-mask';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
@@ -45,6 +45,7 @@ export interface CreateAdminAppointmentResult {
 }
 
 function revalidateAppointmentPaths() {
+  revalidateTag('admin-overview');
   revalidatePath('/admin/prenotazioni');
   revalidatePath('/admin/prenotazioni/storico');
   revalidatePath('/area-cliente/appuntamenti');

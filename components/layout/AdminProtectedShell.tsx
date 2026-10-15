@@ -21,7 +21,7 @@ const SECTIONS: [string, string][] = [
   ['/admin/segnalazioni', 'Assistenza'],
 ];
 
-export function AdminProtectedShell({ children }: { children: React.ReactNode }) {
+export function AdminProtectedShell({ children, readOnly = false }: { children: React.ReactNode; readOnly?: boolean }) {
   const pathname = usePathname();
   const wide = pathname === '/admin/dashboard';
   const section = wide ? null : SECTIONS.find(([p]) => pathname === p || pathname.startsWith(`${p}/`))?.[1] ?? null;
@@ -31,14 +31,14 @@ export function AdminProtectedShell({ children }: { children: React.ReactNode })
         <div className="contents print:hidden">
           <AdminSidebar />
         </div>
-        <main className="adm-skin relative min-w-0 flex-1 p-6 pb-24 lg:ml-60 lg:p-8 lg:pb-8 print:ml-0 print:p-0">
+        <main className="adm-skin relative min-w-0 flex-1 p-6 pb-24 lg:ml-60 lg:p-8 lg:pb-24 print:ml-0 print:p-0">
           <div className={`mx-auto w-full ${wide ? 'max-w-[1500px]' : 'max-w-5xl'}`}>
             {section && <p className="adm-eyebrow print:hidden">{section}</p>}
             {children}
           </div>
         </main>
         <div className="print:hidden">
-          <AdminFloatingSaveButton />
+          {!readOnly && <AdminFloatingSaveButton />}
         </div>
       </div>
     </AdminSaveProvider>

@@ -1,5 +1,6 @@
 'use server';
 
+import { unstable_cache } from 'next/cache';
 import { requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import {
@@ -126,6 +127,13 @@ export async function saveDemographics(
 
 export async function getAnalyticsStats(): Promise<AnalyticsStats> {
   await requireAdminView();
+  return buildAnalyticsStatsCached();
+}
+
+/** Statistiche del sito: si calcolano una volta ogni 30 secondi e si riusano. */
+const buildAnalyticsStatsCached = unstable_cache(buildAnalyticsStats, ['admin-analytics-stats-v1'], { revalidate: 30, tags: ['admin-analytics'] });
+
+async function buildAnalyticsStats(): Promise<AnalyticsStats> {
   const supabase = await createServiceClient();
   if (!supabase) return emptyStats();
 

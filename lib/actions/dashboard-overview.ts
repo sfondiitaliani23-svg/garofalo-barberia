@@ -2,6 +2,7 @@
 
 import { requireAdminView } from '@/lib/auth';
 import { maskForTester } from '@/lib/utils/tester-mask';
+import { unstable_cache } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
 import type { OverviewData, OverviewApt } from '@/lib/utils/dashboard-overview';
 
@@ -15,6 +16,15 @@ const STATUS_CODE: Record<string, 0 | 1 | 2 | 3> = { confirmed: 0, completed: 1,
  */
 export async function getDashboardOverviewAction(): Promise<OverviewData> {
   const { tester } = await requireAdminView();
+  const data = await buildOverviewCached();
+  // Tester: i nomi dei clienti nelle ultime prenotazioni restano nascosti.
+  return tester ? { ...data, recent: data.recent.map((r) => ({ ...r, name: 'Cliente' })) } : data;
+}
+
+/** I conti pesanti si fanno una volta ogni 30 secondi e si riusano (la pagina prima ricaricava tutto a ogni apertura). */
+const buildOverviewCached = unstable_cache(buildOverview, ['admin-overview-v1'], { revalidate: 30, tags: ['admin-overview'] });
+
+async function buildOverview(): Promise<OverviewData> {
   const now = new Date();
   const empty: OverviewData = { now: now.toISOString(), services: [], barbers: [], apts: [], customers: [], recent: [], unread: 0 };
   const supabase = await createServiceClient();
@@ -40,17 +50,23 @@ export async function getDashboardOverviewAction(): Promise<OverviewData> {
 
   // Appuntamenti a pagine da 1000 (limite di Supabase)
   type Row = { starts_at: string; status: string; discount_cents: number | null; service_id: string; barber_id: string; customer_id: string | null; customer_phone: string | null };
+  // Prima si contano le righe, poi tutte le pagine si chiedono insieme (prima si aspettava una pagina alla volta).
   const rows: Row[] = [];
-  for (let start = 0; start < 40000; start += 1000) {
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('starts_at, status, discount_cents, service_id, barber_id, customer_id, customer_phone')
-      .gte('starts_at', from)
-      .order('starts_at', { ascending: true })
-      .range(start, start + 999);
-    if (error || !data) break;
-    rows.push(...(data as Row[]));
-    if (data.length < 1000) break;
+  const { count } = await supabase.from('appointments').select('id', { head: true, count: 'exact' }).gte('starts_at', from);
+  const pages = Math.min(40, Math.max(1, Math.ceil((count ?? 0) / 1000)));
+  const chunks = await Promise.all(
+    Array.from({ length: pages }, (_, i) =>
+      supabase
+        .from('appointments')
+        .select('starts_at, status, discount_cents, service_id, barber_id, customer_id, customer_phone')
+        .gte('starts_at', from)
+        .order('starts_at', { ascending: true })
+        .range(i * 1000, i * 1000 + 999)
+    )
+  );
+  for (const c of chunks) {
+    if (c.error || !c.data) break;
+    rows.push(...(c.data as Row[]));
   }
 
   const services = (servicesRes.data ?? []).map((s) => ({
@@ -90,7 +106,7 @@ export async function getDashboardOverviewAction(): Promise<OverviewData> {
     const brb = (Array.isArray(a.barber) ? a.barber[0] : a.barber) as { name?: string } | null;
     return {
       id: a.id as string,
-      name: tester ? 'Cliente' : ((a.customer_name as string) ?? 'Cliente'),
+      name: (a.customer_name as string) ?? 'Cliente',
       service: svc?.name ?? '',
       barber: brb?.name ?? '',
       amount: Math.max(0, (svc?.price_cents ?? 0) - ((a.discount_cents as number) ?? 0)),
