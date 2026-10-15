@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { Fragment, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { createIssueReport, deleteIssueReport, updateReportStatus } from '@/lib/actions/issue-reports';
 import { SITE_AREAS, type IssueReport } from '@/lib/data/site-areas';
+import { IssueAssistantPanel } from '@/components/admin/IssueAssistantPanel';
 import { cn } from '@/lib/utils';
 
 type Priority = IssueReport['priority'];
@@ -53,7 +54,7 @@ function areaName(id: string) {
   return SITE_AREAS.find((a) => a.id === id)?.name ?? id;
 }
 
-export function IssueReportWizard({ initialReports }: { initialReports: IssueReport[] }) {
+export function IssueReportWizard({ initialReports, readOnly = false }: { initialReports: IssueReport[]; readOnly?: boolean }) {
   const [reports, setReports] = useState(initialReports);
   const [step, setStep] = useState(0);
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -305,7 +306,7 @@ export function IssueReportWizard({ initialReports }: { initialReports: IssueRep
                 )}
               </dl>
               <p className="mt-3 text-xs text-white/45">
-                La segnalazione viene salvata come &quot;Aperta&quot;. Quando il problema è sistemato, la segni come risolta qui sotto.
+                La segnalazione viene salvata come &quot;Aperta&quot;. Dopo l'invio puoi chiedere all'assistente della categoria di analizzarla. Non scrivere nomi o telefoni dei clienti.
               </p>
             </div>
           )}
@@ -370,7 +371,8 @@ export function IssueReportWizard({ initialReports }: { initialReports: IssueRep
                   const st = STATUS[r.status] ?? STATUS.in_analisi;
                   const closed = r.status === 'risolto_manuale' || r.status === 'chiuso';
                   return (
-                    <tr key={r.id} className="border-b border-white/5 align-top">
+                    <Fragment key={r.id}>
+                    <tr className="border-b border-white/5 align-top">
                       <td className="px-4 py-3 text-white/60">{r.areaName}</td>
                       <td className="px-4 py-3">
                         <p className="font-semibold text-white">{r.title}</p>
@@ -408,6 +410,14 @@ export function IssueReportWizard({ initialReports }: { initialReports: IssueRep
                         </div>
                       </td>
                     </tr>
+                    {!closed && (
+                      <tr className="border-b border-white/5">
+                        <td colSpan={6} className="px-4 pb-4">
+                          <IssueAssistantPanel reportId={r.id} initial={r.aiProposal} readOnly={readOnly} />
+                        </td>
+                      </tr>
+                    )}
+                    </Fragment>
                   );
                 })}
               </tbody>

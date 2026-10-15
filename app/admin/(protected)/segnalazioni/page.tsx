@@ -1,3 +1,4 @@
+import { getProfile } from '@/lib/auth';
 import { getIssueReports } from '@/lib/actions/issue-reports';
 import { IssueReportWizard } from '@/components/admin/IssueReportWizard';
 
@@ -8,5 +9,6 @@ export const metadata = {
 
 export default async function AdminSegnalazioniPage() {
   const initialReports = await getIssueReports();
-  return <IssueReportWizard initialReports={initialReports} />;
+  const me = await getProfile();
+  return <IssueReportWizard initialReports={initialReports} readOnly={me?.role === 'tester'} />;
 }

@@ -37,11 +37,11 @@ function modelsFor(provider: AiProvider, preferred?: string) {
 }
 
 /** Prova i modelli del servizio uno dopo l'altro. Chiave sbagliata (401/403) o limite (429): si smette subito. */
-async function callWithModels(provider: AiProvider, key: string, preferred: string | undefined, messages: Msg[], timeoutMs: number, maxModels = 3) {
+async function callWithModels(provider: AiProvider, key: string, preferred: string | undefined, messages: Msg[], timeoutMs: number, maxModels = 3, maxTokens = 400) {
   let last: Error | null = null;
   for (const model of modelsFor(provider, preferred).slice(0, maxModels)) {
     try {
-      return { text: await callProvider(provider, key, model, messages, timeoutMs), model };
+      return { text: await callProvider(provider, key, model, messages, timeoutMs, maxTokens), model };
     } catch (e) {
       last = e as Error;
       if (/\b(401|403|429)\b/.test(last.message)) break;
@@ -137,21 +137,21 @@ ${facts}`;
 
 type Msg = { role: 'system' | 'user' | 'assistant'; content: string };
 
-async function callProvider(provider: AiProvider, key: string, model: string, messages: Msg[], timeoutMs: number): Promise<string> {
+async function callProvider(provider: AiProvider, key: string, model: string, messages: Msg[], timeoutMs: number, maxTokens = 400): Promise<string> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(ENDPOINTS[provider], {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 400 }),
+      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: maxTokens }),
       signal: ctrl.signal,
     });
     if (!res.ok) throw new Error(`${provider} ${res.status}`);
     const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const text = data.choices?.[0]?.message?.content?.trim();
     if (!text) throw new Error(`${provider} risposta vuota`);
-    return text.slice(0, 1500);
+    return text.slice(0, maxTokens > 400 ? 6000 : 1500);
   } finally {
     clearTimeout(t);
   }
@@ -202,4 +202,24 @@ export async function testProvider(provider: AiProvider, key: string, model?: st
   } catch (e) {
     return { ok: false, error: (e as Error).message };
   }
+}
+
+/** Richiesta libera all'AI gratuita (Gemini → Groq). Torna null se nessun servizio risponde. Usata dagli assistenti delle segnalazioni. */
+export async function askAiRaw(messages: { role: 'system' | 'user' | 'assistant'; content: string }[], maxTokens = 1200): Promise<{ text: string; provider: AiProvider } | null> {
+  const cfg = await readAiConfig();
+  if (!cfg.enabled) return null;
+  const chain: { provider: AiProvider; key?: string; model: string }[] = [
+    { provider: 'gemini', key: cfg.geminiKey, model: cfg.geminiModel || DEFAULT_MODELS.gemini },
+    { provider: 'groq', key: cfg.groqKey, model: cfg.groqModel || DEFAULT_MODELS.groq },
+  ];
+  for (const step of chain) {
+    if (!step.key) continue;
+    try {
+      const { text } = await callWithModels(step.provider, step.key, step.model, messages, 20000, 2, maxTokens);
+      return { text, provider: step.provider };
+    } catch (e) {
+      console.warn('[issue-ai]', step.provider, (e as Error).message);
+    }
+  }
+  return null;
 }

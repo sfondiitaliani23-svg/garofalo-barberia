@@ -21,88 +21,6 @@ export interface CreateIssueInput {
   technicalDetails?: string;
 }
 
-// Simula l'azione dei 2 Agenti IA dedicati per risolvere istantaneamente il problema
-function executeAIAgentsForIssue(areaInfo: SiteAreaInfo, input: CreateIssueInput): {
-  status: 'risolto_ia' | 'manuale_richiesto';
-  logs: AIAgentLog[];
-  summary: string;
-} {
-  const agent1 = areaInfo.agent1;
-  const agent2 = areaInfo.agent2;
-  const now = new Date();
-  
-  const isCriticalHardwareOrCustomDev = input.priority === 'critica' && 
-    (input.description.toLowerCase().includes('hardware') || 
-     input.description.toLowerCase().includes('totale azzeramento') ||
-     input.description.toLowerCase().includes('integrazione esterna server'));
-
-  const logs: AIAgentLog[] = [
-    {
-      timestamp: new Date(now.getTime() + 200).toISOString(),
-      agentId: agent1.id,
-      agentName: agent1.name,
-      step: 'Fase 1: Scansione Diagnostica',
-      action: `Scansione completata nell'area "${areaInfo.name}". Analisi parametri e log del sistema.`,
-      status: 'working',
-      details: `Specializzazione agent: ${agent1.specialization}`,
-    },
-  ];
-
-  if (!isCriticalHardwareOrCustomDev) {
-    logs.push({
-      timestamp: new Date(now.getTime() + 600).toISOString(),
-      agentId: agent1.id,
-      agentName: agent1.name,
-      step: 'Fase 1: Auto-Correzione Parametri',
-      action: `Applicata correzione istantanea dei file di stato e sanificazione cache per: "${input.title}".`,
-      status: 'fixed',
-      details: 'Parametri e valori configurazione riallineati con successo.',
-    });
-
-    logs.push({
-      timestamp: new Date(now.getTime() + 1100).toISOString(),
-      agentId: agent2.id,
-      agentName: agent2.name,
-      step: 'Fase 2: Audit di Sicurezza & Risoluzione Avanzata',
-      action: `Test sintetico eseguito. ${agent2.name} ha confermato che l'area "${areaInfo.name}" è ora al 100% operativa e protetta.`,
-      status: 'success',
-      details: `Specializzazione agent: ${agent2.specialization}`,
-    });
-
-    return {
-      status: 'risolto_ia',
-      logs,
-      summary: `I 2 Agenti IA (${agent1.name} e ${agent2.name}) hanno analizzato e RISOLTO il problema autonomamente in 1.2s. Nessun intervento manuale richiesto su codice.`,
-    };
-  } else {
-    logs.push({
-      timestamp: new Date(now.getTime() + 600).toISOString(),
-      agentId: agent1.id,
-      agentName: agent1.name,
-      step: 'Fase 1: Rilevato Limite di Autonomia',
-      action: `Rilevato problema strutturale/critico che richiede modifiche di codice o credenziali esterne.`,
-      status: 'warning',
-      details: 'L\'agente 1 ha stabilizzato l\'area applicando la modalità provvisoria (Safe Mode).',
-    });
-
-    logs.push({
-      timestamp: new Date(now.getTime() + 1100).toISOString(),
-      agentId: agent2.id,
-      agentName: agent2.name,
-      step: 'Fase 2: Inoltro al Contenitore di Sviluppo',
-      action: `${agent2.name} ha archiviato la segnalazione nel contenitore Admin come "Caso Critico". Il titolare o lo sviluppatore potranno intervenire manualmenente.`,
-      status: 'info',
-      details: 'Segnalazione mantenuta in memoria nel contenitore per intervento nel peggiore dei casi.',
-    });
-
-    return {
-      status: 'manuale_richiesto',
-      logs,
-      summary: `I 2 Agenti IA hanno applicato la protezione temporanea, ma trattandosi di un caso critico/strutturale la segnalazione è stata posizionata nel contenitore per l'intervento manuale (nel peggiore dei casi).`,
-    };
-  }
-}
-
 export async function getIssueReports(): Promise<IssueReport[]> {
   try {
     await requireAdmin();
@@ -134,6 +52,7 @@ export async function getIssueReports(): Promise<IssueReport[]> {
           aiLogs: item.ai_logs || [],
           aiResolutionSummary: item.ai_resolution_summary,
           developerNotes: item.developer_notes,
+          aiProposal: item.ai_proposal ?? null,
           assignedAgents: item.assigned_agents || [
             SITE_AREAS.find((a) => a.id === item.area_id)?.agent1 || SITE_AREAS[0].agent1,
             SITE_AREAS.find((a) => a.id === item.area_id)?.agent2 || SITE_AREAS[0].agent2,
@@ -215,56 +134,6 @@ export async function createIssueReport(input: CreateIssueInput): Promise<{
 
   revalidatePath('/admin/segnalazioni');
   return { ok: true, report: newReport };
-}
-
-export async function reRunAIAgents(reportId: string): Promise<{ ok: boolean; report?: IssueReport; error?: string }> {
-  await requireAdmin();
-
-  const index = memoryReportsStore.findIndex((r) => r.id === reportId);
-  if (index === -1) {
-    return { ok: false, error: 'Segnalazione non trovata.' };
-  }
-
-  const existing = memoryReportsStore[index];
-  const areaInfo = SITE_AREAS.find((a) => a.id === existing.areaId) || SITE_AREAS[0];
-
-  const { status, logs, summary } = executeAIAgentsForIssue(areaInfo, {
-    areaId: existing.areaId,
-    title: existing.title,
-    description: existing.description,
-    priority: existing.priority,
-    technicalDetails: existing.technicalDetails,
-  });
-
-  const updated: IssueReport = {
-    ...existing,
-    status,
-    updatedAt: new Date().toISOString(),
-    aiLogs: [...existing.aiLogs, ...logs],
-    aiResolutionSummary: summary,
-  };
-
-  memoryReportsStore[index] = updated;
-
-  const supabase = await createClient();
-  if (supabase) {
-    try {
-      await supabase
-        .from('site_issues')
-        .update({
-          status: updated.status,
-          updated_at: updated.updatedAt,
-          ai_logs: updated.aiLogs,
-          ai_resolution_summary: updated.aiResolutionSummary,
-        })
-        .eq('id', reportId);
-    } catch {
-      // ignore
-    }
-  }
-
-  revalidatePath('/admin/segnalazioni');
-  return { ok: true, report: updated };
 }
 
 export async function updateReportStatus(

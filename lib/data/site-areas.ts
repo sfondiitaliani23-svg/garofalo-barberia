@@ -39,6 +39,7 @@ export interface IssueReport {
   aiLogs: AIAgentLog[];
   aiResolutionSummary?: string;
   developerNotes?: string;
+  aiProposal?: import('@/lib/issues/assistants').IssueAnalysis | null;
   assignedAgents: [AIAgentDefinition, AIAgentDefinition];
 }
 
