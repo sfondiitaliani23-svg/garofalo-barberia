@@ -135,8 +135,8 @@ ${snap.text}`;
     ],
     1400
   );
-  if (!ai) {
-    return { ok: false, error: 'L\'assistente non è raggiungibile adesso (servizio IA non disponibile o chiavi mancanti). Riprova tra poco: la segnalazione resta aperta.' };
+  if ('error' in ai) {
+    return { ok: false, error: `L'assistente non è raggiungibile adesso (${ai.error}). Riprova tra poco: la segnalazione resta aperta.` };
   }
   const parsed = parseAnalysis(ai.text, def, snap.ids);
   if (!parsed) return { ok: false, error: 'L\'assistente ha risposto in modo confuso. Riprova.' };

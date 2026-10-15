@@ -205,9 +205,10 @@ export async function testProvider(provider: AiProvider, key: string, model?: st
 }
 
 /** Richiesta libera all'AI gratuita (Gemini → Groq). Torna null se nessun servizio risponde. Usata dagli assistenti delle segnalazioni. */
-export async function askAiRaw(messages: { role: 'system' | 'user' | 'assistant'; content: string }[], maxTokens = 1200): Promise<{ text: string; provider: AiProvider } | null> {
+export async function askAiRaw(messages: { role: 'system' | 'user' | 'assistant'; content: string }[], maxTokens = 1200): Promise<{ text: string; provider: AiProvider } | { error: string }> {
   const cfg = await readAiConfig();
-  if (!cfg.enabled) return null;
+  if (!cfg.enabled) return { error: 'L\'IA è spenta nelle impostazioni.' };
+  const errors: string[] = [];
   const chain: { provider: AiProvider; key?: string; model: string }[] = [
     { provider: 'gemini', key: cfg.geminiKey, model: cfg.geminiModel || DEFAULT_MODELS.gemini },
     { provider: 'groq', key: cfg.groqKey, model: cfg.groqModel || DEFAULT_MODELS.groq },
@@ -219,7 +220,8 @@ export async function askAiRaw(messages: { role: 'system' | 'user' | 'assistant'
       return { text, provider: step.provider };
     } catch (e) {
       console.warn('[issue-ai]', step.provider, (e as Error).message);
+      errors.push((e as Error).message);
     }
   }
-  return null;
+  return { error: errors.length ? errors.join(' · ') : 'Nessuna chiave IA salvata.' };
 }
