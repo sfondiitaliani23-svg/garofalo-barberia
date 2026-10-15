@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -348,80 +348,62 @@ export function IssueReportWizard({ initialReports, readOnly = false }: { initia
 
       {/* Elenco segnalazioni */}
       <section aria-labelledby="rep-list">
-        <h2 id="rep-list" className="text-lg font-semibold text-white">
-          Le tue segnalazioni <span className="text-sm font-normal text-white/45">({reports.length})</span>
+        <h2 id="rep-list" className="text-xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+          Le tue segnalazioni <span className="font-sans text-sm text-white/40">({reports.length})</span>
         </h2>
         {reports.length === 0 ? (
           <p className="mt-3 text-sm text-white/45">Nessuna segnalazione inviata.</p>
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-xl border border-white/10 bg-[#0c0c0c]">
-            <table className="w-full min-w-[760px] border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-white/45">
-                  <th className="px-4 py-3 font-semibold">Area</th>
-                  <th className="px-4 py-3 font-semibold">Oggetto</th>
-                  <th className="px-4 py-3 font-semibold">Urgenza</th>
-                  <th className="px-4 py-3 font-semibold">Stato</th>
-                  <th className="px-4 py-3 font-semibold">Data</th>
-                  <th className="px-4 py-3 text-right font-semibold">Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reports.map((r) => {
-                  const st = STATUS[r.status] ?? STATUS.in_analisi;
-                  const closed = r.status === 'risolto_manuale' || r.status === 'chiuso';
-                  return (
-                    <Fragment key={r.id}>
-                    <tr className="border-b border-white/5 align-top">
-                      <td className="px-4 py-3 text-white/60">{r.areaName}</td>
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-white">{r.title}</p>
-                        <p className="mt-0.5 line-clamp-2 max-w-md text-xs text-white/50">{r.description}</p>
-                      </td>
-                      <td className="px-4 py-3 capitalize text-white/70">{r.priority}</td>
-                      <td className="px-4 py-3">
-                        <span className={cn('inline-flex rounded-full border px-2.5 py-0.5 text-[11px] font-semibold', st.cls)}>{st.label}</span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-white/55">
-                        {new Date(r.createdAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Rome' })}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() => setStatus(r, closed ? 'in_analisi' : 'risolto_manuale')}
-                            disabled={pending}
-                            className={cn(
-                              'rounded-full border px-3 py-1 text-[11px] font-semibold transition disabled:opacity-40',
-                              closed ? 'border-white/15 text-white/55 hover:text-white' : 'border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/10'
-                            )}
-                          >
-                            {closed ? 'Riapri' : 'Segna risolta'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => remove(r)}
-                            disabled={pending}
-                            className="rounded-md p-2 text-red-400/80 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
-                            aria-label={`Elimina ${r.title}`}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {!closed && (
-                      <tr className="border-b border-white/5">
-                        <td colSpan={6} className="px-4 pb-4">
-                          <IssueAssistantPanel reportId={r.id} initial={r.aiProposal} readOnly={readOnly} />
-                        </td>
-                      </tr>
-                    )}
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="mt-4 space-y-4">
+            {reports.map((r) => {
+              const st = STATUS[r.status] ?? STATUS.in_analisi;
+              const pr = PRIORITIES.find((x) => x.id === r.priority);
+              const closed = r.status === 'risolto_manuale' || r.status === 'chiuso';
+              return (
+                <article key={r.id} className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-[#121212] to-[#0a0a0a]">
+                  <div className="flex flex-wrap items-center gap-2 px-5 pt-4 text-[11px]">
+                    <span className={cn('rounded-full border px-2.5 py-0.5 font-semibold', st.cls)}>{st.label}</span>
+                    {pr && <span className={cn('rounded-full border px-2.5 py-0.5 font-semibold uppercase tracking-wider', pr.cls)}>{pr.label}</span>}
+                    <span className="text-white/45">{r.areaName}</span>
+                    <span className="ml-auto text-white/40">
+                      {new Date(r.createdAt).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Rome' })}
+                    </span>
+                  </div>
+                  <div className="px-5 pb-4 pt-2">
+                    <h3 className="text-lg font-semibold text-white">{r.title}</h3>
+                    <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-white/60">{r.description}</p>
+                  </div>
+                  {!closed && (
+                    <div className="border-t border-white/8 bg-black/30 px-5 py-4">
+                      <IssueAssistantPanel reportId={r.id} initial={r.aiProposal} readOnly={readOnly} />
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-2 border-t border-white/8 px-5 py-3">
+                    <button
+                      type="button"
+                      onClick={() => remove(r)}
+                      disabled={pending}
+                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-white/40 transition hover:bg-red-500/10 hover:text-red-400 disabled:opacity-40"
+                      aria-label={`Elimina ${r.title}`}
+                    >
+                      <Trash2 size={13} aria-hidden /> Elimina
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStatus(r, closed ? 'in_analisi' : 'risolto_manuale')}
+                      disabled={pending}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-semibold transition disabled:opacity-40',
+                        closed ? 'border border-white/15 text-white/60 hover:text-white' : 'bg-gold text-black hover:bg-gold-light'
+                      )}
+                    >
+                      {!closed && <Check size={13} aria-hidden />}
+                      {closed ? 'Riapri' : 'Segna risolta'}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </section>

@@ -56,7 +56,7 @@ export function IssueAssistantPanel({
   }
 
   return (
-    <div className="rounded-lg border border-gold/20 bg-gold/[0.04] p-4">
+    <div>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="inline-flex items-center gap-2 text-sm font-semibold text-gold">
           <Bot size={16} aria-hidden /> {analysis ? analysis.assistant : 'Assistente IA'}
@@ -67,7 +67,7 @@ export function IssueAssistantPanel({
             type="button"
             onClick={ask}
             disabled={pending}
-            className="inline-flex items-center gap-1.5 rounded-full border border-gold/50 px-3 py-1 text-[11px] font-semibold text-gold transition hover:bg-gold/10 disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-full border border-gold/60 bg-gold/10 px-4 py-1.5 text-xs font-semibold text-gold transition hover:bg-gold/20 disabled:opacity-40"
           >
             {pending && !busyId ? <Loader2 size={12} className="animate-spin" aria-hidden /> : <Sparkles size={12} aria-hidden />}
             {analysis ? 'Analizza di nuovo' : 'Chiedi all\'assistente'}
@@ -76,7 +76,7 @@ export function IssueAssistantPanel({
       </div>
 
       {!analysis && (
-        <p className="mt-2 text-xs text-white/50">
+        <p className="mt-2 text-xs leading-relaxed text-white/45">
           L&apos;assistente legge la segnalazione e i dati del salone (senza nomi né telefoni dei clienti), spiega il problema e prepara la soluzione. Non cambia nulla finché non approvi tu.
         </p>
       )}
@@ -95,7 +95,7 @@ export function IssueAssistantPanel({
             <div className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-white/45">Soluzioni pronte (partono solo se approvi)</p>
               {analysis.proposals.map((p) => (
-                <div key={p.id} className="rounded-md border border-white/10 bg-black/30 p-3">
+                <div key={p.id} className="rounded-xl border border-gold/20 bg-gold/[0.05] p-4">
                   <p className="font-semibold text-white">{p.label}</p>
                   {p.why && <p className="mt-0.5 text-xs text-white/55">{p.why}</p>}
                   {p.kind === 'note_for_developer' && <p className="mt-1 whitespace-pre-wrap rounded bg-white/5 p-2 text-xs text-white/70">{String(p.params.text)}</p>}
