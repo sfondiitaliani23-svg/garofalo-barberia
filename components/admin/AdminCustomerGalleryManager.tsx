@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Plus, Trash2, Calendar, Mail, Phone, Image as ImageIcon, Upload, Link as LinkIcon, FileImage, AlertCircle, X } from 'lucide-react';
 import type { Profile } from '@/types/database';
-import { addCustomerPhoto, deleteCustomerPhoto } from '@/lib/actions/customer-gallery';
+import { addCustomerPhoto, deleteCustomerPhoto, setCustomerAvatar } from '@/lib/actions/customer-gallery';
 import { toast } from 'sonner';
 
 interface AdminCustomerGalleryManagerProps {
@@ -63,7 +63,7 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
 
   // URL Tab state
   const [photoUrl, setPhotoUrl] = useState('');
-  const [caption, setCaption] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(customer.avatar_url ?? null);
   
   // File Tab state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -74,21 +74,23 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
-  // Gestione aggiunta tramite URL singolo
-  async function handleAddPhotoUrl(e: React.FormEvent) {
+  // Aggiorna l'immagine di profilo del cliente con l'indirizzo inserito
+  async function handleSetAvatar(e: React.FormEvent) {
     e.preventDefault();
     if (!photoUrl.trim()) return;
 
     setLoading(true);
     try {
-      const newPhoto = await addCustomerPhoto(customer.id, photoUrl.trim(), caption.trim());
-      setPhotos([newPhoto, ...photos]);
+      const r = await setCustomerAvatar(customer.id, photoUrl.trim());
+      if (!r.ok) {
+        toast.error(r.error ?? "Non sono riuscito ad aggiornare l'immagine.");
+        return;
+      }
+      setAvatarUrl(r.url ?? photoUrl.trim());
       setPhotoUrl('');
-      setCaption('');
-      toast.success('Foto aggiunta con successo alla galleria!');
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.message || 'Errore durante l\'inserimento della foto.');
+      toast.success('Immagine di profilo aggiornata.');
+    } catch {
+      toast.error("Non sono riuscito ad aggiornare l'immagine. Riprova.");
     } finally {
       setLoading(false);
     }
@@ -142,8 +144,9 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
         
         // 2. Salva nel database
         const fileCaption = fileCaptions[file.name] || '';
-        const newPhoto = await addCustomerPhoto(customer.id, compressedBase64, fileCaption.trim());
-        uploadedPhotos.push(newPhoto);
+        const r = await addCustomerPhoto(customer.id, compressedBase64, fileCaption.trim());
+        if (!r.ok) throw new Error(r.error);
+        uploadedPhotos.push(r.photo);
         uploadedCount++;
       } catch (err: any) {
         console.error(`Errore nel caricamento del file ${file.name}:`, err);
@@ -170,7 +173,11 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
     }
 
     try {
-      await deleteCustomerPhoto(photoId, customer.id);
+      const r = await deleteCustomerPhoto(photoId, customer.id);
+      if (!r.ok) {
+        toast.error(r.error ?? 'Non sono riuscito a eliminare la foto.');
+        return;
+      }
       setPhotos(photos.filter(p => p.id !== photoId));
       toast.success('Foto eliminata con successo.');
     } catch (err: any) {
@@ -229,7 +236,7 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
       {/* Add New Photos Container */}
       <div className="rounded-xl border border-white/10 bg-[#0e0e0e] p-6 shadow-xl space-y-6">
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <h2 className="font-semibold text-gold text-base uppercase tracking-wider">Aggiungi Foto</h2>
+          <h2 className="font-semibold text-gold text-base uppercase tracking-wider">{activeTab === 'file' ? 'Foto per la galleria' : 'Immagine di profilo'}</h2>
           
           {/* Toggles per il tipo di caricamento */}
           <div className="flex rounded-lg bg-[#161616] p-1 border border-white/5">
@@ -255,7 +262,7 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
               }`}
             >
               <LinkIcon size={14} />
-              Inserisci URL
+              Immagine di profilo
             </button>
           </div>
         </div>
@@ -378,7 +385,21 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
 
         {/* Tab 2: Inserimento URL */}
         {activeTab === 'url' && (
-          <form onSubmit={handleAddPhotoUrl} className="space-y-4">
+          <form onSubmit={handleSetAvatar} className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-gold/40 bg-black/40">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Immagine di profilo attuale" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm font-bold text-gold">
+                    {(customer.full_name || '?').trim().charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-white/60">
+                {avatarUrl ? 'Immagine di profilo attuale. Inserisci un nuovo indirizzo per cambiarla.' : 'Questo cliente non ha ancora un\'immagine di profilo.'}
+              </p>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="photo_url" className="block text-xs font-semibold text-white/60 uppercase tracking-widest mb-1.5">
@@ -391,20 +412,6 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
                   value={photoUrl}
                   onChange={e => setPhotoUrl(e.target.value)}
                   placeholder="https://esempio.com/foto.jpg"
-                  className="w-full rounded-lg border border-white/10 bg-[#161616] px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:border-gold/30 focus:outline-none focus:ring-1 focus:ring-gold/30"
-                  disabled={loading}
-                />
-              </div>
-              <div>
-                <label htmlFor="caption" className="block text-xs font-semibold text-white/60 uppercase tracking-widest mb-1.5">
-                  Didascalia (Opzionale)
-                </label>
-                <input
-                  id="caption"
-                  type="text"
-                  value={caption}
-                  onChange={e => setCaption(e.target.value)}
-                  placeholder="Es. Taglio sfumato medio con riga"
                   className="w-full rounded-lg border border-white/10 bg-[#161616] px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:border-gold/30 focus:outline-none focus:ring-1 focus:ring-gold/30"
                   disabled={loading}
                 />
@@ -435,7 +442,7 @@ export function AdminCustomerGalleryManager({ customer, initialPhotos }: AdminCu
                 className="inline-flex items-center gap-2 rounded-lg bg-gold hover:bg-gold-light px-5 py-2.5 text-sm font-bold text-black shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus size={16} />
-                {loading ? 'Salvataggio...' : 'Aggiungi alla galleria'}
+                {loading ? 'Aggiorno...' : 'Aggiorna immagine di profilo'}
               </button>
             </div>
           </form>
