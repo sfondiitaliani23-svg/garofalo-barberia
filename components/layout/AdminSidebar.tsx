@@ -238,14 +238,15 @@ export function AdminSidebar() {
 
             {/* Footer Overlay - Pulsante Esci */}
             <div className="mt-8 border-t border-white/10 pt-4">
-              <form action={signOut} onSubmit={closeMenu}>
-                <button
-                  type="submit"
+              {/* Il menu resta aperto finché l'uscita non finisce: così si vede "Uscita in corso…" e un solo tocco basta. */}
+              <form action={signOut}>
+                <LogoutSubmit
+                  pendingLabel="Uscita in corso…"
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-600/10 border border-red-500/20 px-4 py-3.5 text-base font-bold text-red-500 hover:bg-red-600/20 transition"
                 >
                   <LogOut size={20} />
                   Disconnetti Account
-                </button>
+                </LogoutSubmit>
               </form>
             </div>
           </div>
