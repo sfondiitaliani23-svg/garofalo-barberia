@@ -20,7 +20,8 @@ Repository: sfondiitaliani23-svg/garofalo-barberia. Unico amministratore: Luigi 
 
 ## Controlli prima di un push
 - `npx tsc --noEmit`
-- `npm test` (70 test; usa `tests/register-alias.mjs` per capire gli indirizzi `@/…`). I test importano i file `.ts` direttamente con Node 22: i moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
+- `npm test` (89 test; usa `tests/register-alias.mjs` per capire gli indirizzi `@/…`). I test importano i file `.ts` direttamente con Node 22: i moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
+- `tests/booking-e2e.test.mjs`: prenotazione vera contro un Postgres in memoria (PGlite) con le migrazioni di `supabase/migrations`. Finto Supabase in `tests/helpers/fake-supabase.mjs`, finti moduli in `tests/mocks/`. Se aggiungi una migrazione che tocca prenotazioni, aggiungila alla lista `MIGRATIONS` lì. Nei test `NEXT_PUBLIC_SUPABASE_URL` va impostato, altrimenti il sito usa gli orari di ripiego senza database.
 - `tests/links.test.mjs` boccia `revalidatePath` e link verso pagine che non esistono.
 - `next build` non funziona nel sandbox (non raggiunge Google Fonts): il controllo vero è il deploy su GitHub Actions.
 - Non c'è configurazione eslint.
