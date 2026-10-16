@@ -498,30 +498,8 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
 
               {step === 2 && (
                 <section className="space-y-4">
-                  <div className="bg-[#f3ead6] px-5 py-4 font-mono text-[#1a140c]">
-                    <p className="text-center text-xs font-bold uppercase tracking-[0.2em]">Servizi</p>
-                    <div className="my-3 border-t-2 border-dashed border-[#1a140c]" />
-                    {chosenServices.length === 0 ? (
-                      <p className="text-sm opacity-60">Scegli almeno un servizio qui sotto.</p>
-                    ) : (
-                      <ul className="space-y-1.5 text-sm">
-                        {chosenServices.map((s) => (
-                          <li key={s.id} className="flex justify-between gap-3">
-                            <span>1 x {s.name}</span>
-                            <span className="font-bold">{s.price_cents != null ? (s.price_cents / 100).toFixed(2).replace('.', ',') : ''}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <div className="my-3 border-t-2 border-[#1a140c]" />
-                    <div className="flex justify-between text-base font-bold">
-                      <span>TOTALE</span>
-                      <span>{euro(total)}</span>
-                    </div>
-                  </div>
-
                   <div>
-                    <span className={label}>Tocca per aggiungere o togliere</span>
+                    <span className={label}>Scegli i servizi</span>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {services.map((sv) => {
                         const on = selectedServiceIds.includes(sv.id);
@@ -538,10 +516,14 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
                             className={`h-9 border px-3.5 text-sm transition ${on ? 'border-gold bg-gold/15 font-semibold text-gold-light' : 'border-gold/25 text-white/65 hover:border-gold/50'}`}
                           >
                             {sv.name}
+                            {sv.price_cents != null && <span className="ml-2 text-xs opacity-60">{euro(sv.price_cents)}</span>}
                           </button>
                         );
                       })}
                     </div>
+                    <p className="mt-3 text-xs text-white/55">
+                      {chosenServices.length === 0 ? 'Scegli almeno un servizio.' : `${chosenServices.length} ${chosenServices.length === 1 ? 'servizio scelto' : 'servizi scelti'}`}
+                    </p>
                   </div>
 
                   <div className="space-y-3 border border-gold/20 p-4">
