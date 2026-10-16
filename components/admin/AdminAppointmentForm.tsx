@@ -1,5 +1,6 @@
 'use client';
 
+import { parseBookingSpeech } from '@/lib/utils/voice-booking';
 import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
@@ -57,6 +58,14 @@ function undoStatusToast(message: string, id: string, previousStatus: string, on
     },
   });
 }
+
+const VOICE_ERRORS: Record<string, string> = {
+  'not-allowed': "Il microfono è bloccato. Clicca il lucchetto vicino all'indirizzo e consenti il microfono.",
+  'service-not-allowed': "Il microfono è bloccato. Clicca il lucchetto vicino all'indirizzo e consenti il microfono.",
+  'no-speech': 'Non ho sentito niente. Riprova e parla vicino al microfono.',
+  'audio-capture': 'Non trovo il microfono. Controlla che sia collegato.',
+  network: 'Per il riconoscimento vocale serve internet.',
+};
 
 export function AdminAppointmentForm({
   barbers,
@@ -156,39 +165,45 @@ export function AdminAppointmentForm({
     const recognition = new SpeechRecognition();
     recognition.lang = 'it-IT';
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
+    recognition.maxAlternatives = 3;
     recognition.onstart = () => {
       setIsListening(true);
       setSpeechText('');
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
+      // Tra le alternative sentite prendo quella da cui capisco più dati.
+      const alternatives = Array.from(event.results[0] as ArrayLike<{ transcript: string }>);
+      let transcript = alternatives[0]?.transcript ?? '';
+      let parsed = parseBookingSpeech(transcript, barbers, services);
+      for (const alt of alternatives.slice(1)) {
+        const candidate = parseBookingSpeech(alt.transcript, barbers, services);
+        if (candidate.score > parsed.score) {
+          parsed = candidate;
+          transcript = alt.transcript;
+        }
+      }
       setSpeechText(transcript);
 
-      const parsed = parseVoiceText(transcript, barbers, services);
       if (parsed.customerName) setCustomerName(parsed.customerName);
       if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone);
       if (parsed.dateStr) setSelectedDates([parsed.dateStr]);
       if (parsed.timeStr) setTime(parsed.timeStr);
       if (parsed.barberId) setBarberId(parsed.barberId);
-      if (parsed.serviceIds && parsed.serviceIds.length > 0) {
-        setSelectedServiceIds(parsed.serviceIds);
-      }
-      if (parsed.isRecurring !== undefined) {
-        setIsRecurring(parsed.isRecurring);
-      }
-      if (parsed.recurrenceWeeks) {
+      if (parsed.serviceIds.length > 0) setSelectedServiceIds(parsed.serviceIds);
+      if (parsed.isRecurring) {
+        setIsRecurring(true);
         setRecurrenceWeeks(parsed.recurrenceWeeks);
       }
 
-      toast.success('Voce riconosciuta ed elaborata!');
+      if (parsed.score === 0) toast.warning('Ho sentito la frase ma non ho capito i dati. Riprova o scrivi a mano.');
+      else toast.success('Voce riconosciuta. Controlla i dati e salva.');
     };
 
     recognition.onerror = (e: any) => {
-      console.error(e);
-      toast.error('Errore nel riconoscimento vocale.');
+      const code = String(e?.error ?? '');
+      if (code === 'aborted') return;
+      toast.error(VOICE_ERRORS[code] ?? `Il riconoscimento vocale non ha funzionato${code ? ` (${code})` : ''}. Riprova.`);
       setIsListening(false);
     };
 
@@ -534,7 +549,7 @@ export function AdminAppointmentForm({
               {isListening ? 'Sto ascoltando... Parla ora' : 'Usa il riconoscimento vocale'}
             </p>
             <p className="mt-1 text-[11px] text-white/40 max-w-[290px] mx-auto leading-relaxed">
-              Clicca e dì ad esempio: <span className="italic text-gold/80">"Mario Rossi 3201234567 domani alle 15:30"</span>
+              Clicca e dì ad esempio: <span className="italic text-gold/80">"Mario Rossi 320 123 4567 sabato alle dieci e mezza con Vittorio, taglio e shampoo"</span>
             </p>
             {speechText && (
               <div className="mt-3 rounded border border-gold/20 bg-gold/10 p-2 text-left">
@@ -909,212 +924,6 @@ export function AdminAppointmentForm({
   );
 
   return createPortal(modal, document.body);
-}
-
-// NLP parser for vocal text
-function parseVoiceText(
-  text: string,
-  barbersList: { id: string; name: string }[] = [],
-  servicesList: { id: string; name: string }[] = []
-) {
-  let dateText = text.toLowerCase();
-  dateText = dateText.replace(/\bprimo\b/gi, '1');
-  dateText = dateText.replace(/\b1[°º]\b/g, '1');
-
-  let dateStr = '';
-  let timeStr = '';
-  let customerName = '';
-  let customerPhone = '';
-  let barberId = '';
-  let isRecurring = false;
-  let recurrenceWeeks = 4;
-  let matchedServiceIds: string[] = [];
-  let matchedServicePhrases: string[] = [];
-
-  // 1. Recurring detection
-  const recurringKeywords = ['ricorrente', 'prenotazione ricorrente', 'ripeti', 'ogni settimana', 'settimane', 'mese', 'mesi'];
-  if (recurringKeywords.some((k) => dateText.includes(k))) {
-    isRecurring = true;
-
-    const weeksMatch = dateText.match(/(\d{1,2})\s*settiman/i);
-    if (weeksMatch) {
-      recurrenceWeeks = parseInt(weeksMatch[1]);
-    } else if (dateText.includes('un mese') || dateText.includes('1 mese')) {
-      recurrenceWeeks = 4;
-    } else if (dateText.includes('due mesi') || dateText.includes('2 mesi')) {
-      recurrenceWeeks = 8;
-    } else if (dateText.includes('tre mesi') || dateText.includes('3 mesi')) {
-      recurrenceWeeks = 12;
-    }
-  }
-
-  // 2. Phone number parsing
-  const phoneRegex = /(?:\+?39\s*)?(?:3\d{2}[\s.-]?\d{6,7}|\d{9,10})/;
-  const phoneMatch = text.match(phoneRegex);
-  if (phoneMatch) {
-    customerPhone = phoneMatch[0].replace(/\s+/g, '');
-  }
-
-  // 3. Barber matching
-  let matchedBarberPhrase = '';
-  if (barbersList && barbersList.length > 0) {
-    for (const b of barbersList) {
-      const fullName = b.name.toLowerCase();
-      const firstName = fullName.split(' ')[0];
-
-      const barberRegex = new RegExp(`(?:con|da|barbiere)?\\s*\\b(${fullName}|${firstName})\\b`, 'i');
-      const bMatch = dateText.match(barberRegex);
-      if (bMatch) {
-        barberId = b.id;
-        matchedBarberPhrase = bMatch[0];
-        break;
-      }
-    }
-  }
-
-  // 4. Service matching
-  if (servicesList && servicesList.length > 0) {
-    for (const s of servicesList) {
-      const sName = s.name.toLowerCase();
-      const cleanSName = sName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const sRegex = new RegExp(`(?:servizio|per|con)?\\s*\\b(${cleanSName})\\b`, 'i');
-      const sMatch = dateText.match(sRegex);
-      if (sMatch) {
-        if (!matchedServiceIds.includes(s.id)) {
-          matchedServiceIds.push(s.id);
-          matchedServicePhrases.push(sMatch[0]);
-        }
-      }
-    }
-
-    if (matchedServiceIds.length === 0) {
-      for (const s of servicesList) {
-        const sName = s.name.toLowerCase();
-        const mainWords = sName.split(/[\s\/+]+/).filter((w) => w.length > 3 && !['con', 'per', 'del', 'della'].includes(w));
-        for (const mw of mainWords) {
-          const mwRegex = new RegExp(`\\b${mw}\\b`, 'i');
-          const mwMatch = dateText.match(mwRegex);
-          if (mwMatch) {
-            if (!matchedServiceIds.includes(s.id)) {
-              matchedServiceIds.push(s.id);
-              matchedServicePhrases.push(mwMatch[0]);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // 5. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
-  const timeRegex = /(\d{1,2})[:.](\d{2})/;
-  const timeMatch = dateText.match(timeRegex);
-  if (timeMatch) {
-    const hh = timeMatch[1].padStart(2, '0');
-    const mm = timeMatch[2];
-    timeStr = `${hh}:${mm}`;
-  } else {
-    const hourRegex = /(?:alle|ore)\s+(\d{1,2})/;
-    const hourMatch = dateText.match(hourRegex);
-    if (hourMatch) {
-      const hh = hourMatch[1].padStart(2, '0');
-      timeStr = `${hh}:00`;
-    }
-  }
-
-  // 6. Date parsing
-  const today = new Date();
-  let matchedDatePhrase = '';
-
-  if (dateText.includes('oggi')) {
-    dateStr = formatLocalDate(today);
-    matchedDatePhrase = 'oggi';
-  } else if (dateText.includes('domani')) {
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    dateStr = formatLocalDate(tomorrow);
-    matchedDatePhrase = 'domani';
-  } else if (dateText.includes('dopodomani')) {
-    const dopodomani = new Date(today);
-    dopodomani.setDate(dopodomani.getDate() + 2);
-    dateStr = formatLocalDate(dopodomani);
-    matchedDatePhrase = 'dopodomani';
-  } else {
-    // Numeric date format 15/07 or 15-07 or 15/07/2026
-    const numDateRegex = /(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?/;
-    const numDateMatch = dateText.match(numDateRegex);
-    if (numDateMatch) {
-      const day = numDateMatch[1].padStart(2, '0');
-      const month = numDateMatch[2].padStart(2, '0');
-      const year = numDateMatch[3] ? (numDateMatch[3].length === 2 ? `20${numDateMatch[3]}` : numDateMatch[3]) : today.getFullYear();
-      dateStr = `${year}-${month}-${day}`;
-      matchedDatePhrase = numDateMatch[0];
-    } else {
-      // Word date e.g. "1 settembre 2026", "del 1 settembre", "primo settembre 2026"
-      const months = [
-        'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
-        'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
-      ];
-      for (let i = 0; i < months.length; i++) {
-        if (dateText.includes(months[i])) {
-          const monthName = months[i];
-          const wordDateRegex = new RegExp(`(?:del\\s+|di\\s+)?(\\d{1,2})\\s+(?:di\\s+)?${monthName}(?:\\s+(?:del\\s+)?(\\d{4}))?`, 'i');
-          const wordDateMatch = dateText.match(wordDateRegex);
-          if (wordDateMatch) {
-            const day = wordDateMatch[1].padStart(2, '0');
-            const month = String(i + 1).padStart(2, '0');
-            const year = wordDateMatch[2] || today.getFullYear();
-            dateStr = `${year}-${month}-${day}`;
-            matchedDatePhrase = wordDateMatch[0];
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  if (!dateStr) {
-    dateStr = formatLocalDate(today);
-  }
-
-  // 7. Name parsing - strip date/time/phone/barber/service/recurring phrases
-  let cleanText = dateText;
-  if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], ' ');
-  if (timeMatch) cleanText = cleanText.replace(timeMatch[0], ' ');
-  if (matchedDatePhrase) cleanText = cleanText.replace(new RegExp(matchedDatePhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  if (matchedBarberPhrase) cleanText = cleanText.replace(new RegExp(matchedBarberPhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  matchedServicePhrases.forEach((sp) => {
-    cleanText = cleanText.replace(new RegExp(sp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  });
-
-  // Strip common date, recurring & preposition words
-  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d|con|da|barbiere|servizio|taglio|shampoo|barba|colore|rasata|lama|modellata|forbici|prenotazione|ricorrente|ripeti|settimana|settimane|mese|mesi)\b/gi, ' ');
-
-  barbersList.forEach((b) => {
-    const fn = b.name.split(' ')[0];
-    cleanText = cleanText.replace(new RegExp(`\\b${b.name}\\b`, 'gi'), ' ');
-    cleanText = cleanText.replace(new RegExp(`\\b${fn}\\b`, 'gi'), ' ');
-  });
-
-  servicesList.forEach((s) => {
-    cleanText = cleanText.replace(new RegExp(s.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  });
-
-  const stopWords = [
-    'prenota', 'prenotazione', 'per', 'a', 'da', 'di', 'il', 'la', 'i', 'gli',
-    'le', 'un', 'una', 'uno', 'ore', 'ora', 'alle', 'del', 'dello', 'della', 'con', 'e', 'ogni'
-  ];
-
-  const words = cleanText.split(/\s+/);
-  const nameWords = words.filter((w) => {
-    const lw = w.toLowerCase().replace(/[^a-zàèìòù]/g, '');
-    return lw.length > 0 && !stopWords.includes(lw);
-  });
-
-  if (nameWords.length > 0) {
-    customerName = nameWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  }
-
-  return { dateStr, timeStr, customerName, customerPhone, barberId, serviceIds: matchedServiceIds, isRecurring, recurrenceWeeks };
 }
 
 function formatLocalDate(date: Date) {
