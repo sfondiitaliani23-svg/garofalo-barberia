@@ -282,10 +282,10 @@ export function WhatsAppStatusWidget() {
         typeof document !== 'undefined' &&
         createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="wa-title">
-            <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d0d] text-white shadow-2xl">
+            <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-none border border-gold/45 bg-[#0a0807] text-white shadow-2xl">
               <div className="flex shrink-0 items-start justify-between border-b border-white/10 px-6 py-4">
                 <div>
-                  <h3 id="wa-title" className="text-2xl text-white" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
+                  <h3 id="wa-title" className="text-2xl text-white" style={{ fontFamily: "var(--font-display), 'Rye', Georgia, serif", color: '#cd9a4f' }}>
                     Collegamento WhatsApp Salone
                   </h3>
                   <p className="text-xs text-white/50">Promemoria automatici e codici di accesso inviati dal numero del salone.</p>
