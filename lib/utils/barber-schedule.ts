@@ -185,7 +185,7 @@ export function isTimeWithinSchedule(day: AdminDayScheduleInput, time: string) {
   if (day.morning.enabled && time >= day.morning.startTime && time < day.morning.endTime) {
     return true;
   }
-  if (day.afternoon.enabled && time >= day.afternoon.startTime && time <= day.afternoon.endTime) {
+  if (day.afternoon.enabled && time >= day.afternoon.startTime && time < day.afternoon.endTime) {
     return true;
   }
   return false;

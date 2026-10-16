@@ -1,4 +1,4 @@
-import { addDays, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 
 const SHOP_TIMEZONE = 'Europe/Rome';
 
@@ -54,7 +54,10 @@ export function getShopDayOfWeek(dateStr: string): number {
 /** Limiti del giorno di salone in UTC (mezzanotte–mezzanotte Europe/Rome). */
 export function getShopDayBounds(dateStr: string): { dayStart: Date; dayEnd: Date } {
   const dayStart = parseBookingDateTime(dateStr, '00:00');
-  return { dayStart, dayEnd: addDays(dayStart, 1) };
+  // Il giorno dopo si calcola sul calendario, non aggiungendo 24 ore: nei giorni del cambio d'ora dura 23 o 25 ore.
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const next = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  return { dayStart, dayEnd: parseBookingDateTime(next, '00:00') };
 }
 
 /** Formatta un istante come orario HH:mm del salone (Europe/Rome). */

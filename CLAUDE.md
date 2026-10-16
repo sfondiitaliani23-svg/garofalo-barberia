@@ -20,7 +20,7 @@ Repository: sfondiitaliani23-svg/garofalo-barberia. Unico amministratore: Luigi 
 
 ## Controlli prima di un push
 - `npx tsc --noEmit`
-- `npm test` (34 test, `node --test tests/*.test.mjs`). I test importano i file `.ts` direttamente con Node 22: i moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
+- `npm test` (56 test, `node --test tests/*.test.mjs`). I test importano i file `.ts` direttamente con Node 22: i moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
 - `tests/links.test.mjs` boccia `revalidatePath` e link verso pagine che non esistono.
 - `next build` non funziona nel sandbox (non raggiunge Google Fonts): il controllo vero è il deploy su GitHub Actions.
 - Non c'è configurazione eslint.
