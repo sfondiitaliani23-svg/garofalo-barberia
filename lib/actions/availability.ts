@@ -69,7 +69,7 @@ function isLegacyContinuousSchedule(dayAvailability: AvailabilityRow[]): boolean
   return primary.end_time.slice(0, 5) > '13:00';
 }
 
-/** Gli orari del barbiere non escono mai dagli orari del salone (es. sabato fino alle 13:30). */
+/** Gli orari del barbiere non escono mai dagli orari del salone (es. sabato fino alle 14:00). */
 function clampToShopHours(dayOfWeek: number, periods: { start: string; end: string }[]) {
   const shop = getShopPeriodsForDay(dayOfWeek);
   if (shop.length === 0) return [];
