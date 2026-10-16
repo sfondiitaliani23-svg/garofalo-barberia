@@ -17,10 +17,15 @@ export function AdminFloatingSaveButton() {
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="pointer-events-auto inline-flex items-center gap-1.5 bg-gold px-3 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[#0a0807] shadow-lg shadow-black/60 transition hover:bg-gold-light lg:gap-2 lg:px-4 lg:py-2.5"
+          title="Prenotazione istantanea"
+          aria-label="Prenotazione istantanea"
+          className="group pointer-events-auto inline-flex h-10 items-center bg-gold px-2.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[#0a0807] shadow-lg shadow-black/60 transition hover:bg-gold-light focus-visible:bg-gold-light"
         >
-          <Plus size={16} />
-          Prenotazione istantanea
+          <Plus size={20} />
+          {/* Etichetta: compare solo al passaggio del mouse o con la tastiera, per non coprire i contenuti */}
+          <span className="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:ml-2 group-hover:max-w-[14rem] group-focus-visible:ml-2 group-focus-visible:max-w-[14rem]">
+            Prenotazione istantanea
+          </span>
         </button>
 
         {/* Bottone Salva: visibile solo quando ci sono modifiche */}

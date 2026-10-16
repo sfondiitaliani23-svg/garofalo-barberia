@@ -141,6 +141,13 @@
     box-shadow: none;
   }
 
+  /* Filtri con etichetta (es. Analytics): il valore parte allineato all'etichetta */
+  .adm-skin .admin-filter select {
+    padding-left: 0;
+    border-color: transparent;
+    background-color: transparent;
+  }
+
   /* Linguette e scelte (pill) a riquadro */
   .adm-skin [role='tab'] { border-radius: 0; }
   .adm-skin [role='tab'][aria-selected='true'] { box-shadow: none; }
