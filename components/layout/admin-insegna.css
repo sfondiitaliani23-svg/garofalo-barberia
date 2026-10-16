@@ -121,8 +121,6 @@
   .adm-skin .bg-gold:not(.rounded-full.h-2):not([class*='h-1']):not([class*='w-1']) {
     background-image: none;
     box-shadow: none;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
     color: #0a0807;
   }
   .adm-skin :is(button, a).rounded-full:not([role='switch']):not([class*='w-']):not([class*='h-']):not([class*='size-']),
