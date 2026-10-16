@@ -147,19 +147,6 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
     recognition.continuous = true; // non si ferma alla prima pausa: puoi dire nome, numero e data con calma
     recognition.interimResults = true; // si vede il testo mentre parli
     recognition.maxAlternatives = 3; // tra più ascolti si sceglie quello che riempie più campi
-    try {
-      // Chrome recente: suggerisce al riconoscimento i nomi di barbieri e servizi
-      const Phrase = (window as any).SpeechRecognitionPhrase;
-      if (Phrase && 'phrases' in recognition) {
-        const { barbers: b, services: sv } = listsRef.current;
-        recognition.phrases = [...b.map((x) => x.name), ...b.map((x) => x.name.split(' ')[0]), ...sv.map((x) => x.name)].map(
-          (x) => new Phrase(x, 5),
-        );
-      }
-    } catch {
-      /* non supportato: nessun problema */
-    }
-
     finalTextRef.current = '';
     let errored = false;
     const armSilence = () => {
@@ -202,8 +189,11 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
     };
 
     recognition.onerror = (e: any) => {
+      const code = String(e?.error ?? '');
+      // "aborted" capita quando fermo io il microfono (chiusura della finestra, nuovo avvio): non è un errore
+      if (code === 'aborted') return;
       errored = true;
-      toast.error(MIC_ERRORS[e?.error] ?? 'Il riconoscimento vocale non ha funzionato. Riprova.');
+      toast.error(MIC_ERRORS[code] ?? `Il riconoscimento vocale non ha funzionato${code ? ` (${code})` : ''}. Riprova, oppure scrivi la frase qui sotto.`);
       setIsListening(false);
     };
 
