@@ -16,7 +16,7 @@ export default function ContattiView({ lang }: { lang: Lang }) {
       {/* ── Mappa a tutta larghezza, versione scura ───────────────────── */}
       <section className="ct-map" aria-label={L(lang, 'Mappa', 'Map')}>
         <iframe
-          src={SITE_CONFIG.googleMapsEmbed}
+          src={lang === 'en' ? SITE_CONFIG.googleMapsEmbed.replace('&hl=it', '&hl=en') : SITE_CONFIG.googleMapsEmbed}
           className="ct-map-frame"
           allowFullScreen
           loading="lazy"
