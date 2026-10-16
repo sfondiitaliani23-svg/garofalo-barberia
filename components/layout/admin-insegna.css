@@ -100,6 +100,12 @@
     border-radius: 0;
   }
 
+  /* Finestre di dialogo (es. Elimina cliente): fondo pieno, altrimenti la tabella dietro si legge attraverso il testo */
+  .adm-skin [role='dialog'][aria-modal='true'].border {
+    background: #0c0a08;
+    border-color: rgba(205, 154, 79, 0.55);
+  }
+
   /* Tabelle: riga di testa in oro, righe tratteggiate */
   .adm-skin table thead tr { background: #cd9a4f; }
   .adm-skin table th {
