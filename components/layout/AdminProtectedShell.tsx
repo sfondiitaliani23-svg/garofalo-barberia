@@ -6,6 +6,7 @@ import { AdminFloatingSaveButton } from '@/components/admin/AdminFloatingSaveBut
 import { AdminSaveProvider } from '@/components/admin/AdminSaveContext';
 import { AutoRefreshOnUpdate } from '@/components/layout/AutoRefreshOnUpdate';
 import './admin-skin.css';
+import './admin-insegna.css';
 
 /** Etichetta della sezione mostrata sopra il titolo di ogni pagina (come "Dashboard" nella dashboard). */
 const SECTIONS: [string, string][] = [
@@ -29,7 +30,7 @@ export function AdminProtectedShell({ children, readOnly = false }: { children: 
   return (
     <AdminSaveProvider>
       <AutoRefreshOnUpdate />
-      <div className="flex min-h-screen bg-black print:bg-white">
+      <div className="flex min-h-screen bg-[#0a0807] print:bg-white">
         <div className="contents print:hidden">
           <AdminSidebar />
         </div>

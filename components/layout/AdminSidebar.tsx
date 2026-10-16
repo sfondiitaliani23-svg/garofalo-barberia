@@ -143,7 +143,7 @@ export function AdminSidebar() {
       </aside>
 
       {/* ── 2. BARRA DI NAVIGAZIONE INFERIORE MOBILE (< lg) ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[190] lg:hidden bg-[#0a0a0a] border-t border-white/10 flex items-stretch justify-around safe-b h-16">
+      <nav className="fixed bottom-0 left-0 right-0 z-[190] lg:hidden bg-[#0c0a08] border-t border-gold/35 flex items-stretch justify-around safe-b h-16">
         {mobileNavItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`);
           return (
@@ -224,11 +224,11 @@ export function AdminSidebar() {
                     prefetch={true}
                     onClick={closeMenu}
                     className={cn(
-                      'flex items-center gap-3.5 rounded-xl px-4 py-3 text-base font-semibold transition',
-                      isActive ? 'bg-gold/15 text-gold' : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      'flex items-center gap-3.5 px-4 py-3 text-sm font-semibold uppercase tracking-[0.12em] transition',
+                      isActive ? 'bg-gold text-[#0a0807]' : 'text-[#bda980] hover:bg-gold/10 hover:text-gold'
                     )}
                   >
-                    <Icon size={20} className={isActive ? 'text-gold' : 'text-white/60'} />
+                    <Icon size={20} className={isActive ? 'text-[#0a0807]' : 'text-gold/70'} />
                     {label}
                   </Link>
                 );

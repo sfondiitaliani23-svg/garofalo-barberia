@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/customer/PageHeader';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile, getSession } from '@/lib/auth';
 import { claimGuestAppointments } from '@/lib/auth/ensure-profile';
@@ -22,7 +23,7 @@ export default async function CustomerAppointmentsPage() {
     return (
       <div>
         <h1 className="font-display text-3xl uppercase">{L(lang, 'Appuntamenti', 'Appointments')}</h1>
-        <p className="mt-4 text-white/50">{L(lang, 'Database non ancora configurato.', 'Database not configured yet.')}</p>
+        <p className="mt-4 text-[#bda980]">{L(lang, 'Database non ancora configurato.', 'Database not configured yet.')}</p>
       </div>
     );
   }
@@ -44,16 +45,17 @@ export default async function CustomerAppointmentsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl uppercase">{L(lang, 'Appuntamenti', 'Appointments')}</h1>
-      <p className="mt-1 text-white/50">
-        {lang === 'en'
+      <PageHeader
+        eyebrow={L(lang, 'Il tuo calendario', 'Your calendar')}
+        title={L(lang, 'Appuntamenti', 'Appointments')}
+        subtitle={lang === 'en'
           ? 'Edit or cancel up to 30 minutes before the appointment time'
           : <>Modifica o disdici fino a 30 minuti prima dell&apos;orario</>}
-      </p>
+      />
 
       {upcoming.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-gold">{L(lang, 'In programma', 'Upcoming')}</h2>
+          <h2 className="mb-3 font-display text-2xl text-gold">{L(lang, 'In programma', 'Upcoming')}</h2>
           <div className="space-y-3">
             {upcoming.map((apt) => {
               const barber = apt.barber as { name: string } | null;
@@ -76,7 +78,7 @@ export default async function CustomerAppointmentsPage() {
       )}
 
       <section className="mt-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">{L(lang, 'Storico', 'History')}</h2>
+        <h2 className="mb-3 font-display text-2xl text-gold/80">{L(lang, 'Storico', 'History')}</h2>
         <div className="space-y-3">
           {past.length === 0 && upcoming.length === 0 ? (
             <p className="text-white/50">{L(lang, 'Nessun appuntamento ancora.', 'No appointments yet.')}</p>

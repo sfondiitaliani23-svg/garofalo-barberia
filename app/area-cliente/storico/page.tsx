@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/customer/PageHeader';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
@@ -41,17 +42,18 @@ export default async function CustomerStoricoPage() {
   return (
     <div className="max-w-4xl mx-auto pb-12">
       {/* Navigazione Briciola (Breadcrumb) stile Treatwell */}
-      <nav className="text-xs text-white/60 mb-6 uppercase tracking-wider">
-        <Link href="/area-cliente/dashboard" className="hover:text-gold transition-colors">
+      <nav className="mb-5 text-[11px] uppercase tracking-[0.25em] text-[#bda980]">
+        <Link href="/area-cliente/dashboard" className="transition-colors hover:text-gold">
           {L(lang, 'Il mio profilo', 'My profile')}
         </Link>
-        <span className="mx-2">/</span>
-        <span className="text-white/70">{L(lang, 'Prenotazioni', 'Bookings')}</span>
+        <span className="mx-2 text-gold/50">/</span>
+        <span className="text-gold">{L(lang, 'Prenotazioni', 'Bookings')}</span>
       </nav>
+      <PageHeader eyebrow={L(lang, 'Le tue visite', 'Your visits')} title={L(lang, 'Storico', 'History')} subtitle={L(lang, 'Tutte le tue prenotazioni, passate e future.', 'All your bookings, past and upcoming.')} />
 
       {/* Sezione Prossime Prenotazioni */}
       <section className="mb-10">
-        <h2 className="text-xl font-bold text-white tracking-wide mb-4">
+        <h2 className="mb-4 font-display text-2xl text-gold">
           {L(lang, 'Prossime prenotazioni', 'Upcoming bookings')}
         </h2>
 
@@ -77,7 +79,7 @@ export default async function CustomerStoricoPage() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-white/60 py-4 border-t border-white/5">
+          <p className="text-sm text-[#bda980] py-4 border-t border-dashed border-gold/30">
             {L(lang, 'Non hai prenotazioni in programma al momento.', 'You have no upcoming bookings at the moment.')}
           </p>
         )}
@@ -85,7 +87,7 @@ export default async function CustomerStoricoPage() {
 
       {/* Sezione Prenotazioni Precedenti */}
       <section>
-        <h2 className="text-xl font-bold text-white tracking-wide mb-4">
+        <h2 className="mb-4 font-display text-2xl text-gold">
           {L(lang, 'Prenotazioni precedenti', 'Past bookings')}
         </h2>
 
@@ -108,7 +110,7 @@ export default async function CustomerStoricoPage() {
             })}
           </div>
         ) : (
-          <p className="text-sm text-white/60 py-4 border-t border-white/5">
+          <p className="text-sm text-[#bda980] py-4 border-t border-dashed border-gold/30">
             {L(lang, 'Non hai prenotazioni passate nel tuo storico.', 'You have no past bookings in your history.')}
           </p>
         )}

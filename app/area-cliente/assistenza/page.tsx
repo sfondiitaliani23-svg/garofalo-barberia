@@ -5,6 +5,7 @@ import { Search, Calendar, User, Scissors, MessageSquare, ChevronDown, ChevronUp
 import { getWhatsAppLink } from '@/lib/site-config';
 import { useLang } from '@/components/i18n/LangProvider';
 import { L } from '@/lib/i18n';
+import { PageHeader } from '@/components/customer/PageHeader';
 import { careCategoryLabel, careFaqs } from '@/lib/i18n/content-customer';
 
 const CATEGORIES = [
@@ -36,10 +37,12 @@ export default function CustomerCarePage() {
   return (
     <div className="max-w-4xl mx-auto pb-12">
       {/* Intestazione */}
-      <div className="text-center py-8">
-        <h1 className="font-display text-3xl uppercase text-white tracking-wide">{L(lang, 'Assistenza Clienti', 'Customer Support')}</h1>
-        <p className="mt-2 text-white/50">{L(lang, 'Come possiamo aiutarti oggi? Cerca tra le domande frequenti o contattaci.', 'How can we help you today? Search the frequently asked questions or get in touch.')}</p>
-      </div>
+      <PageHeader
+        center
+        eyebrow={L(lang, 'Siamo qui', 'We are here')}
+        title={L(lang, 'Assistenza Clienti', 'Customer Support')}
+        subtitle={L(lang, 'Come possiamo aiutarti oggi? Cerca tra le domande frequenti o contattaci.', 'How can we help you today? Search the frequently asked questions or get in touch.')}
+      />
 
       {/* Barra di ricerca */}
       <div className="relative mt-4 max-w-xl mx-auto">
@@ -52,7 +55,7 @@ export default function CustomerCarePage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={L(lang, 'Cerca argomenti, es. cancellare prenotazione, passkey...', 'Search topics, e.g. cancel booking, passkey...')}
           aria-label={L(lang, 'Cerca nelle domande frequenti', 'Search the frequently asked questions')}
-          className="block w-full pl-10 pr-4 py-3 border border-white/10 rounded-xl bg-[#111] text-white placeholder-white/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all shadow-lg"
+          className="block w-full pl-10 pr-4 py-3 border border-gold/40 bg-black/40 text-white placeholder-white/40 focus:outline-none focus:border-gold transition-all"
         />
       </div>
 
@@ -69,10 +72,10 @@ export default function CustomerCarePage() {
                 setExpandedFAQ(null);
               }}
               type="button"
-              className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${
+              className={`flex flex-col items-center justify-center p-4 border transition-all ${
                 isActive
-                  ? 'border-gold bg-gold/10 text-gold shadow-[0_10px_30px_rgba(205,154,79,0.1)]'
-                  : 'border-white/10 bg-[#111] text-white/70 hover:border-white/20 hover:text-white'
+                  ? 'border-gold bg-gold text-[#0a0807]'
+                  : 'border-gold/35 bg-black/25 text-[#bda980] hover:border-gold hover:text-gold'
               }`}
             >
               <Icon className="h-6 w-6 mb-2" />
@@ -83,11 +86,11 @@ export default function CustomerCarePage() {
       </div>
 
       {/* Sezione Domande Frequenti (FAQ) */}
-      <div className="mt-12 bg-[#111] rounded-xl border border-white/10 p-6 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
-        <h2 className="font-display text-lg uppercase text-gold mb-6 border-b border-white/5 pb-3">{L(lang, 'Domande frequenti', 'Frequently asked questions')}</h2>
+      <div className="mt-12 border border-gold/45 bg-black/30 p-6">
+        <h2 className="font-display text-2xl text-gold mb-6 border-b border-dashed border-gold/30 pb-3">{L(lang, 'Domande frequenti', 'Frequently asked questions')}</h2>
 
         {filteredFAQs.length > 0 ? (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-dashed divide-gold/25">
             {filteredFAQs.map((faq) => {
               const isExpanded = expandedFAQ === faq.id;
               return (
@@ -120,8 +123,9 @@ export default function CustomerCarePage() {
       </div>
 
       {/* Contatto Diretto in stile Treatwell */}
-      <div className="mt-8 rounded-xl border border-gold/20 bg-gradient-to-br from-[#111] to-[#151515] p-6 text-center shadow-[0_10px_30px_rgba(205,154,79,0.05)]">
-        <h3 className="text-base font-bold text-white uppercase tracking-wider">{L(lang, 'Non hai trovato quello che cercavi?', "Couldn't find what you were looking for?")}</h3>
+      <div className="mt-8 border border-gold/55 bg-black/35 p-1.5">
+        <div className="border border-gold/30 bg-gradient-to-b from-[#1a140e]/95 to-[#0c0a08]/95 p-6 text-center">
+        <h3 className="font-display text-xl text-gold">{L(lang, 'Non hai trovato quello che cercavi?', "Couldn't find what you were looking for?")}</h3>
         <p className="mt-1 text-sm text-white/50 max-w-lg mx-auto">
           {L(lang, 'Il team della Barberia Garofalo è sempre a tua disposizione per risolvere qualsiasi dubbio o esigenza particolare.', 'The Barberia Garofalo team is always here to help with any question or special request.')}
         </p>
@@ -130,14 +134,14 @@ export default function CustomerCarePage() {
             href={getWhatsAppLink()}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-black font-semibold text-sm transition-all shadow-[0_4px_12px_rgba(37,211,102,0.2)]"
+            className="inline-flex items-center gap-2 px-5 py-3 border border-gold text-gold hover:bg-gold hover:text-[#0a0807] font-bold text-xs uppercase tracking-[0.18em] transition-all"
           >
-            <MessageCircle className="h-4 w-4 fill-black" />
+            <MessageCircle className="h-4 w-4" />
             <span>{L(lang, 'Scrivici su WhatsApp', 'Message us on WhatsApp')}</span>
           </a>
           <a
             href="tel:+390881236236" // Numero fittizio o del salone
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-black font-semibold text-sm transition-all shadow-[0_4px_12px_rgba(37,211,102,0.2)]"
+            className="inline-flex items-center gap-2 px-5 py-3 border border-gold text-gold hover:bg-gold hover:text-[#0a0807] font-bold text-xs uppercase tracking-[0.18em] transition-all"
           >
             <Phone className="h-4 w-4" />
             <span>{L(lang, 'Chiamaci in Salone', 'Call the barbershop')}</span>
@@ -147,11 +151,12 @@ export default function CustomerCarePage() {
               window.dispatchEvent(new CustomEvent('eliseo-chat-open'));
             }}
             type="button"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-black font-semibold text-sm transition-all shadow-[0_4px_12px_rgba(37,211,102,0.2)]"
+            className="inline-flex items-center gap-2 px-5 py-3 border border-gold text-gold hover:bg-gold hover:text-[#0a0807] font-bold text-xs uppercase tracking-[0.18em] transition-all"
           >
             <Scissors className="h-4 w-4" />
             <span>{L(lang, 'Chiedi a Eliseo ( Il nostro agente AI )', 'Ask Eliseo (our AI agent)')}</span>
           </button>
+        </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,145 @@
+/*
+ * Aspetto «Insegna» dell'area admin (nero e oro, angoli squadrati, titoli a insegna,
+ * righe tratteggiate). Solo grafica: nessuna funzione cambia.
+ * Va caricato dopo admin-skin.css e dopo globals.css.
+ */
+
+/* ── Barra laterale ───────────────────────────────────────── */
+.adm-side {
+  background: #0c0a08;
+  border-right: 1px solid rgba(205, 154, 79, 0.35);
+}
+.adm-side .adm-brand { padding-bottom: 0.9rem; border-bottom: 1px solid rgba(205, 154, 79, 0.25); }
+.adm-side .adm-badge {
+  border-radius: 0;
+  border: 1px solid #cd9a4f;
+  background: transparent;
+  box-shadow: none;
+}
+.adm-side .adm-badge-text small { color: #cd9a4f; letter-spacing: 0.2em; }
+.adm-side .adm-badge-text strong {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: #f7ecd0;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+.adm-side .adm-link {
+  border-radius: 0;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #bda980;
+}
+.adm-side .adm-link:hover { background: rgba(205, 154, 79, 0.1); color: #cd9a4f; }
+.adm-side .adm-link.is-active {
+  background: #cd9a4f;
+  color: #0a0807;
+  font-weight: 700;
+  box-shadow: none;
+}
+.adm-side .adm-link.is-active svg { color: #0a0807; }
+.adm-side .adm-promo {
+  border-radius: 0;
+  border: 1px dashed rgba(205, 154, 79, 0.6);
+  background: transparent;
+}
+.adm-side .adm-promo-title {
+  font-family: var(--font-display), 'Rye', Georgia, serif;
+  font-weight: 400;
+  color: #cd9a4f;
+}
+.adm-side .adm-promo-btn {
+  border-radius: 0;
+  background: #cd9a4f;
+  box-shadow: none;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  color: #0a0807;
+}
+
+@media screen {
+  /* ── Pagina ─────────────────────────────────────────────── */
+  .adm-skin {
+    --sk-accent: #cd9a4f;
+    background:
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.016) 0 2px, rgba(0, 0, 0, 0) 2px 118px),
+      #0a0807;
+  }
+  .adm-skin .adm-eyebrow { letter-spacing: 0.4em; color: #cd9a4f; }
+
+  /* Titoli a insegna */
+  .adm-skin h1 {
+    font-family: var(--font-display), 'Rye', Georgia, serif !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.01em;
+    color: #f7ecd0;
+  }
+  .adm-skin :is(h2, h3).font-display {
+    font-family: var(--font-display), 'Rye', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: #cd9a4f;
+    font-size: 1.15rem;
+  }
+
+  /* Riquadri: squadrati, bordo oro sottile */
+  .adm-skin :is(.rounded-xl, .rounded-2xl, .rounded-lg).border {
+    border-radius: 0;
+    border-color: rgba(205, 154, 79, 0.4);
+  }
+  .adm-skin :is(.bg-\[\#111\], .bg-\[\#0e0e0e\], .bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-\[\#0a0a0a\], .bg-black\/45, .bg-\[\#0e0e0e\]\/90).border {
+    background: rgba(0, 0, 0, 0.32);
+    border-color: rgba(205, 154, 79, 0.4);
+  }
+  .adm-skin :is(.rounded-xl, .rounded-2xl).border:is(.bg-\[\#111\], .bg-\[\#0e0e0e\], .bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-black\/45) {
+    border-radius: 0;
+  }
+
+  /* Tabelle: riga di testa in oro, righe tratteggiate */
+  .adm-skin table thead tr { background: #cd9a4f; }
+  .adm-skin table th {
+    color: #0a0807;
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .adm-skin table tbody tr { border-bottom-style: dashed; border-color: rgba(205, 154, 79, 0.25); }
+  .adm-skin table tbody tr:hover { background: rgba(205, 154, 79, 0.06); }
+  .adm-skin .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-style: dashed; border-color: rgba(205, 154, 79, 0.25); }
+
+  /* Pulsanti oro piatti, a riquadro */
+  .adm-skin .bg-gold:not(.rounded-full.h-2):not([class*='h-1']):not([class*='w-1']) {
+    background-image: none;
+    box-shadow: none;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #0a0807;
+  }
+  .adm-skin :is(button, a).rounded-full:not([role='switch']):not([class*='w-']):not([class*='h-']):not([class*='size-']),
+  .adm-skin :is(button, a).rounded-lg,
+  .adm-skin button.rounded-md,
+  .adm-skin :is(button, a).rounded-xl {
+    border-radius: 0;
+  }
+
+  /* Campi */
+  .adm-skin :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']) {
+    border-radius: 0;
+    border-color: rgba(205, 154, 79, 0.4);
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+  .adm-skin :is(input, select, textarea):focus-visible {
+    border-color: #cd9a4f !important;
+    box-shadow: none;
+  }
+
+  /* Linguette e scelte (pill) a riquadro */
+  .adm-skin [role='tab'] { border-radius: 0; }
+  .adm-skin [role='tab'][aria-selected='true'] { box-shadow: none; }
+}

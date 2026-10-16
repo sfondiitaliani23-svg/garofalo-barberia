@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/customer/PageHeader';
 import { Suspense } from 'react';
 import { getProfile } from '@/lib/auth';
 import { ProfileForm } from '@/components/customer/ProfileForm';
@@ -23,9 +24,8 @@ export default async function CustomerProfiloPage() {
         <SavedToast />
       </Suspense>
 
-      <h1 className="font-display text-3xl uppercase">{L(lang, 'Profilo', 'Profile')}</h1>
-      <p className="mt-1 text-white/50">{L(lang, 'I tuoi dati e preferenze', 'Your details and preferences')}</p>
-      
+      <PageHeader eyebrow={L(lang, 'Il tuo account', 'Your account')} title={L(lang, 'Profilo', 'Profile')} subtitle={L(lang, 'I tuoi dati e preferenze', 'Your details and preferences')} />
+
       <ProfileForm profile={profile} />
       <PasskeyManager />
       <PushManager />

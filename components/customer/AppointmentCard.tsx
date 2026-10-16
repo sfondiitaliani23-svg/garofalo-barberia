@@ -1,4 +1,5 @@
 import { parseISO } from 'date-fns';
+import { DateTear } from '@/components/customer/DateTear';
 import Link from 'next/link';
 import { AppointmentActions } from '@/components/customer/AppointmentActions';
 import { L, localHref, type Lang } from '@/lib/i18n';
@@ -6,10 +7,10 @@ import { displayBarberName, displayServiceName, fmtDateTimeLong, statusLabel } f
 import type { AppointmentStatus } from '@/types/database';
 
 const STATUS_COLORS: Record<AppointmentStatus, string> = {
-  confirmed: 'text-gold bg-gold/10 border-gold/20',
-  completed: 'text-green-400 bg-green-500/10 border-green-500/20',
-  cancelled: 'text-red-400 bg-red-500/10 border-red-500/20',
-  no_show: 'text-white/60 bg-white/5 border-white/10',
+  confirmed: 'text-gold border-gold',
+  completed: 'text-green-400 border-green-500/60',
+  cancelled: 'text-red-400 border-red-500/60',
+  no_show: 'text-[#bda980] border-[#bda980]/40',
 };
 
 interface AppointmentCardProps {
@@ -49,36 +50,22 @@ export function AppointmentCard({
   const formattedDate = fmtDateTimeLong(lang, parseISO(startsAt));
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#111] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.2)] transition-all hover:border-white/15">
-      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div className="space-y-2">
-          {/* Data e Ora in grigio/oro */}
-          <p className="text-xs font-semibold text-white/50 tracking-wide uppercase">
-            {formattedDate}
-          </p>
-
-          {/* Nome Servizio in grassetto grande */}
-          <h3 className="text-lg font-bold text-white tracking-wide">
-            {displayServiceName(lang, serviceName)}
-          </h3>
-
-          {/* Dettagli Barberia e Barbieri */}
-          <p className="text-sm text-white/60">
-            Barberia Garofalo — <span className="text-gold font-medium">{displayBarberName(lang, barberName)}</span>
-          </p>
-
-          {/* Riferimento Ordine in stile Treatwell */}
-          <div className="flex items-center gap-2 mt-3 pt-2 border-t border-white/5 text-xs text-white/60">
-            <span>{L(lang, 'Riferimento ordine:', 'Order reference:')}</span>
-            <span className="font-mono bg-white/5 px-2 py-0.5 rounded text-white/70 border border-white/10">
-              {orderCode}
-            </span>
+    <div className="border border-gold/45 bg-black/30 transition-colors hover:border-gold/70">
+      <div className="flex items-stretch">
+        <DateTear startsAt={startsAt} lang={lang} muted={status !== 'confirmed'} />
+        <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 border-l-2 border-dashed border-[#0a0807] p-4 sm:flex-row sm:items-center sm:p-5">
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#bda980]">{formattedDate}</p>
+            <h3 className="text-lg font-semibold tracking-wide text-white">{displayServiceName(lang, serviceName)}</h3>
+            <p className="text-sm text-[#bda980]">
+              Barberia Garofalo — <span className="font-semibold text-gold">{displayBarberName(lang, barberName)}</span>
+            </p>
+            <p className="pt-1 text-[11px] text-[#bda980]/80">
+              {L(lang, 'Riferimento ordine:', 'Order reference:')}{' '}
+              <span className="font-mono border border-dashed border-gold/30 px-2 py-0.5 text-white/70">{orderCode}</span>
+            </p>
           </div>
-        </div>
-
-        {/* Badge di Stato in alto a destra */}
-        <div className="self-start">
-          <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${STATUS_COLORS[status]}`}>
+          <span className={`inline-block shrink-0 self-start border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] sm:self-center ${STATUS_COLORS[status]}`}>
             {statusLabel(lang, status)}
           </span>
         </div>
@@ -86,14 +73,14 @@ export function AppointmentCard({
 
       {/* Azioni Future (Modifica/Cancellazione) */}
       {canShowActions && (
-        <div className="mt-5 border-t border-white/5 pt-4">
+        <div className="border-t border-dashed border-gold/30 p-4">
           <AppointmentActions appointmentId={id} startsAt={startsAt} />
         </div>
       )}
 
       {/* Azioni Past / Completed in stile Treatwell (Lascia Recensione + Prenota di Nuovo) */}
       {status === 'completed' && (
-        <div className="mt-5 border-t border-white/5 pt-4 flex flex-wrap items-center justify-between gap-4">
+        <div className="border-t border-dashed border-gold/30 p-4 flex flex-wrap items-center justify-between gap-4">
           <Link
             href={localHref(lang, '/recensioni/nuova')}
             className="text-xs font-bold text-gold hover:text-gold-light transition-colors underline decoration-gold/30 underline-offset-4"
@@ -102,7 +89,7 @@ export function AppointmentCard({
           </Link>
           <Link
             href={localHref(lang, `/prenota?service=${encodeURIComponent(serviceName)}`)}
-            className="inline-flex items-center justify-center rounded-lg border border-gold hover:bg-gold/15 text-gold font-semibold text-xs px-4 py-2.5 transition-all uppercase tracking-wider"
+            className="inline-flex items-center justify-center border border-gold hover:bg-gold hover:text-[#0a0807] text-gold font-bold text-xs px-4 py-2.5 transition-all uppercase tracking-[0.18em]"
           >
             {L(lang, 'Prenota di nuovo', 'Book again')}
           </Link>
@@ -111,10 +98,10 @@ export function AppointmentCard({
 
       {/* Se cancellato o no-show, consentiamo comunque di prenotare di nuovo */}
       {(status === 'cancelled' || status === 'no_show') && (
-        <div className="mt-5 border-t border-white/5 pt-4 flex justify-end">
+        <div className="border-t border-dashed border-gold/30 p-4 flex justify-end">
           <Link
             href={localHref(lang, '/prenota')}
-            className="inline-flex items-center justify-center rounded-lg border border-gold hover:bg-gold/15 text-gold font-semibold text-xs px-4 py-2.5 transition-all uppercase tracking-wider"
+            className="inline-flex items-center justify-center border border-gold hover:bg-gold hover:text-[#0a0807] text-gold font-bold text-xs px-4 py-2.5 transition-all uppercase tracking-[0.18em]"
           >
             {L(lang, 'Prenota di nuovo', 'Book again')}
           </Link>

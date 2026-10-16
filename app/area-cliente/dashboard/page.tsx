@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { parseISO } from 'date-fns';
 import { displayServiceName, fmtDateTimeShort, statusLabel } from '@/lib/i18n/content-customer';
-import { Calendar, Scissors, Clock, Star, ChevronRight } from 'lucide-react';
+import { Scissors, Clock, ChevronRight, History, User, Image as ImageIcon, HelpCircle } from 'lucide-react';
+import { DateTear } from '@/components/customer/DateTear';
 import { LogoutCard } from '@/components/customer/LogoutCard';
 import { groupComboAppointments } from '@/lib/utils/group-appointments';
 import { PushManager } from '@/components/customer/PushManager';
@@ -53,74 +54,71 @@ export default async function CustomerDashboardPage() {
         ? L(lang, 'Buon pomeriggio', 'Good afternoon')
         : L(lang, 'Buonasera', 'Good evening');
 
+  const tier = totalCount >= 10 ? 'Gold' : totalCount >= 5 ? 'Silver' : 'New';
+  const toNext = totalCount >= 10 ? 0 : totalCount >= 5 ? 10 - totalCount : 5 - totalCount;
+  const nextTier = totalCount >= 5 ? 'Gold' : 'Silver';
+  const quick = [
+    { href: '/area-cliente/storico', label: L(lang, 'Storico', 'History'), sub: L(lang, 'Le tue prenotazioni', 'Your bookings'), icon: History },
+    { href: '/area-cliente/profilo', label: L(lang, 'Profilo', 'Profile'), sub: L(lang, 'I tuoi dati', 'Your details'), icon: User },
+    { href: '/area-cliente/galleria', label: L(lang, 'Galleria', 'Gallery'), sub: L(lang, 'I tuoi tagli', 'Your haircuts'), icon: ImageIcon },
+    { href: '/area-cliente/assistenza', label: L(lang, 'Assistenza', 'Support'), sub: L(lang, 'Hai bisogno di aiuto?', 'Need help?'), icon: HelpCircle },
+  ];
+
   return (
     <div className="space-y-8">
       <PushManager variant="banner" />
-      {/* Hero benvenuto */}
-      <div className="relative rounded-2xl overflow-hidden border border-gold/15 bg-gradient-to-br from-[#0f0c08] via-[#111] to-[#0a0a0a] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
-        {/* Decorazione geometrica gold */}
-        <div className="absolute top-0 right-0 w-48 h-48 opacity-5 pointer-events-none">
-          <svg viewBox="0 0 200 200" fill="none" className="w-full h-full">
-            <circle cx="100" cy="100" r="80" stroke="#cd9a4f" strokeWidth="1" />
-            <circle cx="100" cy="100" r="60" stroke="#cd9a4f" strokeWidth="0.5" />
-            <line x1="100" y1="20" x2="100" y2="180" stroke="#cd9a4f" strokeWidth="0.5" />
-            <line x1="20" y1="100" x2="180" y2="100" stroke="#cd9a4f" strokeWidth="0.5" />
-          </svg>
-        </div>
 
-        <div className="relative z-10">
-          <p className="text-xs font-semibold text-gold/70 uppercase tracking-[0.2em] mb-1">{greeting}</p>
-          <h1 className="text-3xl font-bold text-white tracking-wide">
-            {firstName} <span className="text-gold">✂</span>
-          </h1>
-          <p className="mt-1 text-white/60 text-sm">
-            {L(lang, 'Benvenuto nel tuo spazio riservato — Barberia Garofalo, Foggia', 'Welcome to your private area — Barberia Garofalo, Foggia')}
+      {/* Benvenuto: cornice doppia a insegna */}
+      <section className="border border-gold/55 bg-black/35 p-1.5">
+        <div className="border border-gold/30 bg-gradient-to-b from-[#1a140e]/95 to-[#0c0a08]/95 px-6 py-7 sm:px-8">
+          <p className="text-[11px] uppercase tracking-[0.4em] text-gold">{greeting}</p>
+          <h1 className="mt-1.5 font-display text-4xl leading-tight text-[#f7ecd0] sm:text-5xl">{firstName}</h1>
+          <p className="mt-1 text-sm text-[#bda980]">
+            {L(lang, 'Benvenuto nel tuo spazio riservato, Barberia Garofalo, Foggia', 'Welcome to your private area, Barberia Garofalo, Foggia')}
           </p>
 
-          {/* Stats compatte */}
-          <div className="mt-6 flex flex-wrap gap-4">
-            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-4 py-2.5 border border-white/8">
-              <Scissors size={15} className="text-gold" />
+          <div className="mt-6 flex flex-wrap gap-3.5">
+            <div className="flex items-center gap-3.5 border border-dashed border-gold/50 px-4 py-3">
+              <Scissors size={22} className="text-gold" aria-hidden />
               <div>
-                <p className="text-xs text-white/60 leading-none">{L(lang, 'Tagli effettuati', 'Haircuts done')}</p>
-                <p className="text-base font-bold text-white leading-tight">{totalCount}</p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-[#bda980]">{L(lang, 'Tagli effettuati', 'Haircuts done')}</p>
+                <p className="font-display text-3xl leading-tight text-[#f7ecd0]">{totalCount}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-4 py-2.5 border border-white/8">
-              <Star size={15} className="text-gold fill-gold" />
+            <div className="flex items-center gap-3.5 border border-dashed border-gold/50 px-4 py-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-double border-gold font-display text-sm text-gold">{tier[0]}</span>
               <div>
-                <p className="text-xs text-white/60 leading-none">{L(lang, 'Cliente fedele', 'Loyalty level')}</p>
-                <p className="text-base font-bold text-gold leading-tight">
-                  {totalCount >= 10 ? 'Gold' : totalCount >= 5 ? 'Silver' : 'New'}
-                </p>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-[#bda980]">{L(lang, 'Cliente fedele', 'Loyalty level')}</p>
+                <p className="font-display text-2xl leading-tight text-gold">{tier}</p>
               </div>
+              {toNext > 0 && (
+                <p className="max-w-[130px] text-[11px] leading-snug text-[#bda980]">
+                  {lang === 'en'
+                    ? `${toNext} more ${toNext === 1 ? 'haircut' : 'haircuts'} to reach ${nextTier}`
+                    : `Ancora ${toNext} ${toNext === 1 ? 'taglio' : 'tagli'} per il livello ${nextTier}`}
+                </p>
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Prossimi appuntamenti */}
+      {/* Prossimi appuntamenti: tagliandi */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-            <Calendar size={15} className="text-gold" />
-            {L(lang, 'Prossimi appuntamenti', 'Upcoming appointments')}
-          </h2>
-          <Link
-            href="/area-cliente/storico"
-            className="text-xs text-white/60 hover:text-gold transition-colors flex items-center gap-1"
-          >
+        <div className="mb-3.5 flex items-baseline justify-between">
+          <h2 className="font-display text-2xl text-gold">{L(lang, 'Prossimi appuntamenti', 'Upcoming appointments')}</h2>
+          <Link href="/area-cliente/storico" className="flex items-center gap-1 text-[11px] uppercase tracking-[0.25em] text-[#bda980] transition-colors hover:text-gold">
             {L(lang, 'Vedi tutti', 'View all')} <ChevronRight size={12} />
           </Link>
         </div>
 
         {upcoming.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-8 text-center">
-            <Clock size={28} className="text-white/20 mx-auto mb-3" />
-            <p className="text-white/60 text-sm">{L(lang, 'Nessun appuntamento in programma.', 'No upcoming appointments.')}</p>
+          <div className="border border-dashed border-gold/40 bg-black/25 p-8 text-center">
+            <Clock size={28} className="mx-auto mb-3 text-gold/50" />
+            <p className="text-sm text-[#bda980]">{L(lang, 'Nessun appuntamento in programma.', 'No upcoming appointments.')}</p>
             <Link
               href={localHref(lang, '/prenota')}
-              className="mt-4 inline-flex items-center gap-2 bg-gold hover:bg-[#ffb949] text-black font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-full transition-all"
+              className="mt-4 inline-flex items-center gap-2 bg-gold px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#0a0807] transition-colors hover:bg-gold-light"
             >
               {L(lang, 'Prenota ora', 'Book now')}
             </Link>
@@ -131,25 +129,20 @@ export default async function CustomerDashboardPage() {
               const barber = apt.barber as { name: string } | null;
               const service = apt.service as { name: string } | null;
               return (
-                <div
-                  key={apt.id}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111] px-5 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:border-gold/20 transition-all"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
-                      <Scissors size={16} className="text-gold" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-white text-sm">{service?.name ? displayServiceName(lang, service.name) : service?.name}</p>
-                      <p className="text-xs text-white/60 mt-0.5">
+                <div key={apt.id} className="flex items-stretch border border-gold/45 bg-black/30 transition-colors hover:border-gold/70">
+                  <DateTear startsAt={apt.starts_at} lang={lang} />
+                  <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 border-l-2 border-dashed border-[#0a0807] px-5 py-4">
+                    <div className="min-w-0">
+                      <p className="text-lg font-semibold tracking-wide text-white">{service?.name ? displayServiceName(lang, service.name) : service?.name}</p>
+                      <p className="mt-1 text-sm text-[#bda980]">
                         {fmtDateTimeShort(lang, parseISO(apt.starts_at))} · {L(lang, 'con', 'with')}{' '}
-                        <span className="text-gold">{barber?.name}</span>
+                        <span className="font-semibold text-gold">{barber?.name}</span>
                       </p>
                     </div>
+                    <span className="shrink-0 border border-gold px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-gold">
+                      {statusLabel(lang, 'confirmed')}
+                    </span>
                   </div>
-                  <span className="shrink-0 text-[10px] font-bold text-gold border border-gold/20 bg-gold/5 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    {statusLabel(lang, 'confirmed')}
-                  </span>
                 </div>
               );
             })}
@@ -157,27 +150,20 @@ export default async function CustomerDashboardPage() {
         )}
       </section>
 
-
-
       {/* Accesso rapido sezioni */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { href: '/area-cliente/storico', label: L(lang, 'Storico', 'History'), sub: L(lang, 'Le tue prenotazioni', 'Your bookings'), icon: '📋' },
-          { href: '/area-cliente/profilo', label: L(lang, 'Profilo', 'Profile'), sub: L(lang, 'I tuoi dati', 'Your details'), icon: '👤' },
-          { href: '/area-cliente/galleria', label: L(lang, 'Galleria', 'Gallery'), sub: L(lang, 'I tuoi tagli', 'Your haircuts'), icon: '🖼️' },
-          { href: '/area-cliente/assistenza', label: L(lang, 'Assistenza', 'Support'), sub: L(lang, 'Hai bisogno di aiuto?', 'Need help?'), icon: '💬' },
-        ].map(({ href, label, sub, icon }) => (
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {quick.map(({ href, label, sub, icon: Icon }) => (
           <Link
             key={href}
             href={href}
-            className="group rounded-xl border border-white/8 bg-[#111] p-4 hover:border-gold/20 hover:bg-[#141414] transition-all shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+            className="group flex flex-col gap-2.5 border border-gold/35 bg-black/25 p-4 transition-colors hover:border-gold hover:bg-gold/5"
           >
-            <span className="text-2xl">{icon}</span>
-            <p className="mt-2 font-bold text-white text-sm group-hover:text-gold transition-colors">{label}</p>
-            <p className="text-[11px] text-white/60">{sub}</p>
+            <Icon size={26} className="text-gold" aria-hidden />
+            <span className="text-[13px] font-bold uppercase tracking-[0.16em] text-[#f3e6c8] group-hover:text-gold">{label}</span>
+            <span className="text-[11px] text-[#bda980]">{sub}</span>
           </Link>
         ))}
-      </div>
+      </section>
 
       {/* Logout */}
       <LogoutCard />

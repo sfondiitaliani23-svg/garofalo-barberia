@@ -1,0 +1,54 @@
+/*
+ * Aspetto «Insegna» dell'area cliente (nero e oro, angoli squadrati, linee tratteggiate).
+ * Solo grafica: nessuna funzione cambia. Tutto limitato a .cust-skin.
+ */
+.cust-skin {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.016) 0 2px, rgba(0, 0, 0, 0) 2px 118px),
+    #0a0807;
+  color: #f3e6c8;
+}
+
+/* Riquadri scuri: bordo oro sottile, angoli squadrati */
+.cust-skin :is(.rounded-xl, .rounded-2xl, .rounded-lg).border {
+  border-radius: 0;
+  border-color: rgba(205, 154, 79, 0.4);
+  background-color: rgba(0, 0, 0, 0.32);
+  box-shadow: none;
+}
+.cust-skin :is(.rounded-xl, .rounded-2xl).border-dashed {
+  border-style: dashed;
+}
+
+/* Campi e bottoni a riquadro */
+.cust-skin :is(input, select, textarea) {
+  border-radius: 0 !important;
+  border-color: rgba(205, 154, 79, 0.4) !important;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+.cust-skin :is(input, select, textarea):focus {
+  border-color: #cd9a4f !important;
+}
+.cust-skin button:not(.rounded-full),
+.cust-skin a.rounded-lg,
+.cust-skin button.rounded-md {
+  border-radius: 0;
+}
+.cust-skin .bg-gold {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Titoli dei riquadri in carattere insegna */
+.cust-skin :is(h2, h3).font-display {
+  font-family: var(--font-display), 'Rye', Georgia, serif;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: #cd9a4f;
+}
+
+/* Linee di separazione tratteggiate */
+.cust-skin .divide-y > :not([hidden]) ~ :not([hidden]) {
+  border-top-style: dashed;
+  border-color: rgba(205, 154, 79, 0.25);
+}

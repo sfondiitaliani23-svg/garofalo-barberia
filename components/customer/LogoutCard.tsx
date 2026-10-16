@@ -9,17 +9,19 @@ export function LogoutCard() {
   const lang = useLang();
   return (
     <form action={signOut}>
-      <button
-        type="submit"
-        className="w-full group rounded-xl border border-red-500/15 bg-[#111] hover:bg-red-500/5 hover:border-red-500/30 p-4 transition-all shadow-[0_8px_24px_rgba(0,0,0,0.2)] flex items-center gap-3"
-      >
-        <span className="text-2xl">🚪</span>
-        <div className="text-left">
-          <p className="font-bold text-white/70 group-hover:text-red-400 text-sm transition-colors">{lang === 'en' ? 'Log out of your account' : <>Esci dall&apos;account</>}</p>
-          <p className="text-[11px] text-white/60">{L(lang, 'Disconnetti la sessione', 'Sign out of this session')}</p>
-        </div>
-        <LogOut size={16} className="ml-auto text-white/20 group-hover:text-red-400 transition-colors shrink-0" />
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-gold/35 px-1 py-4">
+        <span className="text-sm text-[#bda980]">
+          {lang === 'en' ? 'All done? Log out of your private area.' : <>Hai finito? Esci dal tuo spazio riservato.</>}
+        </span>
+        <button
+          type="submit"
+          aria-label={L(lang, 'Esci dall\'account', 'Log out of your account')}
+          className="inline-flex items-center gap-2 border border-gold/60 px-6 py-2.5 text-[11px] font-bold uppercase tracking-[0.25em] text-gold transition-colors hover:bg-gold hover:text-[#0a0807]"
+        >
+          <LogOut size={14} aria-hidden />
+          {L(lang, 'Esci', 'Log out')}
+        </button>
+      </div>
     </form>
   );
 }

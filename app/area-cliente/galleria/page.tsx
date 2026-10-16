@@ -1,3 +1,4 @@
+import { PageHeader } from '@/components/customer/PageHeader';
 import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { CustomerGalleryViewer } from '@/components/layout/CustomerGalleryViewer';
@@ -21,10 +22,11 @@ export default async function CustomerGalleriaPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl uppercase text-gold">{L(lang, 'Galleria tagli', 'Haircut gallery')}</h1>
-        <p className="mt-1 text-sm text-white/50">{L(lang, 'Foto dei tuoi tagli caricati dalla barberia', 'Photos of your haircuts, uploaded by the barbershop')}</p>
-      </div>
+      <PageHeader
+        eyebrow={L(lang, 'I tuoi tagli', 'Your haircuts')}
+        title={L(lang, 'Galleria tagli', 'Haircut gallery')}
+        subtitle={L(lang, 'Foto dei tuoi tagli caricati dalla barberia', 'Photos of your haircuts, uploaded by the barbershop')}
+      />
       <div className="pt-2">
         <CustomerGalleryViewer photos={photos} />
       </div>

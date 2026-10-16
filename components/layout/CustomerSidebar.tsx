@@ -38,14 +38,15 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
   return (
     <>
       {/* ── Sidebar Desktop (lg+) ── */}
-      <aside className="hidden lg:flex w-56 flex-col border-r border-white/10 bg-[#0a0a0a] p-4 fixed left-0 top-0 bottom-0 h-screen z-30">
-        <Link href="/area-cliente/dashboard" className="font-display text-sm uppercase tracking-wider text-gold hover:opacity-90 transition-opacity">
-          {L(lang, 'Il mio account', 'My account')}
+      <aside className="hidden lg:flex w-56 flex-col border-r border-gold/35 bg-[#0c0a08] py-6 fixed left-0 top-0 bottom-0 h-screen z-30">
+        <Link href="/area-cliente/dashboard" className="block px-5 pb-4 border-b border-gold/25 hover:opacity-90 transition-opacity">
+          <span className="block font-display text-xl tracking-[0.15em] text-gold">GAROFALO</span>
+          <span className="block text-[10px] uppercase tracking-[0.3em] text-[#bda980] mt-0.5">{L(lang, 'Area riservata', 'Private area')}</span>
         </Link>
 
         {/* Widget Profilo Utente */}
-        <div className="mb-6 flex flex-col items-center text-center border-b border-white/10 pb-6 mt-6">
-          <div className="w-16 h-16 rounded-full border border-gold/30 overflow-hidden mb-3 bg-gradient-to-br from-[#1c140c] to-[#0c0a06] flex items-center justify-center text-gold font-display text-xl font-bold">
+        <div className="mx-5 mb-4 flex flex-col items-center text-center border-b border-dashed border-gold/25 pb-5 mt-5">
+          <div className="w-16 h-16 rounded-full border-[3px] border-double border-gold overflow-hidden mb-3 bg-gradient-to-br from-[#1c140c] to-[#0c0a06] flex items-center justify-center text-gold font-display text-xl font-bold">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
@@ -58,7 +59,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
           </p>
         </div>
 
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-0.5 px-3">
           {links.map(({ href, label, labelEn, icon: Icon }) => {
             const isProfileLink = label === 'Profilo';
             return (
@@ -66,8 +67,8 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
                 key={href}
                 href={href}
                 className={cn(
-                  'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition',
-                  pathname === href ? 'bg-gold/15 text-gold' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                  'flex items-center gap-3 px-3 py-2.5 text-xs uppercase tracking-[0.12em] transition',
+                  pathname === href ? 'bg-gold font-bold text-[#0a0807]' : 'font-medium text-[#bda980] hover:bg-gold/10 hover:text-gold'
                 )}
               >
                 {isProfileLink ? (
@@ -79,28 +80,28 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
                     )}
                   </div>
                 ) : (
-                  <Icon size={16} />
+                  <Icon size={17} />
                 )}
                 {L(lang, label, labelEn)}
               </Link>
             );
           })}
         </nav>
-        <Link href={localHref(lang, '/prenota')} className="mb-2 rounded-lg bg-gold px-3 py-2 text-center text-sm font-semibold text-black hover:bg-gold-light transition-colors">
+        <Link href={localHref(lang, '/prenota')} className="mx-4 mb-2 border border-gold px-3 py-2.5 text-center text-xs font-bold uppercase tracking-[0.2em] text-gold hover:bg-gold hover:text-[#0a0807] transition-colors">
           {L(lang, 'Prenota ora', 'Book now')}
         </Link>
         <div className="mb-2 px-3 py-2">
           <CookieLanguageSwitch />
         </div>
         <form action={signOut}>
-          <button type="submit" className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/50 hover:bg-white/5 transition-colors cursor-pointer">
+          <button type="submit" className="w-full px-5 py-2 text-left text-xs uppercase tracking-[0.2em] text-[#bda980] hover:text-gold transition-colors cursor-pointer">
             {L(lang, 'Esci', 'Log out')}
           </button>
         </form>
       </aside>
 
       {/* ── Bottom Navigation Bar Mobile (< lg) ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[200] lg:hidden bg-[#0a0a0a] border-t border-white/10 flex items-stretch justify-around safe-b h-16">
+      <nav className="fixed bottom-0 left-0 right-0 z-[200] lg:hidden bg-[#0c0a08] border-t border-gold/35 flex items-stretch justify-around safe-b h-16">
         {/* Solo nell'app installata: torna al sito (non c'è la barra del browser) */}
         <Link
           href={localHref(lang, '/')}
