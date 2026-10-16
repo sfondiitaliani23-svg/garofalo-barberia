@@ -118,8 +118,8 @@ function LoginFormInner({
           const serverRes = await signInWithQrTokens(res.accessToken, res.refreshToken);
           if (serverRes.ok) {
             toast.success(L(lang, 'Accesso autorizzato tramite QR Code!', 'Sign-in authorised with QR code!'));
-            router.push(redirect);
-            router.refresh();
+            // Navigazione completa: evita che la cache del router riporti alla pagina di accesso
+            window.location.assign(redirect);
           } else {
             toast.error(translateMessage(lang, serverRes.error || 'Errore di sincronizzazione della sessione'));
           }
@@ -221,8 +221,8 @@ function LoginFormInner({
         return;
       }
       toast.success(L(lang, 'Accesso effettuato.', 'You are signed in.'));
-      router.push(afterLogin);
-      router.refresh();
+      // Navigazione completa: evita che la cache del router riporti alla pagina di accesso
+      window.location.assign(afterLogin);
     } finally {
       setLoading(false);
     }
@@ -249,8 +249,8 @@ function LoginFormInner({
         return;
       }
       toast.success(L(lang, 'Accesso effettuato con Passkey.', 'Signed in with Passkey.'));
-      router.push(afterLogin);
-      router.refresh();
+      // Navigazione completa: evita che la cache del router riporti alla pagina di accesso
+      window.location.assign(afterLogin);
     } catch (err) {
       const name = (err as { name?: string })?.name;
       toast.error(
