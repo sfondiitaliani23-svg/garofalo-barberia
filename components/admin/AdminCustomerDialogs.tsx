@@ -96,8 +96,11 @@ export function DeleteCustomerDialog({ customer, hasUpcoming, onClose }: { custo
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState('');
+  const [confirmWord, setConfirmWord] = useState('');
+  const confirmed = confirmWord.trim().toLowerCase() === 'elimina';
 
   const remove = () => {
+    if (!confirmed) return;
     setError('');
     start(async () => {
       try {
@@ -126,10 +129,19 @@ export function DeleteCustomerDialog({ customer, hasUpcoming, onClose }: { custo
           Attenzione: questo cliente ha un appuntamento in programma. Resta in calendario.
         </p>
       )}
+      <label className="mt-4 block text-sm text-white/80">
+        Per confermare scrivi <strong className="text-white">ELIMINA</strong>
+        <input
+          value={confirmWord}
+          onChange={(e) => setConfirmWord(e.target.value)}
+          autoComplete="off"
+          className="mt-2 h-10 w-full rounded-lg border border-white/15 bg-black/40 px-3 text-sm text-white outline-none focus:border-gold"
+        />
+      </label>
       {error && <p role="alert" className="mt-3 text-sm text-red-400">{error}</p>}
       <div className="mt-5 flex justify-end gap-2">
         <button type="button" onClick={onClose} className="h-10 rounded-full border border-white/15 px-5 text-sm text-white/75 hover:text-white">Annulla</button>
-        <button type="button" onClick={remove} disabled={pending} className="h-10 rounded-full bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-60">
+        <button type="button" onClick={remove} disabled={pending || !confirmed} className="h-10 rounded-full bg-red-600 px-5 text-sm font-semibold text-white transition hover:bg-red-500 disabled:opacity-60">
           {pending ? 'Elimino…' : 'Elimina'}
         </button>
       </div>

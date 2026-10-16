@@ -40,6 +40,24 @@ interface AdminAppointmentFormProps {
   onSaved: () => void;
 }
 
+function undoStatusToast(message: string, id: string, previousStatus: string, onSaved: () => void) {
+  toast.success(message, {
+    duration: 8000,
+    action: {
+      label: 'Annulla',
+      onClick: async () => {
+        const back = await updateAppointmentStatus(id, previousStatus);
+        if (back.ok) {
+          toast.success('Ripristinato');
+          onSaved();
+        } else {
+          toast.error(back.error ?? 'Non sono riuscito a ripristinare');
+        }
+      },
+    },
+  });
+}
+
 export function AdminAppointmentForm({
   barbers,
   services,
@@ -439,6 +457,7 @@ export function AdminAppointmentForm({
   function handleCancel() {
     if (!appointment) return;
     if (!window.confirm('Disdire questa prenotazione?')) return;
+    const previousStatus = String(appointment.status ?? 'confirmed');
 
     startTransition(async () => {
       const result = await adminCancelAppointment(appointment.id);
@@ -446,14 +465,15 @@ export function AdminAppointmentForm({
         toast.error(result.error);
         return;
       }
-      toast.success('Prenotazione disdetta');
       onSaved();
       onClose();
+      undoStatusToast('Prenotazione disdetta', appointment.id, previousStatus, onSaved);
     });
   }
 
   function handleComplete() {
     if (!appointment) return;
+    const previousStatus = String(appointment.status ?? 'confirmed');
 
     startTransition(async () => {
       const result = await updateAppointmentStatus(appointment.id, 'completed');
@@ -461,9 +481,9 @@ export function AdminAppointmentForm({
         toast.error(result.error);
         return;
       }
-      toast.success('Segnato come completato');
       onSaved();
       onClose();
+      undoStatusToast('Segnato come completato', appointment.id, previousStatus, onSaved);
     });
   }
 
