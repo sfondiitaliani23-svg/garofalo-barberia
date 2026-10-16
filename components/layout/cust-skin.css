@@ -52,3 +52,10 @@
   border-top-style: dashed;
   border-color: rgba(205, 154, 79, 0.25);
 }
+
+/* Pulsanti e badge a pillola: squadrati come il resto */
+.cust-skin .rounded-full[class*='px-'] {
+  border-radius: 0;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
