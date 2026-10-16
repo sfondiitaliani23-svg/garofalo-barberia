@@ -8,6 +8,7 @@ const map = {
   '@/lib/auth/ensure-profile': 'noop.mjs',
   '@/lib/utils/notifications': 'noop.mjs',
   '@/lib/utils/reminders': 'noop.mjs',
+  resend: 'resend.mjs',
 };
 export function resolve(specifier, context, next) {
   const f = map[specifier];

@@ -20,7 +20,7 @@ Repository: sfondiitaliani23-svg/garofalo-barberia. Unico amministratore: Luigi 
 
 ## Controlli prima di un push
 - `npx tsc --noEmit`
-- `npm test` (89 test; usa `tests/register-alias.mjs` per capire gli indirizzi `@/…`). I test importano i file `.ts` direttamente con Node 22: i moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
+- `npm test` (97 test; usa `tests/register-alias.mjs` per capire gli indirizzi `@/…`). I test importano i file `.ts` direttamente con Node 22: i moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
 - `tests/booking-e2e.test.mjs`: prenotazione vera contro un Postgres in memoria (PGlite) con le migrazioni di `supabase/migrations`. Finto Supabase in `tests/helpers/fake-supabase.mjs`, finti moduli in `tests/mocks/`. Se aggiungi una migrazione che tocca prenotazioni, aggiungila alla lista `MIGRATIONS` lì. Nei test `NEXT_PUBLIC_SUPABASE_URL` va impostato, altrimenti il sito usa gli orari di ripiego senza database.
 - `tests/links.test.mjs` boccia `revalidatePath` e link verso pagine che non esistono.
 - `next build` non funziona nel sandbox (non raggiunge Google Fonts): il controllo vero è il deploy su GitHub Actions.
@@ -42,6 +42,11 @@ Repository: sfondiitaliani23-svg/garofalo-barberia. Unico amministratore: Luigi 
 - Il microfono dipende da `Permissions-Policy` in `next.config.ts`: deve restare `microphone=(self)`.
 - Dopo disdetta o "completato" compare "Annulla" per 8 secondi (`undoStatusToast`).
 - Eliminare un cliente richiede di scrivere ELIMINA (`AdminCustomerDialogs.tsx`).
+
+## Lista d'attesa
+- Giorno al completo: `components/booking/WaitlistForm.tsx` (dentro `BookingWizard`) chiama `joinWaitlist` (`lib/actions/waitlist.ts`). Tabella `waitlist_entries`: migrazione `014_lista_attesa.sql`, da eseguire da Eliseo.
+- Dopo una disdetta (`cancelAppointment` o `updateAppointmentStatus` con `cancelled`) `notifyWaitlistForDate` (`lib/utils/waitlist-notify.ts`) manda email a chi aspetta, al massimo 3 per volta, solo se c'è un orario libero. Non lancia mai errori.
+- Non mettere funzioni di invio dentro file `'use server'`: ogni funzione esportata diventa chiamabile da chiunque.
 
 ## Sessione e uscita
 - `lib/supabase/session-config.ts`: i cookie rimossi devono tenere `maxAge: 0`, altrimenti l'uscita non funziona.

@@ -26,6 +26,7 @@ import { isValidCustomerEmail } from '@/lib/utils/customer-email';
 import type { Barber, Service } from '@/types/database';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { WaitlistForm } from '@/components/booking/WaitlistForm';
 import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { useLang } from '@/components/i18n/LangProvider';
@@ -828,6 +829,16 @@ export function BookingWizard({
                     ) : (
                       <p className="text-xs text-white/60 mt-1">{L(lang, 'Seleziona un\'altra data dal calendario in alto.', 'Please pick another date from the calendar above.')}</p>
                     )}
+                    {date ? (
+                      <WaitlistForm
+                        date={date}
+                        barberId={barberId}
+                        serviceIds={selectedServices.map((sv) => sv.id)}
+                        defaultName={name}
+                        defaultPhone={phone}
+                        defaultEmail={email}
+                      />
+                    ) : null}
                   </div>
                 ) : (
                   <div className="space-y-4">

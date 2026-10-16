@@ -12,6 +12,7 @@ const MIGRATIONS = [
   '003_appointment_reminders.sql',
   '004_promotions.sql',
   '007_fix_availability_periods.sql',
+  '014_lista_attesa.sql',
 ];
 
 export async function createTestDb() {
@@ -20,6 +21,7 @@ export async function createTestDb() {
     create schema auth;
     create table auth.users(id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb);
     create function auth.uid() returns uuid language sql as $$ select null::uuid $$;
+    create function public.is_admin() returns boolean language sql as $$ select false $$;
     create function auth.role() returns text language sql as $$ select 'service_role'::text $$;
   `);
   for (const f of MIGRATIONS) {

@@ -8,8 +8,9 @@ import { createTestDb, seedShop } from './helpers/fake-supabase.mjs';
 process.env.NEXT_PUBLIC_SUPABASE_URL = 'http://test.invalid';
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test';
 process.env.SUPABASE_SERVICE_ROLE_KEY = 'test';
+process.env.RESEND_API_KEY = 're_test';
 
-let ids; let db; let A; let B;
+let ids; let db; let A; let B; let W;
 
 // Prossimo giorno della settimana (0=dom … 6=sab), almeno 3 giorni da oggi.
 function nextDow(dow) {
@@ -25,11 +26,14 @@ before(async () => {
   ids = await seedShop(db);
   A = await import('@/lib/actions/availability.ts');
   B = await import('@/lib/actions/bookings.ts');
+  W = await import('@/lib/actions/waitlist.ts');
 });
 beforeEach(async () => {
   await db.query('delete from appointments');
   globalThis.__testUser = null;
   globalThis.__sideEffects = [];
+  globalThis.__emails = [];
+  await db.query('delete from waitlist_entries');
 });
 
 const base = (o) => ({ customerName: 'Mario Rossi', customerPhone: '3331234567', customerEmail: 'mario.rossi@gmail.com', ...o });
@@ -192,4 +196,50 @@ test('sabato: barba con Francesco alle 13:30 e alle 19:40 (ultimo da 20 minuti)'
   assert.equal(a.ok, true, a.error);
   const slots = (await A.getAvailableSlots(ids.vittorio, date, 20, undefined, false, false)).slots;
   assert.ok(slots.every((t) => t < '14:00' || t >= '14:30'));
+});
+
+const wl = (date, o = {}) => ({ date, barberId: ids.luigi, serviceIds: [ids.taglio_e_shampoo], customerName: 'Anna Verdi', customerPhone: '3201234567', customerEmail: 'anna.verdi@gmail.com', ...o });
+
+test('lista d’attesa: iscrizione salvata, la seconda per lo stesso giorno e email viene rifiutata', async () => {
+  const date = nextDow(3);
+  assert.equal((await W.joinWaitlist(wl(date))).ok, true);
+  const again = await W.joinWaitlist(wl(date));
+  assert.equal(again.ok, false);
+  assert.match(again.error, /già in lista/);
+  assert.equal((await db.query('select * from waitlist_entries')).rows.length, 1);
+});
+
+test('lista d’attesa: dati sbagliati rifiutati', async () => {
+  const date = nextDow(3);
+  assert.equal((await W.joinWaitlist(wl(date, { customerEmail: 'boh' }))).ok, false);
+  assert.equal((await W.joinWaitlist(wl(date, { customerName: '' }))).ok, false);
+  assert.equal((await W.joinWaitlist(wl('2020-01-01'))).ok, false);
+  assert.equal((await W.joinWaitlist(wl(date, { serviceIds: [] }))).ok, false);
+  assert.equal((await db.query('select * from waitlist_entries')).rows.length, 0);
+});
+
+test('lista d’attesa: dopo una disdetta parte una email e la richiesta passa a "avvisato"', async () => {
+  globalThis.__testUser = { id: '22222222-2222-2222-2222-222222222222', role: 'admin', email: 'luigi2@example.com' };
+  await db.query(`insert into auth.users(id,email) values ($1,$2) on conflict do nothing`, [globalThis.__testUser.id, 'luigi2@example.com']);
+  const date = nextDow(4);
+  const other = nextDow(5);
+  const booked = await B.createAppointment(base({ serviceIds: [ids.taglio_e_shampoo], barberId: ids.luigi, date, time: '10:00' }));
+  assert.equal(booked.ok, true, booked.error);
+  await W.joinWaitlist(wl(date));
+  await W.joinWaitlist(wl(other, { customerEmail: 'altro.giorno@gmail.com' }));
+  const res = await B.cancelAppointment(booked.appointmentId);
+  assert.equal(res.ok, true, res.error);
+  assert.equal(globalThis.__emails.length, 1);
+  assert.equal(globalThis.__emails[0].to, 'anna.verdi@gmail.com');
+  const st = (await db.query(`select customer_email, status from waitlist_entries order by customer_email`)).rows;
+  assert.deepEqual(st.map((r) => r.status), ['waiting', 'notified']);
+});
+
+test('lista d’attesa: senza nessuno in lista, la disdetta non manda email', async () => {
+  globalThis.__testUser = { id: '33333333-3333-3333-3333-333333333333', role: 'admin', email: 'luigi3@example.com' };
+  await db.query(`insert into auth.users(id,email) values ($1,$2) on conflict do nothing`, [globalThis.__testUser.id, 'luigi3@example.com']);
+  const booked = await B.createAppointment(base({ serviceIds: [ids.barba], barberId: ids.francesco, date: nextDow(3), time: '09:00' }));
+  const res = await B.cancelAppointment(booked.appointmentId);
+  assert.equal(res.ok, true, res.error);
+  assert.equal(globalThis.__emails.length, 0);
 });

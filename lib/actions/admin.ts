@@ -6,6 +6,7 @@ import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { maskForTester } from '@/lib/utils/tester-mask';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
+import { notifyWaitlistForDate } from '@/lib/utils/waitlist-notify';
 import { parseBookingDateTime, getShopDateString, getShopTimeString, getShopDayBounds, getShopTimezoneOffset } from '@/lib/utils/booking-datetime';
 import {
   type AdminDayScheduleInput,
@@ -568,12 +569,17 @@ export async function updateAppointmentStatus(id: string, status: string) {
   const supabase = await createServiceClient();
   if (!supabase) return { ok: false, error: 'Database non configurato' };
 
+  const { data: before } = status === 'cancelled'
+    ? await supabase.from('appointments').select('starts_at').eq('id', id).maybeSingle()
+    : { data: null };
+
   const { error } = await supabase
     .from('appointments')
     .update({ status })
     .eq('id', id);
 
   if (error) return { ok: false, error: error.message };
+  if (before?.starts_at) await notifyWaitlistForDate(getShopDateString(new Date(before.starts_at)));
   revalidateAppointmentPaths();
   return { ok: true };
 }

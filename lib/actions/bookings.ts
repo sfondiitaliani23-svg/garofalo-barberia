@@ -10,12 +10,13 @@ import { getAvailableSlots, resolveBarberForSlot } from '@/lib/actions/availabil
 import { notifyAdminBookingCancellation, notifyAdminNewBooking } from '@/lib/utils/notifications';
 import { canManageAppointment, manageAppointmentError } from '@/lib/utils/appointments';
 import { resolvePromotionForBooking } from '@/lib/actions/promotions';
-import { parseBookingDateTime } from '@/lib/utils/booking-datetime';
+import { getShopDateString, parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import { sendImmediateWhatsAppReminderIfEligible } from '@/lib/utils/reminders';
 import { isValidCustomerEmail } from '@/lib/utils/customer-email';
 import { filterCustomerRecipients } from '@/lib/utils/email-delivery';
 import { isBarberAllowedForCut, isBarberPubliclyBookable } from '@/lib/utils/barber-schedule';
 import { isCutService } from '@/lib/data/services';
+import { notifyWaitlistForDate } from '@/lib/utils/waitlist-notify';
 
 export interface CreateAppointmentInput {
   serviceId?: string; // Mantieni per retrocompatibilità
@@ -335,6 +336,9 @@ export async function cancelAppointment(appointmentId: string) {
       console.error('cancelAppointment notification failed:', notifyError);
     }
   }
+
+  // Si è liberato un posto: avvisa chi aspetta in lista d'attesa (non blocca mai la disdetta).
+  await notifyWaitlistForDate(getShopDateString(new Date(apt.starts_at)));
 
   revalidatePath('/area-cliente/appuntamenti');
   revalidatePath('/area-cliente/storico');
