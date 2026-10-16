@@ -26,6 +26,7 @@ import {
   type OverviewData,
   type RangeId,
   romeKey,
+  todaySummary,
 } from '@/lib/utils/dashboard-overview';
 import { storageGet, storageSet } from '@/lib/utils/safe-storage';
 import './overview.css';
@@ -100,6 +101,7 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
     storageSet('gb_admin_range', r);
   };
 
+  const today = useMemo(() => todaySummary(data), [data]);
   const maxBarber = Math.max(1, ...ov.barbers.map((b) => b.revenue));
   const maxService = Math.max(1, ...ov.topServices.map((s) => s.revenue));
 
@@ -138,6 +140,41 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
         <h1 className="ov-title">Barberia Garofalo</h1>
         <p className="ov-sub">Prenotazioni | Incassi e clienti · {RANGES.find((r) => r.id === range)?.label}</p>
       </div>
+
+      {/* ── Oggi ───────────────────────────────────────── */}
+      <section className="ov-card ov-today" aria-label="Riepilogo di oggi">
+        <div className="ov-today-head">
+          <h2 className="ov-h2">Oggi</h2>
+          <Link href="/admin/prenotazioni" className="ov-link">Apri prenotazioni</Link>
+        </div>
+        {today.total === 0 ? (
+          <p className="ov-empty">Nessuna prenotazione per oggi{today.tomorrow ? `. Domani: ${today.tomorrow}.` : '.'}</p>
+        ) : (
+          <>
+            <p className="ov-today-line">
+              <strong>{today.total}</strong> {today.total === 1 ? 'prenotazione' : 'prenotazioni'}
+              {today.firstTime && today.lastTime ? ` dalle ${today.firstTime} alle ${today.lastTime}` : ''}
+              {today.remaining > 0 ? ` · ancora ${today.remaining} da fare` : ' · tutte fatte'}
+              {today.cancelled > 0 ? ` · ${today.cancelled} annullate` : ''}
+              {today.tomorrow > 0 ? ` · domani ${today.tomorrow}` : ''}
+            </p>
+            {today.next && (
+              <p className="ov-today-next">
+                Prossima alle <strong>{today.next.time}</strong>{today.next.barber ? ` con ${today.next.barber.split(' ')[0]}` : ''}{today.next.service ? `, ${today.next.service}` : ''}
+              </p>
+            )}
+            <ul className="ov-today-barbers">
+              {today.perBarber.map((b) => (
+                <li key={b.name}>
+                  <span>{b.name.split(' ')[0]}</span>
+                  <strong>{b.count}</strong>
+                  {b.next && <small>prossima {b.next}</small>}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
 
       {/* ── KPI ────────────────────────────────────────── */}
       <section className="ov-kpis" aria-label="Numeri principali">

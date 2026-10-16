@@ -237,3 +237,48 @@ export function weeklyComparison(data: OverviewData) {
   });
   return out;
 }
+
+const fmtHour = new Intl.DateTimeFormat('it-IT', { timeZone: 'Europe/Rome', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+
+export type TodaySummary = {
+  total: number; // prenotazioni confermate o fatte oggi
+  remaining: number; // ancora da fare (da adesso in poi)
+  cancelled: number; // annullate o non presentate oggi
+  tomorrow: number; // confermate domani
+  firstTime: string | null;
+  lastTime: string | null;
+  next: { time: string; barber: string; service: string } | null;
+  perBarber: { name: string; count: number; next: string | null }[];
+};
+
+/** Riepilogo di oggi per Luigi: quante prenotazioni, la prossima, e chi lavora quanto. Solo numeri già nella dashboard. */
+export function todaySummary(data: OverviewData): TodaySummary {
+  const nowMs = Date.parse(data.now);
+  const today = romeKey(nowMs);
+  const tomorrowKey = shiftKey(today, 1);
+  const list = data.apts
+    .filter((a) => romeKey(a[0]) === today)
+    .sort((x, y) => x[0] - y[0]);
+  const live = list.filter((a) => isDone(a[1]));
+  const upcoming = live.filter((a) => a[0] >= nowMs && a[1] === 0);
+  const nextApt = upcoming[0];
+  const perBarber = data.barbers
+    .map((b, bi) => {
+      const mine = live.filter((a) => a[4] === bi);
+      const nxt = mine.find((a) => a[0] >= nowMs && a[1] === 0);
+      return { name: b.name, count: mine.length, next: nxt ? fmtHour.format(new Date(nxt[0])) : null };
+    })
+    .filter((b) => b.count > 0);
+  return {
+    total: live.length,
+    remaining: upcoming.length,
+    cancelled: list.filter((a) => !isDone(a[1])).length,
+    tomorrow: data.apts.filter((a) => a[1] === 0 && romeKey(a[0]) === tomorrowKey).length,
+    firstTime: live[0] ? fmtHour.format(new Date(live[0][0])) : null,
+    lastTime: live.length ? fmtHour.format(new Date(live[live.length - 1][0])) : null,
+    next: nextApt
+      ? { time: fmtHour.format(new Date(nextApt[0])), barber: data.barbers[nextApt[4]]?.name ?? '', service: data.services[nextApt[3]]?.name ?? '' }
+      : null,
+    perBarber,
+  };
+}

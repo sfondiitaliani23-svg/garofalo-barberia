@@ -475,3 +475,15 @@
   .ov-col-bar, .ov-col-trend { display: none; }
   .ov-card { padding: 1rem 0.9rem; }
 }
+
+/* ── Oggi ───────────────────────────────────────── */
+.ov-today { padding: 1rem 1.1rem; }
+.ov-today-head { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; margin-bottom: 0.5rem; }
+.ov-today-line { color: #e8e1d3; font-size: 0.95rem; line-height: 1.5; }
+.ov-today-line strong { color: var(--ov-accent); font-size: 1.15rem; }
+.ov-today-next { margin-top: 0.35rem; color: var(--ov-muted); font-size: 0.85rem; }
+.ov-today-next strong { color: #fff; }
+.ov-today-barbers { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; list-style: none; padding: 0; }
+.ov-today-barbers li { display: flex; align-items: baseline; gap: 0.45rem; border: 1px solid rgba(205, 154, 79, 0.3); padding: 0.35rem 0.7rem; font-size: 0.85rem; color: #e8e1d3; }
+.ov-today-barbers strong { color: var(--ov-accent); }
+.ov-today-barbers small { color: var(--ov-muted); font-size: 0.72rem; }
