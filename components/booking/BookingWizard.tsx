@@ -16,7 +16,7 @@ import {
   type BarberBookingStatus,
   type SlotDetail,
 } from '@/lib/actions/availability';
-import { getBarberRank } from '@/lib/utils/barber-schedule';
+import { getBarberRank, isBarberAllowedForCut } from '@/lib/utils/barber-schedule';
 import { isCutService } from '@/lib/data/services';
 import { InactiveTimeSlotGrid } from '@/components/booking/InactiveTimeSlotGrid';
 import { getDisplaySlotsForDate } from '@/lib/utils/display-slots';
@@ -99,15 +99,17 @@ export function BookingWizard({
     [selectedServices]
   );
 
-  // Tutti i barbieri ricevono tutti i servizi (tagli compresi).
+  // I tagli online solo con Luigi; barba e styling con tutti.
   const barbers = useMemo(() => {
-    return [...rawBarbers].sort((a, b) => {
+    return rawBarbers
+      .filter((b) => !hasCutService || isBarberAllowedForCut(b.name))
+      .sort((a, b) => {
       const rankA = getBarberRank(a.name);
       const rankB = getBarberRank(b.name);
       if (rankA !== rankB) return rankA - rankB;
       return (a.sort_order ?? 0) - (b.sort_order ?? 0);
     });
-  }, [rawBarbers]);
+  }, [rawBarbers, hasCutService]);
 
   // Primo barbiere pubblico disponibile
   const defaultBarber = useMemo(() => {

@@ -19,9 +19,13 @@ export const SCHEDULE_PERIOD_LABELS: Record<SchedulePeriod, string> = {
   afternoon: 'Pomeriggio',
 };
 
-/** Tutti i barbieri ricevono online anche i tagli (dal 13/10/2026). */
+/**
+ * Online i tagli (Taglio e shampoo, Taglio baby) si prenotano solo con Luigi Garofalo.
+ * Francesco e Vittorio ricevono online solo barba e styling (richiesta di Francesco, 16/10/2026).
+ * Dal pannello admin si possono comunque prenotare tagli con tutti.
+ */
 export function isBarberAllowedForCut(name?: string | null): boolean {
-  return Boolean(name);
+  return (name ?? '').trim().toLowerCase().includes('luigi');
 }
 
 export function isBarberAdminOnly(name?: string | null): boolean {
