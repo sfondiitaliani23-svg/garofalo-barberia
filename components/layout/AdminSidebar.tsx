@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/actions/auth';
+import { LogoutSubmit } from '@/components/layout/LogoutSubmit';
 import {
   LayoutDashboard,
   Calendar,
@@ -135,10 +136,10 @@ export function AdminSidebar() {
           </Link>
         </div>
         <form action={signOut}>
-          <button type="submit" className="adm-link mt-3 w-full">
+          <LogoutSubmit pendingLabel="Uscita in corso…" className="adm-link mt-3 w-full">
             <LogOut size={17} />
             Esci
-          </button>
+          </LogoutSubmit>
         </form>
       </aside>
 

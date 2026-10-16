@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut } from '@/lib/actions/auth';
+import { LogoutSubmit } from '@/components/layout/LogoutSubmit';
 import { useLang } from '@/components/i18n/LangProvider';
 import { CookieLanguageSwitch } from '@/components/i18n/CookieLanguageSwitch';
 import { L, localHref } from '@/lib/i18n';
@@ -94,9 +95,12 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
           <CookieLanguageSwitch />
         </div>
         <form action={signOut}>
-          <button type="submit" className="w-full px-5 py-2 text-left text-xs uppercase tracking-[0.2em] text-[#bda980] hover:text-gold transition-colors cursor-pointer">
+          <LogoutSubmit
+            pendingLabel={L(lang, 'Uscita in corso…', 'Logging out…')}
+            className="w-full px-5 py-2 text-left text-xs uppercase tracking-[0.2em] text-[#bda980] hover:text-gold transition-colors cursor-pointer"
+          >
             {L(lang, 'Esci', 'Log out')}
-          </button>
+          </LogoutSubmit>
         </form>
       </aside>
 
