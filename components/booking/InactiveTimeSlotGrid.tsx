@@ -25,7 +25,7 @@ export function InactiveTimeSlotGrid({
       {slots.map((time) => (
         <div
           key={time}
-          className="cursor-not-allowed rounded-lg border border-white/5 bg-white/[0.02] py-2.5 text-center text-sm font-medium text-white/60"
+          className="cursor-not-allowed border-2 border-gold/10 bg-white/[0.02] py-2.5 text-center text-[15px] font-medium tracking-wide text-white/40 line-through"
           aria-disabled
         >
           {time}

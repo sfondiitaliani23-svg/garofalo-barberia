@@ -458,7 +458,7 @@ export function BookingWizard({
   if (confirmation) {
     return (
       <div className="mx-auto w-full min-w-0 max-w-3xl px-4 sm:px-0">
-        <Card className="border-gold/30 bg-[#161616] text-white">
+        <Card className="rounded-none border-gold/55 bg-[#161616] text-white">
           <CardContent className="p-6 sm:p-8 space-y-0">
             {/* Header / Stato */}
             <div className="flex flex-col items-center text-center pb-6 border-b border-white/10">
@@ -592,33 +592,34 @@ export function BookingWizard({
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-3xl">
-      <div className="mb-8 flex items-center justify-center gap-2 sm:gap-4">
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-3 sm:gap-x-5">
         {STEPS.map((label, i) => {
           const n = i + 1;
           const active = step === n;
           const done = step > n;
           return (
-            <div key={label} className="flex items-center gap-2 text-sm">
+            <div key={label} className="flex items-center gap-2.5">
               <span className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold',
-                active ? 'bg-gold text-black' : done ? 'bg-gold/30 text-white' : 'bg-[#303030] text-white/50'
-              )}>{n}</span>
-              <span className={cn('hidden sm:inline', active ? 'text-gold' : 'text-white/50')}>{label}</span>
-              {i < STEPS.length - 1 && <span className="mx-1 text-white/20">—</span>}
+                'flex h-9 w-9 items-center justify-center rounded-full border-2 border-gold font-display text-sm',
+                active ? 'bg-gold text-black' : done ? 'bg-gold/30 text-white' : 'bg-black text-gold'
+              )}>{['I', 'II', 'III'][i]}</span>
+              <span className={cn('hidden text-xs uppercase tracking-[0.18em] sm:inline', active ? 'text-white' : 'text-white/50')}>{label}</span>
+              {i < STEPS.length - 1 && <span aria-hidden className="mx-1 hidden h-px w-8 border-t-2 border-dotted border-gold/40 sm:block" />}
             </div>
           );
         })}
       </div>
 
-      <Card className="w-full min-w-0 overflow-hidden">
-        <CardHeader className="px-4 sm:px-6">
-          <h2 className="font-display text-xl uppercase tracking-wide">{L(lang, 'Prenotazione online', 'Online booking')}</h2>
+      <Card className="w-full min-w-0 overflow-hidden rounded-none border-gold/55 bg-black/40 p-1.5">
+        <div className="border border-gold/30 bg-gradient-to-b from-[#18130e] to-[#0c0a08]">
+        <CardHeader className="border-gold/20 px-4 sm:px-6">
+          <h2 className="font-display text-2xl uppercase tracking-wide text-gold">{L(lang, 'Prenotazione online', 'Online booking')}</h2>
           <p className="text-sm text-white/50">{L(lang, 'Scegli servizio, barbiere e orario — conferma automatica', 'Choose your service, barber and time — instant confirmation')}</p>
         </CardHeader>
         <CardContent className="min-w-0 space-y-6 overflow-x-hidden px-4 sm:px-6">
           {step === 1 && (
             <div className="space-y-6">
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="divide-y divide-dashed divide-gold/35 border-y border-dashed border-gold/35">
                 {services.map((s) => {
                   const isSelected = selectedServiceIds.includes(s.id);
                   return (
@@ -626,32 +627,33 @@ export function BookingWizard({
                       key={s.id}
                       type="button"
                       onClick={() => toggleService(s.id)}
+                      aria-pressed={isSelected}
                       className={cn(
-                        'flex items-center justify-between rounded-lg border p-4 text-left transition hover:border-gold',
-                        isSelected ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a]'
+                        'flex w-full items-center gap-3 px-2 py-4 text-left transition hover:bg-gold/10 sm:gap-4 sm:px-3',
+                        isSelected && 'bg-gold/10'
                       )}
                     >
-                      <div>
-                        <p className="font-medium text-white">{svcName(s.name)}</p>
-                        <p className="text-sm text-gold">{formatDuration(s.duration_minutes)} · {formatPrice(s.price_cents)}</p>
-                      </div>
-                      <div className={cn(
-                        'flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-all',
-                        isSelected ? 'border-gold bg-gold text-black' : 'border-white/30'
+                      <span className={cn(
+                        'flex h-5 w-5 shrink-0 items-center justify-center border-2 border-gold transition-all',
+                        isSelected ? 'bg-gold text-black' : 'bg-transparent'
                       )}>
                         {isSelected && (
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="h-3.5 w-3.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3.5} stroke="currentColor" className="h-3.5 w-3.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                           </svg>
                         )}
-                      </div>
+                      </span>
+                      <span className="min-w-0 flex-1 font-semibold tracking-wide text-white sm:flex-none sm:text-lg">{svcName(s.name)}</span>
+                      <span aria-hidden className="mx-1 hidden h-px flex-1 border-b-2 border-dotted border-white/25 sm:block" />
+                      <span className="shrink-0 text-xs text-white/60">{formatDuration(s.duration_minutes)}</span>
+                      <span className="min-w-[3.5rem] shrink-0 text-right font-display text-xl text-gold">{formatPrice(s.price_cents)}</span>
                     </button>
                   );
                 })}
               </div>
 
               {selectedServices.length > 0 && (
-                <div className="rounded-lg border border-gold/20 bg-gold/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="border border-gold/30 bg-black/30 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <p className="text-sm text-white/50">{L(lang, 'Servizi selezionati', 'Selected services')} ({selectedServices.length})</p>
                     <p className="font-medium text-gold mt-0.5">
@@ -660,7 +662,7 @@ export function BookingWizard({
                   </div>
                   <div className="text-left sm:text-right shrink-0">
                     <p className="text-sm text-white/50">{L(lang, 'Totale stimato', 'Estimated total')}</p>
-                    <p className="text-lg font-bold text-white mt-0.5">
+                    <p className="mt-0.5 font-display text-xl text-gold">
                       {formatDuration(totalDuration)} · {formatPrice(totalOriginalPrice)}
                     </p>
                   </div>
@@ -673,7 +675,7 @@ export function BookingWizard({
             <div className="space-y-6">
               <div>
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gold">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">
                     {L(lang, 'Con chi vuoi prenotare?', 'Who would you like to book with?')}
                   </h3>
                   {defaultBarber && (
@@ -689,9 +691,9 @@ export function BookingWizard({
                     : <>Scegli il barbiere che preferisci, oppure &quot;Nessuna preferenza&quot; per il primo orario libero.</>}
                 </p>
 
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {loadingBarberStatuses && (
-                    <p className="text-sm text-white/50 sm:col-span-2">{L(lang, 'Verifica disponibilità team...', 'Checking team availability...')}</p>
+                    <p className="col-span-full text-sm text-white/50">{L(lang, 'Verifica disponibilità team...', 'Checking team availability...')}</p>
                   )}
                   {barbers.map((b) => {
                     const isSelected = barberId === b.id;
@@ -700,60 +702,58 @@ export function BookingWizard({
                       <button
                         key={b.id}
                         type="button"
+                        aria-pressed={isSelected}
                         onClick={() => {
                           setBarberId(b.id);
                           setTime(null);
                         }}
                         className={cn(
-                          'relative flex items-center justify-between gap-3 rounded-lg border p-4 text-left transition',
+                          'flex flex-col items-center gap-2 border-2 p-4 text-center transition',
                           isSelected
-                            ? 'border-gold bg-gold/10 shadow-[0_0_15px_rgba(212,175,55,0.15)]'
-                            : 'border-white/15 bg-[#1a1a1a] hover:border-gold/50'
+                            ? 'border-gold bg-gold/15 shadow-[0_0_18px_rgba(205,154,79,0.18)]'
+                            : 'border-gold/30 bg-black/25 hover:border-gold'
                         )}
                       >
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-white">{b.name}</p>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold uppercase tracking-wider">
-                              <Sparkles className="h-3 w-3" />
-                              Staff
-                            </span>
-                          </div>
-                          <p className="text-sm text-gold mt-0.5">
-                            {barberRole(lang, formatBarberRole(b.role))}
-                          </p>
-                        </div>
-                        {b.image_url && (
+                        {b.image_url ? (
                           <Image
                             src={b.image_url}
                             alt={b.name}
-                            width={60}
-                            height={78}
-                            className="h-[68px] w-[52px] rounded object-cover object-top shrink-0"
+                            width={74}
+                            height={74}
+                            className="h-[74px] w-[74px] rounded-full border-[3px] border-double border-gold object-cover object-top"
                           />
+                        ) : (
+                          <span className="flex h-[74px] w-[74px] items-center justify-center rounded-full border-[3px] border-double border-gold bg-[#120e0a] font-display text-2xl text-gold">
+                            {b.name.split(' ').map((w) => w[0]).slice(0, 2).join('')}
+                          </span>
                         )}
+                        <p className="text-[15px] font-semibold text-white">{b.name}</p>
+                        <p className="text-[11px] uppercase tracking-[0.15em] text-gold/80">
+                          {barberRole(lang, formatBarberRole(b.role))}
+                        </p>
                       </button>
                     );
                   })}
                   <button
                     type="button"
+                    aria-pressed={barberId === null}
                     onClick={() => {
                       setBarberId(null);
                       setTime(null);
                     }}
                     className={cn(
-                      'rounded-lg border p-4 text-left transition sm:col-span-2',
-                      barberId === null ? 'border-gold bg-gold/10' : 'border-white/15 bg-[#1a1a1a] hover:border-gold/40'
+                      'col-span-2 border-2 p-4 text-center transition sm:col-span-3',
+                      barberId === null ? 'border-gold bg-gold/15' : 'border-gold/30 bg-black/25 hover:border-gold'
                     )}
                   >
-                    <p className="font-medium text-white">{L(lang, 'Nessuna preferenza (Primo disponibile)', 'No preference (first available)')}</p>
-                    <p className="text-sm text-white/50">{L(lang, 'Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco', 'Automatically assigned from the free times of Luigi, Vittorio and Francesco')}</p>
+                    <p className="font-semibold text-white">{L(lang, 'Nessuna preferenza (Primo disponibile)', 'No preference (first available)')}</p>
+                    <p className="text-sm text-white/60">{L(lang, 'Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco', 'Automatically assigned from the free times of Luigi, Vittorio and Francesco')}</p>
                   </button>
                 </div>
               </div>
 
               <div>
-                <h3 className="mb-3 text-sm font-semibold text-gold">{L(lang, 'Scegli il giorno', 'Choose a day')}</h3>
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-gold">{L(lang, 'Scegli il giorno', 'Choose a day')}</h3>
                 <MonthDatePicker
                   dates={dates}
                   selectedDate={date}
@@ -764,7 +764,7 @@ export function BookingWizard({
 
               <div>
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-gold">{L(lang, 'Orari disponibili', 'Available times')}</h3>
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.25em] text-gold">{L(lang, 'Orari disponibili', 'Available times')}</h3>
                   {date && (
                     <span className="text-xs text-white/50">
                       {format(parseISO(date), "EEEE d MMMM", { locale })}
@@ -841,11 +841,11 @@ export function BookingWizard({
                             type="button"
                             onClick={() => selectSlot(t)}
                             className={cn(
-                              'flex flex-col items-center justify-center rounded-lg border py-2.5 px-2 text-center transition hover:border-gold hover:bg-gold/10',
-                              isSelected ? 'border-gold bg-gold text-black font-bold shadow-md' : 'border-white/15 bg-[#1a1a1a]'
+                              'flex flex-col items-center justify-center border-2 py-2.5 px-2 text-center transition hover:border-gold hover:bg-gold/10',
+                              isSelected ? 'border-gold bg-gold text-black font-bold shadow-md' : 'border-gold/30 bg-black/25'
                             )}
                           >
-                            <span className={cn('text-sm font-semibold', isSelected ? 'text-black' : 'text-white')}>
+                            <span className={cn('text-[15px] font-semibold tracking-wide', isSelected ? 'text-black' : 'text-white')}>
                               {t}
                             </span>
                             {detail?.barberName && (
@@ -903,40 +903,50 @@ export function BookingWizard({
 
           {step === 3 && selectedServices.length > 0 && date && time && (
             <div className="space-y-4">
-              <div className="rounded-lg border border-white/10 bg-[#1a1a1a] p-4 text-sm space-y-2">
-                <p><strong>{L(lang, 'Servizi selezionati', 'Selected services')}:</strong> {selectedServices.map(s => svcName(s.name)).join(' + ')}</p>
-                <p><strong>{L(lang, 'Durata totale', 'Total duration')}:</strong> {formatDuration(totalDuration)}</p>
-                {appliedPromotion && appliedPromotion.discountCents > 0 ? (
-                  <>
-                    <p>
-                      <strong>{L(lang, 'Prezzo complessivo', 'Total price')}:</strong>{' '}
-                      <span className="line-through text-white/60">{formatPrice(totalOriginalPrice)}</span>{' '}
-                      <span className="text-gold font-semibold">{formatPrice(appliedPromotion.finalCents)}</span>
-                    </p>
-                    <p className="text-emerald-400/90 text-xs">
-                      {L(lang, 'Sconto', 'Discount')} {formatPrice(appliedPromotion.discountCents)} — {appliedPromotion.title}
-                      {appliedPromotion.code ? ` (${appliedPromotion.code})` : ''}
-                    </p>
-                  </>
-                ) : (
-                  <p><strong>{L(lang, 'Prezzo complessivo', 'Total price')}:</strong> {formatPrice(totalOriginalPrice)}</p>
-                )}
-                <p><strong>{L(lang, 'Data', 'Date')}:</strong> {format(parseISO(date), "EEEE d MMMM yyyy", { locale })} {L(lang, 'alle', 'at')} {time}</p>
-                <div className="pt-1 border-t border-white/10 flex items-center justify-between">
-                  <div>
-                    <span className="text-white/60">{L(lang, 'Operatore', 'Barber')}: </span>
-                    <strong className="text-gold text-base">{assignedBarberName}</strong>
+              <div className="relative bg-[#f3e6c8] p-5 text-sm text-[#1a1410] shadow-[0_14px_34px_rgba(0,0,0,0.55)] sm:p-6">
+                <p className="text-center font-display text-xl tracking-[0.12em]">GAROFALO</p>
+                <p className="mt-0.5 text-center text-[10px] uppercase tracking-[0.35em] text-[#6b5a3e]">{L(lang, 'Barberia · Foggia', 'Barbershop · Foggia')}</p>
+                <div className="my-4 border-t-2 border-dashed border-[#1a1410]" />
+                <div className="space-y-2">
+                  <p><strong>{L(lang, 'Servizi selezionati', 'Selected services')}:</strong> {selectedServices.map(s => svcName(s.name)).join(' + ')}</p>
+                  <p><strong>{L(lang, 'Durata totale', 'Total duration')}:</strong> {formatDuration(totalDuration)}</p>
+                  <p><strong>{L(lang, 'Data', 'Date')}:</strong> {format(parseISO(date), "EEEE d MMMM yyyy", { locale })} {L(lang, 'alle', 'at')} {time}</p>
+                  <p className="flex flex-wrap items-center gap-x-2">
+                    <span><strong>{L(lang, 'Operatore', 'Barber')}:</strong> {assignedBarberName}</span>
                     {selectedSlotInfo?.isFallback ? (
-                      <span className="ml-2 inline-block rounded bg-amber-500/20 px-2 py-0.5 text-[11px] font-bold text-amber-300">
+                      <span className="inline-block bg-[#1a1410]/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">
                         {L(lang, 'Collaboratore', 'Team member')}
                       </span>
                     ) : (
-                      <span className="ml-2 inline-block rounded bg-gold/20 px-2 py-0.5 text-[11px] font-bold text-gold">
+                      <span className="inline-block bg-[#1a1410]/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider">
                         {L(lang, 'Titolare', 'Owner')}
                       </span>
                     )}
-                  </div>
+                  </p>
                 </div>
+                <div className="my-4 border-t-2 border-[#1a1410]" />
+                {appliedPromotion && appliedPromotion.discountCents > 0 ? (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.25em]">{L(lang, 'Prezzo complessivo', 'Total price')}</span>
+                      <span className="text-[#1a1410]/55 line-through">{formatPrice(totalOriginalPrice)}</span>
+                    </div>
+                    <p className="text-xs text-emerald-800">
+                      {L(lang, 'Sconto', 'Discount')} {formatPrice(appliedPromotion.discountCents)} — {appliedPromotion.title}
+                      {appliedPromotion.code ? ` (${appliedPromotion.code})` : ''}
+                    </p>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-[11px] font-bold uppercase tracking-[0.25em]">{L(lang, 'Totale', 'Total')}</span>
+                      <span className="font-display text-3xl text-[#a3251f]">{formatPrice(appliedPromotion.finalCents)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.25em]">{L(lang, 'Prezzo complessivo', 'Total price')}</span>
+                    <span className="font-display text-3xl text-[#a3251f]">{formatPrice(totalOriginalPrice)}</span>
+                  </div>
+                )}
+                <p className="mt-2 text-xs text-[#6b5a3e]">{L(lang, 'Si paga in negozio dopo il servizio.', 'You pay at the barbershop after your service.')}</p>
               </div>
 
               <div>
@@ -1006,7 +1016,7 @@ export function BookingWizard({
 
           <div
             className={cn(
-              'grid gap-3 border-t border-white/10 pt-4',
+              'grid gap-3 border-t border-gold/25 pt-4',
               step === 3 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-[auto_1fr] md:items-center'
             )}
           >
@@ -1014,7 +1024,7 @@ export function BookingWizard({
               <Button
                 variant="outline"
                 onClick={() => setStep(step - 1)}
-                className="w-full max-w-full min-w-0 md:w-auto"
+                className="w-full max-w-full min-w-0 uppercase tracking-[0.2em] md:w-auto"
               >
                 {L(lang, 'Indietro', 'Back')}
               </Button>
@@ -1029,7 +1039,7 @@ export function BookingWizard({
                   else if (step === 2 && time) setStep(3);
                 }}
                 className={cn(
-                  'w-full max-w-full min-w-0 md:ml-auto md:w-auto font-bold',
+                  'w-full max-w-full min-w-0 md:ml-auto md:w-auto font-bold uppercase tracking-[0.2em]',
                   (step === 1 ? selectedServiceIds.length === 0 : (step === 2 && !time)) && 'opacity-50'
                 )}
               >
@@ -1046,6 +1056,7 @@ export function BookingWizard({
             )}
           </div>
         </CardContent>
+        </div>
       </Card>
     </div>
   );

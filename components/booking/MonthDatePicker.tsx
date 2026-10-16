@@ -201,10 +201,10 @@ export function MonthDatePicker({
                   type="button"
                   onClick={() => handleMonthClick(month.value)}
                   className={cn(
-                    'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition cursor-pointer select-none',
+                    'flex-shrink-0 border-2 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] transition cursor-pointer select-none',
                     isActive
-                      ? 'border-gold bg-gold/15 text-gold font-semibold shadow-[0_0_12px_rgba(212,175,55,0.18)]'
-                      : 'border-white/15 bg-[#1a1a1a] text-white/60 hover:border-gold/40 hover:text-white'
+                      ? 'border-gold bg-gold text-black'
+                      : 'border-gold/30 bg-black/25 text-white/70 hover:border-gold hover:text-white'
                   )}
                 >
                   {month.label}
@@ -226,8 +226,7 @@ export function MonthDatePicker({
             const isSelected = selectedDates ? selectedDates.includes(d) : selectedDate === d;
             const parsed = parseISO(d);
             const dayOfWeek = format(parsed, 'EEE', { locale });
-            const dayAndMonth = format(parsed, 'd MMM', { locale });
-            const isFirstOfNewMonth = index > 0 && d.slice(0, 7) !== sortedDates[index - 1].slice(0, 7);
+                        const isFirstOfNewMonth = index > 0 && d.slice(0, 7) !== sortedDates[index - 1].slice(0, 7);
 
             return (
               <Fragment key={d}>
@@ -248,22 +247,25 @@ export function MonthDatePicker({
                   type="button"
                   onClick={() => handleDayClick(d)}
                   className={cn(
-                    'flex-shrink-0 min-w-[72px] rounded-lg border px-4 py-2.5 text-center transition cursor-pointer select-none',
+                    'flex-shrink-0 w-[74px] overflow-hidden border-2 text-center transition cursor-pointer select-none',
                     isSelected
-                      ? 'border-gold bg-gold/10 text-white shadow-[0_0_14px_rgba(212,175,55,0.2)]'
-                      : 'border-white/15 bg-[#1a1a1a] text-white hover:border-gold/40'
+                      ? 'border-gold bg-gold text-black'
+                      : 'border-gold/30 bg-black/25 text-white hover:border-gold'
                   )}
                 >
                   <span
                     className={cn(
-                      'block text-[11px] font-semibold uppercase tracking-wider',
-                      isSelected ? 'text-gold' : 'text-white/50'
+                      'block py-1 text-[10px] font-bold uppercase tracking-[0.2em]',
+                      isSelected ? 'bg-[#f3e6c8] text-black' : 'bg-gold text-black'
                     )}
                   >
                     {dayOfWeek}
                   </span>
-                  <span className="block text-sm font-bold text-white mt-0.5 whitespace-nowrap">
-                    {dayAndMonth}
+                  <span className="block pt-1.5 font-display text-[28px] leading-none">
+                    {format(parsed, 'd')}
+                  </span>
+                  <span className="block pb-2 pt-0.5 text-[10px] uppercase tracking-[0.2em]">
+                    {format(parsed, 'MMM', { locale })}
                   </span>
                 </button>
               </Fragment>
