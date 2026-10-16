@@ -104,11 +104,14 @@
   .adm-skin table thead tr { background: #cd9a4f; }
   .adm-skin table th {
     color: #0a0807;
-    font-size: 0.64rem;
-    letter-spacing: 0.18em;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     font-weight: 700;
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
   }
+  .adm-skin table th:first-child { padding-left: 0.6rem; }
   .adm-skin table tbody tr { border-bottom-style: dashed; border-color: rgba(205, 154, 79, 0.25); }
   .adm-skin table tbody tr:hover { background: rgba(205, 154, 79, 0.06); }
   .adm-skin .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-style: dashed; border-color: rgba(205, 154, 79, 0.25); }
@@ -142,4 +145,21 @@
   /* Linguette e scelte (pill) a riquadro */
   .adm-skin [role='tab'] { border-radius: 0; }
   .adm-skin [role='tab'][aria-selected='true'] { box-shadow: none; }
+
+  /* Dashboard (classi ov-*): stesso aspetto a insegna */
+  .adm-skin .ov-card { border-radius: 0; border: 1px solid rgba(205, 154, 79, 0.4); background: rgba(0, 0, 0, 0.32); }
+  .adm-skin .ov-card::before { background: linear-gradient(90deg, transparent, rgba(205, 154, 79, 0.45), transparent); }
+  .adm-skin .ov-kpi:hover { border-color: #cd9a4f; transform: none; }
+  .adm-skin .ov-kpi-icon { border-radius: 0; }
+  .adm-skin .ov-h2 {
+    font-family: var(--font-display), 'Rye', Georgia, serif;
+    font-weight: 400;
+    font-size: 1.05rem;
+    color: #cd9a4f;
+  }
+  .adm-skin .ov-link { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.65rem; }
+  .adm-skin .ov-search, .adm-skin .ov-range-btn { border-radius: 0; }
+  .adm-skin .ov-table th { padding: 0.55rem 0.5rem; }
+  .adm-skin .ov-pin-bar, .adm-skin .ov-meter { border-radius: 0; }
+  .adm-skin .ov-badge { border-radius: 0; }
 }
