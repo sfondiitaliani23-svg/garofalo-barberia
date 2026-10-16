@@ -24,15 +24,19 @@ export function getCustomerSessionExpiryDate(): Date {
 
 export function applyCustomerSessionCookieOptions(cookiesToSet: SessionCookie[]): SessionCookie[] {
   const defaults = getCustomerSessionCookieOptions();
-  return cookiesToSet.map(({ name, value, options }) => ({
-    name,
-    value,
-    options: {
-      ...options,
-      ...defaults,
-      maxAge: CUSTOMER_SESSION_MAX_AGE_SECONDS,
-    },
-  }));
+  return cookiesToSet.map(({ name, value, options }) => {
+    // Un cookie che Supabase sta cancellando (logout) deve restare cancellato: non gli diamo i 60 giorni.
+    const removing = options?.maxAge === 0 || value === '';
+    return {
+      name,
+      value,
+      options: {
+        ...options,
+        ...defaults,
+        maxAge: removing ? 0 : CUSTOMER_SESSION_MAX_AGE_SECONDS,
+      },
+    };
+  });
 }
 
 export function isCustomerSessionExpired(sessionUntilValue?: string | null): boolean {
