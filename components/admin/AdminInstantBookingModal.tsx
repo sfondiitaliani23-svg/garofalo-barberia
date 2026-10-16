@@ -1,19 +1,34 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
-import { Mic, X, Loader2 } from 'lucide-react';
+import { useEffect, useRef, useState, useTransition } from 'react';
+import { Mic, Square, X, Loader2, Wand2, Check, CircleDashed } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { createAdminAppointment } from '@/lib/actions/admin';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { parseBookingSpeech, type VoiceBookingResult } from '@/lib/utils/voice-booking';
 
 interface AdminInstantBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const field =
+  'mt-1 block h-10 w-full border border-gold/30 bg-black/50 px-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-gold [color-scheme:dark]';
+const label = 'block text-[11px] font-semibold uppercase tracking-[0.15em] text-white/55';
+
+function todayLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const MIC_ERRORS: Record<string, string> = {
+  'not-allowed': 'Il microfono è bloccato. Clicca il lucchetto vicino all\'indirizzo e consenti il microfono.',
+  'service-not-allowed': 'Il microfono è bloccato. Clicca il lucchetto vicino all\'indirizzo e consenti il microfono.',
+  'no-speech': 'Non ho sentito niente. Riprova e parla vicino al microfono.',
+  'audio-capture': 'Non trovo il microfono. Controlla che sia collegato.',
+  network: 'Per il riconoscimento vocale serve internet.',
+};
 
 export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookingModalProps) {
   const router = useRouter();
@@ -21,7 +36,6 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   const [barbers, setBarbers] = useState<{ id: string; name: string }[]>([]);
   const [services, setServices] = useState<{ id: string; name: string }[]>([]);
 
-  // Form fields
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [date, setDate] = useState('');
@@ -31,33 +45,33 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceWeeks, setRecurrenceWeeks] = useState(4);
 
-  // Speech Recognition state
+  // Voce
   const [isListening, setIsListening] = useState(false);
   const [speechText, setSpeechText] = useState('');
+  const [heard, setHeard] = useState<VoiceBookingResult | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const finalTextRef = useRef('');
+  const silenceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const listsRef = useRef({ barbers, services });
+  listsRef.current = { barbers, services };
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      stopListening();
+      return;
+    }
+    setDate(todayLocal());
+    setSpeechText('');
+    setHeard(null);
+    setCustomerName('');
+    setCustomerPhone('');
+    setIsRecurring(false);
 
-    // Pre-fill today's date
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    setDate(`${yyyy}-${mm}-${dd}`);
-
-    // Load barbers and services
     const supabase = createClient();
     if (!supabase) return;
-    const fetchOptions = async () => {
-      const { data: bData } = await supabase
-        .from('barbers')
-        .select('id, name')
-        .eq('is_active', true);
-      const { data: sData } = await supabase
-        .from('services')
-        .select('id, name')
-        .eq('is_active', true);
-
+    (async () => {
+      const { data: bData } = await supabase.from('barbers').select('id, name').eq('is_active', true);
+      const { data: sData } = await supabase.from('services').select('id, name').eq('is_active', true);
       if (bData && bData.length > 0) {
         setBarbers(bData);
         setBarberId(bData[0].id);
@@ -66,90 +80,153 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
         setServices(sData);
         setSelectedServiceIds([sData[0].id]);
       }
-    };
-    fetchOptions();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isOpen, onClose]);
+
+  useEffect(() => () => stopListening(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null;
 
-  const startVoiceInput = () => {
-    if (typeof window === 'undefined') return;
+  /** Applica sul modulo solo quello che è stato capito; il resto resta com'era. */
+  function applyParsed(parsed: VoiceBookingResult) {
+    if (parsed.customerName) setCustomerName(parsed.customerName);
+    if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone);
+    if (parsed.dateStr) setDate(parsed.dateStr);
+    if (parsed.timeStr) setTime(parsed.timeStr);
+    if (parsed.barberId) setBarberId(parsed.barberId);
+    if (parsed.serviceIds.length > 0) setSelectedServiceIds(parsed.serviceIds);
+    setIsRecurring(parsed.isRecurring);
+    if (parsed.isRecurring) setRecurrenceWeeks(parsed.recurrenceWeeks);
+    setHeard(parsed);
+  }
 
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  function runParse(text: string) {
+    const { barbers: b, services: sv } = listsRef.current;
+    const parsed = parseBookingSpeech(text, b, sv);
+    applyParsed(parsed);
+    return parsed;
+  }
 
-    if (!SpeechRecognition) {
-      toast.error('Il riconoscimento vocale non è supportato su questo browser. Prova con Google Chrome.');
+  function stopListening() {
+    if (silenceTimer.current) clearTimeout(silenceTimer.current);
+    silenceTimer.current = null;
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      /* già fermo */
+    }
+  }
+
+  function startVoiceInput() {
+    if (isListening) {
+      stopListening();
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      toast.error('Questo browser non ascolta la voce. Usa Google Chrome, oppure scrivi la frase qui sotto e premi "Compila".');
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SR();
     recognition.lang = 'it-IT';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    recognition.continuous = true; // non si ferma alla prima pausa: puoi dire nome, numero e data con calma
+    recognition.interimResults = true; // si vede il testo mentre parli
+    recognition.maxAlternatives = 3; // tra più ascolti si sceglie quello che riempie più campi
+    try {
+      // Chrome recente: suggerisce al riconoscimento i nomi di barbieri e servizi
+      const Phrase = (window as any).SpeechRecognitionPhrase;
+      if (Phrase && 'phrases' in recognition) {
+        const { barbers: b, services: sv } = listsRef.current;
+        recognition.phrases = [...b.map((x) => x.name), ...b.map((x) => x.name.split(' ')[0]), ...sv.map((x) => x.name)].map(
+          (x) => new Phrase(x, 5),
+        );
+      }
+    } catch {
+      /* non supportato: nessun problema */
+    }
+
+    finalTextRef.current = '';
+    let errored = false;
+    const armSilence = () => {
+      if (silenceTimer.current) clearTimeout(silenceTimer.current);
+      // 3 secondi di silenzio dopo che hai parlato: mi fermo da solo
+      silenceTimer.current = setTimeout(() => stopListening(), 3000);
+    };
 
     recognition.onstart = () => {
       setIsListening(true);
       setSpeechText('');
+      setHeard(null);
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setSpeechText(transcript);
-
-      const parsed = parseVoiceText(transcript, barbers, services);
-      if (parsed.customerName) setCustomerName(parsed.customerName);
-      if (parsed.customerPhone) setCustomerPhone(parsed.customerPhone);
-      if (parsed.dateStr) setDate(parsed.dateStr);
-      if (parsed.timeStr) setTime(parsed.timeStr);
-      if (parsed.barberId) setBarberId(parsed.barberId);
-      if (parsed.serviceIds && parsed.serviceIds.length > 0) {
-        setSelectedServiceIds(parsed.serviceIds);
+      let interim = '';
+      let finals = '';
+      for (let i = 0; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) {
+          // tra le alternative scelgo quella da cui si capiscono più campi
+          let best = res[0].transcript as string;
+          let bestScore = -1;
+          for (let a = 0; a < res.length; a++) {
+            const sc = parseBookingSpeech(res[a].transcript, listsRef.current.barbers, listsRef.current.services).score;
+            if (sc > bestScore) {
+              bestScore = sc;
+              best = res[a].transcript;
+            }
+          }
+          finals += `${best} `;
+        } else {
+          interim += `${res[0].transcript} `;
+        }
       }
-      if (parsed.isRecurring !== undefined) {
-        setIsRecurring(parsed.isRecurring);
-      }
-      if (parsed.recurrenceWeeks) {
-        setRecurrenceWeeks(parsed.recurrenceWeeks);
-      }
-
-      toast.success('Voce riconosciuta ed elaborata!');
+      finalTextRef.current = finals.trim();
+      const shown = `${finals}${interim}`.trim();
+      setSpeechText(shown);
+      if (shown) armSilence();
     };
 
     recognition.onerror = (e: any) => {
-      console.error(e);
-      toast.error('Errore nel riconoscimento vocale.');
+      errored = true;
+      toast.error(MIC_ERRORS[e?.error] ?? 'Il riconoscimento vocale non ha funzionato. Riprova.');
       setIsListening(false);
     };
 
     recognition.onend = () => {
       setIsListening(false);
+      if (silenceTimer.current) clearTimeout(silenceTimer.current);
+      const text = finalTextRef.current;
+      if (text) {
+        const parsed = runParse(text);
+        if (parsed.score === 0) toast.warning('Ho sentito la frase ma non ho capito i dati. Controlla il testo e premi "Compila".');
+      } else if (!errored) {
+        toast.warning('Non ho sentito niente. Riprova e parla vicino al microfono.');
+      }
     };
 
-    recognition.start();
-  };
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch {
+      toast.error('Il microfono è già in uso. Riprova tra un attimo.');
+    }
+  }
 
   const handleSave = () => {
-    if (!customerName.trim()) {
-      toast.error('Inserisci il nome e cognome del cliente.');
-      return;
-    }
-    if (!date) {
-      toast.error('Inserisci la data.');
-      return;
-    }
-    if (!time) {
-      toast.error('Inserisci l\'orario.');
-      return;
-    }
-    if (!barberId) {
-      toast.error('Seleziona un barbiere.');
-      return;
-    }
-    if (selectedServiceIds.length === 0) {
-      toast.error('Seleziona almeno un servizio.');
-      return;
-    }
+    if (!customerName.trim()) return void toast.error('Inserisci il nome e cognome del cliente.');
+    if (!date) return void toast.error('Inserisci la data.');
+    if (!time) return void toast.error("Inserisci l'orario.");
+    if (!barberId) return void toast.error('Seleziona un barbiere.');
+    if (selectedServiceIds.length === 0) return void toast.error('Seleziona almeno un servizio.');
 
     startTransition(async () => {
       const result = await createAdminAppointment({
@@ -170,439 +247,215 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
       if (result.isRecurring) {
         const succ = result.successCount || 0;
         const fail = result.failedCount || 0;
-        if (fail > 0) {
-          toast.warning(`Prenotate ${succ} settimane su ${succ + fail}. Alcune date erano già occupate.`);
-        } else {
-          toast.success(`Prenotate con successo tutte le ${succ} settimane!`);
-        }
+        if (fail > 0) toast.warning(`Prenotate ${succ} settimane su ${succ + fail}. Alcune date erano già occupate.`);
+        else toast.success(`Prenotate con successo tutte le ${succ} settimane!`);
       } else {
-        toast.success('Prenotazione istantanea creata con successo!');
+        toast.success('Prenotazione creata.');
       }
       router.refresh();
       onClose();
     });
   };
 
+  const chips: { label: string; ok: boolean }[] = heard
+    ? [
+        { label: 'Nome', ok: !!heard.customerName },
+        { label: 'Telefono', ok: !!heard.customerPhone },
+        { label: 'Data', ok: !!heard.dateStr },
+        { label: 'Ora', ok: !!heard.timeStr },
+        { label: 'Barbiere', ok: !!heard.barberId },
+        { label: 'Servizio', ok: heard.serviceIds.length > 0 },
+      ]
+    : [];
+
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[250] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-white/10 bg-[#111] p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 cursor-default"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Prenotazione istantanea"
+        className="flex max-h-[94vh] w-full max-w-lg cursor-default flex-col overflow-hidden border border-gold/50 bg-[#0c0a08] shadow-2xl sm:max-h-[90vh]"
       >
-        <div className="flex items-center justify-between border-b border-white/5 pb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⚡</span>
-            <div>
-              <h2 className="font-display text-lg uppercase tracking-wide text-gold font-bold">Prenotazione Istantanea</h2>
-              <p className="text-xs text-white/50">Crea una prenotazione al volo</p>
-            </div>
+        {/* Testata */}
+        <div className="flex items-start justify-between gap-4 border-b border-gold/25 px-5 py-4">
+          <div>
+            <h2 className="font-display text-lg font-bold uppercase tracking-wide text-gold">Prenotazione istantanea</h2>
+            <p className="mt-0.5 text-xs text-white/50">Parla, scrivi o compila a mano.</p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1 text-white/40 hover:bg-white/5 hover:text-white">
+          <button onClick={onClose} aria-label="Chiudi" className="p-1 text-white/45 transition hover:text-white">
             <X size={18} />
           </button>
         </div>
 
-        <div className="admin-modal-scroll flex-1 overflow-y-auto min-h-0 pr-1 space-y-4 my-4">
-          {/* Sezione Riconoscimento Vocale */}
-          <div className="mt-2 rounded-lg border border-white/5 bg-white/[0.02] p-4 text-center">
-            <button
-              type="button"
-              onClick={startVoiceInput}
-              className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full transition-all ${
-                isListening
-                  ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-600/30'
-                  : 'bg-gold/15 text-gold border border-gold/30 hover:bg-gold/25'
-              }`}
-            >
-              <Mic size={24} className={isListening ? 'animate-bounce' : ''} />
-            </button>
-            <p className="mt-2 text-xs font-semibold text-white/70">
-              {isListening ? 'Sto ascoltando... Parla ora' : 'Usa il riconoscimento vocale'}
-            </p>
-            <p className="mt-1 text-[11px] text-white/40 max-w-[280px] mx-auto leading-relaxed">
-              Clicca e dì ad esempio: <span className="italic text-gold/70">"Mario Rossi 3201234567 domani alle 15:30"</span>
-            </p>
-            {speechText && (
-              <div className="mt-3 rounded border border-gold/10 bg-gold/5 p-2 text-left">
-                <span className="text-[10px] uppercase font-bold text-gold/50 block">Testo Rilevato:</span>
-                <p className="text-xs text-white/80 italic">"{speechText}"</p>
+        <div className="admin-modal-scroll min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
+          {/* Voce */}
+          <section className="border border-gold/20 bg-gold/[0.04] p-4">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={startVoiceInput}
+                aria-label={isListening ? 'Ferma la registrazione' : 'Parla per compilare'}
+                className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition ${
+                  isListening
+                    ? 'animate-pulse bg-red-600 text-white shadow-lg shadow-red-600/30'
+                    : 'border border-gold/40 bg-gold/15 text-gold hover:bg-gold/25'
+                }`}
+              >
+                {isListening ? <Square size={20} /> : <Mic size={24} />}
+              </button>
+              <div className="min-w-0 text-left">
+                <p className="text-sm font-semibold text-white/85">
+                  {isListening ? 'Sto ascoltando… Premi per fermare' : 'Premi il microfono e parla'}
+                </p>
+                <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+                  Dì nome, telefono, giorno, ora, barbiere e servizio. Esempio:{' '}
+                  <span className="italic text-gold/80">&quot;Mario Rossi 320 123 4567 sabato alle dieci e mezza con Vittorio, taglio e shampoo&quot;</span>
+                </p>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Form Fields */}
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="inst-name" className="text-xs text-white/60">Nome e Cognome *</Label>
-                <Input
-                  id="inst-name"
-                  type="text"
-                  placeholder="Es. Mario Rossi"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
-                />
+            <label htmlFor="inst-speech" className={`${label} mt-4`}>
+              Frase (puoi correggerla)
+            </label>
+            <textarea
+              id="inst-speech"
+              rows={2}
+              value={speechText}
+              onChange={(e) => setSpeechText(e.target.value)}
+              placeholder="La frase compare qui mentre parli. Puoi anche scriverla."
+              className="mt-1 block w-full resize-none border border-gold/30 bg-black/50 px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-gold"
+            />
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-1.5" aria-live="polite">
+                {chips.map((c) => (
+                  <span
+                    key={c.label}
+                    className={`inline-flex items-center gap-1 border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                      c.ok ? 'border-emerald-500/40 text-emerald-300' : 'border-white/15 text-white/40'
+                    }`}
+                  >
+                    {c.ok ? <Check size={11} /> : <CircleDashed size={11} />}
+                    {c.label}
+                  </span>
+                ))}
               </div>
+              <button
+                type="button"
+                onClick={() => speechText.trim() && runParse(speechText)}
+                disabled={!speechText.trim() || isListening}
+                className="inline-flex h-8 items-center gap-1.5 border border-gold/50 px-3 text-[11px] font-bold uppercase tracking-[0.15em] text-gold transition hover:bg-gold hover:text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Wand2 size={13} /> Compila
+              </button>
+            </div>
+          </section>
 
+          {/* Dati */}
+          <section className="space-y-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <Label htmlFor="inst-phone" className="text-xs text-white/60">Telefono (opzionale)</Label>
-                <Input
-                  id="inst-phone"
-                  type="tel"
-                  placeholder="Es. 320 123 4567"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
-                />
+                <label htmlFor="inst-name" className={label}>Nome e cognome *</label>
+                <input id="inst-name" type="text" placeholder="Es. Mario Rossi" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={field} />
+              </div>
+              <div>
+                <label htmlFor="inst-phone" className={label}>Telefono</label>
+                <input id="inst-phone" type="tel" inputMode="tel" placeholder="Es. 320 123 4567" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className={field} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="inst-date" className="text-xs text-white/60">Data *</Label>
-                <Input
-                  id="inst-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
-                />
+                <label htmlFor="inst-date" className={label}>Data *</label>
+                <input id="inst-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} />
               </div>
               <div>
-                <Label htmlFor="inst-time" className="text-xs text-white/60">Orario *</Label>
-                <Input
-                  id="inst-time"
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className="mt-1 border-white/10 bg-black/40 text-sm focus:border-gold"
-                />
+                <label htmlFor="inst-time" className={label}>Orario *</label>
+                <input id="inst-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className={field} />
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="inst-barber" className="text-xs text-white/60">Barbiere</Label>
-                <select
-                  id="inst-barber"
-                  value={barberId}
-                  onChange={(e) => setBarberId(e.target.value)}
-                  className="mt-1 block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
-                >
-                  {barbers.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label htmlFor="inst-barber" className={label}>Barbiere</label>
+              <select id="inst-barber" value={barberId} onChange={(e) => setBarberId(e.target.value)} className={field}>
+                {barbers.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </div>
 
-              <div>
-                <Label className="text-xs text-white/60">Servizi (seleziona uno o più)</Label>
-                <div className="admin-modal-scroll mt-1 max-h-36 overflow-y-auto rounded-md border border-white/10 bg-black/40 p-2 space-y-1">
-                  {services.map((s) => {
-                    const checked = selectedServiceIds.includes(s.id);
-                    return (
-                      <label
-                        key={s.id}
-                        className={`flex items-center gap-2 rounded px-2 py-1.5 text-xs cursor-pointer transition ${
-                          checked ? 'bg-gold/15 text-gold font-medium' : 'text-white/80 hover:bg-white/5'
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => {
-                            if (checked) {
-                              if (selectedServiceIds.length > 1) {
-                                setSelectedServiceIds(selectedServiceIds.filter((id) => id !== s.id));
-                              }
-                            } else {
-                              setSelectedServiceIds([...selectedServiceIds, s.id]);
-                            }
-                          }}
-                          className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-3.5 w-3.5"
-                        />
-                        <span>{s.name}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+            <div>
+              <span className={label}>Servizi (uno o più)</span>
+              <div className="admin-modal-scroll mt-1 max-h-40 space-y-1 overflow-y-auto border border-gold/30 bg-black/50 p-2">
+                {services.map((s) => {
+                  const checked = selectedServiceIds.includes(s.id);
+                  return (
+                    <label
+                      key={s.id}
+                      className={`flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm transition ${
+                        checked ? 'bg-gold/15 font-medium text-gold' : 'text-white/80 hover:bg-white/5'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          if (checked) {
+                            if (selectedServiceIds.length > 1) setSelectedServiceIds(selectedServiceIds.filter((id) => id !== s.id));
+                          } else {
+                            setSelectedServiceIds([...selectedServiceIds, s.id]);
+                          }
+                        }}
+                        className="h-4 w-4 accent-[#cd9a4f]"
+                      />
+                      <span>{s.name}</span>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Recurrence fields */}
-            <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isRecurring}
-                  onChange={(e) => setIsRecurring(e.target.checked)}
-                  className="rounded border-white/20 bg-black text-gold focus:ring-0 focus:ring-offset-0 h-4 w-4"
-                />
+            <div className="space-y-3 border border-gold/20 p-4">
+              <label className="flex cursor-pointer select-none items-center gap-2">
+                <input type="checkbox" checked={isRecurring} onChange={(e) => setIsRecurring(e.target.checked)} className="h-4 w-4 accent-[#cd9a4f]" />
                 <span className="text-sm font-medium text-white/90">Prenotazione ricorrente</span>
               </label>
-              
               {isRecurring && (
-                <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <Label htmlFor="inst-recurrence-weeks" className="text-xs text-white/60">
-                    Ripeti ogni settimana per:
-                  </Label>
-                  <select
-                    id="inst-recurrence-weeks"
-                    value={recurrenceWeeks}
-                    onChange={(e) => setRecurrenceWeeks(Number(e.target.value))}
-                    className="block w-full rounded-md border border-white/10 bg-black/80 px-3 py-2 text-sm text-white focus:border-gold focus:outline-none"
-                  >
-                    <option value={2}>2 settimane (2 appuntamenti)</option>
-                    <option value={4}>4 settimane (4 appuntamenti)</option>
-                    <option value={6}>6 settimane (6 appuntamenti)</option>
-                    <option value={8}>8 settimane (8 appuntamenti)</option>
-                    <option value={12}>12 settimane (12 appuntamenti)</option>
+                <div>
+                  <label htmlFor="inst-recurrence-weeks" className={label}>Ripeti ogni settimana per</label>
+                  <select id="inst-recurrence-weeks" value={recurrenceWeeks} onChange={(e) => setRecurrenceWeeks(Number(e.target.value))} className={field}>
+                    {[2, 4, 6, 8, 12].map((w) => (
+                      <option key={w} value={w}>{w} settimane ({w} appuntamenti)</option>
+                    ))}
                   </select>
                 </div>
               )}
             </div>
-          </div>
+          </section>
         </div>
 
-        {/* Buttons */}
-        <div className="mt-6 flex gap-3 border-t border-white/5 pt-4">
-          <Button
+        {/* Pulsanti sempre visibili */}
+        <div className="flex gap-3 border-t border-gold/25 bg-[#0c0a08] px-5 py-4">
+          <button
             type="button"
-            variant="ghost"
             onClick={onClose}
-            className="flex-1 border border-white/10 text-white/70 hover:bg-white/5 hover:text-white"
+            className="h-11 flex-1 border border-white/20 text-xs font-bold uppercase tracking-[0.2em] text-white/70 transition hover:border-white/40 hover:text-white"
           >
             Annulla
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
             onClick={handleSave}
             disabled={pending}
-            className="flex-1 bg-gold text-black hover:bg-gold-light font-bold"
+            className="inline-flex h-11 flex-1 items-center justify-center bg-gold text-xs font-bold uppercase tracking-[0.2em] text-black transition hover:bg-gold-light disabled:opacity-60"
           >
             {pending ? <Loader2 size={16} className="animate-spin" /> : 'Conferma'}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
   );
-}
-
-// NLP parser for vocal text
-function parseVoiceText(
-  text: string,
-  barbersList: { id: string; name: string }[] = [],
-  servicesList: { id: string; name: string }[] = []
-) {
-  let dateText = text.toLowerCase();
-  dateText = dateText.replace(/\bprimo\b/gi, '1');
-  dateText = dateText.replace(/\b1[°º]\b/g, '1');
-
-  let dateStr = '';
-  let timeStr = '';
-  let customerName = '';
-  let customerPhone = '';
-  let barberId = '';
-  let isRecurring = false;
-  let recurrenceWeeks = 4;
-  let matchedServiceIds: string[] = [];
-  let matchedServicePhrases: string[] = [];
-
-  // 1. Recurring detection
-  const recurringKeywords = ['ricorrente', 'prenotazione ricorrente', 'ripeti', 'ogni settimana', 'settimane', 'mese', 'mesi'];
-  if (recurringKeywords.some((k) => dateText.includes(k))) {
-    isRecurring = true;
-
-    const weeksMatch = dateText.match(/(\d{1,2})\s*settiman/i);
-    if (weeksMatch) {
-      recurrenceWeeks = parseInt(weeksMatch[1]);
-    } else if (dateText.includes('un mese') || dateText.includes('1 mese')) {
-      recurrenceWeeks = 4;
-    } else if (dateText.includes('due mesi') || dateText.includes('2 mesi')) {
-      recurrenceWeeks = 8;
-    } else if (dateText.includes('tre mesi') || dateText.includes('3 mesi')) {
-      recurrenceWeeks = 12;
-    }
-  }
-
-  // 2. Phone number parsing
-  const phoneRegex = /(?:\+?39\s*)?(?:3\d{2}[\s.-]?\d{6,7}|\d{9,10})/;
-  const phoneMatch = text.match(phoneRegex);
-  if (phoneMatch) {
-    customerPhone = phoneMatch[0].replace(/\s+/g, '');
-  }
-
-  // 3. Barber matching
-  let matchedBarberPhrase = '';
-  if (barbersList && barbersList.length > 0) {
-    for (const b of barbersList) {
-      const fullName = b.name.toLowerCase();
-      const firstName = fullName.split(' ')[0];
-
-      const barberRegex = new RegExp(`(?:con|da|barbiere)?\\s*\\b(${fullName}|${firstName})\\b`, 'i');
-      const bMatch = dateText.match(barberRegex);
-      if (bMatch) {
-        barberId = b.id;
-        matchedBarberPhrase = bMatch[0];
-        break;
-      }
-    }
-  }
-
-  // 4. Service matching
-  if (servicesList && servicesList.length > 0) {
-    for (const s of servicesList) {
-      const sName = s.name.toLowerCase();
-      const cleanSName = sName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const sRegex = new RegExp(`(?:servizio|per|con)?\\s*\\b(${cleanSName})\\b`, 'i');
-      const sMatch = dateText.match(sRegex);
-      if (sMatch) {
-        if (!matchedServiceIds.includes(s.id)) {
-          matchedServiceIds.push(s.id);
-          matchedServicePhrases.push(sMatch[0]);
-        }
-      }
-    }
-
-    if (matchedServiceIds.length === 0) {
-      for (const s of servicesList) {
-        const sName = s.name.toLowerCase();
-        const mainWords = sName.split(/[\s\/+]+/).filter((w) => w.length > 3 && !['con', 'per', 'del', 'della'].includes(w));
-        for (const mw of mainWords) {
-          const mwRegex = new RegExp(`\\b${mw}\\b`, 'i');
-          const mwMatch = dateText.match(mwRegex);
-          if (mwMatch) {
-            if (!matchedServiceIds.includes(s.id)) {
-              matchedServiceIds.push(s.id);
-              matchedServicePhrases.push(mwMatch[0]);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // 5. Time parsing (e.g. 15:30, 10.15, alle 10, ore 12)
-  const timeRegex = /(\d{1,2})[:.](\d{2})/;
-  const timeMatch = dateText.match(timeRegex);
-  if (timeMatch) {
-    const hh = timeMatch[1].padStart(2, '0');
-    const mm = timeMatch[2];
-    timeStr = `${hh}:${mm}`;
-  } else {
-    const hourRegex = /(?:alle|ore)\s+(\d{1,2})/;
-    const hourMatch = dateText.match(hourRegex);
-    if (hourMatch) {
-      const hh = hourMatch[1].padStart(2, '0');
-      timeStr = `${hh}:00`;
-    }
-  }
-
-  // 6. Date parsing
-  const today = new Date();
-  let matchedDatePhrase = '';
-
-  if (dateText.includes('oggi')) {
-    dateStr = formatLocalDate(today);
-    matchedDatePhrase = 'oggi';
-  } else if (dateText.includes('domani')) {
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    dateStr = formatLocalDate(tomorrow);
-    matchedDatePhrase = 'domani';
-  } else if (dateText.includes('dopodomani')) {
-    const dopodomani = new Date(today);
-    dopodomani.setDate(dopodomani.getDate() + 2);
-    dateStr = formatLocalDate(dopodomani);
-    matchedDatePhrase = 'dopodomani';
-  } else {
-    // Numeric date format 15/07 or 15-07 or 15/07/2026
-    const numDateRegex = /(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?/;
-    const numDateMatch = dateText.match(numDateRegex);
-    if (numDateMatch) {
-      const day = numDateMatch[1].padStart(2, '0');
-      const month = numDateMatch[2].padStart(2, '0');
-      const year = numDateMatch[3] ? (numDateMatch[3].length === 2 ? `20${numDateMatch[3]}` : numDateMatch[3]) : today.getFullYear();
-      dateStr = `${year}-${month}-${day}`;
-      matchedDatePhrase = numDateMatch[0];
-    } else {
-      // Word date e.g. "1 settembre 2026", "del 1 settembre", "primo settembre 2026"
-      const months = [
-        'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
-        'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
-      ];
-      for (let i = 0; i < months.length; i++) {
-        if (dateText.includes(months[i])) {
-          const monthName = months[i];
-          const wordDateRegex = new RegExp(`(?:del\\s+|di\\s+)?(\\d{1,2})\\s+(?:di\\s+)?${monthName}(?:\\s+(?:del\\s+)?(\\d{4}))?`, 'i');
-          const wordDateMatch = dateText.match(wordDateRegex);
-          if (wordDateMatch) {
-            const day = wordDateMatch[1].padStart(2, '0');
-            const month = String(i + 1).padStart(2, '0');
-            const year = wordDateMatch[2] || today.getFullYear();
-            dateStr = `${year}-${month}-${day}`;
-            matchedDatePhrase = wordDateMatch[0];
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  if (!dateStr) {
-    dateStr = formatLocalDate(today);
-  }
-
-  // 7. Name parsing - strip date/time/phone/barber/service/recurring phrases
-  let cleanText = dateText;
-  if (phoneMatch) cleanText = cleanText.replace(phoneMatch[0], ' ');
-  if (timeMatch) cleanText = cleanText.replace(timeMatch[0], ' ');
-  if (matchedDatePhrase) cleanText = cleanText.replace(new RegExp(matchedDatePhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  if (matchedBarberPhrase) cleanText = cleanText.replace(new RegExp(matchedBarberPhrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  matchedServicePhrases.forEach((sp) => {
-    cleanText = cleanText.replace(new RegExp(sp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  });
-
-  // Strip common date, recurring & preposition words
-  cleanText = cleanText.replace(/\b(primo|del|dello|della|di|alle|ore|oggi|domani|dopodomani|202\d|con|da|barbiere|servizio|taglio|shampoo|barba|colore|rasata|lama|modellata|forbici|prenotazione|ricorrente|ripeti|settimana|settimane|mese|mesi)\b/gi, ' ');
-
-  barbersList.forEach((b) => {
-    const fn = b.name.split(' ')[0];
-    cleanText = cleanText.replace(new RegExp(`\\b${b.name}\\b`, 'gi'), ' ');
-    cleanText = cleanText.replace(new RegExp(`\\b${fn}\\b`, 'gi'), ' ');
-  });
-
-  servicesList.forEach((s) => {
-    cleanText = cleanText.replace(new RegExp(s.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' ');
-  });
-
-  const stopWords = [
-    'prenota', 'prenotazione', 'per', 'a', 'da', 'di', 'il', 'la', 'i', 'gli',
-    'le', 'un', 'una', 'uno', 'ore', 'ora', 'alle', 'del', 'dello', 'della', 'con', 'e', 'ogni'
-  ];
-
-  const words = cleanText.split(/\s+/);
-  const nameWords = words.filter((w) => {
-    const lw = w.toLowerCase().replace(/[^a-zàèìòù]/g, '');
-    return lw.length > 0 && !stopWords.includes(lw);
-  });
-
-  if (nameWords.length > 0) {
-    customerName = nameWords.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  }
-
-  return { dateStr, timeStr, customerName, customerPhone, barberId, serviceIds: matchedServiceIds, isRecurring, recurrenceWeeks };
-}
-
-function formatLocalDate(date: Date) {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
 }
