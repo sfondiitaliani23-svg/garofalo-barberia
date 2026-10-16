@@ -162,4 +162,7 @@
   .adm-skin .ov-table th { padding: 0.55rem 0.5rem; }
   .adm-skin .ov-pin-bar, .adm-skin .ov-meter { border-radius: 0; }
   .adm-skin .ov-badge { border-radius: 0; }
+  .adm-skin .ov-badge--info { color: #cd9a4f; background: rgba(205, 154, 79, 0.1); border-color: rgba(205, 154, 79, 0.55); }
+  .adm-skin .ov-badge--ok { border-radius: 0; }
+  .adm-skin .ov-live-grid > *, .adm-skin .ov-live > * { border-radius: 0; }
 }

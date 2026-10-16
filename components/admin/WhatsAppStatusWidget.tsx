@@ -217,8 +217,8 @@ export function WhatsAppStatusWidget() {
 
   return (
     <>
-      <div className="rounded-xl border border-white/10 bg-gradient-to-r from-[#141414] via-[#1a1a1a] to-[#141414] p-4 shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="rounded-xl border border-gold/40 bg-black/30 p-4">
+        <div className="flex flex-col gap-3">
           <div className="flex items-start sm:items-center gap-3">
             <div
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
@@ -258,7 +258,7 @@ export function WhatsAppStatusWidget() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 [&_*]:rounded-none">
             <Button
               type="button"
               variant="outline"
