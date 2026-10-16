@@ -112,6 +112,7 @@
     padding-bottom: 0.55rem;
   }
   .adm-skin table th:first-child { padding-left: 0.6rem; }
+  .adm-skin table thead th, .adm-skin table thead th * { color: #0a0807 !important; }
   .adm-skin table tbody tr { border-bottom-style: dashed; border-color: rgba(205, 154, 79, 0.25); }
   .adm-skin table tbody tr:hover { background: rgba(205, 154, 79, 0.06); }
   .adm-skin .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-style: dashed; border-color: rgba(205, 154, 79, 0.25); }
@@ -165,4 +166,17 @@
   .adm-skin .ov-badge--info { color: #cd9a4f; background: rgba(205, 154, 79, 0.1); border-color: rgba(205, 154, 79, 0.55); }
   .adm-skin .ov-badge--ok { border-radius: 0; }
   .adm-skin .ov-live-grid > *, .adm-skin .ov-live > * { border-radius: 0; }
+
+  /* Angoli squadrati ovunque (campi, selettori, schede, pulsanti a pillola, badge) */
+  .adm-skin :is(.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl) { border-radius: 0; }
+  .adm-skin .rounded-full[class*='px-'] { border-radius: 0; }
+  .adm-skin :is(button, a, span).rounded-full[class*='px-'] { letter-spacing: 0.08em; }
+
+  /* Titoli dei riquadri in carattere insegna */
+  .adm-skin :is(h2, h3):not(.font-display):not(table *) {
+    font-family: var(--font-display), 'Rye', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: #cd9a4f;
+  }
 }

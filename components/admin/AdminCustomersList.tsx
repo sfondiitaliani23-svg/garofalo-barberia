@@ -168,7 +168,7 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
       )}
 
       <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#0c0c0c]">
-        <table className="w-full min-w-[900px] border-collapse text-sm">
+        <table className="w-full min-w-[780px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-white/45">
               <th className="px-4 py-3 font-semibold">Nome</th>
