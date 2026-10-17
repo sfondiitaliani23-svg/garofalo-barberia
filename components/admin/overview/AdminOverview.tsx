@@ -11,6 +11,8 @@ import {
   ChevronDown,
   Euro,
   Eye,
+  MessageSquare,
+  Plus,
   Receipt,
   Search,
   UserPlus,
@@ -29,6 +31,7 @@ import {
   todaySummary,
 } from '@/lib/utils/dashboard-overview';
 import { storageGet, storageSet } from '@/lib/utils/safe-storage';
+import { AdminInstantBookingModal } from '@/components/admin/AdminInstantBookingModal';
 import './overview.css';
 
 /* Formati scritti a mano: identici sul server e nel browser (niente differenze di Intl). */
@@ -55,6 +58,14 @@ function romeDateTime(iso: string) {
   const k = romeKey(ms);
   const parts = new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Rome' });
   return `${dayLabel(k)}, ${parts}`;
+}
+
+/** Saluto in ora di Roma, calcolato dall'orario del server: uguale sul server e nel browser. */
+function greeting(nowIso: string) {
+  const hour = Number(new Date(Date.parse(nowIso)).toLocaleTimeString('en-GB', { hour: '2-digit', hour12: false, timeZone: 'Europe/Rome' }).slice(0, 2));
+  if (hour < 13) return 'Buongiorno';
+  if (hour < 18) return 'Buon pomeriggio';
+  return 'Buonasera';
 }
 
 const initials = (name: string) =>
@@ -85,6 +96,7 @@ type Props = {
 export function AdminOverview({ data, visitsHistory, userName, userRole, children }: Props) {
   const [range, setRange] = useState<RangeId>('30g');
   const [trendMode, setTrendMode] = useState<'mese' | 'settimana'>('mese');
+  const [instantOpen, setInstantOpen] = useState(false);
 
   useEffect(() => {
     const saved = storageGet('gb_admin_range') as RangeId | null;
@@ -141,6 +153,34 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
         <p className="ov-sub">Prenotazioni | Incassi e clienti · {RANGES.find((r) => r.id === range)?.label}</p>
       </div>
 
+      {/* ── Saluto e azioni rapide ─────────────────────── */}
+      <section className="ov-quick" aria-label="Azioni rapide">
+        <p className="ov-quick-hello">
+          {greeting(data.now)}, <strong>{userName.split(' ')[0] || 'benvenuto'}</strong>
+          <span> · {dayLabel(ov.today, true)}</span>
+        </p>
+        <div className="ov-quick-grid">
+          <button type="button" className="ov-quick-btn" onClick={() => setInstantOpen(true)}>
+            <Plus size={18} aria-hidden />
+            <span>Nuova prenotazione</span>
+          </button>
+          <Link href="/admin/prenotazioni" className="ov-quick-btn">
+            <CalendarDays size={18} aria-hidden />
+            <span>Prenotazioni</span>
+          </Link>
+          <Link href="/admin/clienti" className="ov-quick-btn">
+            <Search size={18} aria-hidden />
+            <span>Cerca cliente</span>
+          </Link>
+          <Link href="/admin/messaggi" className="ov-quick-btn">
+            <MessageSquare size={18} aria-hidden />
+            <span>Messaggi e avvisi</span>
+            {data.unread > 0 && <b className="ov-quick-badge" aria-label={`${data.unread} da leggere`}>{data.unread > 9 ? '9+' : data.unread}</b>}
+          </Link>
+        </div>
+      </section>
+      <AdminInstantBookingModal isOpen={instantOpen} onClose={() => setInstantOpen(false)} />
+
       {/* ── Oggi ───────────────────────────────────────── */}
       <section className="ov-card ov-today" aria-label="Riepilogo di oggi">
         <div className="ov-today-head">
@@ -158,6 +198,17 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
               {today.cancelled > 0 ? ` · ${today.cancelled} annullate` : ''}
               {today.tomorrow > 0 ? ` · domani ${today.tomorrow}` : ''}
             </p>
+            <div
+              className="ov-progress"
+              role="progressbar"
+              aria-label="Prenotazioni di oggi già fatte"
+              aria-valuemin={0}
+              aria-valuemax={today.total}
+              aria-valuenow={Math.max(0, today.total - today.remaining)}
+            >
+              <span className="ov-progress-fill" style={{ width: `${Math.round((Math.max(0, today.total - today.remaining) / today.total) * 100)}%` }} />
+            </div>
+            <p className="ov-progress-label">{Math.max(0, today.total - today.remaining)} su {today.total} fatte</p>
             {today.next && (
               <p className="ov-today-next">
                 Prossima alle <strong>{today.next.time}</strong>{today.next.barber ? ` con ${today.next.barber.split(' ')[0]}` : ''}{today.next.service ? `, ${today.next.service}` : ''}

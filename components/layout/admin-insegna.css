@@ -178,6 +178,23 @@
   .adm-skin .ov-badge--ok { border-radius: 0; }
   .adm-skin .ov-live-grid > *, .adm-skin .ov-live > * { border-radius: 0; }
 
+  /* Saluto e azioni rapide: riquadri con linea tratteggiata, oro al passaggio */
+  .adm-skin .ov-quick-hello { font-family: var(--font-display), 'Rye', Georgia, serif; font-size: 1.1rem; color: #cd9a4f; }
+  .adm-skin .ov-quick-hello strong { color: #f4efe7; font-weight: 400; }
+  .adm-skin .ov-quick-btn {
+    border-radius: 0;
+    border: 1px dashed rgba(205, 154, 79, 0.55);
+    background: rgba(0, 0, 0, 0.32);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.68rem;
+  }
+  .adm-skin .ov-quick-btn svg { color: #cd9a4f; }
+  .adm-skin .ov-quick-btn:hover, .adm-skin .ov-quick-btn:focus-visible { border-style: solid; border-color: #cd9a4f; background: rgba(205, 154, 79, 0.1); }
+  .adm-skin .ov-quick-badge { border-radius: 0; background: #cd9a4f; }
+  .adm-skin .ov-progress { border-radius: 0; background: rgba(205, 154, 79, 0.15); }
+  .adm-skin .ov-progress-fill { background: #cd9a4f; }
+
   /* Angoli squadrati ovunque (campi, selettori, schede, pulsanti a pillola, badge) */
   .adm-skin :is(.rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl) { border-radius: 0; }
   .adm-skin .rounded-full[class*='px-'] { border-radius: 0; }
