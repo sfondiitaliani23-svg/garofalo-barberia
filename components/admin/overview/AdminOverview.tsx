@@ -116,6 +116,9 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
   const today = useMemo(() => todaySummary(data), [data]);
   const maxBarber = Math.max(1, ...ov.barbers.map((b) => b.revenue));
   const maxService = Math.max(1, ...ov.topServices.map((s) => s.revenue));
+  // Tester: niente incassi. I numeri sono già a zero dal server, qui si nascondono anche i riquadri.
+  const hm = !!data.hideMoney;
+  const servicesShown = hm ? [...ov.topServices].sort((a, b) => b.count - a.count) : ov.topServices;
 
   return (
     <div className="ov">
@@ -150,7 +153,7 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
       <div className="ov-head">
         <p className="ov-eyebrow">Dashboard</p>
         <h1 className="ov-title">Barberia Garofalo</h1>
-        <p className="ov-sub">Prenotazioni | Incassi e clienti · {RANGES.find((r) => r.id === range)?.label}</p>
+        <p className="ov-sub">Prenotazioni | {hm ? 'Clienti' : 'Incassi e clienti'} · {RANGES.find((r) => r.id === range)?.label}</p>
       </div>
 
       {/* ── Saluto e azioni rapide ─────────────────────── */}
@@ -229,9 +232,9 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
 
       {/* ── KPI ────────────────────────────────────────── */}
       <section className="ov-kpis" aria-label="Numeri principali">
-        <KpiCard icon={<Euro size={20} />} label="Incasso" value={money(ov.kpis.revenue.value)} kpi={ov.kpis.revenue} vs={ov.prevLabel} />
+        {!hm && <KpiCard icon={<Euro size={20} />} label="Incasso" value={money(ov.kpis.revenue.value)} kpi={ov.kpis.revenue} vs={ov.prevLabel} />}
         <KpiCard icon={<CalendarCheck size={20} />} label="Appuntamenti" value={num.format(ov.kpis.appointments.value)} kpi={ov.kpis.appointments} vs={ov.prevLabel} />
-        <KpiCard icon={<Receipt size={20} />} label="Scontrino medio" value={eur2.format(ov.kpis.avgTicket.value / 100)} kpi={ov.kpis.avgTicket} vs={ov.prevLabel} />
+        {!hm && <KpiCard icon={<Receipt size={20} />} label="Scontrino medio" value={eur2.format(ov.kpis.avgTicket.value / 100)} kpi={ov.kpis.avgTicket} vs={ov.prevLabel} />}
         <KpiCard icon={<UserPlus size={20} />} label="Nuovi clienti" value={num.format(ov.kpis.newCustomers.value)} kpi={ov.kpis.newCustomers} vs={ov.prevLabel} />
         <KpiCard
           icon={<Eye size={20} />}
@@ -251,6 +254,7 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
       </section>
 
       {/* ── Grafici ────────────────────────────────────── */}
+      {!hm && (
       <section className="ov-grid ov-grid--charts">
         <div className="ov-card ov-trend">
           <div className="ov-card-head">
@@ -375,6 +379,7 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
           </ul>
         </div>
       </section>
+      )}
 
       {/* ── Tabelle ────────────────────────────────────── */}
       <section className="ov-grid ov-grid--tables">
@@ -391,37 +396,47 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
                 <tr>
                   <th>#</th>
                   <th>Servizio</th>
-                  <th className="num">Incasso</th>
-                  <th className="num">Crescita</th>
-                  <th className="ov-col-bar">
-                    <span className="sr-only">Quota</span>
-                  </th>
+                  {hm ? <th className="num">Volte</th> : (
+                    <>
+                      <th className="num">Incasso</th>
+                      <th className="num">Crescita</th>
+                      <th className="ov-col-bar">
+                        <span className="sr-only">Quota</span>
+                      </th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {ov.topServices.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="ov-empty">
+                    <td colSpan={hm ? 3 : 5} className="ov-empty">
                       Nessun servizio nel periodo
                     </td>
                   </tr>
                 )}
-                {ov.topServices.map((s, i) => (
+                {servicesShown.map((s, i) => (
                   <tr key={s.name}>
                     <td className="muted">{i + 1}</td>
                     <td className="strong">
                       {s.name}
-                      <small>{s.count} volte</small>
+                      {!hm && <small>{s.count} volte</small>}
                     </td>
-                    <td className="num">{money(s.revenue)}</td>
-                    <td className="num">
-                      <Change value={s.change} />
-                    </td>
-                    <td className="ov-col-bar">
-                      <span className="ov-meter">
-                        <span style={{ width: `${Math.max(4, (s.revenue / maxService) * 100)}%` }} />
-                      </span>
-                    </td>
+                    {hm ? (
+                      <td className="num">{num.format(s.count)}</td>
+                    ) : (
+                      <>
+                        <td className="num">{money(s.revenue)}</td>
+                        <td className="num">
+                          <Change value={s.change} />
+                        </td>
+                        <td className="ov-col-bar">
+                          <span className="ov-meter">
+                            <span style={{ width: `${Math.max(4, (s.revenue / maxService) * 100)}%` }} />
+                          </span>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -442,7 +457,7 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
                 <tr>
                   <th>Barbiere</th>
                   <th className="num">Appunt.</th>
-                  <th className="num">Medio</th>
+                  {!hm && <th className="num">Medio</th>}
                   <th className="num">Disdette</th>
                   <th className="ov-col-trend">Andamento</th>
                 </tr>
@@ -457,7 +472,7 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
                       </small>
                     </td>
                     <td className="num">{num.format(b.count)}</td>
-                    <td className="num">{eur0.format(b.avg / 100)}</td>
+                    {!hm && <td className="num">{eur0.format(b.avg / 100)}</td>}
                     <td className="num">{dec1(b.lostRate)}%</td>
                     <td className="ov-col-trend">
                       <Spark data={b.spark} className="ov-spark-row" />
@@ -482,14 +497,14 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
                 <tr>
                   <th>Codice</th>
                   <th>Cliente</th>
-                  <th className="num">Importo</th>
+                  {!hm && <th className="num">Importo</th>}
                   <th>Stato</th>
                 </tr>
               </thead>
               <tbody>
                 {data.recent.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="ov-empty">
+                    <td colSpan={hm ? 3 : 4} className="ov-empty">
                       Nessuna prenotazione
                     </td>
                   </tr>
@@ -506,7 +521,7 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
                           {r.barber ? ` · ${r.barber.split(' ')[0]}` : ''}
                         </small>
                       </td>
-                      <td className="num">{eur0.format(r.amount / 100)}</td>
+                      {!hm && <td className="num">{eur0.format(r.amount / 100)}</td>}
                       <td>
                         <span className={`ov-badge ${st.cls}`}>{st.label}</span>
                       </td>

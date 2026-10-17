@@ -6,7 +6,7 @@ import { getClickStatsAction } from '@/lib/actions/click-stats';
 export const metadata = { title: 'Analytics Prenotazioni' };
 
 export default async function AdminAnalyticsPage() {
-  const [{ configured, rows }, clicks] = await Promise.all([getAnalyticsRows(), getClickStatsAction()]);
+  const [{ configured, rows, hideMoney }, clicks] = await Promise.all([getAnalyticsRows(), getClickStatsAction()]);
 
   if (!configured) {
     return <p className="text-white/50">Database non configurato.</p>;
@@ -15,7 +15,7 @@ export default async function AdminAnalyticsPage() {
   return (
     <>
       <ClickStatsCard {...clicks} />
-      <AnalyticsExplorer rows={rows} />
+      <AnalyticsExplorer rows={rows} hideMoney={hideMoney} />
     </>
   );
 }

@@ -8,7 +8,7 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
     <>
       {tester && (
         <div role="status" className="sticky top-0 z-50 bg-amber-500 px-4 py-2 text-center text-sm font-semibold text-black print:hidden">
-          Modalità tester: puoi guardare tutte le funzioni, ma non puoi modificare nulla e i dati dei clienti sono nascosti.
+          Modalità tester: puoi guardare tutte le funzioni, ma non puoi modificare nulla e i dati dei clienti e gli incassi sono nascosti.
         </div>
       )}
       <AdminProtectedShell readOnly={tester}>{children}</AdminProtectedShell>

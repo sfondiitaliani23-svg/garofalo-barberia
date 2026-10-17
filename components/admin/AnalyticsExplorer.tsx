@@ -49,7 +49,7 @@ function csvCell(v: string | number) {
   return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-export function AnalyticsExplorer({ rows }: { rows: AnalyticsRow[] }) {
+export function AnalyticsExplorer({ rows, hideMoney = false }: { rows: AnalyticsRow[]; hideMoney?: boolean }) {
   // Prenotazioni valide (le annullate non contano nelle statistiche)
   const valid = useMemo(() => rows.filter((r) => r.s !== 'cancelled' && r.ck !== '').map((r) => ({ ...r, ...romeParts(r.t) })), [rows]);
 
@@ -144,7 +144,7 @@ export function AnalyticsExplorer({ rows }: { rows: AnalyticsRow[] }) {
   }, [inMonth, inPrev]);
 
   function exportCsv() {
-    const header = ['Data', 'Ora', 'Cliente', 'Servizio', 'Categoria', 'Barbiere', 'Stato', 'Importo'];
+    const header = ['Data', 'Ora', 'Cliente', 'Servizio', 'Categoria', 'Barbiere', 'Stato', ...(hideMoney ? [] : ['Importo'])];
     const lines = [...inMonth]
       .sort((a, b) => a.t.localeCompare(b.t))
       .map((r) => {
@@ -157,7 +157,7 @@ export function AnalyticsExplorer({ rows }: { rows: AnalyticsRow[] }) {
           r.sc ? CATEGORY_LABELS[r.sc] ?? r.sc : '',
           r.bn ?? '',
           r.s === 'completed' ? 'Completato' : r.s === 'no_show' ? 'Non presentato' : 'Confermato',
-          (r.p / 100).toFixed(2).replace('.', ','),
+          ...(hideMoney ? [] : [(r.p / 100).toFixed(2).replace('.', ',')]),
         ]
           .map(csvCell)
           .join(';');
@@ -182,7 +182,12 @@ export function AnalyticsExplorer({ rows }: { rows: AnalyticsRow[] }) {
           </h1>
           <p className="mt-1 text-sm text-white/50">
             {monthLabel(month)}: <strong className="text-white/80">{total}</strong> prenotazioni ·{' '}
-            <strong className="text-white/80">{formatPrice(revenue)}</strong> di incasso previsto · {cancelled} annullate
+            {!hideMoney && (
+              <>
+                <strong className="text-white/80">{formatPrice(revenue)}</strong> di incasso previsto ·{' '}
+              </>
+            )}
+            {cancelled} annullate
           </p>
         </div>
         <button

@@ -83,7 +83,7 @@ function unwrapRelation<T>(value: T | T[] | null): T | null {
 }
 
 export async function getBookingAnalytics(): Promise<BookingAnalytics> {
-  await requireAdminView();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return emptyAnalytics();
 
@@ -183,7 +183,7 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
         id: service.id,
         name: service.name,
         count: ranked?.count ?? 0,
-        revenueCents: ranked?.revenueCents ?? 0,
+        revenueCents: tester ? 0 : ranked?.revenueCents ?? 0,
       };
     })
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'it'))
@@ -209,8 +209,8 @@ export async function getBookingAnalytics(): Promise<BookingAnalytics> {
     activeBookings,
     cancelledBookings,
     completedBookings,
-    totalRevenueCents,
-    averageTicketCents: revenueCount > 0 ? Math.round(totalRevenueCents / revenueCount) : 0,
+    totalRevenueCents: tester ? 0 : totalRevenueCents,
+    averageTicketCents: tester || revenueCount === 0 ? 0 : Math.round(totalRevenueCents / revenueCount),
     mostRequestedService: topServices[0] ?? null,
     topServices,
     mostLoyalCustomer: topCustomers[0] ?? null,
@@ -247,10 +247,10 @@ export interface AnalyticsRow {
 const PLACEHOLDER_NAMES = /^(chiusura|chiuso|pausa|ferie|blocco|bloccato|riservato|occupato|test|prova)\b/i;
 
 /** Tutte le prenotazioni degli ultimi 24 mesi, senza il tetto di 1000 righe. */
-export async function getAnalyticsRows(): Promise<{ configured: boolean; rows: AnalyticsRow[] }> {
-  await requireAdminView();
+export async function getAnalyticsRows(): Promise<{ configured: boolean; rows: AnalyticsRow[]; hideMoney: boolean }> {
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
-  if (!supabase) return { configured: false, rows: [] };
+  if (!supabase) return { configured: false, rows: [], hideMoney: tester };
 
   const since = subMonths(new Date(), 24).toISOString();
   const PAGE = 1000;
@@ -281,7 +281,8 @@ export async function getAnalyticsRows(): Promise<{ configured: boolean; rows: A
         sid: service?.id ?? null,
         sn: service?.name ?? null,
         sc: service?.category ?? null,
-        p: service ? Math.max(0, service.price_cents - (apt.discount_cents ?? 0)) : 0,
+        // Tester: nessun importo esce dal server.
+        p: service && !tester ? Math.max(0, service.price_cents - (apt.discount_cents ?? 0)) : 0,
         bid: barber?.id ?? null,
         bn: barber?.name ?? null,
         ck: PLACEHOLDER_NAMES.test(name) ? '' : customerKey(apt.customer_id, name, apt.customer_phone ?? ''),
@@ -292,5 +293,5 @@ export async function getAnalyticsRows(): Promise<{ configured: boolean; rows: A
     if (data.length < PAGE) break;
   }
 
-  return { configured: true, rows: out };
+  return { configured: true, rows: out, hideMoney: tester };
 }

@@ -55,7 +55,7 @@ function revalidateAppointmentPaths() {
 }
 
 export async function getAdminStats() {
-  await requireAdminView();
+  const { tester } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) {
     return {
@@ -96,6 +96,7 @@ export async function getAdminStats() {
 
   const sumRevenue = (rows: typeof recentAppointments) =>
     rows.reduce((sum, apt) => {
+      if (tester) return 0; // Tester: nessun importo esce dal server.
       if (apt.status !== 'confirmed' && apt.status !== 'completed') return sum;
       const service = Array.isArray(apt.service) ? apt.service[0] : apt.service;
       const gross = service?.price_cents ?? 0;

@@ -11,6 +11,8 @@ export type OverviewData = {
   customers: number[];
   recent: { id: string; name: string; service: string; barber: string; amount: number; status: string; startsAt: string; createdAt: string }[];
   unread: number;
+  /** Modalità tester: gli importi sono già azzerati sul server e la pagina non mostra gli incassi. */
+  hideMoney?: boolean;
 };
 
 export type RangeId = 'oggi' | '7g' | '30g' | 'mese' | 'anno';

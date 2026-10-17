@@ -18,8 +18,15 @@ const STATUS_CODE: Record<string, 0 | 1 | 2 | 3> = { confirmed: 0, completed: 1,
 export async function getDashboardOverviewAction(): Promise<OverviewData> {
   const { tester } = await requireAdminView();
   const data = await buildOverviewCached();
-  // Tester: i nomi dei clienti nelle ultime prenotazioni restano nascosti.
-  return tester ? { ...data, recent: data.recent.map((r) => ({ ...r, name: 'Cliente' })) } : data;
+  if (!tester) return data;
+  // Tester: nomi dei clienti nascosti e nessun importo. I soldi sono azzerati qui, prima di uscire dal server.
+  return {
+    ...data,
+    hideMoney: true,
+    services: data.services.map((s) => ({ ...s, price: 0 })),
+    apts: data.apts.map((a) => [a[0], a[1], 0, a[3], a[4], a[5]] as OverviewApt),
+    recent: data.recent.map((r) => ({ ...r, name: 'Cliente', amount: 0 })),
+  };
 }
 
 /** I conti pesanti si fanno una volta ogni 30 secondi e si riusano (la pagina prima ricaricava tutto a ogni apertura). */
