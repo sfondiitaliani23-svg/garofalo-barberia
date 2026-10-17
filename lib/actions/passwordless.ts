@@ -83,10 +83,9 @@ export async function requestWhatsAppCode(phone: string): Promise<Result> {
     const current = await getAppMetadata(userId);
     const prev = current?.meta.wa_otp as StoredOtp | undefined;
     const now = Date.now();
-    if (prev && now - prev.sent < OTP_RESEND_MS) {
-      const wait = Math.ceil((OTP_RESEND_MS - (now - prev.sent)) / 1000);
-      return { ok: false, error: `Attendi ${wait} secondi prima di chiedere un nuovo codice.` };
-    }
+    // Troppo presto per un nuovo codice: non si invia nulla e si dà la stessa risposta di sempre,
+    // così chi insiste non può capire se il numero ha un account.
+    if (prev && now - prev.sent < OTP_RESEND_MS) return { ok: true, message: GENERIC_SENT };
 
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
     await patchAppMetadata(userId, {
