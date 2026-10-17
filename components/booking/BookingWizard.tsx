@@ -33,7 +33,7 @@ import { useLang } from '@/components/i18n/LangProvider';
 import { L, localHref } from '@/lib/i18n';
 import { serviceName } from '@/lib/i18n/content-en';
 import { barberRole, dfLocale, fallbackBarberLabel, translateMessage } from '@/lib/i18n/content-booking';
-import { Calendar, CheckCircle2, Clock, CreditCard, Star, User, Sparkles, AlertCircle } from 'lucide-react';
+import { Calendar, CheckCircle2, Clock, CreditCard, Star, User, Sparkles, AlertCircle, Scissors } from 'lucide-react';
 
 interface BookingWizardProps {
   services: Service[];
@@ -884,8 +884,8 @@ export function BookingWizard({
                     {time && (
                       <div className="rounded-lg border border-gold/30 bg-gold/10 p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-in fade-in">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/20 text-gold text-sm font-bold">
-                            ✂️
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/20 text-gold">
+                            <Scissors className="h-4 w-4" aria-hidden="true" />
                           </div>
                           <div>
                             <p className="text-xs text-white/60">{L(lang, 'Orario e Operatore selezionati:', 'Selected time and barber:')}</p>
