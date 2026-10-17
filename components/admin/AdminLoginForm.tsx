@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { safeDecodeURIComponent } from '@/lib/utils/site-origin';
 
 function AdminLoginFormInner() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,8 +56,8 @@ function AdminLoginFormInner() {
       return;
     }
 
-    router.push('/admin/dashboard');
-    router.refresh();
+    // Navigazione completa: evita che la cache del router riporti alla pagina di accesso (serviva un secondo accesso).
+    window.location.assign('/admin/dashboard');
   }
 
   return (
