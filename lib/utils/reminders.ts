@@ -454,7 +454,7 @@ export async function processAppointmentReminders() {
       const { sendPushOnce } = await import('@/lib/utils/push');
       const time = new Date(primaryApt.starts_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Rome' });
       push = await sendPushOnce(`domani:${group.ids[0]}`, primaryApt.customer_id, {
-        title: `Domani alle ${time} ✂️`,
+        title: `Domani alle ${time}`,
         body: `${group.serviceNames}${group.barberName ? ` con ${group.barberName}` : ''}. Ti aspettiamo da Barberia Garofalo.`,
         url: '/area-cliente/appuntamenti',
         tag: `promemoria-${group.ids[0]}`,

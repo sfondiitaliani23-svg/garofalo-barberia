@@ -82,7 +82,7 @@ export function scrollTopLabel(lang: Lang) {
 
 export function imageProtectionText(lang: Lang) {
   return {
-    title: L(lang, '🔒 Immagine e Contenuti Protetti da Privacy', '🔒 Images and content are protected'),
+    title: L(lang, 'Immagine e Contenuti Protetti da Privacy', 'Images and content are protected'),
     description: L(
       lang,
       'Per questioni di riservatezza e diritto d’autore, non è possibile scaricare, copiare o salvare le immagini del sito.',
@@ -112,8 +112,8 @@ export function chatText(lang: Lang) {
   return {
     welcome: L(
       lang,
-      'Ciao! 👋 Sono **Eliseo**, l\'assistente virtuale della Barberia Garofalo.\n\nPosso aiutarti con:\n• Orari e prenotazioni\n• Servizi e prezzi\n• Disdette e modifiche\n• Come raggiungerci',
-      'Hi! 👋 I’m **Eliseo**, the virtual assistant of Barberia Garofalo.\n\nI can help you with:\n• Opening hours and bookings\n• Services and prices\n• Cancellations and changes\n• How to find us',
+      'Ciao! Sono **Eliseo**, l\'assistente virtuale della Barberia Garofalo.\n\nPosso aiutarti con:\n• Orari e prenotazioni\n• Servizi e prezzi\n• Disdette e modifiche\n• Come raggiungerci',
+      'Hi! I’m **Eliseo**, the virtual assistant of Barberia Garofalo.\n\nI can help you with:\n• Opening hours and bookings\n• Services and prices\n• Cancellations and changes\n• How to find us',
     ),
     quick: L(
       lang,
@@ -134,8 +134,8 @@ export function chatText(lang: Lang) {
     errorMsg: (phone: string) =>
       L(
         lang,
-        `Scusami, si è verificato un errore. Contattaci su WhatsApp al **${phone}** 📱`,
-        `Sorry, something went wrong. Contact us on WhatsApp at **${phone}** 📱`,
+        `Scusami, si è verificato un errore. Contattaci su WhatsApp al **${phone}**`,
+        `Sorry, something went wrong. Contact us on WhatsApp at **${phone}**`,
       ),
     errorAction: L(lang, 'Scrivi su WhatsApp', 'Message us on WhatsApp'),
   };

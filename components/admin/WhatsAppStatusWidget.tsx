@@ -164,7 +164,7 @@ export function WhatsAppStatusWidget() {
       if (res.ok && res.state === 'authorized') {
         setStatus('authorized');
         setQrBase64(null);
-        toast.success('🎉 WhatsApp Salone collegato con successo! Invio automatico attivo.');
+        toast.success('WhatsApp Salone collegato con successo! Invio automatico attivo.');
         if (pollingRef.current) clearInterval(pollingRef.current);
       }
     }, 4000);
@@ -183,7 +183,7 @@ export function WhatsAppStatusWidget() {
     try {
       const res = await sendWhatsAppTestMessageAction(testPhone.trim());
       if (res.ok) {
-        toast.success('✅ Messaggio WhatsApp di prova inviato con successo!');
+        toast.success('Messaggio WhatsApp di prova inviato con successo!');
       } else {
         if (res.quota) setQuotaMsg(res.error ?? null);
         toast.error(res.error || 'Errore durante l\'invio di prova', { duration: 10000 });

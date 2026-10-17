@@ -230,7 +230,7 @@ export function AppointmentActions({ appointmentId, startsAt }: AppointmentActio
             <span
               className="hd-checkmark success"
               style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%) scale(0)', opacity: 0, fontSize: 13, pointerEvents: 'none', lineHeight: 1 }}
-            >✅</span>
+            ></span>
           )}
         </span>
 

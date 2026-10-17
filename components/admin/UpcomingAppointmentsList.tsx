@@ -529,7 +529,7 @@ export function UpcomingAppointmentsList({
                       }`}
                     >
                       <span>{label}</span>
-                      {sortType === value && <span className="text-[10px]">✓</span>}
+                      {sortType === value && <span className="text-[10px]"></span>}
                     </button>
                   ))}
                 </div>
@@ -564,7 +564,7 @@ export function UpcomingAppointmentsList({
                     >
                       <span className="flex w-full items-center justify-between text-xs font-semibold">
                         {label}
-                        {sortDir === value && <span className="text-[10px]">✓</span>}
+                        {sortDir === value && <span className="text-[10px]"></span>}
                       </span>
                       <span className="text-[10px] text-white/40">{sub}</span>
                     </button>
@@ -584,7 +584,7 @@ export function UpcomingAppointmentsList({
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
                 <CheckCheck size={26} />
               </div>
-              <h3 className="text-lg font-bold text-emerald-400">Tutti i clienti sono stati avvisati! 🎉</h3>
+              <h3 className="text-lg font-bold text-emerald-400">Tutti i clienti sono stati avvisati!</h3>
               <p className="text-xs text-white/50 max-w-sm mx-auto">
                 Non ci sono altre prenotazioni in attesa di promemoria WhatsApp.
               </p>

@@ -622,28 +622,28 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-1.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      📸 Mood Velvet
+                      Mood Velvet
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-2.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      📸 Mood Fancy
+                      Mood Fancy
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-3.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      📸 Mood Imperious
+                      Mood Imperious
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-4.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      📸 Mood Aroma
+                      Mood Aroma
                     </button>
                   </div>
                 </div>

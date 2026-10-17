@@ -445,8 +445,8 @@ export function BookingWizard({
       const details = encodeURIComponent(
         L(
           lang,
-          `Dettagli prenotazione:\n💈 Servizi: ${confirmation.serviceName}\n👤 Barbiere: ${confirmation.barberName}\n⏱️ Durata: ${totalDuration} min\n💶 Prezzo: ${formatPrice(confirmation.priceCents)}\n\n📍 Indirizzo: ${SITE_CONFIG.address}`,
-          `Booking details:\n💈 Services: ${svcNames(confirmation.serviceName)}\n👤 Barber: ${confirmation.barberName}\n⏱️ Duration: ${totalDuration} min\n💶 Price: ${formatPrice(confirmation.priceCents)}\n\n📍 Address: ${SITE_CONFIG.address}`
+          `Dettagli prenotazione:\nServizi: ${confirmation.serviceName}\nBarbiere: ${confirmation.barberName}\nDurata: ${totalDuration} min\nPrezzo: ${formatPrice(confirmation.priceCents)}\n\nIndirizzo: ${SITE_CONFIG.address}`,
+          `Booking details:\nServices: ${svcNames(confirmation.serviceName)}\nBarber: ${confirmation.barberName}\nDuration: ${totalDuration} min\nPrice: ${formatPrice(confirmation.priceCents)}\n\nAddress: ${SITE_CONFIG.address}`
         )
       );
       const location = encodeURIComponent(SITE_CONFIG.address);

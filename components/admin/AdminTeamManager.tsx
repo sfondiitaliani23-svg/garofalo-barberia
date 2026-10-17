@@ -551,7 +551,7 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
             className="flex items-center gap-2 rounded-full border border-gold/40 bg-gold/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-black shadow-lg focus:outline-none"
           >
             <Zap size={14} />
-            ⚡ Chiudi Mezza Giornata
+            Chiudi Mezza Giornata
           </button>
         </div>
 
@@ -766,10 +766,10 @@ export function AdminTeamManager({ barbers, availability, timeOff }: AdminTeamMa
                   onChange={(e) => setHalfDayBarberId(e.target.value)}
                   className="mt-1 flex h-11 w-full rounded-md border border-white/15 bg-[#1a1a1a] px-4 text-sm text-white"
                 >
-                  <option value="all">💈 Tutto il salone (Tutti)</option>
+                  <option value="all">Tutto il salone (Tutti)</option>
                   {activeBarbers.map((barber) => (
                     <option key={barber.id} value={barber.id}>
-                      ✂️ {barber.name}
+                      {barber.name}
                     </option>
                   ))}
                 </select>
@@ -953,11 +953,11 @@ function BarberCard({
             <p className="text-xs text-gold">{barber.role}</p>
             {isBarberAdminOnly(barber.name) ? (
               <span className="inline-block rounded bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 mt-1">
-                🔒 Solo Staff / Admin
+                Solo Staff / Admin
               </span>
             ) : (
               <span className="inline-block rounded bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 mt-1">
-                🌐 Prenotabile Online
+                Prenotabile Online
               </span>
             )}
           </div>

@@ -17,7 +17,7 @@ const LINKS = [
 
 const IDEAS = [
   { title: 'Chiusura straordinaria', body: 'Sabato il salone resta chiuso. Prenota ora il tuo posto per la settimana prossima.', url: '/prenota' },
-  { title: 'Nuova offerta ✂️', body: 'Questa settimana c’è un’offerta per te. Scoprila e prenota in un tocco.', url: '/offerte' },
+  { title: 'Nuova offerta', body: 'Questa settimana c’è un’offerta per te. Scoprila e prenota in un tocco.', url: '/offerte' },
   { title: 'Posti liberi oggi', body: 'Ci sono ancora orari liberi oggi pomeriggio. Prenota ora.', url: '/prenota' },
 ];
 

@@ -12,7 +12,7 @@ export async function POST() {
   } = await supabase.auth.getUser();
   if (!user) return new Response(null, { status: 401 });
   const sent = await sendPushToUser(user.id, {
-    title: 'Notifiche attive ✂️',
+    title: 'Notifiche attive',
     body: 'Da ora ricevi qui promemoria e novità di Barberia Garofalo.',
     url: '/area-cliente/appuntamenti',
     tag: 'test',

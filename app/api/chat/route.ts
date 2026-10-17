@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
       {
         replies: [
           lang === 'en'
-            ? `Sorry, something went wrong. Message us on WhatsApp at **${SITE_CONFIG.phoneDisplay}** 📱`
-            : `Mi dispiace, c'è stato un errore. Scrivici su WhatsApp al **${SITE_CONFIG.phoneDisplay}** 📱`,
+            ? `Sorry, something went wrong. Message us on WhatsApp at **${SITE_CONFIG.phoneDisplay}**`
+            : `Mi dispiace, c'è stato un errore. Scrivici su WhatsApp al **${SITE_CONFIG.phoneDisplay}**`,
         ],
         actions: [{ label: lang === 'en' ? 'Message us on WhatsApp' : 'Scrivi su WhatsApp', href: `https://wa.me/${SITE_CONFIG.whatsapp}` }],
         suggestions: [],

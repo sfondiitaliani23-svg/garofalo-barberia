@@ -797,8 +797,7 @@ export function AdminAppointmentForm({
               <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3 mt-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
-                    <span>📲</span>
-                    Promemoria WhatsApp
+                                        Promemoria WhatsApp
                   </h4>
                   {appointment.reminder_whatsapp_sent_at ? (
                     <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
@@ -825,8 +824,7 @@ export function AdminAppointmentForm({
                     onClick={handleSendReminderNotification}
                     className="w-full gap-2 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/70"
                   >
-                    <span>📲</span>
-                    {appointment.reminder_whatsapp_sent_at
+                                        {appointment.reminder_whatsapp_sent_at
                       ? 'Re-invia Promemoria su WhatsApp'
                       : 'Invia Promemoria su WhatsApp Adesso'}
                   </Button>

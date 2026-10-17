@@ -154,7 +154,7 @@ export function QrAuthHandler({
     <div className="w-full max-w-md space-y-4">
       <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 text-center">
         <p className="text-xs font-semibold text-gold uppercase tracking-wider">
-          📲 Autorizzazione computer richiesta
+          Autorizzazione computer richiesta
         </p>
         <p className="text-[11px] text-white/70 mt-1">
           Accedi qui sotto sul tuo smartphone per sbloccare automaticamente la sessione anche sul tuo computer.
