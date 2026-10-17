@@ -2,7 +2,7 @@
 
 Sito e prenotazioni di una barberia (barberiagarofalo.it). Parte del progetto M×E Barber Lab.
 Next.js 15.5 (App Router) + Tailwind v4 + Supabase. Pubblicazione: Vercel tramite GitHub Actions a ogni push su `main`.
-Repository: sfondiitaliani23-svg/garofalo-barberia. Unico amministratore: Luigi Garofalo.
+Repository: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (titolare) ed Eliseo (co-founder, dal 17/10/2026, stesso ruolo `admin`).
 
 ## Regole fisse
 - Testi e risposte a Eliseo in italiano, frasi corte e semplici. Il suo nome è Eliseo.
