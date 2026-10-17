@@ -529,7 +529,7 @@ export function UpcomingAppointmentsList({
                       }`}
                     >
                       <span>{label}</span>
-                      {sortType === value && <span className="text-[10px]"></span>}
+                      {sortType === value && <span className="text-[10px]">✓</span>}
                     </button>
                   ))}
                 </div>
@@ -564,7 +564,7 @@ export function UpcomingAppointmentsList({
                     >
                       <span className="flex w-full items-center justify-between text-xs font-semibold">
                         {label}
-                        {sortDir === value && <span className="text-[10px]"></span>}
+                        {sortDir === value && <span className="text-[10px]">✓</span>}
                       </span>
                       <span className="text-[10px] text-white/40">{sub}</span>
                     </button>

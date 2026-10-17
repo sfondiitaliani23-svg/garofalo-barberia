@@ -7,7 +7,7 @@ import { authenticateQrSession } from '@/lib/actions/qr-auth';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function QrAuthHandler({
@@ -154,7 +154,7 @@ export function QrAuthHandler({
     <div className="w-full max-w-md space-y-4">
       <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 text-center">
         <p className="text-xs font-semibold text-gold uppercase tracking-wider">
-          Autorizzazione computer richiesta
+          <Smartphone className="mr-1.5 inline-block h-3.5 w-3.5 -translate-y-px" aria-hidden="true" />Autorizzazione computer richiesta
         </p>
         <p className="text-[11px] text-white/70 mt-1">
           Accedi qui sotto sul tuo smartphone per sbloccare automaticamente la sessione anche sul tuo computer.

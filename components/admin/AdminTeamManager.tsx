@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { CalendarOff, Clock, Moon, Pencil, Plus, Sun, Trash2, UserCog, X, Zap } from 'lucide-react';
+import { CalendarOff, Clock, Globe, Lock, Moon, Pencil, Plus, Sun, Trash2, UserCog, X, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -953,11 +953,11 @@ function BarberCard({
             <p className="text-xs text-gold">{barber.role}</p>
             {isBarberAdminOnly(barber.name) ? (
               <span className="inline-block rounded bg-amber-500/20 border border-amber-500/30 px-1.5 py-0.5 text-[10px] font-bold text-amber-300 mt-1">
-                Solo Staff / Admin
+                <Lock size={10} className="mr-1 inline-block -translate-y-px" aria-hidden="true" />Solo Staff / Admin
               </span>
             ) : (
               <span className="inline-block rounded bg-emerald-500/20 border border-emerald-500/30 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300 mt-1">
-                Prenotabile Online
+                <Globe size={10} className="mr-1 inline-block -translate-y-px" aria-hidden="true" />Prenotabile Online
               </span>
             )}
           </div>

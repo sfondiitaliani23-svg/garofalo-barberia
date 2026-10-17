@@ -622,28 +622,28 @@ export function AdminProductsManager({ products }: AdminProductsManagerProps) {
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-1.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      Mood Velvet
+                      <Camera className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px" aria-hidden="true" />Mood Velvet
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-2.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      Mood Fancy
+                      <Camera className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px" aria-hidden="true" />Mood Fancy
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-3.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      Mood Imperious
+                      <Camera className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px" aria-hidden="true" />Mood Imperious
                     </button>
                     <button
                       type="button"
                       onClick={() => setImageUrl('/assets/sostituisci-immagini/homepage/4-4.jpg')}
                       className="rounded border border-gold/30 bg-gold/10 px-2 py-1 text-[11px] text-gold hover:bg-gold/25"
                     >
-                      Mood Aroma
+                      <Camera className="mr-1 inline-block h-3.5 w-3.5 -translate-y-px" aria-hidden="true" />Mood Aroma
                     </button>
                   </div>
                 </div>

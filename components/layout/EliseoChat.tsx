@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Scissors, RotateCcw, ChevronDown, Sparkles } from 'lucide-react';
+import {
+  X, Send, Scissors, RotateCcw, ChevronDown, Sparkles, Clock, Gift, Timer, CalendarDays, Repeat, MapPin, Phone,
+  CreditCard, Baby, Users, User, Camera, Star, Car, Monitor, Bot, Lock, Circle,
+  type LucideIcon,
+} from 'lucide-react';
 import { LocLink as Link } from '@/components/i18n/LocLink';
 import { useLang } from '@/components/i18n/LangProvider';
 import { localHref } from '@/lib/i18n';
@@ -24,6 +28,31 @@ interface Message {
 
 
 const URL_RE = /(https?:\/\/[^\s)]+)/g;
+
+/** Icone del salone al posto delle emoji: nel testo si scrive [[nome]]. */
+const CHAT_ICONS: Record<string, { Icon: LucideIcon; className?: string }> = {
+  clock: { Icon: Clock },
+  scissors: { Icon: Scissors },
+  gift: { Icon: Gift },
+  timer: { Icon: Timer },
+  calendar: { Icon: CalendarDays },
+  repeat: { Icon: Repeat },
+  pin: { Icon: MapPin },
+  phone: { Icon: Phone },
+  card: { Icon: CreditCard },
+  baby: { Icon: Baby },
+  team: { Icon: Users },
+  user: { Icon: User },
+  camera: { Icon: Camera },
+  star: { Icon: Star },
+  car: { Icon: Car },
+  monitor: { Icon: Monitor },
+  bot: { Icon: Bot },
+  lock: { Icon: Lock },
+  open: { Icon: Circle, className: 'fill-emerald-400 text-emerald-400' },
+  closed: { Icon: Circle, className: 'fill-red-500 text-red-500' },
+};
+const ICON_RE = /\[\[(\w+)\]\]/g;
 
 export function EliseoChat() {
   const lang = useLang();
@@ -193,13 +222,28 @@ export function EliseoChat() {
   /** Render a single message bubble */
   const renderContent = (text: string) =>
     text.split('\n').map((line, i) => {
-      // Bold: **text**
-      const parts = line.split(/\*\*(.*?)\*\*/g);
+      // Icone: [[nome]] e grassetto: **testo**
+      const segments = line.split(ICON_RE);
       return (
         <p key={i} className={cn(i > 0 && 'mt-0.5', line === '' && 'h-2')}>
-          {parts.map((part, j) =>
-            j % 2 === 1 ? <strong key={j}>{renderLinks(part, `${i}-${j}`)}</strong> : renderLinks(part, `${i}-${j}`)
-          )}
+          {segments.map((seg, s) => {
+            if (s % 2 === 1) {
+              const entry = CHAT_ICONS[seg];
+              if (!entry) return null;
+              const { Icon, className } = entry;
+              return (
+                <Icon
+                  key={`ic-${s}`}
+                  aria-hidden="true"
+                  className={cn('mr-1.5 inline-block h-[0.95em] w-[0.95em] -translate-y-px', className ?? 'text-[#cd9a4f]')}
+                  strokeWidth={className ? 2 : 2.2}
+                />
+              );
+            }
+            return seg.split(/\*\*(.*?)\*\*/g).map((part, j) =>
+              j % 2 === 1 ? <strong key={`${s}-${j}`}>{renderLinks(part, `${i}-${s}-${j}`)}</strong> : renderLinks(part, `${i}-${s}-${j}`)
+            );
+          })}
         </p>
       );
     });

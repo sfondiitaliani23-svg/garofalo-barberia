@@ -4,6 +4,7 @@ import { getBarbers, getServices } from '@/lib/actions/bookings';
 import { getActivePromotions } from '@/lib/actions/promotions';
 import { respond, type ChatHistoryItem, type ChatKnowledge } from '@/lib/chat/assistant';
 import { askAi } from '@/lib/chat/ai';
+import { stripEmoji } from '@/lib/chat/strip-emoji';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isLang, type Lang } from '@/lib/i18n';
 
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
       const ai = await askAi(message, history, knowledge, result.replies.join('\n\n'), undefined, lang).catch(() => null);
       if (ai) {
         await countAnswer(ai.provider);
-        return NextResponse.json({ ...result, replies: [ai.text], source: 'ai' });
+        return NextResponse.json({ ...result, replies: [stripEmoji(ai.text)], source: 'ai' });
       }
     }
     await countAnswer('regole');
