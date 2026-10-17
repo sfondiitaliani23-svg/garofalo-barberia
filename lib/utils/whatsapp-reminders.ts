@@ -18,13 +18,13 @@ export function buildWhatsAppReminderMessage(data: ReminderPayload): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://barberiagarofalo.it';
 
   return (
-    `💈 *Garofalo Barberia — Promemoria Appuntamento*\n\n` +
+    `*Garofalo Barberia — Promemoria Appuntamento*\n\n` +
     `Ciao *${data.customerName}*! Ti ricordiamo il tuo appuntamento:\n\n` +
-    `✂️ *Servizio:* ${data.serviceName}\n` +
-    `👤 *Barbiere:* ${data.barberName}\n` +
-    `📅 *Data:* ${dateStr}\n` +
-    `⏰ *Orario:* ${timeStr}\n` +
-    `📍 *Indirizzo:* ${SITE_CONFIG.address}\n\n` +
+    `*Servizio:* ${data.serviceName}\n` +
+    `*Barbiere:* ${data.barberName}\n` +
+    `*Data:* ${dateStr}\n` +
+    `*Orario:* ${timeStr}\n` +
+    `*Indirizzo:* ${SITE_CONFIG.address}\n\n` +
     `Per visualizzare o gestire la prenotazione:\n${siteUrl}/area-cliente/appuntamenti\n\n` +
     `A presto!`
   );

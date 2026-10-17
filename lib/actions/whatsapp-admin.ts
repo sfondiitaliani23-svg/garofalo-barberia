@@ -108,8 +108,8 @@ export async function sendWhatsAppTestMessageAction(phoneNumber: string): Promis
   }
 
   const testMessage =
-    `💈 *Garofalo Barberia — Test Notifiche WhatsApp*\n\n` +
-    `✅ Connessione stabilita con successo!\n` +
+    `*Garofalo Barberia — Test Notifiche WhatsApp*\n\n` +
+    `Connessione stabilita con successo!\n` +
     `Il sistema di promemoria automatici per gli appuntamenti alle 22:30 è ora perfettamente operativo.`;
 
   try {

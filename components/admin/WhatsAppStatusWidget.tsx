@@ -60,7 +60,7 @@ const WA_MESSAGES = {
     title: 'Messaggio di prova',
     trigger: 'Quando premi "Invia test"',
     when: 'subito',
-    text: '💈 *Garofalo Barberia — Test Notifiche WhatsApp*\n\n✅ Connessione stabilita con successo!\nIl sistema di promemoria automatici per gli appuntamenti alle 22:30 è ora perfettamente operativo.',
+    text: '*Garofalo Barberia — Test Notifiche WhatsApp*\n\nConnessione stabilita con successo!\nIl sistema di promemoria automatici per gli appuntamenti alle 22:30 è ora perfettamente operativo.',
   },
 };
 type WaMessageId = keyof typeof WA_MESSAGES;

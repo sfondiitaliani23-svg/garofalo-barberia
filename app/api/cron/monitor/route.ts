@@ -27,7 +27,7 @@ async function sendWhatsAppAlert(message: string): Promise<void> {
 
   // Log the alert — in production you can integrate Twilio or Meta Cloud API
   // to send this message programmatically. For now we log it for manual review.
-  console.error('[MONITOR AGENT] 🚨 ALERT — WhatsApp da inviare a:', waNumber);
+  console.error('[MONITOR AGENT] ALERT — WhatsApp da inviare a:', waNumber);
   console.error('[MONITOR AGENT] Messaggio:', message);
   console.error('[MONITOR AGENT] Link diretto:', waUrl);
 
@@ -53,7 +53,7 @@ async function sendWhatsAppAlert(message: string): Promise<void> {
           }),
         }
       );
-      console.log('[MONITOR AGENT] ✅ Alert WhatsApp inviato via Twilio');
+      console.log('[MONITOR AGENT] Alert WhatsApp inviato via Twilio');
     } catch (err) {
       console.error('[MONITOR AGENT] Twilio send error:', err);
     }
@@ -76,7 +76,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const agentLog: string[] = [];
   const timestamp = new Date().toISOString();
 
-  agentLog.push(`[${timestamp}] 🤖 Monitor Agent avviato`);
+  agentLog.push(`[${timestamp}] Monitor Agent avviato`);
 
   let health: HealthResponse | null = null;
   let fetchOk = false;
@@ -91,7 +91,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     fetchOk = res.ok;
     agentLog.push(`[HEALTH] status=${health.status} duration=${health.duration_ms}ms`);
   } catch (err) {
-    agentLog.push(`[HEALTH] ❌ Fetch fallito: ${String(err)}`);
+    agentLog.push(`[HEALTH] Fetch fallito: ${String(err)}`);
   }
 
   // ── 2. Evaluate status ───────────────────────────────────────────────────
@@ -101,7 +101,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   // ── 3. Alert if needed ───────────────────────────────────────────────────
   if (hasIssue) {
-    const severity = isSiteDown ? '🔴 CRITICO' : '🟡 DEGRADATO';
+    const severity = isSiteDown ? 'CRITICO' : 'DEGRADATO';
     const failedChecks = health?.checks
       ? Object.entries(health.checks)
           .filter(([, v]) => !v.ok)
@@ -110,18 +110,18 @@ export async function GET(request: Request): Promise<NextResponse> {
       : '  • Sito non raggiungibile';
 
     const alertMessage =
-      `🚨 ${severity} — Barberia Garofalo\n\n` +
+      `${severity} — Barberia Garofalo\n\n` +
       `Il sito presenta problemi!\n\n` +
-      `🔍 Problemi rilevati:\n${failedChecks}\n\n` +
-      `⏰ Rilevato alle: ${new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}\n` +
-      `🌐 URL: ${siteOrigin}\n\n` +
+      `Problemi rilevati:\n${failedChecks}\n\n` +
+      `Rilevato alle: ${new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}\n` +
+      `URL: ${siteOrigin}\n\n` +
       `Controlla subito la dashboard Vercel:\nhttps://vercel.com/dashboard`;
 
-    agentLog.push('[ALERT] 🚨 Invio notifica...');
+    agentLog.push('[ALERT] Invio notifica...');
     await sendWhatsAppAlert(alertMessage);
-    agentLog.push('[ALERT] ✅ Notifica processata');
+    agentLog.push('[ALERT] Notifica processata');
   } else {
-    agentLog.push('[STATUS] ✅ Tutti i sistemi operativi');
+    agentLog.push('[STATUS] Tutti i sistemi operativi');
   }
 
   return NextResponse.json({
