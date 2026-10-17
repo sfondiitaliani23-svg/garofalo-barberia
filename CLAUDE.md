@@ -21,7 +21,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 
 ## Prima di un push
 - `npx tsc --noEmit`, poi `git checkout tsconfig.tsbuildinfo`.
-- `npm test` (101 test, Node 22, alias `@/…` da `tests/register-alias.mjs`). I moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
+- `npm test` (109 test, Node 22, alias `@/…` da `tests/register-alias.mjs`). I moduli in `lib/` usano solo TypeScript "cancellabile" (niente enum, niente parametri con modificatori).
 - `tests/booking-e2e.test.mjs`: prenotazione vera su Postgres in memoria (PGlite) con le migrazioni di `supabase/migrations`; finto Supabase in `tests/helpers/fake-supabase.mjs`, finti moduli in `tests/mocks/`. Una migrazione che tocca le prenotazioni va nella lista `MIGRATIONS` lì. Nei test serve `NEXT_PUBLIC_SUPABASE_URL`, altrimenti il sito usa gli orari di ripiego.
 - `tests/links.test.mjs` boccia `revalidatePath` e link verso pagine che non esistono.
 - `next build` non funziona nel sandbox (Google Fonts): il controllo vero è il deploy. Niente eslint.

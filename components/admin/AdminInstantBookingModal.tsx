@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { createAdminAppointment } from '@/lib/actions/admin';
-import { parseBookingSpeech, type VoiceBookingResult } from '@/lib/utils/voice-booking';
+import { parseBookingSpeech, mergeVoiceResults, suggestKnownNames, type VoiceBookingResult } from '@/lib/utils/voice-booking';
+import { listCustomerNamesForVoice } from '@/lib/actions/voice-names';
 
 interface AdminInstantBookingModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
   const [isListening, setIsListening] = useState(false);
   const [speechText, setSpeechText] = useState('');
   const [heard, setHeard] = useState<VoiceBookingResult | null>(null);
+  const [knownNames, setKnownNames] = useState<string[]>([]);
   const recognitionRef = useRef<any>(null);
   const finalTextRef = useRef('');
   const silenceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,6 +75,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
     setMode('voice');
     setStep(1);
 
+    listCustomerNamesForVoice().then((r) => { if (r.ok) setKnownNames(r.names); }).catch(() => {});
     const supabase = createClient();
     if (!supabase) return;
     (async () => {
@@ -163,7 +166,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
 
     recognition.onresult = (event: any) => {
       let interim = '';
-      let finals = '';
+      const finalParts: string[] = [];
       for (let i = 0; i < event.results.length; i++) {
         const res = event.results[i];
         if (res.isFinal) {
@@ -177,13 +180,15 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
               best = res[a].transcript;
             }
           }
-          finals += `${best} `;
+          finalParts.push(best);
         } else {
           interim += `${res[0].transcript} `;
         }
       }
-      finalTextRef.current = finals.trim();
-      const shown = `${finals}${interim}`.trim();
+      // Chrome può rimandare lo stesso pezzo più volte: se ne tiene una copia sola
+      const finals = mergeVoiceResults(finalParts);
+      finalTextRef.current = finals;
+      const shown = mergeVoiceResults([finals, interim]);
       setSpeechText(shown);
       if (shown) armSilence();
     };
@@ -458,6 +463,11 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
                     <div>
                       <label htmlFor="inst-name" className={label}>Nome e cognome *</label>
                       <input id="inst-name" type="text" placeholder="Es. Mario Rossi" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={field} />
+                      {suggestKnownNames(customerName, knownNames).map((n) => (
+                        <button key={n} type="button" onClick={() => setCustomerName(n)} className="mt-1.5 mr-2 border border-gold/40 px-2 py-1 text-xs text-gold hover:brightness-125">
+                          Intendevi: {n}?
+                        </button>
+                      ))}
                     </div>
                     <div>
                       <label htmlFor="inst-phone" className={label}>Telefono</label>

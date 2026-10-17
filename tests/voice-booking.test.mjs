@@ -103,3 +103,33 @@ test('frase completa e naturale', () => {
 test('a nome di', () => {
   assert.equal(p('prenotazione a nome di Antonio Esposito domani alle 11').customerName, 'Antonio Esposito');
 });
+
+import { mergeVoiceResults, suggestKnownNames } from '../lib/utils/voice-booking.ts';
+
+test('voce: la stessa frase ripetuta 3 volte resta una sola', () => {
+  assert.equal(mergeVoiceResults(['Mario Rossi domani alle dieci', 'Mario Rossi domani alle dieci', 'Mario Rossi domani alle dieci']), 'Mario Rossi domani alle dieci');
+  assert.equal(mergeVoiceResults(['mario rossi domani alle dieci mario rossi domani alle dieci mario rossi domani alle dieci']), 'mario rossi domani alle dieci');
+});
+
+test('voce: frasi che si allungano tengono solo l’ultima', () => {
+  assert.equal(mergeVoiceResults(['Mario Rossi', 'Mario Rossi domani', 'Mario Rossi domani alle dieci']), 'Mario Rossi domani alle dieci');
+});
+
+test('voce: pezzi diversi si uniscono, i numeri ripetuti restano', () => {
+  assert.equal(mergeVoiceResults(['Mario Rossi', 'taglio e barba con Luigi']), 'Mario Rossi taglio e barba con Luigi');
+  assert.equal(mergeVoiceResults(['tre tre tre quattro']), 'tre tre tre quattro');
+  assert.equal(mergeVoiceResults([]), '');
+});
+
+test('voce: il nome non si allunga con le ripetizioni', () => {
+  const text = mergeVoiceResults(['Mario Rossi domani', 'Mario Rossi domani', 'Mario Rossi domani']);
+  assert.equal(parseBookingSpeech(text, [], []).customerName, 'Mario Rossi');
+});
+
+test('nomi: suggerisce i clienti già registrati con nome simile, mai uno uguale o lontano', () => {
+  const known = ['Mario Rossi', 'Maria Russo', 'Luca Bianchi'];
+  assert.deepEqual(suggestKnownNames('Mario Rosi', known), ['Mario Rossi']);
+  assert.deepEqual(suggestKnownNames('Mario Rossi', known), []);
+  assert.deepEqual(suggestKnownNames('Giuseppe Verdi', known), []);
+  assert.deepEqual(suggestKnownNames('lu', known), []);
+});

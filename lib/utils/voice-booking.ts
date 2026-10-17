@@ -419,3 +419,65 @@ export function parseBookingSpeech(
   const score = [customerName, customerPhone, dateStr, timeStr, barberId, serviceIds.length ? 'x' : '', isRecurring ? 'x' : ''].filter(Boolean).length;
   return { customerName, customerPhone, dateStr, timeStr, barberId, serviceIds, isRecurring, recurrenceWeeks, score };
 }
+
+// ── Risultati del microfono: niente ripetizioni ────────────────────────────────
+// Chrome (soprattutto su telefono, con l'ascolto continuo) può restituire lo stesso pezzo più volte,
+// oppure frasi che si allungano ("mario rossi", "mario rossi domani", ...). Qui si tiene una sola copia.
+const words = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}'\s]/gu, ' ').split(/\s+/).filter(Boolean);
+
+/** Se l'intera frase è la stessa sequenza di 2 o più parole ripetuta, tiene una sola copia. */
+function collapseWholeRepeats(text: string): string {
+  const raw = text.trim().split(/\s+/).filter(Boolean);
+  const w = words(text);
+  if (raw.length !== w.length) return text.trim();
+  for (let size = 2; size <= Math.floor(raw.length / 2); size++) {
+    if (raw.length % size !== 0) continue;
+    const base = w.slice(0, size).join(' ');
+    let same = true;
+    for (let i = size; i < w.length; i += size) if (w.slice(i, i + size).join(' ') !== base) { same = false; break; }
+    if (same) return raw.slice(0, size).join(' ');
+  }
+  return text.trim();
+}
+
+export function mergeVoiceResults(parts: string[]): string {
+  const kept: string[] = [];
+  for (const part of parts.map((p) => p.trim()).filter(Boolean)) {
+    const pw = words(part).join(' ');
+    // già detto (uguale o contenuto in un pezzo precedente): si salta
+    if (kept.some((k) => words(k).join(' ').includes(pw))) continue;
+    // il nuovo pezzo contiene i precedenti (frase che si allunga): sostituisce
+    for (let i = kept.length - 1; i >= 0; i--) if (pw.includes(words(kept[i]).join(' '))) kept.splice(i, 1);
+    kept.push(part);
+  }
+  return collapseWholeRepeats(kept.join(' '));
+}
+
+// ── Nome capito male: suggerimento dai clienti che già conosciamo ──────────────
+const fold = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
+function distance(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+
+/** Fino a `max` clienti già registrati con un nome molto simile a quello capito (mai una sostituzione automatica). */
+export function suggestKnownNames(spoken: string, known: string[], max = 2): string[] {
+  const s = fold(spoken);
+  if (s.length < 3) return [];
+  const exact = known.some((k) => fold(k) === s);
+  if (exact) return [];
+  const scored = known
+    .map((k) => ({ k, d: distance(s, fold(k)), len: fold(k).length }))
+    .filter(({ d, len }) => d > 0 && d <= Math.max(2, Math.floor(Math.max(len, s.length) * 0.25)))
+    .sort((a, b) => a.d - b.d);
+  return Array.from(new Set(scored.map((x) => x.k))).slice(0, max);
+}
