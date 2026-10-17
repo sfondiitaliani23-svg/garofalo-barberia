@@ -1,0 +1,98 @@
+/* Animazione di conferma prenotazione (oro su nero, stile Insegna).
+   Sequenza: anello (0-0,6 s) -> forbici che tagliano due volte (0,5-1,9 s)
+   -> le forbici spariscono e compare la spunta (1,9-2,5 s). Una volta sola. */
+.bk-confirm {
+  display: block;
+  overflow: visible;
+  color: var(--color-gold);
+}
+
+.bk-confirm__ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transform: rotate(-90deg);
+  transform-origin: 32px 32px;
+  animation: bk-ring 0.6s ease-out 0.05s forwards;
+}
+
+.bk-confirm__scissors {
+  opacity: 0;
+  animation: bk-scissors-life 1.6s linear 0.5s forwards;
+}
+
+.bk-confirm__half polygon,
+.bk-confirm__pivot {
+  fill: currentColor;
+}
+
+.bk-confirm__half line,
+.bk-confirm__half circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.bk-confirm__half {
+  transform-box: view-box;
+  transform-origin: 32px 35px;
+}
+
+.bk-confirm__half--a {
+  animation: bk-snip-a 0.7s ease-in-out 0.55s 2;
+}
+
+.bk-confirm__half--b {
+  animation: bk-snip-b 0.7s ease-in-out 0.55s 2;
+}
+
+.bk-confirm__check {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: bk-check 0.45s ease-out 2s forwards;
+}
+
+@keyframes bk-ring {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes bk-scissors-life {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes bk-snip-a {
+  0%, 100% { transform: rotate(-14deg); }
+  50%      { transform: rotate(2deg); }
+}
+
+@keyframes bk-snip-b {
+  0%, 100% { transform: rotate(14deg); }
+  50%      { transform: rotate(-2deg); }
+}
+
+@keyframes bk-check {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Movimento ridotto: niente forbici, subito anello e spunta fermi. */
+@media (prefers-reduced-motion: reduce) {
+  .bk-confirm__ring,
+  .bk-confirm__check {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .bk-confirm__scissors {
+    display: none;
+  }
+}

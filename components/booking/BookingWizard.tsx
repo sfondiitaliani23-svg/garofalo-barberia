@@ -27,13 +27,14 @@ import type { Barber, Service } from '@/types/database';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { WaitlistForm } from '@/components/booking/WaitlistForm';
+import { BookingConfirmAnimation } from '@/components/booking/BookingConfirmAnimation';
 import { MonthDatePicker } from '@/components/booking/MonthDatePicker';
 import { SITE_CONFIG } from '@/lib/site-config';
 import { useLang } from '@/components/i18n/LangProvider';
 import { L, localHref } from '@/lib/i18n';
 import { serviceName } from '@/lib/i18n/content-en';
 import { barberRole, dfLocale, fallbackBarberLabel, translateMessage } from '@/lib/i18n/content-booking';
-import { Calendar, CheckCircle2, Clock, CreditCard, Star, User, Sparkles, AlertCircle, Scissors } from 'lucide-react';
+import { Calendar, Clock, CreditCard, Star, User, Sparkles, AlertCircle, Scissors } from 'lucide-react';
 
 interface BookingWizardProps {
   services: Service[];
@@ -465,8 +466,8 @@ export function BookingWizard({
           <CardContent className="p-6 sm:p-8 space-y-0">
             {/* Header / Stato */}
             <div className="flex flex-col items-center text-center pb-6 border-b border-white/10">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500 mb-4 animate-pulse">
-                <CheckCircle2 className="h-9 w-9" />
+              <div className="mb-4">
+                <BookingConfirmAnimation />
               </div>
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full mb-3">
                 {L(lang, 'Prenotazione confermata', 'Booking confirmed')}
