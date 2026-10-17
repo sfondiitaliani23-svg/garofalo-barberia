@@ -83,6 +83,15 @@ export const GALLERY_FILTERS_EN: Record<string, string> = {
   bimbo: 'Kids',
 };
 
+export const GALLERY_STYLE_FILTERS_EN: Record<string, string> = {
+  tutti: 'All styles',
+  sfumato: 'Fade',
+  classico: 'Classic',
+  ricci: 'Curls & waves',
+  barba: 'Beard',
+  styling: 'Styling',
+};
+
 export interface GalleryCopyEn {
   alt: string;
   eyebrow: string;

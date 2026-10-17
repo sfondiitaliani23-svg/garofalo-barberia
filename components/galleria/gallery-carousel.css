@@ -13,6 +13,10 @@
   margin-bottom: 1.5rem;
 }
 
+.gc-filters--style {
+  margin-top: -0.75rem;
+}
+
 .gc-stage {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 96px;

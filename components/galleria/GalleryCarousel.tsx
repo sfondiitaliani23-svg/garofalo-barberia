@@ -5,11 +5,11 @@ import Image from 'next/image';
 import { LocLink as Link } from '@/components/i18n/LocLink';
 import { useLang } from '@/components/i18n/LangProvider';
 import { L } from '@/lib/i18n';
-import { GALLERY_FILTERS_EN, galleryEn } from '@/lib/i18n/content-team';
+import { GALLERY_FILTERS_EN, GALLERY_STYLE_FILTERS_EN, galleryEn } from '@/lib/i18n/content-team';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Expand, X } from 'lucide-react';
-import { GALLERY_FILTERS, GALLERY_IMAGES } from '@/lib/data/gallery';
+import { GALLERY_FILTERS, GALLERY_IMAGES, GALLERY_STYLE_FILTERS } from '@/lib/data/gallery';
 import './gallery-carousel.css';
 
 
@@ -23,6 +23,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 export function GalleryCarousel() {
   const lang = useLang();
   const [filter, setFilter] = useState<string>('tutti');
+  const [style, setStyle] = useState<string>('tutti');
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -36,7 +37,7 @@ export function GalleryCarousel() {
   const touchX = useRef<number | null>(null);
 
   const allImages = lang === 'en' ? GALLERY_IMAGES.map((img) => ({ ...img, ...(galleryEn(img.src) ?? {}) })) : GALLERY_IMAGES;
-  const images = filter === 'tutti' ? allImages : allImages.filter((img) => img.category === filter);
+  const images = allImages.filter((img) => (filter === 'tutti' || img.category === filter) && (style === 'tutti' || img.styles.includes(style as never)));
   const total = images.length;
   const current = images[Math.min(index, total - 1)];
   const copy = current;
@@ -73,7 +74,7 @@ export function GalleryCarousel() {
     } else {
       box.scrollTo({ left: el.offsetLeft - box.clientWidth / 2 + el.clientWidth / 2, behavior: 'smooth' });
     }
-  }, [index, filter]);
+  }, [index, filter, style]);
 
   // Carosello visibile sullo schermo: solo allora le frecce della tastiera lo comandano
   useEffect(() => {
@@ -125,8 +126,16 @@ export function GalleryCarousel() {
     };
   }, [lightbox]);
 
+  // Se la combinazione non ha foto, l'altro filtro torna su «Tutti»
+  const has = (cat: string, st: string) => allImages.some((img) => (cat === 'tutti' || img.category === cat) && (st === 'tutti' || img.styles.includes(st as never)));
   const changeFilter = (id: string) => {
     setFilter(id);
+    if (!has(id, style)) setStyle('tutti');
+    setIndex(0);
+  };
+  const changeStyle = (id: string) => {
+    setStyle(id);
+    if (!has(filter, id)) setFilter('tutti');
     setIndex(0);
   };
 
@@ -154,6 +163,19 @@ export function GalleryCarousel() {
             onClick={() => changeFilter(f.id)}
           >
             {lang === 'en' ? GALLERY_FILTERS_EN[f.id] ?? f.label : f.label}
+          </button>
+        ))}
+      </div>
+      <div className="gc-filters gc-filters--style" role="group" aria-label={L(lang, 'Filtra per tipo di taglio', 'Filter by cut type')}>
+        {GALLERY_STYLE_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            className={`filter-btn${style === f.id ? ' active' : ''}`}
+            aria-pressed={style === f.id}
+            onClick={() => changeStyle(f.id)}
+          >
+            {lang === 'en' ? GALLERY_STYLE_FILTERS_EN[f.id] ?? f.label : f.label}
           </button>
         ))}
       </div>
