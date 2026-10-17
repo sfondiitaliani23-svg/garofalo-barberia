@@ -22,10 +22,29 @@ const standalone = () => window.matchMedia('(display-mode: standalone)').matches
  * Attiva/disattiva le notifiche sul telefono (promemoria appuntamenti, "è ora di tornare", novità).
  * variant "banner": riquadro compatto che compare solo se le notifiche non sono ancora attive.
  */
-export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' }) {
+export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' | 'popup' }) {
   const lang = useLang();
   const [state, setState] = useState<State>('loading');
   const [busy, setBusy] = useState(false);
+  const [hidden, setHidden] = useState(true);
+
+  useEffect(() => {
+    try {
+      const t = Number(localStorage.getItem('push-popup-no') ?? 0);
+      setHidden(Date.now() - t < 7 * 864e5);
+    } catch {
+      setHidden(false);
+    }
+  }, []);
+
+  function later() {
+    try {
+      localStorage.setItem('push-popup-no', String(Date.now()));
+    } catch {
+      /* niente memoria: pazienza */
+    }
+    setHidden(true);
+  }
 
   useEffect(() => {
     (async () => {
@@ -61,6 +80,7 @@ export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' 
       const res = await fetch('/api/push/subscribe', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub) });
       if (!res.ok) throw new Error('save');
       setState('on');
+      setHidden(true);
       await fetch('/api/push/test', { method: 'POST' });
       toast.success(L(lang, 'Notifiche attive. Ti abbiamo mandato una notifica di prova.', 'Notifications are on. We have sent you a test notification.'));
     } catch {
@@ -88,6 +108,7 @@ export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' 
 
   if (variant === 'banner' && state !== 'off') return null;
   if (state === 'loading') return null;
+  if (variant === 'popup' && (hidden || (state !== 'off' && state !== 'ios-install'))) return null;
 
   const text: Record<State, string> = {
     loading: '',
@@ -97,6 +118,36 @@ export function PushManager({ variant = 'card' }: { variant?: 'card' | 'banner' 
     on: L(lang, 'Attive su questo dispositivo: promemoria appuntamenti e novità del salone.', 'On for this device: appointment reminders and news from the barbershop.'),
     denied: L(lang, 'Le notifiche sono bloccate nelle impostazioni del browser. Riattivale da lì per riceverle.', 'Notifications are blocked in your browser settings. Turn them back on there to receive them.'),
   };
+
+  if (variant === 'popup') {
+    return (
+      <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="push-pop-title">
+        <div className="w-full max-w-sm border border-gold/40 bg-[#0e0e0e] p-6 text-center">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center bg-gold/10 text-gold">
+            <Bell size={24} aria-hidden />
+          </span>
+          <h2 id="push-pop-title" className="mt-4 font-display text-xl text-white">
+            {L(lang, 'Non perdere il tuo appuntamento', 'Never miss your appointment')}
+          </h2>
+          <p className="mt-2 text-sm text-white/70">
+            {state === 'ios-install'
+              ? text['ios-install']
+              : L(lang, 'Attiva le notifiche: ti avvisiamo prima del taglio e quando si libera un posto. Gratis, le spegni quando vuoi. Ti arrivano anche a telefono spento o fuori dal sito.', 'Turn on notifications: we remind you before your cut and tell you when a slot opens. Free, and you can turn them off anytime. They reach you even when your phone is off or away from the site.')}
+          </p>
+          <div className="mt-5 flex flex-col gap-2">
+            {state === 'off' && (
+              <button type="button" onClick={enable} disabled={busy} className="inline-flex items-center justify-center gap-2 bg-gold px-5 py-3 text-sm font-semibold text-black disabled:opacity-50">
+                {busy && <Loader2 size={14} className="animate-spin" aria-hidden />} {L(lang, 'Attiva notifiche', 'Turn on notifications')}
+              </button>
+            )}
+            <button type="button" onClick={later} className="px-5 py-2 text-sm text-white/60">
+              {state === 'ios-install' ? L(lang, 'Ho capito', 'Got it') : L(lang, 'Non ora', 'Not now')}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <section className={variant === 'banner' ? 'mb-6 rounded-xl border border-gold/35 bg-gold/[0.06] p-4' : 'mt-6 rounded-xl border border-white/10 bg-[#0e0e0e] p-5'} aria-labelledby="push-title">

@@ -66,7 +66,7 @@ export default async function CustomerDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PushManager variant="banner" />
+      <PushManager variant="popup" />
 
       {/* Benvenuto: cornice doppia a insegna */}
       <section className="border border-gold/55 bg-black/35 p-1.5">

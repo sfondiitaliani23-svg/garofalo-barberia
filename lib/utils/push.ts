@@ -95,7 +95,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
       continue;
     }
     try {
-      await webpush.sendNotification(s.sub, JSON.stringify(payload), { TTL: 60 * 60 * 12, urgency: 'normal' });
+      await webpush.sendNotification(s.sub, JSON.stringify(payload), { TTL: 60 * 60 * 48, urgency: 'high' });
       ok++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;
@@ -139,7 +139,7 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
           return;
         }
         try {
-          await webpush.sendNotification(s.sub, body, { TTL: 60 * 60 * 24, urgency: 'normal' });
+          await webpush.sendNotification(s.sub, body, { TTL: 60 * 60 * 48, urgency: 'high' });
           sent++;
           users.add(s.userId);
         } catch (e) {
