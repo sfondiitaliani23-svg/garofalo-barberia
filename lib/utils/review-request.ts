@@ -8,13 +8,15 @@ import { firstName } from '@/lib/utils/barber-slug';
 import { pickReviewCandidates, romeDate, type ReviewRow } from '@/lib/utils/review-request-select';
 
 /**
- * Email "com'è andata?" il giorno dopo la visita, con cinque stelle che portano alla pagina recensioni.
- * È SPENTA finché in Vercel non c'è REVIEW_EMAILS=on. Con ?dry=1 si vede chi la riceverebbe, senza inviare.
+ * Email "com'è andata?" 24 ore dopo la fine dell'appuntamento, con cinque stelle che portano alla pagina recensioni.
+ * Gira ogni 15 minuti (con i promemoria). Per spegnerla: in Vercel REVIEW_EMAILS=off. Con ?dry=1 si vede chi la riceverebbe.
  * Una sola richiesta per cliente ogni 30 giorni; chi dice "non inviarmele più" non la riceve più.
  * Nei log mai nomi né email dei clienti.
  */
 
-const DAILY_CAP = 20;
+const RUN_CAP = 10; // per giro (ogni 15 minuti)
+const SEND_FROM = '08:00';
+const SEND_UNTIL = '22:00';
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 function romeHhmm(d: Date) {
@@ -38,20 +40,23 @@ export function renderReviewRequestEmail(c: { email: string; name: string; barbe
 
 export async function processReviewRequests(opts: { dry?: boolean; force?: boolean } = {}) {
   const now = new Date();
-  if (!opts.dry && process.env.REVIEW_EMAILS !== 'on') return { ok: true as const, skipped: 'disattivato' };
+  if (!opts.dry && process.env.REVIEW_EMAILS === 'off') return { ok: true as const, skipped: 'disattivato' };
+  // Mai di notte: se le 24 ore cadono fuori orario, l'email parte al primo giro utile del mattino.
   const hhmm = romeHhmm(now);
-  if (!opts.dry && !opts.force && !(hhmm >= '10:30' && hhmm < '11:00')) return { ok: true as const, skipped: 'fuori_orario', at: hhmm };
+  if (!opts.dry && !opts.force && (hhmm < SEND_FROM || hhmm >= SEND_UNTIL)) return { ok: true as const, skipped: 'fuori_orario', at: hhmm };
 
   const supabase = await createServiceClient();
   if (!supabase) return { ok: false as const, error: 'Database non configurato' };
 
-  const since = new Date(now.getTime() - 4 * 86_400_000).toISOString();
+  // Appuntamenti finiti tra 38 e 24 ore fa (24 ore di attesa + 14 di recupero).
+  const from = new Date(now.getTime() - 38 * 3_600_000).toISOString();
+  const to = new Date(now.getTime() - 24 * 3_600_000).toISOString();
   const { data } = await supabase
     .from('appointments')
-    .select('customer_name, customer_email, starts_at, status, barber:barbers(name)')
-    .gte('starts_at', since)
-    .lte('starts_at', now.toISOString())
-    .eq('status', 'completed')
+    .select('customer_name, customer_email, starts_at, ends_at, status, barber:barbers(name)')
+    .gte('ends_at', from)
+    .lte('ends_at', to)
+    .in('status', ['confirmed', 'completed'])
     .not('customer_email', 'is', null)
     .neq('customer_email', '')
     .limit(2000);
@@ -70,7 +75,7 @@ export async function processReviewRequests(opts: { dry?: boolean; force?: boole
 
   let sent = 0;
   let failed = 0;
-  for (const c of candidates.slice(0, DAILY_CAP)) {
+  for (const c of candidates.slice(0, RUN_CAP)) {
     // Segno prima di inviare: se il job parte due volte, nessuno riceve due email.
     const { error: markErr } = await supabase
       .from('site_content')
@@ -93,5 +98,5 @@ export async function processReviewRequests(opts: { dry?: boolean; force?: boole
       await supabase.from('site_content').delete().eq('key', c.key);
     }
   }
-  return { ok: true as const, sent, failed, waiting: Math.max(0, candidates.length - DAILY_CAP), skipped };
+  return { ok: true as const, sent, failed, waiting: Math.max(0, candidates.length - RUN_CAP), skipped };
 }

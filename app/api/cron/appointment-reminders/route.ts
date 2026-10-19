@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   const result = await processAppointmentReminders();
   // Promemoria "è ora di tornare": parte da solo una volta al giorno (10:30–11:00 di Roma).
   const comeback = await processComebackReminders().catch((e) => ({ ok: false as const, error: String(e) }));
-  // Richiesta di recensione il giorno dopo la visita: spenta finché REVIEW_EMAILS non è 'on'.
+  // Richiesta di recensione 24 ore dopo l'appuntamento (si spegne con REVIEW_EMAILS=off).
   const reviews = await processReviewRequests().catch(() => ({ ok: false as const, error: 'errore' }));
   const status = result.ok ? 200 : 500;
 

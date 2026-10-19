@@ -9,7 +9,7 @@ function isAuthorized(request: Request) {
   return request.headers.get('authorization') === `Bearer ${cronSecret}`;
 }
 
-/** ?dry=1 mostra quante email partirebbero, senza inviare. ?force=1 invia anche fuori orario (serve REVIEW_EMAILS=on). */
+/** ?dry=1 mostra quante email partirebbero, senza inviare. ?force=1 invia anche fuori orario. */
 export async function GET(request: Request) {
   if (!isAuthorized(request)) return Response.json({ error: 'Unauthorized' }, { status: 401 });
   const url = new URL(request.url);

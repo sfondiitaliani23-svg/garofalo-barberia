@@ -1,13 +1,15 @@
 /**
- * Chi riceve l'email "com'è andata?": solo clienti con un appuntamento COMPLETATO ieri (o l'altro ieri,
- * se un giorno è saltato), con email, che non hanno detto "non inviarmele più" e che non hanno già
- * ricevuto una richiesta negli ultimi 30 giorni. Funzione pura: niente database, si prova nei test.
+ * Chi riceve l'email "com'è andata?": clienti con un appuntamento (confermato o completato, mai disdetto)
+ * finito da 24 ore, con email, che non hanno detto "non inviarmele più" e che non hanno già ricevuto
+ * una richiesta negli ultimi 30 giorni. Il lavoro gira ogni 15 minuti: l'email parte entro un quarto d'ora
+ * dalle 24 ore. Se un giro salta, si recupera fino a 14 ore dopo. Funzione pura: si prova nei test.
  */
 
 export type ReviewRow = {
   customer_name: string | null;
   customer_email: string | null;
   starts_at: string;
+  ends_at: string;
   status: string;
   barber: { name: string } | { name: string }[] | null;
 };
@@ -21,8 +23,8 @@ export type ReviewCandidate = {
 };
 
 const PLACEHOLDER = /^(chiusura|chiuso|pausa|ferie|blocco|bloccato|riservato|occupato|test|prova)\b/i;
-export const REVIEW_MIN_DAYS = 1;
-export const REVIEW_MAX_DAYS = 2;
+export const REVIEW_DELAY_HOURS = 24;
+export const REVIEW_CATCHUP_HOURS = 14;
 export const REVIEW_PAUSE_DAYS = 30;
 
 export function romeDate(d: Date) {
@@ -41,18 +43,20 @@ export function pickReviewCandidates(
 ): { candidates: ReviewCandidate[]; skipped: Record<string, number> } {
   const skipped: Record<string, number> = { optout: 0, recent: 0, sent: 0, notInWindow: 0 };
   const today = romeDate(opts.now);
+  const HOUR = 3_600_000;
   const latest = new Map<string, { day: string; name: string; barber: string }>();
 
   for (const r of rows) {
-    if (r.status !== 'completed') continue;
+    if (r.status !== 'completed' && r.status !== 'confirmed') continue;
     const email = (r.customer_email ?? '').trim().toLowerCase();
     if (!email.includes('@') || PLACEHOLDER.test(r.customer_name ?? '')) continue;
-    const day = romeDate(new Date(r.starts_at));
-    const daysSince = Math.round((dayMs(today) - dayMs(day)) / 86_400_000);
-    if (daysSince < REVIEW_MIN_DAYS || daysSince > REVIEW_MAX_DAYS) {
+    const end = Date.parse(r.ends_at);
+    const late = opts.now.getTime() - (end + REVIEW_DELAY_HOURS * HOUR); // ore passate oltre le 24 ore
+    if (Number.isNaN(end) || late < 0 || late > REVIEW_CATCHUP_HOURS * HOUR) {
       skipped.notInWindow++;
       continue;
     }
+    const day = romeDate(new Date(end));
     const b = Array.isArray(r.barber) ? r.barber[0] : r.barber;
     const prev = latest.get(email);
     if (!prev || day >= prev.day) latest.set(email, { day, name: r.customer_name ?? '', barber: b?.name ?? '' });

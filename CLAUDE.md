@@ -46,6 +46,11 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 ## Notifiche sul telefono
 - Web Push in `lib/utils/push.ts` (chiavi VAPID create da sole, iscrizioni in `site_content`), `components/customer/PushManager.tsx`, invio dall'admin in Inbox → "Notifiche ai clienti" (`lib/actions/push-admin.ts`).
 
+## Recensioni
+- Email "com'è andata?" (`lib/utils/review-request.ts`, scelta dei destinatari in `review-request-select.ts`): parte 24 ore dopo la fine di un appuntamento confermato o completato, con email, mai disdetto. Gira ogni 15 minuti dentro `/api/cron/appointment-reminders`, solo tra le 08:00 e le 22:00. Una richiesta ogni 30 giorni, 10 per giro. Si spegne con `REVIEW_EMAILS=off`; `/api/cron/review-requests?dry=1` mostra chi la riceverebbe.
+- Le stelle nell'email portano a `/recensioni/nuova?stelle=N` (e `/en/...`). "Non inviarmele più" è separato da quello di "è ora di tornare" (`optout-rec:` contro `optout:`).
+- Non c'è un campo "prenotato dal sito": l'email parte per ogni appuntamento con email, anche se inserito dall'admin. Per limitarla al sito serve una colonna `source` (migrazione, la esegue Eliseo).
+
 ## Sessione e uscita
 - `lib/supabase/session-config.ts`: i cookie rimossi tengono `maxAge: 0`, altrimenti l'uscita non funziona.
 - `LogoutSubmit.tsx`: pulsante di uscita con attesa. `middleware.ts`: senza cookie `sb-*-auth-token` → /login; admin e tester → /admin/dashboard.
