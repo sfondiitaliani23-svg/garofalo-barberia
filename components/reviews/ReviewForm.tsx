@@ -13,6 +13,8 @@ import './review-form.css';
 
 interface ReviewFormProps {
   defaultName?: string;
+  /** Stelle già scelte (1-5), per esempio dal link dell'email. */
+  defaultRating?: number;
 }
 
 const RATING_LABELS_EN: Record<number, string> = {
@@ -31,10 +33,10 @@ const RATING_LABELS: Record<number, string> = {
   1: 'Insufficiente',
 };
 
-export function ReviewForm({ defaultName = '' }: ReviewFormProps) {
+export function ReviewForm({ defaultName = '', defaultRating = 5 }: ReviewFormProps) {
   const router = useRouter();
   const lang = useLang();
-  const [rating, setRating] = useState(5);
+  const [rating, setRating] = useState(defaultRating >= 1 && defaultRating <= 5 ? Math.round(defaultRating) : 5);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [customerName, setCustomerName] = useState(defaultName);
   const [comment, setComment] = useState('');

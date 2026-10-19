@@ -37,9 +37,11 @@ export function verifyStopToken(email: string, token: string) {
   const b = Buffer.from(token);
   return a.length === b.length && timingSafeEqual(a, b);
 }
-export function stopUrl(email: string) {
+/** kind 'rec' = richieste di recensione (scelta separata da "è ora di tornare"). */
+export type StopKind = 'rec';
+export function stopUrl(email: string, kind?: StopKind) {
   const e = Buffer.from(email.trim().toLowerCase()).toString('base64url');
-  return `${SITE_URL}/api/promemoria/stop?e=${e}&t=${sign(email)}`;
+  return `${SITE_URL}/api/promemoria/stop?e=${e}&t=${sign(email)}${kind ? `&k=${kind}` : ''}`;
 }
 
 function romeParts(d: Date) {
@@ -251,10 +253,10 @@ export async function processComebackReminders(opts: { dry?: boolean; force?: bo
   return { ok: true as const, sent, failed, waiting: Math.max(0, candidates.length - DAILY_CAP), skipped };
 }
 
-export async function optOutEmail(email: string) {
+export async function optOutEmail(email: string, kind?: StopKind) {
   const supabase = await createServiceClient();
   if (!supabase) return false;
-  const key = `optout:${emailHash(email)}`;
+  const key = `${kind === 'rec' ? 'optout-rec' : 'optout'}:${emailHash(email)}`;
   const { data } = await supabase.from('site_content').select('id').eq('key', key).maybeSingle();
   if (data) return true;
   const { error } = await supabase.from('site_content').insert({ key, title: 'optout', body: '{}', is_active: false, updated_at: new Date().toISOString() });

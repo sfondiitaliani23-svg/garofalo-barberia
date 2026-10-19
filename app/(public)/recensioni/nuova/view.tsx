@@ -2,7 +2,13 @@ import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { getProfile } from '@/lib/auth';
 import { L, type Lang } from '@/lib/i18n';
 
-export default async function NuovaRecensioneView({ lang }: { lang: Lang }) {
+/** Legge `?stelle=` dal link dell'email: solo numeri da 1 a 5, altrimenti 5. */
+export function ratingFromParam(value: string | string[] | undefined) {
+  const n = Number(Array.isArray(value) ? value[0] : value);
+  return Number.isInteger(n) && n >= 1 && n <= 5 ? n : 5;
+}
+
+export default async function NuovaRecensioneView({ lang, rating = 5 }: { lang: Lang; rating?: number }) {
   const profile = await getProfile();
 
   return (
@@ -18,7 +24,7 @@ export default async function NuovaRecensioneView({ lang }: { lang: Lang }) {
           </p>
         </div>
 
-        <ReviewForm defaultName={profile?.full_name ?? ''} />
+        <ReviewForm defaultName={profile?.full_name ?? ''} defaultRating={rating} />
       </div>
     </section>
   );

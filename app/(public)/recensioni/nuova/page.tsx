@@ -1,4 +1,4 @@
-import NuovaRecensioneView from './view';
+import NuovaRecensioneView, { ratingFromParam } from './view';
 import { alternatesFor } from '@/lib/i18n/seo';
 
 export const metadata = {
@@ -7,6 +7,7 @@ export const metadata = {
 };
 export const dynamic = 'force-dynamic';
 
-export default function Page() {
-  return <NuovaRecensioneView lang="it" />;
+export default async function Page({ searchParams }: { searchParams: Promise<{ stelle?: string | string[] }> }) {
+  const { stelle } = await searchParams;
+  return <NuovaRecensioneView lang="it" rating={ratingFromParam(stelle)} />;
 }

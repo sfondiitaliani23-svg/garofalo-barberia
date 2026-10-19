@@ -27,6 +27,13 @@ export async function GET(request: Request) {
   const email = decode(url.searchParams.get('e'));
   const token = url.searchParams.get('t') ?? '';
   if (!email || !verifyStopToken(email, token)) return page('Link non valido', 'Il link non è valido o è incompleto.');
+  if (url.searchParams.get('k') === 'rec') {
+    return page(
+      'Richieste di recensione',
+      'Vuoi smettere di ricevere le richieste di recensione dopo la visita? Le conferme e i promemoria dei tuoi appuntamenti continueranno ad arrivare.',
+      `<form method="post"><button type="submit">Sì, non inviarmele più</button></form>`
+    );
+  }
   return page(
     'Promemoria via email',
     'Vuoi smettere di ricevere i promemoria “è ora di tornare”? Le conferme e i promemoria dei tuoi appuntamenti continueranno ad arrivare.',
@@ -40,8 +47,9 @@ export async function POST(request: Request) {
   const email = decode(url.searchParams.get('e'));
   const token = url.searchParams.get('t') ?? '';
   if (!email || !verifyStopToken(email, token)) return page('Link non valido', 'Il link non è valido o è incompleto.');
-  const ok = await optOutEmail(email);
+  const rec = url.searchParams.get('k') === 'rec';
+  const ok = await optOutEmail(email, rec ? 'rec' : undefined);
   return ok
-    ? page('Fatto', 'Non riceverai più i promemoria “è ora di tornare”. Ti aspettiamo quando vuoi.')
+    ? page('Fatto', rec ? 'Non riceverai più le richieste di recensione. Grazie lo stesso!' : 'Non riceverai più i promemoria “è ora di tornare”. Ti aspettiamo quando vuoi.')
     : page('Riprova', 'Non siamo riusciti a salvare la tua scelta. Riprova tra poco oppure scrivici su WhatsApp.');
 }

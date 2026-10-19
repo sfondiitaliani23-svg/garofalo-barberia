@@ -4,6 +4,7 @@ import { filterCustomerRecipients } from '../lib/utils/email-delivery';
 import {
   renderCustomerBookingEmailHtml,
   renderCustomerReminderEmailHtml,
+  renderReviewRequestEmailHtml,
 } from '../lib/utils/email-templates';
 
 const env = readFileSync('.env.local', 'utf8').replace(/^\uFEFF/, '');
@@ -41,6 +42,10 @@ const previews = [
       dateStr: 'venerdì 11 luglio 2026',
       timeStr: '10:30',
     }),
+  },
+  {
+    subject: '[Anteprima] Com’è andata? Recensione — design email',
+    html: renderReviewRequestEmailHtml({ customerName: 'Eliseo', barberName: 'Luigi Garofalo' }),
   },
 ];
 

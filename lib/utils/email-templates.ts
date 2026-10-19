@@ -72,6 +72,8 @@ export type EmailTemplateOptions = {
   title: string;
   intro: string;
   detailRows: Array<{ label: string; value: string; highlight?: boolean }>;
+  /** HTML già pronto, mostrato dopo le righe di dettaglio e prima del pulsante. */
+  bodyHtml?: string;
   cta?: { href: string; label: string };
   footerNote?: string;
   badge?: string;
@@ -80,6 +82,7 @@ export type EmailTemplateOptions = {
 export function renderEmailTemplate(options: EmailTemplateOptions) {
   const preheader = options.preheader ?? options.title;
   const detailHtml = options.detailRows.map((row) => renderDetailRow(row.label, row.value, row.highlight)).join('');
+  const bodyHtml = options.bodyHtml ?? '';
   const ctaHtml = options.cta ? renderCta(options.cta.href, options.cta.label) : '';
   const badgeHtml = options.badge
     ? `<span style="display:inline-block;margin:0 0 14px;padding:6px 14px;border:1px solid ${GOLD};border-radius:999px;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${GOLD_LIGHT};">${options.badge}</span>`
@@ -143,6 +146,7 @@ export function renderEmailTemplate(options: EmailTemplateOptions) {
                     </table>
                   </td>
                 </tr>
+                ${bodyHtml ? `<tr><td style="padding:4px 24px 0;text-align:center;">${bodyHtml}</td></tr>` : ''}
                 <tr>
                   <td style="padding:4px 24px 28px;text-align:center;">
                     ${ctaHtml}
@@ -357,5 +361,46 @@ export function renderScheduleChangeEmailHtml(heading: string, lines: string[]) 
     })),
     cta: { href: bookUrl, label: 'Prenota un appuntamento' },
     footerNote: 'Grazie per la comprensione. Per urgenze puoi contattarci su WhatsApp o telefono.',
+  });
+}
+const REVIEW_STAR_LABELS = ['Insufficiente', 'Sufficiente', 'Buono', 'Molto buono', 'Eccellente'] as const;
+
+/** Indirizzo della pagina dove il cliente scrive la recensione. Con `stars` le stelle arrivano già scelte. */
+export function reviewPageUrl(stars?: number) {
+  const base = `${siteUrl()}/recensioni/nuova`;
+  return stars && stars >= 1 && stars <= 5 ? `${base}?stelle=${stars}` : base;
+}
+
+function renderStarRow() {
+  const cells = REVIEW_STAR_LABELS.map((label, i) => {
+    const n = i + 1;
+    return `<td align="center" width="20%" style="padding:0 2px;">
+      <a href="${reviewPageUrl(n)}" style="display:block;text-decoration:none;" title="${n} / 5">
+        <span style="display:block;font-family:Arial,Helvetica,sans-serif;font-size:38px;line-height:44px;color:${GOLD};">&#9733;</span>
+        <span style="display:block;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.3;color:${GOLD_LIGHT};">${label}</span>
+      </a>
+    </td>`;
+  }).join('');
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 4px;"><tr>${cells}</tr></table>`;
+}
+
+/** Email "com'è andata?": cinque stelle cliccabili che portano alla pagina recensioni con le stelle già scelte. */
+export function renderReviewRequestEmailHtml(data: { customerName: string; barberName?: string; unsubscribeUrl?: string }) {
+  const name = escapeHtml(data.customerName.trim().split(/\s+/)[0] || 'Ciao');
+  const barber = data.barberName ? ` con ${escapeHtml(data.barberName)}` : '';
+  const optOut = data.unsubscribeUrl
+    ? ` Non vuoi più ricevere queste richieste? <a href="${data.unsubscribeUrl}" style="color:${GOLD_LIGHT};">Non inviarmele più</a>.`
+    : '';
+
+  return renderEmailTemplate({
+    preheader: `${name}, com’è andata la tua visita${barber}? Bastano 30 secondi.`,
+    badge: 'La tua opinione',
+    eyebrow: 'Dopo la visita',
+    title: `Ciao ${name}, com’è andata da noi?`,
+    intro: `${escapeHtml('Barberia Garofalo')} vorrebbe sapere della tua esperienza${barber}. Tocca le stelle: ti portiamo subito sul sito, dove puoi scrivere due righe.`,
+    detailRows: [],
+    bodyHtml: renderStarRow(),
+    cta: { href: reviewPageUrl(), label: 'Lascia una recensione' },
+    footerNote: `La tua recensione aiuta altri clienti a scegliere. Compare sul sito solo se ci dai il permesso, e puoi toglierla quando vuoi.${optOut}`,
   });
 }
