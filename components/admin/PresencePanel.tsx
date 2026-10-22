@@ -30,15 +30,17 @@ export function usePresence(initial: PresenceSnapshot) {
   return snap;
 }
 
-export function PresenceDot({ info, withLabel = true }: { info?: PresenceInfo; withLabel?: boolean }) {
+export function PresenceDot({ info, withLabel = true, absentLabel = 'Mai collegato' }: { info?: PresenceInfo; withLabel?: boolean; absentLabel?: string }) {
   const online = !!info?.online;
+  const label = presenceLabel(info);
+  const text = label === 'Mai collegato' ? absentLabel : label;
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold" title={presenceLabel(info)}>
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold" title={text}>
       <span className="relative flex h-2 w-2" aria-hidden>
         {online && <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />}
         <span className={`relative inline-flex h-2 w-2 rounded-full ${online ? 'bg-emerald-400' : 'bg-white/30'}`} />
       </span>
-      {withLabel && <span className={online ? 'text-emerald-300' : 'text-white/60'}>{presenceLabel(info)}</span>}
+      {withLabel && <span className={online ? 'text-emerald-300' : 'text-white/60'}>{text}</span>}
     </span>
   );
 }

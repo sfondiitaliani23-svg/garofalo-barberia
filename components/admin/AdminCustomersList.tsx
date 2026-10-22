@@ -146,9 +146,9 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
           </select>
         </label>
         <label className="admin-filter">
-          <span className="sr-only">Stato</span>
+          <span className="sr-only">Prenotazioni</span>
           <select value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
-            <option value="all">Stato: tutti</option>
+            <option value="all">Prenotazioni: tutte</option>
             <option value="active">Attivi (ultimi 90 giorni)</option>
             <option value="upcoming">Con appuntamento futuro</option>
             <option value="never">Mai prenotato</option>
@@ -177,10 +177,10 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
               <th className="px-4 py-3 font-semibold">Nome</th>
               <th className="px-4 py-3 font-semibold">Email</th>
               <th className="px-4 py-3 font-semibold">Telefono</th>
-              <th className="px-4 py-3 font-semibold">Ultima prenotazione</th>
-              <th className="px-4 py-3 font-semibold">Stato</th>
+              <th className="px-4 py-3 font-semibold whitespace-nowrap">Ultima prenotazione</th>
+              <th className="px-4 py-3 font-semibold whitespace-nowrap" title="Ha prenotato negli ultimi 90 giorni, oppure ha un appuntamento futuro">Prenotazioni</th>
               <th className="px-4 py-3 font-semibold">Ruolo</th>
-              <th className="px-4 py-3 font-semibold">Sul sito</th>
+              <th className="px-4 py-3 font-semibold whitespace-nowrap" title="Quando ha aperto il sito da collegato">Ultimo accesso</th>
               <th className="px-4 py-3 font-semibold text-right">Azioni</th>
             </tr>
           </thead>
@@ -214,24 +214,18 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
                     </td>
                     <td className="px-4 py-3">
                       {active ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
-                          Attivo
-                        </span>
+                        <span className="text-[12px] font-medium text-white/80">Attivo</span>
                       ) : a ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[11px] font-semibold text-white/55">
-                          <span className="h-1.5 w-1.5 rounded-full bg-white/40" aria-hidden />
-                          Inattivo
-                        </span>
+                        <span className="text-[12px] text-white/45">Inattivo</span>
                       ) : (
-                        <span className="text-[11px] text-white/35">Mai prenotato</span>
+                        <span className="text-[12px] text-white/35">Mai prenotato</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <UserRoleSelect userId={c.id} role={c.role} disabled={!canAssignRoles} />
                     </td>
                     <td className="px-4 py-3">
-                      <PresenceDot info={presence.byUser[c.id]} />
+                      <PresenceDot info={presence.byUser[c.id]} absentLabel="Mai entrato" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
