@@ -117,7 +117,9 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
   const maxBarber = Math.max(1, ...ov.barbers.map((b) => b.revenue));
   const maxService = Math.max(1, ...ov.topServices.map((s) => s.revenue));
   // Tester: niente incassi. I numeri sono già a zero dal server, qui si nascondono anche i riquadri.
-  const hm = !!data.hideMoney;
+  // Dati finanziari spostati nell'area Analytics per riservatezza e privacy
+  const [showMoney, setShowMoney] = useState(false);
+  const hm = !showMoney;
   const servicesShown = hm ? [...ov.topServices].sort((a, b) => b.count - a.count) : ov.topServices;
 
   return (
@@ -229,6 +231,31 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
           </>
         )}
       </section>
+
+      {/* ── Avviso Privacy & Link ad Analytics ── */}
+      <div className="ov-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-gold/30 bg-[#14120e] p-4 text-xs rounded-xl shadow-lg">
+        <div className="flex items-center gap-3 text-white/80">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold text-sm font-bold border border-gold/25">🔒</span>
+          <div>
+            <strong className="text-white text-sm block">Modalità Privacy attiva</strong>
+            <span className="text-white/60">Dati di incasso, fatturato e scontrino medio sono riservati nel salone e spostati nell&apos;area Analytics.</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowMoney((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-gold/40 text-white/70 hover:text-white transition text-xs font-medium"
+            title={showMoney ? 'Nascondi dati sensibili' : 'Mostra dati economici'}
+          >
+            <Eye size={14} className={showMoney ? 'text-gold' : ''} />
+            {showMoney ? 'Nascondi dati' : 'Mostra su Dashboard'}
+          </button>
+          <Link href="/admin/analytics" className="inline-flex items-center gap-1.5 rounded-lg bg-gold/15 hover:bg-gold/25 border border-gold/30 font-semibold text-gold hover:text-gold-light px-3.5 py-1.5 transition text-xs">
+            Apri Analytics →
+          </Link>
+        </div>
+      </div>
 
       {/* ── KPI ────────────────────────────────────────── */}
       <section className="ov-kpis" aria-label="Numeri principali">
