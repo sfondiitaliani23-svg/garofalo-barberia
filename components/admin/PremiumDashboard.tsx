@@ -313,7 +313,7 @@ export function PremiumDashboard({
       </div>
 
       {/* ── SEZIONE 1: 4 KPI CARD CON SPARKLINE ────────────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-3">
         <KpiCard
           title={appointmentsTitle}
           value={metrics.appointments.currentVal}
@@ -321,15 +321,7 @@ export function PremiumDashboard({
           icon={Calendar}
           sparklineData={metrics.appointments.sparkline}
         />
-        {/* KPI Incasso nascosta per riservatezza — decommentare se necessario
-        <KpiCard
-          title={revenueTitle}
-          value={formatPrice(metrics.revenue.currentVal)}
-          trend={metrics.revenue.trendLabel}
-          icon={DollarSign}
-          sparklineData={metrics.revenue.sparkline}
-        />
-        */}
+        {/* KPI Incasso e dati finanziari spostati in Analytics per riservatezza */}
         <KpiCard
           title={visitsTitle}
           value={metrics.visits.currentVal}

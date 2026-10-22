@@ -1,7 +1,7 @@
 import type { BookingAnalytics } from '@/lib/actions/booking-analytics';
 import { formatPrice } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Crown, Scissors, TrendingUp, Users } from 'lucide-react';
+import { Crown, DollarSign, Scissors, TrendingUp, Users } from 'lucide-react';
 
 const TOP_RANK_LIMIT = 5;
 
@@ -76,11 +76,12 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
             </p>
           </CardContent>
         </Card>
-        {/* Incasso nascosto per riservatezza — impostare a true per riabilitare */}
-        {false && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white/60">Incasso stimato</CardTitle>
+            <CardTitle className="flex items-center gap-1.5 text-sm text-white/60">
+              <DollarSign size={14} className="text-gold" />
+              Incasso stimato
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-gold">{formatPrice(stats.totalRevenueCents)}</p>
@@ -89,7 +90,6 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
             </p>
           </CardContent>
         </Card>
-        )}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-sm text-white/60">
@@ -148,6 +148,7 @@ export function BookingAnalyticsSection({ stats }: { stats: BookingAnalytics }) 
                   value={service.count}
                   maxValue={maxServiceCount}
                   shareTotal={totalServiceBookings}
+                  detail={`Incasso stimato ${formatPrice(service.revenueCents)}`}
                 />
               ))
             ) : (
