@@ -2,6 +2,7 @@
 
 import { useFormStatus } from 'react-dom';
 import { signInWithOAuth } from '@/lib/actions/auth';
+import { GoogleContinueButton } from '@/components/auth/GoogleContinueButton';
 import { Button } from '@/components/ui/button';
 import { useLang } from '@/components/i18n/LangProvider';
 import { L } from '@/lib/i18n';
@@ -117,11 +118,13 @@ export function OAuthLoginButtons({
           <span>{L(lang, 'Oppure accedi con', 'Or sign in with')}</span>
         </div>
         <div className="login-alt-row">
-          <form action={signInWithOAuth}>
-            <input type="hidden" name="provider" value="google" />
-            <input type="hidden" name="redirect" value={redirectTo} />
-            <OAuthSubmitButton provider="google" label="Google" pendingLabel={openingLabel} icon={<GoogleIcon />} row />
-          </form>
+          <GoogleContinueButton
+            redirectTo={redirectTo}
+            label="Google"
+            openingLabel={openingLabel}
+            icon={<GoogleIcon />}
+            row
+          />
           {process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === 'true' && (
             <form action={signInWithOAuth}>
               <input type="hidden" name="provider" value="apple" />
@@ -183,16 +186,12 @@ export function OAuthLoginButtons({
 
       <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
         {/* Google OAuth */}
-        <form action={signInWithOAuth}>
-          <input type="hidden" name="provider" value="google" />
-          <input type="hidden" name="redirect" value={redirectTo} />
-          <OAuthSubmitButton
-            provider="google"
-            label="Google"
-            pendingLabel={openingLabel}
-            icon={<GoogleIcon />}
-          />
-        </form>
+        <GoogleContinueButton
+          redirectTo={redirectTo}
+          label="Google"
+          openingLabel={openingLabel}
+          icon={<GoogleIcon />}
+        />
 
         {/* Apple OAuth */}
         {process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === 'true' && (

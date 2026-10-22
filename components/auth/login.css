@@ -141,6 +141,48 @@
   cursor: wait;
 }
 
+/* Il clic vero arriva al pulsante di Google, aperto sul dominio del sito. */
+.login-google {
+  position: relative;
+  display: inline-flex;
+}
+
+.login-google--stack {
+  display: block;
+  width: 100%;
+}
+
+.login-google__hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  opacity: 0.02;
+  pointer-events: none;
+}
+
+.login-google__hit.is-on {
+  pointer-events: auto;
+}
+
+.login-google__hit > div,
+.login-google__hit iframe {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.login-google__status {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  width: max-content;
+  max-width: 16rem;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 /* I flussi secondari (password dimenticata, WhatsApp, Passkey) restano compatti */
 .login-bar form.space-y-4,
 .login-bar > .space-y-4 > div.space-y-4,
@@ -172,5 +214,13 @@
   .login-alt-btn {
     justify-content: center;
     border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .login-google {
+    width: 100%;
+  }
+
+  .login-google .login-alt-btn {
+    width: 100%;
   }
 }

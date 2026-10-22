@@ -98,6 +98,37 @@ const OAUTH_LABELS: Record<'google' | 'github' | 'apple' | 'facebook', string> =
   facebook: 'Facebook',
 };
 
+/**
+ * Completa l'accesso Google partito dal dominio del sito.
+ * Il token arriva dal pulsante di Google aperto su barberiagarofalo.it,
+ * così la schermata di Google mostra il sito e non l'indirizzo di Supabase.
+ */
+export async function signInWithGoogleCredential(
+  idToken: string,
+  nonce: string,
+): Promise<{ ok: true } | { error: string }> {
+  if (!idToken || !nonce) {
+    return { error: 'Accesso con Google non completato. Riprova.' };
+  }
+  const supabase = await createClient();
+  if (!supabase) return { error: 'Accesso con Google non disponibile.' };
+
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: 'google',
+    token: idToken,
+    nonce,
+  });
+  if (error || !data.user) {
+    return { error: 'Non siamo riusciti a entrare con Google. Riprova, oppure usa email e password.' };
+  }
+
+  const { ensureProfileForAuthUser } = await import('@/lib/auth/ensure-profile');
+  await ensureProfileForAuthUser(data.user);
+  await setCustomerSessionExpiryCookie();
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
+
 export async function signInWithOAuth(formData: FormData) {
   const provider = formData.get('provider') as 'google' | 'github' | 'apple' | 'facebook';
   const redirectTo = (formData.get('redirect') as string) || '/area-cliente/dashboard';
