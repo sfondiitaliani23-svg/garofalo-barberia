@@ -55,6 +55,38 @@ function safeNext(value: string) {
   return value.startsWith('/') && !value.startsWith('//') ? value : '/area-cliente/dashboard';
 }
 
+function waitRealFrame(parent: HTMLElement) {
+  return new Promise<HTMLIFrameElement | null>((resolve) => {
+    const start = Date.now();
+    const tick = () => {
+      const frame = parent.querySelector('iframe');
+      // La larghezza va letta prima di qualsiasi regola che allarga l'iframe:
+      // un dominio rifiutato resta a 0, uno accettato circa 260.
+      if (frame && frame.offsetWidth >= 20 && frame.offsetHeight >= 20) {
+        resolve(frame);
+        return;
+      }
+      if (Date.now() - start >= 2000) {
+        resolve(null);
+        return;
+      }
+      window.setTimeout(tick, 200);
+    };
+    tick();
+  });
+}
+
+function placeSizer(sizer: HTMLElement, frame: HTMLIFrameElement, anchor: HTMLElement) {
+  const born = frame.offsetWidth;
+  const bornH = frame.offsetHeight;
+  const box = anchor.getBoundingClientRect();
+  if (born < 20 || bornH < 20 || box.width < 20 || box.height < 8) return;
+  sizer.style.width = `${born}px`;
+  sizer.style.height = `${bornH}px`;
+  sizer.style.transformOrigin = 'top left';
+  sizer.style.transform = `scale(${box.width / born}, ${box.height / bornH})`;
+}
+
 export function GoogleContinueButton({
   redirectTo,
   label,
@@ -69,7 +101,6 @@ export function GoogleContinueButton({
   row?: boolean;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
-  const hitRef = useRef<HTMLDivElement>(null);
   const redirectRef = useRef(redirectTo);
   const openingRef = useRef(openingLabel);
   redirectRef.current = redirectTo;
@@ -80,12 +111,18 @@ export function GoogleContinueButton({
   useEffect(() => {
     let cancelled = false;
     const raw = randomNonce();
+    let stage: HTMLDivElement | null = null;
+    let follow: (() => void) | null = null;
+    let observer: ResizeObserver | null = null;
 
     (async () => {
+      const anchor = formRef.current;
       const hashed = await sha256Hex(raw);
       await loadGsi();
-      if (cancelled || !hitRef.current || !window.google?.accounts?.id) return;
-      const hit = hitRef.current;
+      if (cancelled || !anchor || !window.google?.accounts?.id) {
+        if (!cancelled) setMode('redirect');
+        return;
+      }
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         nonce: hashed,
@@ -103,33 +140,56 @@ export function GoogleContinueButton({
           window.location.assign(safeNext(redirectRef.current));
         },
       });
-      const width = Math.max(Math.round(hit.getBoundingClientRect().width) || 240, 200);
-      window.google.accounts.id.renderButton(hit, {
+      stage = document.createElement('div');
+      stage.className = 'login-google__stage';
+      const sizer = document.createElement('div');
+      sizer.className = 'login-google__sizer';
+      stage.appendChild(sizer);
+      if (cancelled) return;
+      anchor.appendChild(stage);
+      window.google.accounts.id.renderButton(sizer, {
         type: 'standard',
         theme: 'outline',
         size: 'large',
         text: 'signin_with',
         shape: 'pill',
-        width,
+        width: 240,
       });
-      const ready = await new Promise<boolean>((resolve) => {
-        const start = Date.now();
-        const tick = () => {
-          if (cancelled) return;
-          const frame = hit.querySelector('iframe');
-          if (frame && frame.offsetWidth >= 20) { resolve(true); return; }
-          if (Date.now() - start >= 1600) { resolve(false); return; }
-          window.setTimeout(tick, 200);
-        };
-        tick();
-      });
-      if (!cancelled) setMode(ready ? 'site' : 'redirect');
+      const frame = await waitRealFrame(sizer);
+      if (cancelled) {
+        stage.remove();
+        stage = null;
+        return;
+      }
+      if (!frame) {
+        stage.remove();
+        stage = null;
+        setMode('redirect');
+        return;
+      }
+      if (cancelled) {
+        stage.remove();
+        stage = null;
+        return;
+      }
+      placeSizer(sizer, frame, anchor);
+      stage.classList.add('is-on');
+      follow = () => placeSizer(sizer, frame, anchor);
+      window.addEventListener('resize', follow);
+      observer = new ResizeObserver(follow);
+      observer.observe(anchor);
+      setMode('site');
     })().catch(() => {
+      stage?.remove();
+      stage = null;
       if (!cancelled) setMode('redirect');
     });
 
     return () => {
       cancelled = true;
+      if (follow) window.removeEventListener('resize', follow);
+      observer?.disconnect();
+      stage?.remove();
     };
   }, []);
 
@@ -164,7 +224,6 @@ export function GoogleContinueButton({
           {label}
         </Button>
       )}
-      <div ref={hitRef} className={mode === 'site' ? 'login-google__hit is-on' : 'login-google__hit'} />
       {message ? (
         <p className="login-google__status" role="status">
           {message}

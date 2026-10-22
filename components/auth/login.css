@@ -152,23 +152,23 @@
   width: 100%;
 }
 
-.login-google__hit {
+.login-google__stage {
   position: absolute;
   inset: 0;
   z-index: 2;
   overflow: hidden;
-  opacity: 0.02;
+  opacity: 0;
   pointer-events: none;
 }
 
-.login-google__hit.is-on {
+.login-google__stage.is-on {
+  opacity: 0.02;
   pointer-events: auto;
 }
 
-.login-google__hit > div,
-.login-google__hit iframe {
-  width: 100% !important;
-  height: 100% !important;
+.login-google__sizer {
+  width: 320px;
+  height: 48px;
 }
 
 .login-google__status {
