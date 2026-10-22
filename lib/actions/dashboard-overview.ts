@@ -16,16 +16,16 @@ const STATUS_CODE: Record<string, 0 | 1 | 2 | 3> = { confirmed: 0, completed: 1,
  * periodo è istantaneo.
  */
 export async function getDashboardOverviewAction(): Promise<OverviewData> {
-  const { tester } = await requireAdminView();
+  const { tester, hideFinance } = await requireAdminView();
   const data = await buildOverviewCached();
-  if (!tester) return data;
-  // Tester: nomi dei clienti nascosti e nessun importo. I soldi sono azzerati qui, prima di uscire dal server.
+  if (!hideFinance) return data;
+  // Dipendente e tester: nessun importo esce dal server. Il tester non riceve nemmeno i nomi.
   return {
     ...data,
     hideMoney: true,
     services: data.services.map((s) => ({ ...s, price: 0 })),
     apts: data.apts.map((a) => [a[0], a[1], 0, a[3], a[4], a[5]] as OverviewApt),
-    recent: data.recent.map((r) => ({ ...r, name: 'Cliente', amount: 0 })),
+    recent: data.recent.map((r) => ({ ...r, name: tester ? 'Cliente' : r.name, amount: 0 })),
   };
 }
 

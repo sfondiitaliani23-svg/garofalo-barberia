@@ -18,7 +18,7 @@ export interface CalendarAppointment {
   service_id: string;
   reminder_whatsapp_sent_at?: string | null;
   barber?: { name: string } | null;
-  service?: { name: string; duration_minutes: number; price_cents: number } | null;
+  service?: { name: string; duration_minutes: number; price_cents?: number | null } | null;
 }
 
 export type GridCell =

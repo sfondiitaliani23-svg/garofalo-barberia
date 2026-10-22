@@ -24,6 +24,7 @@ import {
   Inbox,
   BookOpen,
   BellRing,
+  Lightbulb,
 } from 'lucide-react';
 
 const links = [
@@ -39,9 +40,10 @@ const links = [
   { href: '/admin/messaggi', label: 'Messaggi e QR', icon: Inbox },
   { href: '/admin/journal', label: 'Journal', icon: BookOpen },
   { href: '/admin/segnalazioni', label: 'Segnalaci il problema', icon: MessageSquareWarning },
+  { href: '/admin/proposte', label: 'Proposte', icon: Lightbulb },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({ areaLabel = 'Admin' }: { areaLabel?: string }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -102,7 +104,7 @@ export function AdminSidebar() {
             <span className="adm-badge-dot" aria-hidden />
             <span className="adm-badge-text">
               <small>Area riservata</small>
-              <strong>Admin</strong>
+              <strong>{areaLabel}</strong>
             </span>
           </span>
         </Link>

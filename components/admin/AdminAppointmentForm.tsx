@@ -26,7 +26,7 @@ import { formatPrice, formatDuration } from '@/lib/utils';
 import { getShopDateString, getShopTimeString, formatShopTimeFromDate, parseBookingDateTime } from '@/lib/utils/booking-datetime';
 import { getWhatsAppReminderUrl } from '@/lib/utils/whatsapp-reminders';
 import { cn } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
+import { getComboServiceIds } from '@/lib/actions/admin';
 import type { Barber, Service } from '@/types/database';
 import type { CalendarAppointment } from '@/lib/utils/week-calendar';
 
@@ -232,22 +232,9 @@ export function AdminAppointmentForm({
     const comboId = comboMatch ? comboMatch[1] : null;
 
     if (comboId) {
-      const supabase = createClient();
-      if (!supabase) return;
-
-      async function loadComboServices() {
-        const { data } = await supabase!
-          .from('appointments')
-          .select('service_id, starts_at')
-          .like('notes', `%[Combo: ${comboId}]%`)
-          .order('starts_at', { ascending: true });
-
-        if (data && data.length > 0) {
-          const ids = data.map((item: any) => item.service_id);
-          setSelectedServiceIds(ids);
-        }
-      }
-      void loadComboServices();
+      void getComboServiceIds(comboId).then((ids) => {
+        if (ids.length > 0) setSelectedServiceIds(ids);
+      });
     }
   }, [appointment, mounted]);
 

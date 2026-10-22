@@ -38,7 +38,7 @@ export async function getPresenceAction(): Promise<PresenceSnapshot> {
     };
     byUser[p.id] = info;
     const name = (p.full_name as string | null) || (p.email as string | null) || 'Utente';
-    if (p.role === 'admin') team.push({ id: p.id, name: tester && name === p.email ? 'Admin' : name, email: tester ? null : (p.email as string | null), presence: info });
+    if (p.role === 'admin' || p.role === 'dipendente' || p.role === 'tester') team.push({ id: p.id, name: tester && name === p.email ? 'Staff' : name, email: tester ? null : (p.email as string | null), presence: info });
     else if (info.online) onlineCustomers.push({ id: p.id, name: tester ? 'Cliente' : name });
   }
   return { byUser, team, onlineCustomers, generatedAt: new Date(now).toISOString() };

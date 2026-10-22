@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
+import { canMutate, isStaffRole } from '@/lib/auth/staff';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import type { Profile, UserRole } from '@/types/database';
 
@@ -39,12 +40,12 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   return null;
 });
 
-export const TESTER_BLOCK_MESSAGE = 'Modalità tester: puoi guardare tutto, ma non modificare.';
+export const TESTER_BLOCK_MESSAGE = 'Modalità tester: puoi guardare tutto e proporre una novità, ma non modificare.';
 
 export const requireRole = cache(async (role: UserRole) => {
   const profile = await getProfile();
-  // Il tester guarda ma non cambia nulla: ogni azione che modifica passa da qui e lo ferma.
   if (role === 'admin' && profile?.role === 'tester') throw new Error(TESTER_BLOCK_MESSAGE);
+  if (role === 'admin' && profile && canMutate(profile.role)) return profile;
   if (!profile || profile.role !== role) {
     if (role === 'admin') {
       redirect('/admin/login');
@@ -55,13 +56,32 @@ export const requireRole = cache(async (role: UserRole) => {
   return profile;
 });
 
+/** Azioni che modificano il salone: admin e dipendente. Il tester viene fermato. */
 export const requireAdmin = cache(async () => requireRole('admin'));
+
+/** Solo l'admin: ruoli, incassi, profitti. */
+export const requireFullAdmin = cache(async () => {
+  const profile = await getProfile();
+  if (!profile || profile.role !== 'admin') {
+    if (profile?.role === 'tester') throw new Error(TESTER_BLOCK_MESSAGE);
+    if (profile?.role === 'dipendente') throw new Error('Solo un admin può farlo.');
+    redirect('/admin/login');
+  }
+  return profile;
+});
 
 export const requireCustomer = cache(async () => requireRole('customer'));
 
-/** Come requireAdmin, ma accetta anche il tester. Solo per azioni che LEGGONO: chi legge deve poi nascondere i dati personali se `tester` è true. */
-export const requireAdminView = cache(async (): Promise<{ profile: Profile; tester: boolean }> => {
+/**
+ * Lettura dell'area riservata: admin, dipendente e tester.
+ * `tester` nasconde i dati personali. `hideFinance` toglie incassi e profitti a dipendente e tester.
+ */
+export const requireAdminView = cache(async (): Promise<{ profile: Profile; tester: boolean; hideFinance: boolean }> => {
   const profile = await getProfile();
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'tester')) redirect('/admin/login');
-  return { profile, tester: profile.role === 'tester' };
+  if (!profile || !isStaffRole(profile.role)) redirect('/admin/login');
+  return {
+    profile,
+    tester: profile.role === 'tester',
+    hideFinance: profile.role !== 'admin',
+  };
 });

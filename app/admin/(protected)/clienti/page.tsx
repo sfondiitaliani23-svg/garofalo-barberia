@@ -17,12 +17,12 @@ export default async function AdminClientiPage() {
             Clienti
           </h1>
           <p className="mt-1 text-sm text-white/50">
-            Elenco completo dei clienti registrati · {customers.length} {customers.length === 1 ? 'cliente' : 'clienti'}
+            Iscritti al sito. Un admin può assegnare il ruolo Admin, Dipendente o Tester. · {customers.length} {customers.length === 1 ? 'iscritto' : 'iscritti'}
           </p>
         </div>
       </div>
       <div className="mt-6">
-        <AdminCustomersList customers={customers} activity={activity} presence={presence} readOnly={readOnly} />
+        <AdminCustomersList customers={customers} activity={activity} presence={presence} readOnly={readOnly} canAssignRoles={me?.role === 'admin'} />
       </div>
     </div>
   );

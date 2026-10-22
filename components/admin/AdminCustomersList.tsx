@@ -8,6 +8,7 @@ import type { CustomerActivity } from '@/lib/actions/admin';
 import type { PresenceSnapshot } from '@/lib/utils/presence';
 import { PresenceDot, usePresence } from '@/components/admin/PresencePanel';
 import { DeleteCustomerDialog, EditCustomerDialog } from '@/components/admin/AdminCustomerDialogs';
+import { UserRoleSelect } from '@/components/admin/UserRoleSelect';
 
 interface AdminCustomersListProps {
   customers: Profile[];
@@ -15,6 +16,8 @@ interface AdminCustomersListProps {
   presence?: PresenceSnapshot;
   /** Il tester guarda ma non modifica: niente pulsanti Modifica/Elimina. */
   readOnly?: boolean;
+  /** Solo l'admin promuove o riporta un iscritto a cliente. */
+  canAssignRoles?: boolean;
 }
 
 type StatusFilter = 'all' | 'active' | 'upcoming' | 'never';
@@ -56,7 +59,7 @@ function matchesQuery(customer: Profile, query: string) {
   return haystack.includes(query);
 }
 
-export function AdminCustomersList({ customers, activity = {}, presence: presenceInit, readOnly = false }: AdminCustomersListProps) {
+export function AdminCustomersList({ customers, activity = {}, presence: presenceInit, readOnly = false, canAssignRoles = false }: AdminCustomersListProps) {
   const presence = usePresence(presenceInit ?? { byUser: {}, team: [], onlineCustomers: [], generatedAt: '' });
   const [search, setSearch] = useState('');
   // Ricerca arrivata dalla dashboard (?q=...)
@@ -168,7 +171,7 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
       )}
 
       <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#0c0c0c]">
-        <table className="w-full min-w-[780px] border-collapse text-sm">
+        <table className="w-full min-w-[920px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-white/45">
               <th className="px-4 py-3 font-semibold">Nome</th>
@@ -176,6 +179,7 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
               <th className="px-4 py-3 font-semibold">Telefono</th>
               <th className="px-4 py-3 font-semibold">Ultima prenotazione</th>
               <th className="px-4 py-3 font-semibold">Stato</th>
+              <th className="px-4 py-3 font-semibold">Ruolo</th>
               <th className="px-4 py-3 font-semibold">Sul sito</th>
               <th className="px-4 py-3 font-semibold text-right">Azioni</th>
             </tr>
@@ -183,7 +187,7 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-white/45">
+                <td colSpan={8} className="px-4 py-10 text-center text-white/45">
                   {filtersActive ? 'Nessun cliente corrisponde ai filtri.' : 'Nessun cliente registrato.'}
                 </td>
               </tr>
@@ -224,6 +228,9 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
                       )}
                     </td>
                     <td className="px-4 py-3">
+                      <UserRoleSelect userId={c.id} role={c.role} disabled={!canAssignRoles} />
+                    </td>
+                    <td className="px-4 py-3">
                       <PresenceDot info={presence.byUser[c.id]} />
                     </td>
                     <td className="px-4 py-3">
@@ -253,7 +260,7 @@ export function AdminCustomersList({ customers, activity = {}, presence: presenc
                         >
                           <Images size={15} />
                         </Link>
-                        {!readOnly && (
+                        {!readOnly && c.role === 'customer' && (
                           <>
                             <button
                               type="button"

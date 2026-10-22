@@ -1,8 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, requireAdminView } from '@/lib/auth';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
 import {
   SITE_AREAS,
   type IssueReport,
@@ -21,14 +21,14 @@ export interface CreateIssueInput {
   technicalDetails?: string;
 }
 
-export async function getIssueReports(): Promise<IssueReport[]> {
-  try {
-    await requireAdmin();
-  } catch {
-    // In modalità client o dev torna lo store in memoria
-  }
+async function issuesDb() {
+  return (await createServiceClient()) ?? (await createClient());
+}
 
-  const supabase = await createClient();
+export async function getIssueReports(): Promise<IssueReport[]> {
+  await requireAdminView();
+
+  const supabase = await issuesDb();
   if (supabase) {
     try {
       const { data, error } = await supabase
@@ -108,7 +108,7 @@ export async function createIssueReport(input: CreateIssueInput): Promise<{
   memoryReportsStore = [newReport, ...memoryReportsStore];
 
   // Tentativo di persistenza Supabase se la tabella esiste
-  const supabase = await createClient();
+  const supabase = await issuesDb();
   if (supabase) {
     try {
       await supabase.from('site_issues').insert({
@@ -153,7 +153,7 @@ export async function updateReportStatus(
     };
   }
 
-  const supabase = await createClient();
+  const supabase = await issuesDb();
   if (supabase) {
     try {
       await supabase
@@ -178,7 +178,7 @@ export async function deleteIssueReport(reportId: string): Promise<{ ok: boolean
 
   memoryReportsStore = memoryReportsStore.filter((r) => r.id !== reportId);
 
-  const supabase = await createClient();
+  const supabase = await issuesDb();
   if (supabase) {
     try {
       await supabase.from('site_issues').delete().eq('id', reportId);

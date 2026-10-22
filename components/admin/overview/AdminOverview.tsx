@@ -119,7 +119,8 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
   // Tester: niente incassi. I numeri sono già a zero dal server, qui si nascondono anche i riquadri.
   // Dati finanziari spostati nell'area Analytics per riservatezza e privacy
   const [showMoney, setShowMoney] = useState(false);
-  const hm = !showMoney;
+  const moneyLocked = data.hideMoney === true;
+  const hm = moneyLocked || !showMoney;
   const servicesShown = hm ? [...ov.topServices].sort((a, b) => b.count - a.count) : ov.topServices;
 
   return (
@@ -242,15 +243,17 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
           </div>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            onClick={() => setShowMoney((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-gold/40 text-white/70 hover:text-white transition text-xs font-medium"
-            title={showMoney ? 'Nascondi dati sensibili' : 'Mostra dati economici'}
-          >
-            <Eye size={14} className={showMoney ? 'text-gold' : ''} />
-            {showMoney ? 'Nascondi dati' : 'Mostra su Dashboard'}
-          </button>
+          {!moneyLocked && (
+            <button
+              type="button"
+              onClick={() => setShowMoney((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 hover:border-gold/40 text-white/70 hover:text-white transition text-xs font-medium"
+              title={showMoney ? 'Nascondi dati sensibili' : 'Mostra dati economici'}
+            >
+              <Eye size={14} className={showMoney ? 'text-gold' : ''} />
+              {showMoney ? 'Nascondi dati' : 'Mostra su Dashboard'}
+            </button>
+          )}
           <Link href="/admin/analytics" className="inline-flex items-center gap-1.5 rounded-lg bg-gold/15 hover:bg-gold/25 border border-gold/30 font-semibold text-gold hover:text-gold-light px-3.5 py-1.5 transition text-xs">
             Apri Analytics →
           </Link>

@@ -2,6 +2,7 @@ import { getAnalyticsStats } from '@/lib/actions/analytics';
 import { getProfile } from '@/lib/auth';
 import { getDashboardOverviewAction } from '@/lib/actions/dashboard-overview';
 import { getPresenceAction } from '@/lib/actions/presence-admin';
+import { roleLabel } from '@/lib/auth/staff';
 import { AdminOverview } from '@/components/admin/overview/AdminOverview';
 import { DashboardLive } from '@/components/admin/overview/DashboardLive';
 
@@ -21,7 +22,7 @@ export default async function AdminDashboardPage() {
   const firstTwo = name.split(/\s+/).slice(0, 2).join(' ');
 
   return (
-    <AdminOverview data={overview} visitsHistory={analytics.visitsHistory ?? []} userName={firstTwo} userRole={profile?.role === 'tester' ? 'Tester' : 'Amministratore'}>
+    <AdminOverview data={overview} visitsHistory={analytics.visitsHistory ?? []} userName={firstTwo} userRole={roleLabel(profile?.role)}>
       <DashboardLive presence={presence} />
     </AdminOverview>
   );

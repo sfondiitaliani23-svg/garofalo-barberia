@@ -5,6 +5,7 @@ import { revalidatePath, unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getProfile, getSession } from '@/lib/auth';
+import { canMutate } from '@/lib/auth/staff';
 import { ensureProfileForAuthUser } from '@/lib/auth/ensure-profile';
 import { getAvailableSlots, resolveBarberForSlot } from '@/lib/actions/availability';
 import { notifyAdminBookingCancellation, notifyAdminNewBooking } from '@/lib/utils/notifications';
@@ -85,7 +86,7 @@ export async function createAppointment(input: CreateAppointmentInput) {
       .map((id) => services.find((s) => s.id === id))
       .filter((s): s is typeof services[number] => !!s);
 
-    const isAdmin = profile?.role === 'admin';
+    const isAdmin = canMutate(profile?.role);
     const hasCutService = orderedServices.some((s) => isCutService(s.name) || isCutService(s.category));
 
     // Calcola la durata totale combinata di tutti i servizi
@@ -264,10 +265,11 @@ export async function createAppointment(input: CreateAppointmentInput) {
 }
 
 export async function cancelAppointment(appointmentId: string) {
-  const supabase = await createClient();
-  if (!supabase) return { ok: false, error: 'Database non configurato' };
   const profile = await getProfile();
   if (!profile) return { ok: false, error: 'Non autenticato' };
+  const staff = canMutate(profile.role);
+  const supabase = staff ? await createServiceClient() : await createClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
 
   const { data: apt } = await supabase
     .from('appointments')
@@ -278,7 +280,7 @@ export async function cancelAppointment(appointmentId: string) {
   if (!apt) return { ok: false, error: 'Appuntamento non trovato' };
 
   const isOwner = apt.customer_id === profile.id;
-  const isAdmin = profile.role === 'admin';
+  const isAdmin = staff;
   if (!isOwner && !isAdmin) return { ok: false, error: 'Non autorizzato' };
 
   if (!canManageAppointment(apt.starts_at, isAdmin)) {
@@ -348,10 +350,11 @@ export async function cancelAppointment(appointmentId: string) {
 }
 
 export async function rescheduleAppointment(appointmentId: string, date: string, time: string) {
-  const supabase = await createClient();
-  if (!supabase) return { ok: false, error: 'Database non configurato' };
   const profile = await getProfile();
   if (!profile) return { ok: false, error: 'Non autenticato' };
+  const staff = canMutate(profile.role);
+  const supabase = staff ? await createServiceClient() : await createClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato' };
 
   const { data: apt } = await supabase
     .from('appointments')
@@ -363,7 +366,7 @@ export async function rescheduleAppointment(appointmentId: string, date: string,
   if (apt.status !== 'confirmed') return { ok: false, error: 'Questo appuntamento non può essere modificato' };
 
   const isOwner = apt.customer_id === profile.id;
-  const isAdmin = profile.role === 'admin';
+  const isAdmin = staff;
   if (!isOwner && !isAdmin) return { ok: false, error: 'Non autorizzato' };
 
   if (!canManageAppointment(apt.starts_at, isAdmin)) {

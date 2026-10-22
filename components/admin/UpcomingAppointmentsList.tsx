@@ -177,6 +177,7 @@ export function UpcomingAppointmentsList({
 
       return matchesQuery(a, query);
     });
+
     return [...base].sort((a, b) => {
       let cmp = 0;
       if (sortType === 'date') {
@@ -193,9 +194,11 @@ export function UpcomingAppointmentsList({
     });
   }, [appointments, query, onlyActive, reminderFilter, serviceFilter, barberFilter, sortType, sortDir]);
 
+  const showMoney = !appointments.some((a) => a.service && a.service.price_cents == null);
+
   /** Scarica in CSV (Excel) esattamente le righe visibili con i filtri attuali. */
   function exportCsv() {
-    const header = ['Data', 'Ora', 'Cliente', 'Telefono', 'Servizio', 'Barbiere', 'Importo', 'Stato', 'Promemoria', 'Note'];
+    const header = ['Data', 'Ora', 'Cliente', 'Telefono', 'Servizio', 'Barbiere', ...(showMoney ? ['Importo'] : []), 'Stato', 'Promemoria', 'Note'];
     const rows = filtered.map((a) => {
       const d = parseISO(a.starts_at);
       return [
@@ -205,7 +208,7 @@ export function UpcomingAppointmentsList({
         a.customer_phone,
         a.service?.name ?? '',
         a.barber?.name ?? '',
-        a.service ? (a.service.price_cents / 100).toFixed(2).replace('.', ',') : '',
+        ...(showMoney ? [a.service?.price_cents != null ? (a.service.price_cents / 100).toFixed(2).replace('.', ',') : ''] : []),
         (STATUS_STYLE[a.status] ?? STATUS_STYLE.confirmed).label,
         a.reminder_whatsapp_sent_at ? 'Avvisato' : !a.customer_phone ? 'Tel. mancante' : a.status === 'confirmed' ? 'Da avvisare' : '',
         cleanCustomerNotes(a.notes) ?? '',
@@ -604,7 +607,7 @@ export function UpcomingAppointmentsList({
                 <th className="px-4 py-3 font-semibold">Cliente</th>
                 <th className="px-4 py-3 font-semibold">Servizio</th>
                 <th className="px-4 py-3 font-semibold">Barbiere</th>
-                <th className="px-4 py-3 font-semibold text-right">Importo</th>
+                {showMoney && <th className="px-4 py-3 font-semibold text-right">Importo</th>}
                 <th className="px-4 py-3 font-semibold">Stato</th>
                 <th className="px-4 py-3 font-semibold">Promemoria</th>
                 <th className="px-4 py-3 font-semibold text-right">Azioni</th>
@@ -647,9 +650,11 @@ export function UpcomingAppointmentsList({
                       )}
                     </td>
                     <td className="px-4 py-3 text-white/75">{appointment.barber?.name ?? '-'}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right text-white/85 tabular-nums">
-                      {appointment.service ? formatPrice(appointment.service.price_cents) : '-'}
-                    </td>
+                    {showMoney && (
+                      <td className="whitespace-nowrap px-4 py-3 text-right text-white/85 tabular-nums">
+                        {appointment.service?.price_cents != null ? formatPrice(appointment.service.price_cents) : '-'}
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${status.cls}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} aria-hidden />

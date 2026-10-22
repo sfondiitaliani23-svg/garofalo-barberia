@@ -54,8 +54,27 @@ function revalidateAppointmentPaths() {
   revalidatePath('/area-cliente/dashboard');
 }
 
+/** Dipendente e tester ricevono gli appuntamenti senza importi: il listino pubblico resta sui servizi. */
+function presentAppointments<T>(rows: T[] | null, tester: boolean, hideFinance: boolean): T[] {
+  const masked = (tester ? maskForTester(rows ?? []) : (rows ?? [])) as T[];
+  if (!hideFinance) return masked;
+  return masked.map((row) => {
+    const record = row as {
+      discount_cents?: number | null;
+      service?: { price_cents?: number | null } | { price_cents?: number | null }[] | null;
+    };
+    const service = record.service;
+    const stripped = Array.isArray(service)
+      ? service.map((item) => ({ ...item, price_cents: null }))
+      : service
+        ? { ...service, price_cents: null }
+        : service;
+    return { ...record, discount_cents: null, service: stripped } as T;
+  });
+}
+
 export async function getAdminStats() {
-  const { tester } = await requireAdminView();
+  const { hideFinance } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) {
     return {
@@ -96,7 +115,7 @@ export async function getAdminStats() {
 
   const sumRevenue = (rows: typeof recentAppointments) =>
     rows.reduce((sum, apt) => {
-      if (tester) return 0; // Tester: nessun importo esce dal server.
+      if (hideFinance) return 0; // Dipendente e tester: nessun importo esce dal server.
       if (apt.status !== 'confirmed' && apt.status !== 'completed') return sum;
       const service = Array.isArray(apt.service) ? apt.service[0] : apt.service;
       const gross = service?.price_cents ?? 0;
@@ -180,7 +199,7 @@ export async function getAdminStats() {
 }
 
 export async function getAdminAppointments(from: string, to: string, barberId?: string) {
-  const { tester } = await requireAdminView();
+  const { tester, hideFinance } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -194,7 +213,7 @@ export async function getAdminAppointments(from: string, to: string, barberId?: 
   if (barberId && barberId !== 'all') query = query.eq('barber_id', barberId);
 
   const { data } = await query;
-  return tester ? maskForTester(data ?? []) : (data ?? []);
+  return presentAppointments(data, tester, hideFinance);
 }
 
 export async function getAdminWeekAppointments(weekStartDate: string, barberId?: string) {
@@ -205,7 +224,7 @@ export async function getAdminWeekAppointments(weekStartDate: string, barberId?:
 }
 
 export async function getUpcomingAdminAppointments(limit = 1500) {
-  const { tester } = await requireAdminView();
+  const { tester, hideFinance } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -220,11 +239,24 @@ export async function getUpcomingAdminAppointments(limit = 1500) {
     .order('starts_at', { ascending: true })
     .limit(limit);
 
-  return tester ? maskForTester(data ?? []) : (data ?? []);
+  return presentAppointments(data, tester, hideFinance);
+}
+
+export async function getComboServiceIds(comboId: string): Promise<string[]> {
+  await requireAdmin();
+  if (!/^combo_[a-z0-9]+_\d+$/.test(comboId)) return [];
+  const supabase = await createServiceClient();
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from('appointments')
+    .select('service_id, starts_at')
+    .like('notes', `%[Combo: ${comboId}]%`)
+    .order('starts_at', { ascending: true });
+  return (data ?? []).map((item) => item.service_id).filter((id): id is string => !!id);
 }
 
 export async function getPastAdminAppointments(limit = 500) {
-  const { tester } = await requireAdminView();
+  const { tester, hideFinance } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -239,11 +271,11 @@ export async function getPastAdminAppointments(limit = 500) {
     .order('starts_at', { ascending: false })
     .limit(limit);
 
-  return tester ? maskForTester(data ?? []) : (data ?? []);
+  return presentAppointments(data, tester, hideFinance);
 }
 
 export async function getAllAdminAppointments(limit = 2000) {
-  const { tester } = await requireAdminView();
+  const { tester, hideFinance } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -254,11 +286,11 @@ export async function getAllAdminAppointments(limit = 2000) {
     .order('starts_at', { ascending: false })
     .limit(limit);
 
-  return tester ? maskForTester(data ?? []) : (data ?? []);
+  return presentAppointments(data, tester, hideFinance);
 }
 
 export async function getYesterdayAdminAppointments(limit = 200) {
-  const { tester } = await requireAdminView();
+  const { tester, hideFinance } = await requireAdminView();
   const supabase = await createServiceClient();
   if (!supabase) return [];
 
@@ -277,7 +309,7 @@ export async function getYesterdayAdminAppointments(limit = 200) {
     .order('starts_at', { ascending: true })
     .limit(limit);
 
-  return tester ? maskForTester(data ?? []) : (data ?? []);
+  return presentAppointments(data, tester, hideFinance);
 }
 
 export async function createAdminAppointment(input: AdminAppointmentInput): Promise<CreateAdminAppointmentResult> {
@@ -593,11 +625,16 @@ export async function getCustomers() {
   const { data } = await supabase
     .from('profiles')
     .select('id, role, full_name, phone, email, hair_preferences, personal_notes, avatar_url, created_at, updated_at')
-    .eq('role', 'customer')
     .order('created_at', { ascending: false })
     .limit(1000);
 
-  return tester ? maskForTester(data ?? []) : (data ?? []);
+  const rank: Record<string, number> = { admin: 0, dipendente: 1, tester: 2, customer: 3 };
+  const rows = [...(data ?? [])].sort((a, b) => {
+    const byRole = (rank[a.role] ?? 9) - (rank[b.role] ?? 9);
+    if (byRole !== 0) return byRole;
+    return (a.full_name || a.email || '').localeCompare(b.full_name || b.email || '', 'it');
+  });
+  return tester ? maskForTester(rows) : rows;
 }
 
 export interface AdminCustomerInput {
