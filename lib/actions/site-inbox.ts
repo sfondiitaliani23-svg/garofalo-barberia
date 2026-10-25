@@ -160,6 +160,29 @@ export async function markInboxReadAction(id: string): Promise<{ ok: boolean }> 
   return { ok: !error };
 }
 
+/** Segna come letti tutti i messaggi di un tipo (feedback o candidature). */
+export async function markAllInboxReadAction(kind: InboxKind): Promise<{ ok: boolean; count: number }> {
+  await requireAdmin();
+  if (kind !== 'feedback' && kind !== 'candidatura') return { ok: false, count: 0 };
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, count: 0 };
+  const { data } = await supabase.from('site_content').select('id, body').like('key', `${PREFIX}${kind}:%`).limit(500);
+  let count = 0;
+  for (const row of data ?? []) {
+    let body: Record<string, unknown> = {};
+    try {
+      body = JSON.parse(row.body ?? '{}');
+    } catch {
+      /* ignora */
+    }
+    if (body.read === true) continue;
+    const { error } = await supabase.from('site_content').update({ body: JSON.stringify({ ...body, read: true }) }).eq('id', row.id);
+    if (error) return { ok: false, count };
+    count++;
+  }
+  return { ok: true, count };
+}
+
 export async function deleteInboxItemAction(id: string): Promise<{ ok: boolean }> {
   await requireAdmin();
   const supabase = await createServiceClient();

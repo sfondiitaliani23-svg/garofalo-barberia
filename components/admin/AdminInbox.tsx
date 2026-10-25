@@ -42,6 +42,18 @@ export function AdminInbox({ items: initial, qrs, scans, comeback, push, ai }: {
       await markInboxReadAction(id);
     });
   }
+  function markAll(kind: 'feedback' | 'candidatura') {
+    const before = items;
+    setItems((list) => list.map((i) => (i.kind === kind ? { ...i, read: true } : i)));
+    start(async () => {
+      const { markAllInboxReadAction } = await import('@/lib/actions/site-inbox');
+      const res = await markAllInboxReadAction(kind);
+      if (!res.ok) {
+        setItems(before);
+        toast.error('Non sono riuscito a segnarli come letti');
+      }
+    });
+  }
   function remove(id: string) {
     if (!window.confirm('Eliminare definitivamente questo messaggio?')) return;
     setItems((list) => list.filter((i) => i.id !== id));
@@ -92,6 +104,7 @@ export function AdminInbox({ items: initial, qrs, scans, comeback, push, ai }: {
             <Stat label="Voto medio" value={avg} />
             <Stat label="Da leggere" value={String(unread(feedback))} />
           </div>
+          {unread(feedback) > 0 && <MarkAll onClick={() => markAll('feedback')} count={unread(feedback)} />}
           {feedback.length === 0 ? (
             <Empty text="Nessun feedback ancora. Stampa il QR “Specchio” dalla scheda QR del salone." />
           ) : (
@@ -112,6 +125,7 @@ export function AdminInbox({ items: initial, qrs, scans, comeback, push, ai }: {
 
       {tab === 'candidatura' && (
         <section className="space-y-3">
+          {unread(apps) > 0 && <MarkAll onClick={() => markAll('candidatura')} count={unread(apps)} />}
           {apps.length === 0 ? (
             <Empty text="Nessuna candidatura. La pagina pubblica è /lavora-con-noi." />
           ) : (
@@ -252,5 +266,19 @@ function Card({ item, onRead, onDelete, children }: { item: InboxItem; onRead: (
       </div>
       {children}
     </article>
+  );
+}
+
+function MarkAll({ onClick, count }: { onClick: () => void; count: number }) {
+  return (
+    <div className="flex justify-end">
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex min-h-10 items-center gap-2 border border-gold/50 px-4 text-sm font-semibold text-gold-light transition hover:border-gold hover:bg-gold/10"
+      >
+        <Check size={15} aria-hidden /> Segna tutto come letto ({count})
+      </button>
+    </div>
   );
 }
