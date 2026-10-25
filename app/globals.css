@@ -46,6 +46,15 @@ img, video, picture, canvas, svg, [data-protected-image] {
   -webkit-touch-callout: none !important;
 }
 
+/* Sito dei clienti: menu, pulsanti, intestazioni ed etichette non si selezionano
+   (niente riquadri colorati con doppio clic o Ctrl+A). Testi lunghi, indirizzo e telefono restano copiabili.
+   L'area admin resta com'è: lì serve poter copiare i dati. */
+:where(header, nav, button, footer h2, footer h3, footer h4, .uppercase):not(.adm-skin *, .adm-side *) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input, textarea, select, [contenteditable] { -webkit-user-select: text; user-select: text; }
+
 /* Eccezione per l'area cliente autorizzata */
 .customer-gallery-authorized img {
   pointer-events: auto !important;
