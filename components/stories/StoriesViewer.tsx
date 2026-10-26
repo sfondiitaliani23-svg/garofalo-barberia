@@ -20,7 +20,33 @@ type Props = {
 };
 
 /** Visore a schermo intero: barrette in alto, tocco a destra avanti, a sinistra indietro, tieni premuto per fermare. */
-export function StoriesViewer({ groups, startGroup, lang, onClose, onSeen }: Props) {
+export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, onSeen }: Props) {
+  // Il tasto «Indietro» del telefono chiude le storie e lascia la pagina dov'era (come su Instagram).
+  const closedRef = useRef(false);
+  const closeProp = useRef(onCloseProp);
+  closeProp.current = onCloseProp;
+  useEffect(() => {
+    history.pushState({ ...(history.state ?? {}), gbStory: true }, '');
+    const onPop = () => {
+      if (closedRef.current) return;
+      closedRef.current = true;
+      closeProp.current();
+    };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      // Chiuso dal pulsante del link: togliamo la voce in più dalla cronologia senza tornare indietro.
+      if (history.state?.gbStory) history.replaceState({ ...history.state, gbStory: false }, '');
+    };
+  }, []);
+  const onClose = useCallback(() => {
+    if (closedRef.current) return;
+    if (history.state?.gbStory) history.back();
+    else {
+      closedRef.current = true;
+      closeProp.current();
+    }
+  }, []);
   const [g, setG] = useState(startGroup);
   const [i, setI] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -232,7 +258,7 @@ export function StoriesViewer({ groups, startGroup, lang, onClose, onSeen }: Pro
                 {slide.ctaLabel} <ChevronRight size={18} aria-hidden />
               </a>
             ) : (
-              <Link className="story-cta" href={slide.ctaHref} onClick={onClose}>
+              <Link className="story-cta" href={slide.ctaHref} onClick={() => { closedRef.current = true; onCloseProp(); }}>
                 {slide.ctaLabel} <ChevronRight size={18} aria-hidden />
               </Link>
             )
