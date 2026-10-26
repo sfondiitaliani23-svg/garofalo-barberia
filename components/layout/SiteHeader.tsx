@@ -80,7 +80,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             : 'bg-black/80 backdrop-blur-sm border-b border-white/5'
         }`}
       >
-        <div className="container-lux flex h-16 items-center justify-between lg:grid lg:grid-cols-[1fr_auto_1fr]">
+        <div className="container-lux flex h-16 items-center justify-between lg:grid lg:grid-cols-[1fr_auto_1fr] lg:max-w-none lg:px-8 xl:px-10">
 
           {/* ── Navigazione sinistra (Desktop - 4 elementi) ───────────────── */}
           <nav
@@ -145,8 +145,8 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
               </Link>
             ))}
             </span>
-            {/* Accesso, lingua e Prenota: a destra, staccati dal menu */}
-            <span className="flex items-center gap-3 xl:gap-5">
+            {/* Accesso, lingua e Prenota: in fondo a destra, staccati dal menu da un filo */}
+            <span className="flex items-center gap-3 xl:gap-5 border-l border-white/15 pl-4 xl:pl-6">
             {isLoggedIn ? (
               <Link
                 href="/area-cliente/dashboard"
