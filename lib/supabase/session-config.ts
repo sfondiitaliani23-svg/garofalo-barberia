@@ -1,5 +1,7 @@
-/** Durata sessione cliente: 60 giorni (~2 mesi). */
-export const CUSTOMER_SESSION_MAX_AGE_SECONDS = 60 * 24 * 60 * 60;
+/** Durata dell'accesso (sito e app): almeno 3 mesi dall'accesso. 95 giorni (richiesta di Eliseo del 26/10/2026). */
+export const CUSTOMER_SESSION_MAX_AGE_SECONDS = 95 * 24 * 60 * 60;
+/** Chi è entrato quando la durata era di 60 giorni riceve i giorni mancanti per arrivare ai 3 mesi. */
+const LEGACY_GRACE_MS = 35 * 24 * 60 * 60 * 1000;
 
 export const CUSTOMER_SESSION_UNTIL_COOKIE = 'garofalo_session_until';
 
@@ -25,7 +27,7 @@ export function getCustomerSessionExpiryDate(): Date {
 export function applyCustomerSessionCookieOptions(cookiesToSet: SessionCookie[]): SessionCookie[] {
   const defaults = getCustomerSessionCookieOptions();
   return cookiesToSet.map(({ name, value, options }) => {
-    // Un cookie che Supabase sta cancellando (logout) deve restare cancellato: non gli diamo i 60 giorni.
+    // Un cookie che Supabase sta cancellando (logout) deve restare cancellato: non gli diamo i 95 giorni.
     const removing = options?.maxAge === 0 || value === '';
     return {
       name,
@@ -43,5 +45,5 @@ export function isCustomerSessionExpired(sessionUntilValue?: string | null): boo
   if (!sessionUntilValue) return false;
   const expiresAt = new Date(sessionUntilValue);
   if (Number.isNaN(expiresAt.getTime())) return false;
-  return expiresAt.getTime() <= Date.now();
+  return expiresAt.getTime() + LEGACY_GRACE_MS <= Date.now();
 }

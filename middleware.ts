@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = request.cookies.get('gb_lang')?.value === 'en' ? '/en/login' : '/login';
     url.searchParams.set('redirect', pathname);
-    url.searchParams.set('error', 'La sessione è scaduta dopo 2 mesi. Accedi di nuovo.');
+    url.searchParams.set('error', 'La sessione è scaduta dopo 3 mesi. Accedi di nuovo.');
     const expiredResponse = NextResponse.redirect(url);
     expiredResponse.cookies.delete(CUSTOMER_SESSION_UNTIL_COOKIE);
     return expiredResponse;

@@ -59,6 +59,8 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Admin: `/admin/storie`. Admin, dipendente e tester caricano e riordinano; il tester modifica ed elimina solo le sue. Foto e video richiedono la casella della liberatoria. Video fino a 15 secondi.
 
 ## Sessione e uscita
+- Accesso valido almeno 3 mesi (sito e app): `CUSTOMER_SESSION_MAX_AGE_SECONDS` = 95 giorni; chi era entrato con la regola dei 60 giorni riceve 35 giorni in più (`LEGACY_GRACE_MS`).
+- Server in Europa: `vercel.json` ha `regions: ["fra1"]` (vicino a Supabase). Senza, le funzioni girano negli Stati Uniti e l'area riservata è lenta.
 - `lib/supabase/session-config.ts`: i cookie rimossi tengono `maxAge: 0`, altrimenti l'uscita non funziona.
 - `LogoutSubmit.tsx`: pulsante di uscita con attesa. `middleware.ts`: senza cookie `sb-*-auth-token` → /login; admin e tester → /admin/dashboard.
 - Dopo l'accesso (`LoginForm.tsx`, `AdminLoginForm.tsx`) usare `window.location.assign`, non `router.push`.

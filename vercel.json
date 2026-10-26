@@ -2,6 +2,9 @@
   "framework": "nextjs",
   "buildCommand": "next build --turbopack",
   "installCommand": "yarn install --frozen-lockfile",
+  "regions": [
+    "fra1"
+  ],
   "crons": [
     {
       "path": "/api/cron/appointment-reminders",
