@@ -24,7 +24,7 @@ function readSeen(): Set<string> {
 }
 
 /** Cerchi dorati in home: "Novità" (storie del salone) e "Il tuo anno" (Wrapped del cliente con accesso). */
-export function StoriesBar({ slides, lang }: { slides: StorySlide[]; lang: Lang }) {
+export function StoriesBar({ slides, lang, size, empty = null }: { slides: StorySlide[]; lang: Lang; size?: 'lg'; empty?: React.ReactNode }) {
   const [wrapped, setWrapped] = useState<StorySlide[]>([]);
   const [open, setOpen] = useState<number | null>(null);
   const [seen, setSeen] = useState<Set<string>>(new Set());
@@ -63,11 +63,11 @@ export function StoriesBar({ slides, lang }: { slides: StorySlide[]; lang: Lang 
     });
   }, []);
 
-  if (!groups.length) return null;
+  if (!groups.length) return <>{empty}</>;
 
   return (
     <>
-      <div className="story-bar" aria-label={L(lang, 'Storie', 'Stories')}>
+      <div className={`story-bar${size === 'lg' ? ' story-bar--lg' : ''}`} aria-label={L(lang, 'Storie', 'Stories')}>
         {groups.map((gr, k) => {
           const allSeen = gr.slides.every((s) => seen.has(s.id));
           return (

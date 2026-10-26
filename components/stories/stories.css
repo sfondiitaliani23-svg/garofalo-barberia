@@ -53,6 +53,10 @@
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.85);
 }
+.story-bar--lg { gap: 2.4rem; margin-top: 0; }
+.story-bar--lg .story-ring { width: 112px; height: 112px; padding: 4px; }
+.story-bar--lg .story-ring-year { font-size: 1.6rem; }
+.story-bar--lg .story-bubble-label { font-size: 0.85rem; }
 @media (hover: hover) {
   .story-bubble:hover .story-ring { transform: scale(1.06); }
 }

@@ -19,10 +19,11 @@ function navLinks(lang: 'it' | 'en') {
   const gallery = { href: '/galleria', label: L(lang, 'Galleria', 'Gallery') };
   const reviews = { href: '/recensioni', label: L(lang, 'Recensioni', 'Reviews') };
   const contacts = { href: '/contatti', label: L(lang, 'Contatti', 'Contact') };
+  const wrapped = { href: '/wrapped', label: 'Wrapped' };
   return {
     navLeft: [home, about, services, gallery],
-    navRight: [reviews, contacts],
-    allNavLinks: [home, about, services, gallery, reviews, contacts],
+    navRight: [reviews, contacts, wrapped],
+    allNavLinks: [home, about, services, gallery, reviews, contacts, wrapped],
   };
 }
 
@@ -131,8 +132,9 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           {/* ── Navigazione destra (Desktop - 4 elementi) ─────────────────── */}
           <nav
             aria-label={L(lang, 'Navigazione principale destra', 'Main navigation, right')}
-            className="hidden lg:flex items-center justify-start gap-3 xl:gap-7 pl-4 xl:pl-8"
+            className="hidden lg:flex items-center justify-between gap-3 xl:gap-7 pl-4 xl:pl-8"
           >
+            <span className="flex items-center gap-3 xl:gap-7">
             {navRight.map((link) => (
               <Link
                 key={link.href}
@@ -142,6 +144,9 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
                 {link.label}
               </Link>
             ))}
+            </span>
+            {/* Accesso, lingua e Prenota: a destra, staccati dal menu */}
+            <span className="flex items-center gap-3 xl:gap-5">
             {isLoggedIn ? (
               <Link
                 href="/area-cliente/dashboard"
@@ -164,6 +169,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
               <CalendarDays size={15} strokeWidth={1.75} aria-hidden />
               {L(lang, 'Prenota', 'Book')}
             </Link>
+            </span>
           </nav>
 
           {/* ── Bottone hamburger Mobile ─────────────────────────────────────── */}

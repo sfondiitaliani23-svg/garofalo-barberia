@@ -79,6 +79,7 @@ export const EN_STATIC_PATHS = [
   '/barba-foggia',
   '/taglio-uomo-foggia',
   '/taglio-bambino-foggia',
+  '/wrapped',
 ] as const;
 export const EN_DYNAMIC_PREFIXES = ['/team/', '/journal/'] as const;
 
