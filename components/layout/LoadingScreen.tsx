@@ -29,7 +29,7 @@ export function LoadingScreen() {
       }
     }, 20);
 
-    // Fade out fluido e ultra-scattante dopo 450ms
+    // Uscita rapida: il logo si vede un attimo, la pagina è subito usabile
     const fadeTimer = setTimeout(() => {
       const loader = loaderRef.current;
       if (loader) {
@@ -37,10 +37,10 @@ export function LoadingScreen() {
         loader.style.pointerEvents = 'none';
         setTimeout(() => {
           setShouldRender(false);
-        }, 250);
+        }, 180);
       }
       storageSet('gbf_loader_shown', '1', 'session');
-    }, 450);
+    }, 220);
 
     return () => {
       clearTimeout(barTimer);
@@ -63,7 +63,7 @@ export function LoadingScreen() {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        transition: 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       <div
@@ -108,7 +108,7 @@ export function LoadingScreen() {
               width: '0%',
               background: 'linear-gradient(90deg, #cd9a4f, #ffb949, #cd9a4f)',
               borderRadius: '3px',
-              transition: 'width 0.9s cubic-bezier(0.25, 0.1, 0.25, 1)',
+              transition: 'width 0.22s cubic-bezier(0.25, 0.1, 0.25, 1)',
             }}
           />
         </div>

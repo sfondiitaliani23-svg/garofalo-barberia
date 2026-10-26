@@ -16,6 +16,7 @@ import { unstable_cache } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getLiveStories } from '@/lib/stories-server';
 import { StoriesBar } from '@/components/stories/StoriesBar';
+import { preload } from 'react-dom';
 import './home.css';
 
 const getCachedHomepageProducts = unstable_cache(
@@ -46,6 +47,8 @@ const getCachedHomepageProducts = unstable_cache(
 );
 
 export default async function HomeView({ lang }: { lang: Lang }) {
+  // Foto del primo schermo: il browser la scarica subito, senza aspettare il CSS.
+  preload('/assets/sostituisci-immagini/homepage/1.jpg', { as: 'image', fetchPriority: 'high' });
   const [dbReviews, dbProducts, services, stories] = await Promise.all([
     getApprovedReviews(),
     getCachedHomepageProducts(),

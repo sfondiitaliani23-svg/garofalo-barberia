@@ -32,6 +32,14 @@ export function StoriesBar({ slides, lang, size, empty = null }: { slides: Story
   useEffect(() => {
     setSeen(readSeen());
     let alive = true;
+    // Senza accesso non c'è nessun Wrapped: niente richiesta al server.
+    let loggedIn = true;
+    try {
+      loggedIn = /sb-[^=]+-auth-token/.test(document.cookie);
+    } catch {
+      /* cookie non leggibili: proviamo comunque */
+    }
+    if (!loggedIn) return;
     getMyWrappedAction(lang)
       .then((w) => {
         if (alive) setWrapped(w);
