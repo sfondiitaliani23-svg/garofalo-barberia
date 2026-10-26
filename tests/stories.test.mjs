@@ -94,3 +94,11 @@ test('durata leggibile', () => {
   assert.equal(humanMinutes(200, 'it'), '3 ore e 20 minuti');
   assert.equal(humanMinutes(61, 'en'), '1 hour and 1 minute');
 });
+
+test('storie di base: sempre presenti, voto solo con almeno 3 recensioni', async () => {
+  const { baseSlides } = await import('../lib/utils/stories.ts');
+  assert.equal(baseSlides('it', [5, 5]).some((s) => s.id === 'base-voto'), false);
+  const s = baseSlides('it', [5, 4, 5]);
+  assert.equal(s.find((x) => x.id === 'base-voto').bigNumber, '4,7 / 5');
+  assert.ok(s.every((x) => x.ctaHref && x.ctaHref.startsWith('/')));
+});

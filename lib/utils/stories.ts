@@ -221,3 +221,35 @@ export function wrappedSlides(w: Wrapped, firstName: string, lang: 'it' | 'en'):
   out.push({ ...s('share', en ? 'Thank you for this year' : 'Grazie per quest\'anno', '♥', en ? 'Share your year in your stories.' : 'Condividi il tuo anno nelle storie.'), kind: 'testo', id: 'wrapped-share', duration: 8000 });
   return out;
 }
+
+/**
+ * Storie di base del salone: si vedono quando il team non ne ha caricate per oggi,
+ * così il cerchio «Novità» c'è sempre. Il voto compare solo con almeno 3 recensioni.
+ */
+export function baseSlides(lang: 'it' | 'en', ratings: number[] = []): StorySlide[] {
+  const en = lang === 'en';
+  const slide = (id: string, kind: StoryKind, title: string, body: string, ctaLabel: string, ctaHref: string | null, bigNumber = ''): StorySlide => ({
+    id: `base-${id}`,
+    kind,
+    title,
+    body,
+    bigNumber,
+    mediaUrl: null,
+    ctaLabel,
+    ctaHref,
+    duration: 6500,
+  });
+  const out: StorySlide[] = [
+    slide('benvenuto', 'testo', en ? 'Welcome to Barberia Garofalo' : 'Benvenuto da Barberia Garofalo', en ? 'Cuts, beards and styling for men, boys and kids in Foggia.' : 'Taglio, barba e styling per uomo, ragazzo e bimbo a Foggia.', en ? 'Book now' : 'Prenota ora', '/prenota'),
+  ];
+  const valid = ratings.filter((r) => Number.isFinite(r) && r >= 1 && r <= 5);
+  if (valid.length >= 3) {
+    const avg = Math.round((valid.reduce((a, b) => a + b, 0) / valid.length) * 10) / 10;
+    out.push(slide('voto', 'numero', en ? 'Average of the latest reviews' : 'Media delle ultime recensioni', en ? 'Thank you for every word.' : 'Grazie per ogni parola.', en ? 'Read the reviews' : 'Leggi le recensioni', '/recensioni', `${String(avg).replace('.', en ? '.' : ',')} / 5`));
+  }
+  out.push(
+    slide('prima', 'testo', en ? 'First time with us?' : 'Prima volta da noi?', en ? 'Here is what to expect, step by step.' : 'Ecco cosa ti aspetta, passo dopo passo.', en ? 'First visit' : 'Prima visita', '/prima-visita'),
+    slide('wrapped', 'testo', en ? 'Your year at Garofalo' : 'Il tuo anno da Garofalo', en ? 'Sign in to see your Wrapped: visits, time in the chair, favourite service.' : 'Accedi per vedere il tuo Wrapped: visite, tempo in poltrona, servizio preferito.', en ? 'Sign in' : 'Accedi', '/login'),
+  );
+  return out;
+}

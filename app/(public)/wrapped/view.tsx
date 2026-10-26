@@ -2,6 +2,7 @@ import { LocLink as Link } from '@/components/i18n/LocLink';
 import { ContentHero } from '@/components/content/ContentHero';
 import { StoriesBar } from '@/components/stories/StoriesBar';
 import { getLiveStories } from '@/lib/stories-server';
+import { baseSlides } from '@/lib/utils/stories';
 import { L, type Lang } from '@/lib/i18n';
 import '@/components/content/content.css';
 
@@ -21,7 +22,7 @@ export default async function WrappedView({ lang }: { lang: Lang }) {
       <section className="section pb-24">
         <div className="container-lux cp-wrap" style={{ textAlign: 'center' }}>
           <StoriesBar
-            slides={stories}
+            slides={stories.length ? stories : baseSlides(lang)}
             lang={lang}
             size="lg"
             empty={<p className="text-white/60">{L(lang, 'Oggi non ci sono storie. Torna presto!', 'No stories today. Come back soon!')}</p>}

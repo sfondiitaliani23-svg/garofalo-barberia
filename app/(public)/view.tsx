@@ -15,6 +15,7 @@ import { getApprovedReviews } from '@/lib/actions/reviews';
 import { unstable_cache } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getLiveStories } from '@/lib/stories-server';
+import { baseSlides } from '@/lib/utils/stories';
 import { StoriesBar } from '@/components/stories/StoriesBar';
 import { preload } from 'react-dom';
 import './home.css';
@@ -113,7 +114,7 @@ export default async function HomeView({ lang }: { lang: Lang }) {
               <BtnArrow />
             </Link>
           </div>
-          <StoriesBar slides={stories} lang={lang} />
+          <StoriesBar slides={stories.length ? stories : baseSlides(lang, dbReviews.map((r: { rating: number }) => Number(r.rating)))} lang={lang} />
         </div>
       </section>
 
