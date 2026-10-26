@@ -491,6 +491,10 @@
 /* ── Saluto e azioni rapide ─────────────────────── */
 .ov-quick { margin: 0 0 1.1rem; }
 .ov-quick-hello { font-size: 1rem; color: #e8e1d3; margin-bottom: 0.7rem; }
+.ov-quick-row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+.ov-quick-row .ov-quick-hello { margin-bottom: 0; }
+.ov-home-link { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 40px; padding: 0 1rem; border: 1px dashed rgba(205, 154, 79, 0.6); color: var(--ov-accent); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; transition: background 0.2s, color 0.2s; }
+@media (hover: hover) { .ov-home-link:hover { background: rgba(205, 154, 79, 0.12); color: #ffb949; } }
 .ov-quick-hello strong { color: #fff; }
 .ov-quick-hello span { color: var(--ov-muted); font-size: 0.85rem; }
 .ov-quick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }

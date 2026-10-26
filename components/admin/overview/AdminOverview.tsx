@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Euro,
   Eye,
+  Home,
   MessageSquare,
   Plus,
   Receipt,
@@ -161,10 +162,16 @@ export function AdminOverview({ data, visitsHistory, userName, userRole, childre
 
       {/* ── Saluto e azioni rapide ─────────────────────── */}
       <section className="ov-quick" aria-label="Azioni rapide">
-        <p className="ov-quick-hello">
-          {greeting(data.now)}, <strong>{userName.split(' ')[0] || 'benvenuto'}</strong>
-          <span> · {dayLabel(ov.today, true)}</span>
-        </p>
+        <div className="ov-quick-row">
+          <p className="ov-quick-hello">
+            {greeting(data.now)}, <strong>{userName.split(' ')[0] || 'benvenuto'}</strong>
+            <span> · {dayLabel(ov.today, true)}</span>
+          </p>
+          <a href="/" className="ov-home-link">
+            <Home size={16} aria-hidden />
+            <span>Vai al sito</span>
+          </a>
+        </div>
         <div className="ov-quick-grid">
           <button type="button" className="ov-quick-btn" onClick={() => setInstantOpen(true)}>
             <Plus size={18} aria-hidden />

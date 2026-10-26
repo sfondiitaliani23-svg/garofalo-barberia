@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile } from '@/lib/auth';
 import { parseISO } from 'date-fns';
 import { displayServiceName, fmtDateTimeShort, statusLabel } from '@/lib/i18n/content-customer';
-import { Scissors, Clock, ChevronRight, History, User, Image as ImageIcon, HelpCircle } from 'lucide-react';
+import { Scissors, Clock, ChevronRight, History, User, Image as ImageIcon, HelpCircle, Home } from 'lucide-react';
 import { DateTear } from '@/components/customer/DateTear';
 import { LogoutCard } from '@/components/customer/LogoutCard';
 import { groupComboAppointments } from '@/lib/utils/group-appointments';
@@ -71,7 +71,12 @@ export default async function CustomerDashboardPage() {
       {/* Benvenuto: cornice doppia a insegna */}
       <section className="border border-gold/55 bg-black/35 p-1.5">
         <div className="border border-gold/30 bg-gradient-to-b from-[#1a140e]/95 to-[#0c0a08]/95 px-6 py-7 sm:px-8">
-          <p className="text-[11px] uppercase tracking-[0.4em] text-gold">{greeting}</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="text-[11px] uppercase tracking-[0.4em] text-gold">{greeting}</p>
+            <Link href={localHref(lang, '/')} className="inline-flex min-h-10 items-center gap-2 border border-dashed border-gold/60 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-gold transition-colors hover:bg-gold/10">
+              <Home size={15} aria-hidden /> {L(lang, 'Vai al sito', 'Go to the website')}
+            </Link>
+          </div>
           <h1 className="mt-1.5 font-display text-4xl leading-tight text-[#f7ecd0] sm:text-5xl">{firstName}</h1>
           <p className="mt-1 text-sm text-[#bda980]">
             {L(lang, 'Benvenuto nel tuo spazio riservato, Barberia Garofalo, Foggia', 'Welcome to your private area, Barberia Garofalo, Foggia')}
