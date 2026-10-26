@@ -13,6 +13,7 @@ import {
   STORY_KINDS,
   VIDEO_TYPES,
   computeWrapped,
+  isStoryRatio,
   romeToday,
   safeCtaHref,
   wrappedSlides,
@@ -105,12 +106,13 @@ export async function listStoriesAction(): Promise<{ ok: true; stories: AdminSto
 }
 
 /** Permesso per caricare un file direttamente nello spazio "storie" (foto fino a 8 MB, video fino a 20 MB). */
-export async function createStoryUploadAction(input: { mime: string; size: number }): Promise<{ ok: true; path: string; token: string } | Fail> {
+export async function createStoryUploadAction(input: { mime: string; size: number; width: number; height: number }): Promise<{ ok: true; path: string; token: string } | Fail> {
   const me = await editor();
   if (!me) return { ok: false, error: 'Accesso non consentito.' };
   const isImage = IMAGE_TYPES.includes(input.mime);
   const isVideo = VIDEO_TYPES.includes(input.mime);
   if (!isImage && !isVideo) return { ok: false, error: 'Formato non accettato: foto JPG, PNG, WebP o video MP4, WebM, MOV.' };
+  if (!isStoryRatio(Number(input.width), Number(input.height))) return { ok: false, error: 'Servono foto e video verticali 9:16, per esempio 1080x1920.' };
   if (input.size > (isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES)) return { ok: false, error: isVideo ? 'Il video supera 20 MB.' : 'La foto supera 8 MB.' };
   const supabase = await createServiceClient();
   if (!supabase) return { ok: false, error: 'Database non configurato.' };

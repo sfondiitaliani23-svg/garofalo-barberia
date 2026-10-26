@@ -12,6 +12,7 @@ import {
   MAX_VIDEO_SECONDS,
   VIDEO_TYPES,
   isStoryLive,
+  isStoryRatio,
   moveInOrder,
   sortStories,
   toSlide,
@@ -22,8 +23,8 @@ import type { AdminStory, StoryInput } from '@/lib/actions/stories';
 const StoriesViewer = dynamic(() => import('@/components/stories/StoriesViewer').then((m) => m.StoriesViewer), { ssr: false });
 
 const KINDS: { id: StoryKind; label: string; icon: typeof ImageIcon; hint: string }[] = [
-  { id: 'foto', label: 'Foto', icon: ImageIcon, hint: 'Un taglio, il salone, un prodotto. JPG, PNG o WebP fino a 8 MB.' },
-  { id: 'video', label: 'Video', icon: Film, hint: `Video verticale fino a ${MAX_VIDEO_SECONDS} secondi e 20 MB.` },
+  { id: 'foto', label: 'Foto', icon: ImageIcon, hint: 'Solo verticale 9:16 (es. 1080x1920). JPG, PNG o WebP fino a 8 MB.' },
+  { id: 'video', label: 'Video', icon: Film, hint: `Solo verticale 9:16 (es. 1080x1920), fino a ${MAX_VIDEO_SECONDS} secondi e 20 MB.` },
   { id: 'testo', label: 'Testo o promo', icon: Type, hint: 'Un annuncio, una promo, un orario speciale.' },
   { id: 'numero', label: 'Numero', icon: Hash, hint: 'Stile Wrapped: un numero grande (es. "1.200 tagli nel 2026").' },
 ];
@@ -72,6 +73,29 @@ const addDays = (day: string, n: number) => {
 };
 const fmtDay = (day: string) =>
   new Date(`${day}T12:00:00Z`).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+/** Larghezza e altezza di una foto o di un video, letti nel browser. */
+function mediaSize(file: File, video: boolean): Promise<{ w: number; h: number }> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const done = (w: number, h: number) => {
+      URL.revokeObjectURL(url);
+      resolve({ w, h });
+    };
+    if (video) {
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      v.onloadedmetadata = () => done(v.videoWidth, v.videoHeight);
+      v.onerror = () => done(0, 0);
+      v.src = url;
+    } else {
+      const img = new Image();
+      img.onload = () => done(img.naturalWidth, img.naturalHeight);
+      img.onerror = () => done(0, 0);
+      img.src = url;
+    }
+  });
+}
 
 function videoSeconds(file: File): Promise<number> {
   return new Promise((resolve) => {
@@ -123,6 +147,8 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
     if (form.kind === 'video' && !isVideo) return toast.error('Scegli un video MP4, WebM o MOV.');
     if (form.kind === 'foto' && !isImage) return toast.error('Scegli una foto JPG, PNG o WebP.');
     if (file.size > (isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES)) return toast.error(isVideo ? 'Il video supera 20 MB.' : 'La foto supera 8 MB.');
+    const { w, h } = await mediaSize(file, isVideo);
+    if (!isStoryRatio(w, h)) return toast.error(`Formato non valido (${w}x${h}). Servono foto e video verticali 9:16, per esempio 1080x1920.`);
     if (isVideo) {
       const secs = await videoSeconds(file);
       if (secs > MAX_VIDEO_SECONDS + 0.5) return toast.error(`Il video dura ${Math.round(secs)} secondi: il massimo è ${MAX_VIDEO_SECONDS}.`);
@@ -130,7 +156,7 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
     setUploading(true);
     try {
       const { createStoryUploadAction } = await import('@/lib/actions/stories');
-      const res = await createStoryUploadAction({ mime: file.type, size: file.size });
+      const res = await createStoryUploadAction({ mime: file.type, size: file.size, width: w, height: h });
       if (!res.ok) return toast.error(res.error);
       const sb = createClient();
       if (!sb) return toast.error('Database non configurato.');

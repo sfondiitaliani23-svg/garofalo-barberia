@@ -56,7 +56,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Calcoli puri in `lib/utils/stories.ts` (test `stories.test.mjs`); lettura pubblica in `lib/stories-server.ts` (cache 60 s, tag `stories`); azioni in `lib/actions/stories.ts`.
 - Home: `components/stories/StoriesBar.tsx` sotto "Prenota ora"; visore `StoriesViewer.tsx`; immagine da condividere `shareCard.ts` (1080x1920, niente dati privati).
 - Wrapped personale: solo per il cliente con accesso, visite fatte dell'anno, combo = una visita, **mai importi**.
-- Admin: `/admin/storie`. Admin, dipendente e tester caricano e riordinano; il tester modifica ed elimina solo le sue. Foto e video richiedono la casella della liberatoria. Video fino a 15 secondi.
+- Admin: `/admin/storie`. Admin, dipendente e tester caricano e riordinano; il tester modifica ed elimina solo le sue. Foto e video richiedono la casella della liberatoria. Video fino a 15 secondi. Solo formato verticale 9:16 (`isStoryRatio`, tolleranza 2%), controllato nel browser e nell'azione.
 
 ## Sessione e uscita
 - Accesso valido almeno 3 mesi (sito e app): `CUSTOMER_SESSION_MAX_AGE_SECONDS` = 95 giorni; chi era entrato con la regola dei 60 giorni riceve 35 giorni in più (`LEGACY_GRACE_MS`).

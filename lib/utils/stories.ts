@@ -42,6 +42,12 @@ export type StorySlide = {
 export const STORY_KINDS: StoryKind[] = ['foto', 'video', 'testo', 'numero'];
 export const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
 export const MAX_VIDEO_SECONDS = 15;
+/** Solo formato verticale 9:16 (es. 1080x1920). Tolleranza del 2% per i tagli dei telefoni. */
+export const STORY_RATIO = 9 / 16;
+export function isStoryRatio(width: number, height: number): boolean {
+  if (!(width > 0 && height > 0)) return false;
+  return Math.abs(width / height - STORY_RATIO) / STORY_RATIO <= 0.02;
+}
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 export const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];

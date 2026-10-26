@@ -102,3 +102,13 @@ test('storie di base: sempre presenti, voto solo con almeno 3 recensioni', async
   assert.equal(s.find((x) => x.id === 'base-voto').bigNumber, '4,7 / 5');
   assert.ok(s.every((x) => x.ctaHref && x.ctaHref.startsWith('/')));
 });
+
+test('storie: solo formato verticale 9:16', async () => {
+  const { isStoryRatio } = await import('../lib/utils/stories.ts');
+  assert.equal(isStoryRatio(1080, 1920), true);
+  assert.equal(isStoryRatio(720, 1280), true);
+  assert.equal(isStoryRatio(1080, 1350), false); // 4:5
+  assert.equal(isStoryRatio(1080, 1080), false);
+  assert.equal(isStoryRatio(1920, 1080), false);
+  assert.equal(isStoryRatio(0, 0), false);
+});
