@@ -80,12 +80,12 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             : 'bg-black/80 backdrop-blur-sm border-b border-white/5'
         }`}
       >
-        <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-5 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-6 xl:px-10">
+        <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-5 xl:grid xl:max-w-none xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:px-6 2xl:px-10">
 
           {/* ── Navigazione sinistra (Desktop - 4 elementi) ───────────────── */}
           <nav
             aria-label={L(lang, 'Navigazione principale sinistra', 'Main navigation, left')}
-            className="hidden lg:flex items-center justify-end gap-3 xl:gap-7 pr-4 xl:pr-8"
+            className="hidden xl:flex items-center justify-end gap-5 2xl:gap-7 pr-6 2xl:pr-8"
           >
             {navLeft.map((link) => (
               <Link
@@ -99,7 +99,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           </nav>
 
           {/* ── Logo Centrato (Desktop) / Sinistra (Mobile) ───────────────── */}
-          <div className="flex items-center justify-start lg:justify-center px-2">
+          <div className="flex items-center justify-start xl:justify-center px-2">
             <Link
               href="/"
               className="relative z-[151] flex shrink-0 items-center"
@@ -112,7 +112,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
                 alt={SITE_CONFIG.name}
                 width={180}
                 height={58}
-                className="hidden lg:block h-[50px] w-auto max-w-[165px] object-contain"
+                className="hidden xl:block h-[50px] w-auto max-w-[165px] object-contain"
                 style={{ mixBlendMode: 'screen' }}
                 priority
               />
@@ -122,7 +122,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
                 alt={SITE_CONFIG.name}
                 width={46}
                 height={46}
-                className="block lg:hidden h-[44px] w-auto max-w-[44px] object-contain"
+                className="block xl:hidden h-[44px] w-auto max-w-[44px] object-contain"
                 style={{ mixBlendMode: 'screen' }}
                 priority
               />
@@ -132,9 +132,9 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           {/* ── Navigazione destra (Desktop - 4 elementi) ─────────────────── */}
           <nav
             aria-label={L(lang, 'Navigazione principale destra', 'Main navigation, right')}
-            className="hidden lg:flex items-center justify-between gap-3 xl:gap-7 pl-4 xl:pl-8"
+            className="hidden xl:flex items-center justify-between gap-5 pl-6 2xl:pl-8"
           >
-            <span className="flex items-center gap-3 xl:gap-7">
+            <span className="flex items-center gap-5 2xl:gap-7">
             {navRight.map((link) => (
               <Link
                 key={link.href}
@@ -146,7 +146,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             ))}
             </span>
             {/* Accesso, lingua e Prenota: in fondo a destra, staccati dal menu da un filo */}
-            <span className="flex items-center gap-3 xl:gap-5 border-l border-white/15 pl-4 xl:pl-6">
+            <span className="flex items-center gap-4 2xl:gap-5 border-l border-white/15 pl-5 2xl:pl-6">
             {isLoggedIn ? (
               <Link
                 href="/area-cliente/dashboard"
@@ -175,7 +175,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           {/* ── Bottone hamburger Mobile ─────────────────────────────────────── */}
           <button
             type="button"
-            className="relative z-[151] lg:hidden flex flex-col items-center justify-center border border-white/20 hover:border-gold rounded-lg w-12 h-14 bg-black/50 text-white p-1 transition-all duration-200"
+            className="relative z-[151] xl:hidden flex flex-col items-center justify-center border border-white/20 hover:border-gold rounded-lg w-12 h-14 bg-black/50 text-white p-1 transition-all duration-200"
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? L(lang, 'Chiudi menu', 'Close menu') : L(lang, 'Apri menu', 'Open menu')}
             aria-expanded={open}
@@ -201,7 +201,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
 
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[149] bg-black/60 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-[149] bg-black/60 backdrop-blur-sm xl:hidden transition-opacity duration-300 ${
           open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={close}
@@ -210,7 +210,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
 
       {/* Pannello drawer */}
       <nav
-        className={`fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col lg:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col xl:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-label={L(lang, 'Menu di navigazione', 'Navigation menu')}
