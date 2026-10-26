@@ -80,7 +80,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             : 'bg-black/80 backdrop-blur-sm border-b border-white/5'
         }`}
       >
-        <div className="container-lux flex h-16 items-center justify-between lg:grid lg:grid-cols-[1fr_auto_1fr] lg:max-w-none lg:px-8 xl:px-10">
+        <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-5 lg:grid lg:max-w-none lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-6 xl:px-10">
 
           {/* ── Navigazione sinistra (Desktop - 4 elementi) ───────────────── */}
           <nav
