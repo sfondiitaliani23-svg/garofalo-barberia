@@ -293,6 +293,13 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
 
           {media && (
             <div className="space-y-3">
+              <div role="note" className="flex items-start gap-3 border border-dashed border-gold bg-gold/10 p-3 text-sm text-white/90">
+                <span className="mt-0.5 inline-flex h-12 w-7 shrink-0 items-center justify-center border-2 border-gold text-[10px] font-bold text-gold" aria-hidden>9:16</span>
+                <span>
+                  <strong className="block text-gold-light">Solo formato verticale 9:16</strong>
+                  {form.kind === 'video' ? 'Il video deve essere verticale, come una storia di Instagram (es. 1080x1920), e durare al massimo 15 secondi.' : 'La foto deve essere verticale, come una storia di Instagram (es. 1080x1920).'} Foto e video in altri formati (quadrati, 4:5, orizzontali) vengono rifiutati.
+                </span>
+              </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="inline-flex min-h-10 items-center gap-2 border border-gold/60 px-4 text-sm font-semibold text-gold-light hover:bg-gold/10 disabled:opacity-60">
                   <Upload size={15} aria-hidden /> {uploading ? 'Caricamento…' : form.media_path ? 'Cambia file' : form.kind === 'video' ? 'Scegli il video' : 'Scegli la foto'}
