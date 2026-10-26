@@ -25,6 +25,7 @@ import {
   BookOpen,
   BellRing,
   Lightbulb,
+  CircleDashed,
 } from 'lucide-react';
 
 const links = [
@@ -39,6 +40,7 @@ const links = [
   { href: '/admin/staff', label: 'Gestione team', icon: UserCog },
   { href: '/admin/messaggi', label: 'Messaggi e QR', icon: Inbox },
   { href: '/admin/journal', label: 'Journal', icon: BookOpen },
+  { href: '/admin/storie', label: 'Storie', icon: CircleDashed },
   { href: '/admin/segnalazioni', label: 'Segnalaci il problema', icon: MessageSquareWarning },
   { href: '/admin/proposte', label: 'Proposte', icon: Lightbulb },
 ];

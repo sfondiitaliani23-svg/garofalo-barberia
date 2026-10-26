@@ -51,6 +51,13 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Le stelle nell'email portano a `/recensioni/nuova?stelle=N` (e `/en/...`). "Non inviarmele più" è separato da quello di "è ora di tornare" (`optout-rec:` contro `optout:`).
 - Non c'è un campo "prenotato dal sito": l'email parte per ogni appuntamento con email, anche se inserito dall'admin. Per limitarla al sito serve una colonna `source` (migrazione, la esegue Eliseo).
 
+## Storie (Wrapped + storie di Instagram)
+- Tabella `stories` e spazio file `storie` (pubblico, 20 MB, solo immagini e video): migrazione `016_storie.sql`, da eseguire da Eliseo. Senza migrazione il sito funziona e il cerchio "Novità" non compare.
+- Calcoli puri in `lib/utils/stories.ts` (test `stories.test.mjs`); lettura pubblica in `lib/stories-server.ts` (cache 60 s, tag `stories`); azioni in `lib/actions/stories.ts`.
+- Home: `components/stories/StoriesBar.tsx` sotto "Prenota ora"; visore `StoriesViewer.tsx`; immagine da condividere `shareCard.ts` (1080x1920, niente dati privati).
+- Wrapped personale: solo per il cliente con accesso, visite fatte dell'anno, combo = una visita, **mai importi**.
+- Admin: `/admin/storie`. Admin, dipendente e tester caricano e riordinano; il tester modifica ed elimina solo le sue. Foto e video richiedono la casella della liberatoria. Video fino a 15 secondi.
+
 ## Sessione e uscita
 - `lib/supabase/session-config.ts`: i cookie rimossi tengono `maxAge: 0`, altrimenti l'uscita non funziona.
 - `LogoutSubmit.tsx`: pulsante di uscita con attesa. `middleware.ts`: senza cookie `sb-*-auth-token` → /login; admin e tester → /admin/dashboard.

@@ -14,6 +14,8 @@ import { perfumes as perfumesFor, photoStrip, priceList } from '@/lib/i18n/conte
 import { getApprovedReviews } from '@/lib/actions/reviews';
 import { unstable_cache } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
+import { getLiveStories } from '@/lib/stories-server';
+import { StoriesBar } from '@/components/stories/StoriesBar';
 import './home.css';
 
 const getCachedHomepageProducts = unstable_cache(
@@ -44,10 +46,11 @@ const getCachedHomepageProducts = unstable_cache(
 );
 
 export default async function HomeView({ lang }: { lang: Lang }) {
-  const [dbReviews, dbProducts, services] = await Promise.all([
+  const [dbReviews, dbProducts, services, stories] = await Promise.all([
     getApprovedReviews(),
     getCachedHomepageProducts(),
     getServices(),
+    getLiveStories(lang),
   ]);
 
   const perfumeDefaults = perfumesFor(lang);
@@ -107,6 +110,7 @@ export default async function HomeView({ lang }: { lang: Lang }) {
               <BtnArrow />
             </Link>
           </div>
+          <StoriesBar slides={stories} lang={lang} />
         </div>
       </section>
 
