@@ -71,18 +71,17 @@
 .story-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 2147483000;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.94);
+  background: #070707;
   animation: story-in 0.22s ease-out;
 }
 @keyframes story-in { from { opacity: 0; transform: scale(0.97); } }
 .story-frame {
   position: relative;
-  width: min(100vw, calc(100dvh * 9 / 16));
-  height: min(100dvh, calc(100vw * 16 / 9));
-  max-height: 100dvh;
+  width: 100vw;
+  height: 100dvh;
   background: radial-gradient(120% 70% at 50% 0%, rgba(205, 154, 79, 0.22), transparent 60%), #070707;
   overflow: hidden;
   touch-action: none;
@@ -95,7 +94,7 @@
 }
 .story-bars {
   position: absolute;
-  top: 10px;
+  top: calc(10px + env(safe-area-inset-top));
   left: 10px;
   right: 10px;
   z-index: 4;
@@ -106,7 +105,7 @@
 .story-bars i { display: block; height: 100%; background: #ffb949; }
 .story-head {
   position: absolute;
-  top: 22px;
+  top: calc(22px + env(safe-area-inset-top));
   left: 14px;
   right: 8px;
   z-index: 4;
@@ -152,7 +151,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 1.6rem;
+  bottom: calc(1.6rem + env(safe-area-inset-bottom));
   z-index: 4;
   display: flex;
   justify-content: center;
@@ -191,3 +190,6 @@
   .story-overlay, .story-text { animation: none; }
   .story-text--numero, .story-text--testo { transform: translateY(-50%); }
 }
+
+/* Con il visore aperto spariscono i pulsanti fissi (assistente, WhatsApp, barra dell'app) */
+body.story-open .app-tabbar { visibility: hidden; }

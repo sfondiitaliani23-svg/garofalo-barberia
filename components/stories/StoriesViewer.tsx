@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronRight, Share2, Volume2, VolumeX, X } from 'lucide-react';
 import { LocLink as Link } from '@/components/i18n/LocLink';
 import { L, type Lang } from '@/lib/i18n';
@@ -105,10 +106,12 @@ export function StoriesViewer({ groups, startGroup, lang, onClose, onSeen }: Pro
     window.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('story-open');
     closeRef.current?.focus();
     return () => {
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
+      document.body.classList.remove('story-open');
     };
   }, [next, prev, onClose]);
 
@@ -145,7 +148,8 @@ export function StoriesViewer({ groups, startGroup, lang, onClose, onSeen }: Pro
 
   const external = slide.ctaHref?.startsWith('https://');
 
-  return (
+  // Fuori dalla pagina (direttamente nel <body>): sopra header, barra dell'app e pulsanti fissi.
+  return createPortal(
     <div className="story-overlay" role="dialog" aria-modal="true" aria-label={group.label}>
       <div className="story-frame" onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => setPaused(false)}>
         {/* Barrette */}
@@ -237,6 +241,7 @@ export function StoriesViewer({ groups, startGroup, lang, onClose, onSeen }: Pro
 
         {paused && <span className="story-paused" aria-live="polite">{L(lang, 'In pausa', 'Paused')}</span>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
