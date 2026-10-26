@@ -75,7 +75,6 @@
   display: grid;
   place-items: center;
   background: #070707;
-  animation: story-in 0.22s ease-out;
 }
 @keyframes story-in { from { opacity: 0; transform: scale(0.97); } }
 .story-frame {
