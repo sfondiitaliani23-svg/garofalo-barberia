@@ -1,21 +1,35 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { ChevronDown, Columns3, List, MessageCircle, PhoneCall, Search } from 'lucide-react';
+import { createContext, useContext, useMemo, useState, useTransition } from 'react';
+import { ChevronDown, Columns3, FileText, List, MessageCircle, PhoneCall, Search } from 'lucide-react';
+import { saveModelliAction, setEtichetteAction } from '@/lib/actions/eliseo';
 import {
+  CATEGORIE,
   FASE_HINT,
   FASE_LABEL,
   FASI,
+  cleanTags,
+  fillTemplate,
   filtraContatti,
   ordinaDaRichiamare,
   riepilogo,
   testoRichiamo,
   whatsappUrl,
+  type Categoria,
   type Contatto,
   type Fase,
+  type Modello,
 } from '@/lib/utils/eliseo';
 
-type Tab = 'richiamare' | 'elenco' | 'fasi';
+type Tab = 'richiamare' | 'elenco' | 'fasi' | 'modelli';
+
+type Ctx = {
+  tester: boolean;
+  prenotaUrl: string;
+  modelli: Modello[];
+  setTags: (key: string, tags: string[]) => Promise<string | null>;
+};
+const EliseoCtx = createContext<Ctx>({ tester: true, prenotaUrl: '', modelli: [], setTags: async () => null });
 
 function giorno(iso: string | null) {
   if (!iso) return '—';
@@ -37,6 +51,9 @@ const FASE_CLASS: Record<Fase, string> = {
   perso: 'border-white/15 text-white/45',
 };
 
+const btn = 'inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80';
+const input = 'min-h-10 w-full rounded-lg border border-white/15 bg-black/40 px-3 text-sm text-white placeholder:text-white/35';
+
 function Badge({ fase }: { fase: Fase }) {
   return (
     <span title={FASE_HINT[fase]} className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${FASE_CLASS[fase]}`}>
@@ -45,28 +62,53 @@ function Badge({ fase }: { fase: Fase }) {
   );
 }
 
+function Tags({ tags }: { tags?: string[] }) {
+  if (!tags?.length) return null;
+  return (
+    <span className="mt-1 flex flex-wrap gap-1">
+      {tags.map((t) => (
+        <span key={t} className="rounded-full border border-white/15 px-2 text-[11px] text-white/60">
+          {t}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 const STATO: Record<string, string> = { confirmed: 'Prenotato', completed: 'Fatto', no_show: 'Non venuto' };
 
-function Azioni({ c, tester, prenotaUrl, aperta, onScheda }: { c: Contatto; tester: boolean; prenotaUrl: string; aperta: boolean; onScheda: () => void }) {
-  const wa = tester ? null : whatsappUrl(c.customer_phone, testoRichiamo(c, prenotaUrl));
+function Azioni({ c, aperta, onScheda }: { c: Contatto; aperta: boolean; onScheda: () => void }) {
+  const { tester, prenotaUrl, modelli } = useContext(EliseoCtx);
+  const [modello, setModello] = useState('');
+  const m = modelli.find((x) => x.id === modello);
+  const testo = m ? fillTemplate(m.testo, c, prenotaUrl) : testoRichiamo(c, prenotaUrl);
+  const wa = tester ? null : whatsappUrl(c.customer_phone, testo);
   return (
     <div className="flex flex-wrap gap-2">
+      {wa && modelli.length > 0 && (
+        <label className="admin-filter min-h-10">
+          <span className="sr-only">Modello di messaggio per {c.customer_name}</span>
+          <select value={modello} onChange={(e) => setModello(e.target.value)}>
+            <option value="">Messaggio «da richiamare»</option>
+            {modelli.map((x) => (
+              <option key={x.id} value={x.id}>
+                {x.nome}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {wa && (
         <a href={wa} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-gold px-4 text-sm font-semibold text-gold-light">
           <MessageCircle size={15} aria-hidden /> WhatsApp
         </a>
       )}
       {!tester && c.customer_phone && (
-        <a href={`tel:${c.customer_phone.replace(/[^\d+]/g, '')}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80">
+        <a href={`tel:${c.customer_phone.replace(/[^\d+]/g, '')}`} className={btn}>
           <PhoneCall size={15} aria-hidden /> Chiama
         </a>
       )}
-      <button
-        type="button"
-        onClick={onScheda}
-        aria-expanded={aperta}
-        className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80"
-      >
+      <button type="button" onClick={onScheda} aria-expanded={aperta} className={btn}>
         Scheda <ChevronDown size={15} aria-hidden className={`transition ${aperta ? 'rotate-180' : ''}`} />
       </button>
     </div>
@@ -75,6 +117,10 @@ function Azioni({ c, tester, prenotaUrl, aperta, onScheda }: { c: Contatto; test
 
 /** Scheda del contatto: dati e ultimi appuntamenti, presi dalle prenotazioni (non dall'account del sito). */
 function Scheda({ c }: { c: Contatto }) {
+  const { tester, setTags } = useContext(EliseoCtx);
+  const [tags, setTagsText] = useState((c.etichette ?? []).join(', '));
+  const [msg, setMsg] = useState('');
+  const [pending, start] = useTransition();
   return (
     <div className="mt-3 border-t border-dashed border-white/15 pt-3 text-sm">
       <dl className="grid gap-1 text-white/75 sm:grid-cols-2">
@@ -95,6 +141,29 @@ function Scheda({ c }: { c: Contatto }) {
           <dd>{giorno(c.prossimo)}</dd>
         </div>
       </dl>
+      {!tester && (
+        <form
+          className="mt-3 flex flex-wrap items-end gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            start(async () => {
+              const err = await setTags(c.key, cleanTags(tags));
+              setMsg(err ?? 'Etichette salvate.');
+            });
+          }}
+        >
+          <label className="min-w-0 flex-1">
+            <span className="text-[11px] uppercase tracking-widest text-white/40">Etichette</span>
+            <input className={input} value={tags} maxLength={200} onChange={(e) => setTagsText(e.target.value)} placeholder="es. bambino, sposo, studente" />
+          </label>
+          <button type="submit" disabled={pending} className={btn}>
+            {pending ? 'Salvo…' : 'Salva'}
+          </button>
+          <p className="w-full text-xs text-white/50" role="status">
+            {msg || 'Separate da virgola, al massimo 10. Servono per raggruppare i clienti.'}
+          </p>
+        </form>
+      )}
       <p className="mt-3 text-[11px] uppercase tracking-widest text-white/40">Ultimi appuntamenti</p>
       <ul className="mt-1 divide-y divide-white/5">
         {c.storico.map((v, i) => (
@@ -112,7 +181,7 @@ function Scheda({ c }: { c: Contatto }) {
   );
 }
 
-function Card({ c, tester, prenotaUrl, compact = false }: { c: Contatto; tester: boolean; prenotaUrl: string; compact?: boolean }) {
+function Card({ c, compact = false }: { c: Contatto; compact?: boolean }) {
   const [aperta, setAperta] = useState(false);
   return (
     <article className="rounded-xl border border-white/10 bg-[#0e0e0e] p-4">
@@ -128,9 +197,10 @@ function Card({ c, tester, prenotaUrl, compact = false }: { c: Contatto; tester:
         {c.assenze ? ` · ${c.assenze} ${c.assenze === 1 ? 'assenza' : 'assenze'}` : ''}
       </p>
       {!compact && c.ultimoServizio && <p className="mt-0.5 text-xs text-white/40">{c.ultimoServizio}</p>}
+      <Tags tags={c.etichette} />
       {!compact && (
         <div className="mt-3">
-          <Azioni c={c} tester={tester} prenotaUrl={prenotaUrl} aperta={aperta} onScheda={() => setAperta((v) => !v)} />
+          <Azioni c={c} aperta={aperta} onScheda={() => setAperta((v) => !v)} />
         </div>
       )}
       {compact && (
@@ -143,154 +213,261 @@ function Card({ c, tester, prenotaUrl, compact = false }: { c: Contatto; tester:
   );
 }
 
-export function AdminEliseo({ contatti, tester, prenotaUrl }: { contatti: Contatto[]; tester: boolean; prenotaUrl: string }) {
+/** Modelli di messaggio (come le FAQ-modello di Keplero): si scelgono sul pulsante WhatsApp di ogni cliente. */
+function Modelli({ initial, onSaved }: { initial: Modello[]; onSaved: (m: Modello[]) => void }) {
+  const { tester, prenotaUrl } = useContext(EliseoCtx);
+  const [list, setList] = useState<Modello[]>(initial);
+  const [msg, setMsg] = useState('');
+  const [pending, start] = useTransition();
+  const upd = (i: number, patch: Partial<Modello>) => setList((l) => l.map((m, j) => (j === i ? { ...m, ...patch } : m)));
+  return (
+    <section className="space-y-3">
+      <p className="text-sm text-white/55">
+        Testi pronti. {'{nome}'} diventa il nome del cliente, {'{barbiere}'} il suo barbiere, {'{prenota}'} il link per prenotare. Si scelgono vicino al pulsante WhatsApp.
+      </p>
+      {list.map((m, i) => (
+        <div key={m.id} className="space-y-2 rounded-xl border border-white/10 bg-[#0e0e0e] p-4">
+          <div className="grid gap-2 sm:grid-cols-[1fr_12rem]">
+            <label>
+              <span className="sr-only">Nome del modello</span>
+              <input className={input} value={m.nome} maxLength={60} disabled={tester} onChange={(e) => upd(i, { nome: e.target.value })} />
+            </label>
+            <label className="admin-filter">
+              <span className="sr-only">Tipo</span>
+              <select value={m.categoria} disabled={tester} onChange={(e) => upd(i, { categoria: e.target.value as Categoria })}>
+                {CATEGORIE.map(([k, t]) => (
+                  <option key={k} value={k}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="block">
+            <span className="sr-only">Testo</span>
+            <textarea className={`${input} min-h-24 py-2`} value={m.testo} maxLength={1000} disabled={tester} onChange={(e) => upd(i, { testo: e.target.value })} />
+          </label>
+          <p className="text-xs text-white/45">Anteprima: {fillTemplate(m.testo, { customer_name: 'Mario Rossi', barbiere: 'Luigi Garofalo' }, prenotaUrl)}</p>
+          {!tester && (
+            <button type="button" className={btn} onClick={() => setList((l) => l.filter((_, j) => j !== i))}>
+              Togli
+            </button>
+          )}
+        </div>
+      ))}
+      {!tester && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={btn} onClick={() => setList((l) => [...l, { id: `m-${Date.now().toString(36)}`, nome: 'Nuovo modello', categoria: 'altro', testo: 'Ciao {nome}, ' }])}>
+            Aggiungi modello
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            className="inline-flex min-h-10 items-center rounded-full border border-gold bg-gold px-4 text-sm font-semibold text-black"
+            onClick={() =>
+              start(async () => {
+                const r = await saveModelliAction(list);
+                if (r.ok && r.modelli) {
+                  setList(r.modelli);
+                  onSaved(r.modelli);
+                  setMsg('Modelli salvati.');
+                } else setMsg(r.ok ? '' : r.error);
+              })
+            }
+          >
+            {pending ? 'Salvo…' : 'Salva i modelli'}
+          </button>
+          <p className="text-xs text-white/55" role="status">
+            {msg}
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function AdminEliseo({ contatti: iniziali, tester, prenotaUrl, modelli: modelliIniziali }: { contatti: Contatto[]; tester: boolean; prenotaUrl: string; modelli: Modello[] }) {
+  const [contatti, setContatti] = useState(iniziali);
+  const [modelli, setModelli] = useState(modelliIniziali);
   const [tab, setTab] = useState<Tab>('richiamare');
   const [q, setQ] = useState('');
   const [fase, setFase] = useState<Fase | ''>('');
   const [barbiere, setBarbiere] = useState('');
+  const [etichetta, setEtichetta] = useState('');
   const [quanti, setQuanti] = useState(30);
 
   const sum = useMemo(() => riepilogo(contatti), [contatti]);
   const barbieri = useMemo(() => [...new Set(contatti.map((c) => c.barbiere).filter(Boolean) as string[])].sort(), [contatti]);
-  const daRichiamare = useMemo(() => ordinaDaRichiamare(filtraContatti(contatti, { q, barbiere })), [contatti, q, barbiere]);
-  const filtrati = useMemo(() => filtraContatti(contatti, { q, fase, barbiere }), [contatti, q, fase, barbiere]);
+  const tutte = useMemo(() => [...new Set(contatti.flatMap((c) => c.etichette ?? []))].sort((a, b) => a.localeCompare(b, 'it')), [contatti]);
+  const daRichiamare = useMemo(() => ordinaDaRichiamare(filtraContatti(contatti, { q, barbiere, etichetta })), [contatti, q, barbiere, etichetta]);
+  const filtrati = useMemo(() => filtraContatti(contatti, { q, fase, barbiere, etichetta }), [contatti, q, fase, barbiere, etichetta]);
+
+  const ctx: Ctx = {
+    tester,
+    prenotaUrl,
+    modelli,
+    setTags: async (key, tags) => {
+      const r = await setEtichetteAction(key, tags);
+      if (!r.ok) return r.error;
+      setContatti((l) => l.map((c) => (c.key === key ? { ...c, etichette: r.etichette ?? tags } : c)));
+      return null;
+    },
+  };
 
   const tabs: { id: Tab; label: string; icon: typeof List; badge?: number }[] = [
     { id: 'richiamare', label: 'Da richiamare', icon: MessageCircle, badge: sum.daRichiamare },
     { id: 'elenco', label: 'Rubrica', icon: List },
     { id: 'fasi', label: 'Fasi', icon: Columns3 },
+    { id: 'modelli', label: 'Modelli', icon: FileText },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[
-          ['Contatti', sum.totale, 'negli ultimi 2 anni'],
-          ['Prenotati', sum.perFase.prenotato, 'hanno un appuntamento'],
-          ['Da richiamare', sum.daRichiamare, 'tempo giusto passato'],
-          ['Nuovi', sum.nuovi30, 'prima visita negli ultimi 30 giorni'],
-        ].map(([t, n, s]) => (
-          <div key={t as string} className="rounded-xl border border-white/10 bg-[#0e0e0e] p-4">
-            <p className="text-xs uppercase tracking-widest text-white/50">{t}</p>
-            <p className="mt-1 font-display text-3xl text-gold-light">{n}</p>
-            <p className="text-xs text-white/45">{s}</p>
+    <EliseoCtx.Provider value={ctx}>
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {[
+            ['Contatti', sum.totale, 'negli ultimi 2 anni'],
+            ['Prenotati', sum.perFase.prenotato, 'hanno un appuntamento'],
+            ['Da richiamare', sum.daRichiamare, 'tempo giusto passato'],
+            ['Nuovi', sum.nuovi30, 'prima visita negli ultimi 30 giorni'],
+          ].map(([t, n, s]) => (
+            <div key={t as string} className="rounded-xl border border-white/10 bg-[#0e0e0e] p-4">
+              <p className="text-xs uppercase tracking-widest text-white/50">{t}</p>
+              <p className="mt-1 font-display text-3xl text-gold-light">{n}</p>
+              <p className="text-xs text-white/45">{s}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Viste di Eliseo">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${
+                tab === t.id ? 'border-gold bg-gold text-black' : 'border-white/15 text-white/75 hover:border-gold/60'
+              }`}
+            >
+              <t.icon size={15} aria-hidden /> {t.label}
+              {!!t.badge && <span className={`rounded-full px-1.5 text-[11px] ${tab === t.id ? 'bg-black/20' : 'bg-gold text-black'}`}>{t.badge}</span>}
+            </button>
+          ))}
+        </div>
+
+        {tab !== 'modelli' && (
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+            <label className="admin-filter">
+              <Search size={15} aria-hidden />
+              <span className="sr-only">Cerca</span>
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefono o email" />
+            </label>
+            {tab === 'elenco' ? (
+              <label className="admin-filter">
+                <span className="sr-only">Fase</span>
+                <select value={fase} onChange={(e) => setFase(e.target.value as Fase | '')}>
+                  <option value="">Tutte le fasi</option>
+                  {FASI.map((f) => (
+                    <option key={f} value={f}>
+                      {FASE_LABEL[f]} ({sum.perFase[f]})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <span className="hidden lg:block" />
+            )}
+            <label className="admin-filter">
+              <span className="sr-only">Barbiere</span>
+              <select value={barbiere} onChange={(e) => setBarbiere(e.target.value)}>
+                <option value="">Tutti i barbieri</option>
+                {barbieri.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="admin-filter">
+              <span className="sr-only">Etichetta</span>
+              <select value={etichetta} onChange={(e) => setEtichetta(e.target.value)} disabled={!tutte.length}>
+                <option value="">{tutte.length ? 'Tutte le etichette' : 'Nessuna etichetta'}</option>
+                {tutte.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Viste di Eliseo">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition ${
-              tab === t.id ? 'border-gold bg-gold text-black' : 'border-white/15 text-white/75 hover:border-gold/60'
-            }`}
-          >
-            <t.icon size={15} aria-hidden /> {t.label}
-            {!!t.badge && <span className={`rounded-full px-1.5 text-[11px] ${tab === t.id ? 'bg-black/20' : 'bg-gold text-black'}`}>{t.badge}</span>}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid gap-2.5 sm:grid-cols-[1.6fr_1fr_1fr]">
-        <label className="admin-filter">
-          <Search size={15} aria-hidden />
-          <span className="sr-only">Cerca</span>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nome, telefono o email" />
-        </label>
-        {tab === 'elenco' ? (
-          <label className="admin-filter">
-            <span className="sr-only">Fase</span>
-            <select value={fase} onChange={(e) => setFase(e.target.value as Fase | '')}>
-              <option value="">Tutte le fasi</option>
-              {FASI.map((f) => (
-                <option key={f} value={f}>
-                  {FASE_LABEL[f]} ({sum.perFase[f]})
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          <span className="hidden sm:block" />
         )}
-        <label className="admin-filter">
-          <span className="sr-only">Barbiere</span>
-          <select value={barbiere} onChange={(e) => setBarbiere(e.target.value)}>
-            <option value="">Tutti i barbieri</option>
-            {barbieri.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
 
-      {tab === 'richiamare' && (
-        <section className="space-y-3">
-          <p className="text-sm text-white/55">
-            Clienti che dovrebbero essere già tornati e non hanno prenotato. Prima chi è in ritardo da meno tempo. Il messaggio WhatsApp è già scritto: lo apri, lo controlli e lo mandi tu.
-            {tester && ' In modalità tester nomi e numeri sono nascosti.'}
-          </p>
-          {daRichiamare.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-white/15 p-6 text-center text-sm text-white/50">Nessuno da richiamare. Ottimo.</p>
-          ) : (
+        {tab === 'richiamare' && (
+          <section className="space-y-3">
+            <p className="text-sm text-white/55">
+              Clienti che dovrebbero essere già tornati e non hanno prenotato. Prima chi è in ritardo da meno tempo. Il messaggio WhatsApp è già scritto (puoi scegliere anche un modello): lo apri, lo controlli e lo mandi tu.
+              {tester && ' In modalità tester nomi e numeri sono nascosti.'}
+            </p>
+            {daRichiamare.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-white/15 p-6 text-center text-sm text-white/50">Nessuno da richiamare. Ottimo.</p>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-2">
+                {daRichiamare.slice(0, quanti).map((c) => (
+                  <Card key={c.key} c={c} />
+                ))}
+              </div>
+            )}
+            {daRichiamare.length > quanti && (
+              <button type="button" onClick={() => setQuanti((n) => n + 30)} className={btn}>
+                Mostra altri {Math.min(30, daRichiamare.length - quanti)}
+              </button>
+            )}
+          </section>
+        )}
+
+        {tab === 'elenco' && (
+          <section className="space-y-3">
+            <p className="text-xs text-white/45">{filtrati.length} contatti</p>
             <div className="grid gap-3 md:grid-cols-2">
-              {daRichiamare.slice(0, quanti).map((c) => (
-                <Card key={c.key} c={c} tester={tester} prenotaUrl={prenotaUrl} />
+              {filtrati.slice(0, quanti).map((c) => (
+                <Card key={c.key} c={c} />
               ))}
             </div>
-          )}
-          {daRichiamare.length > quanti && (
-            <button type="button" onClick={() => setQuanti((n) => n + 30)} className="min-h-10 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80">
-              Mostra altri {Math.min(30, daRichiamare.length - quanti)}
-            </button>
-          )}
-        </section>
-      )}
+            {filtrati.length > quanti && (
+              <button type="button" onClick={() => setQuanti((n) => n + 30)} className={btn}>
+                Mostra altri {Math.min(30, filtrati.length - quanti)}
+              </button>
+            )}
+          </section>
+        )}
 
-      {tab === 'elenco' && (
-        <section className="space-y-3">
-          <p className="text-xs text-white/45">{filtrati.length} contatti</p>
-          <div className="grid gap-3 md:grid-cols-2">
-            {filtrati.slice(0, quanti).map((c) => (
-              <Card key={c.key} c={c} tester={tester} prenotaUrl={prenotaUrl} />
-            ))}
-          </div>
-          {filtrati.length > quanti && (
-            <button type="button" onClick={() => setQuanti((n) => n + 30)} className="min-h-10 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80">
-              Mostra altri {Math.min(30, filtrati.length - quanti)}
-            </button>
-          )}
-        </section>
-      )}
+        {tab === 'fasi' && (
+          <section className="flex snap-x gap-3 overflow-x-auto pb-2">
+            {FASI.map((f) => {
+              const col = filtraContatti(contatti, { q, fase: f, barbiere, etichetta });
+              return (
+                <div key={f} className="w-72 shrink-0 snap-start rounded-xl border border-white/10 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <Badge fase={f} />
+                    <span className="text-xs text-white/50">{col.length}</span>
+                  </div>
+                  <p className="mb-3 text-[11px] text-white/40">{FASE_HINT[f]}</p>
+                  <div className="space-y-2">
+                    {col.slice(0, 20).map((c) => (
+                      <Card key={c.key} c={c} compact />
+                    ))}
+                    {col.length > 20 && <p className="text-center text-[11px] text-white/40">e altri {col.length - 20} nella Rubrica</p>}
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
 
-      {tab === 'fasi' && (
-        <section className="flex snap-x gap-3 overflow-x-auto pb-2">
-          {FASI.map((f) => {
-            const col = filtraContatti(contatti, { q, fase: f, barbiere });
-            return (
-              <div key={f} className="w-72 shrink-0 snap-start rounded-xl border border-white/10 p-3">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <Badge fase={f} />
-                  <span className="text-xs text-white/50">{col.length}</span>
-                </div>
-                <p className="mb-3 text-[11px] text-white/40">{FASE_HINT[f]}</p>
-                <div className="space-y-2">
-                  {col.slice(0, 20).map((c) => (
-                    <Card key={c.key} c={c} tester={tester} prenotaUrl={prenotaUrl} compact />
-                  ))}
-                  {col.length > 20 && <p className="text-center text-[11px] text-white/40">e altri {col.length - 20} nella Rubrica</p>}
-                </div>
-              </div>
-            );
-          })}
-        </section>
-      )}
-    </div>
+        {tab === 'modelli' && <Modelli initial={modelli} onSaved={setModelli} />}
+      </div>
+    </EliseoCtx.Provider>
   );
 }

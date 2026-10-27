@@ -15,7 +15,7 @@ export default async function AdminEliseoPage() {
       </p>
       <div className="mt-6">
         {res.ok ? (
-          <AdminEliseo contatti={res.contatti} tester={res.tester} prenotaUrl={`${SITE_URL}/prenota`} />
+          <AdminEliseo contatti={res.contatti} tester={res.tester} modelli={res.modelli} prenotaUrl={`${SITE_URL}/prenota`} />
         ) : (
           <p className="border border-dashed border-gold/40 p-4 text-sm text-white/80">{res.error}</p>
         )}

@@ -62,6 +62,8 @@ export type Contatto = {
   barbiere: string | null;
   ultimoServizio: string | null;
   fase: Fase;
+  /** Etichette messe a mano (come le liste di Keplero). */
+  etichette?: string[];
   /** Ultimi appuntamenti (al massimo 12, dal più recente): data, servizio, barbiere, stato. */
   storico: Visita[];
 };
@@ -185,12 +187,13 @@ export function riepilogo(list: Contatto[]): Riepilogo {
   return { totale: list.length, perFase, daRichiamare: perFase.da_richiamare, nuovi30 };
 }
 
-export function filtraContatti(list: Contatto[], f: { q?: string; fase?: Fase | ''; barbiere?: string }): Contatto[] {
+export function filtraContatti(list: Contatto[], f: { q?: string; fase?: Fase | ''; barbiere?: string; etichetta?: string }): Contatto[] {
   const q = (f.q ?? '').trim().toLowerCase();
   const qDigits = q.replace(/\D/g, '');
   return list.filter((c) => {
     if (f.fase && c.fase !== f.fase) return false;
     if (f.barbiere && c.barbiere !== f.barbiere) return false;
+    if (f.etichetta && !(c.etichette ?? []).includes(f.etichetta)) return false;
     if (!q) return true;
     if (c.customer_name.toLowerCase().includes(q)) return true;
     if ((c.customer_email ?? '').includes(q)) return true;
@@ -217,3 +220,80 @@ export function whatsappUrl(phone: string | null, text: string): string | null {
   const tel = phone ? normalizeItalianPhone(phone) : null;
   return tel ? `https://wa.me/${tel}?text=${encodeURIComponent(text)}` : null;
 }
+
+// ——— Modelli di messaggio ed etichette (come in Keplero). Salvati in site_content, privati (is_active = false). ———
+
+export const CATEGORIE = [
+  ['benvenuto', 'Benvenuto'],
+  ['promemoria', 'Promemoria'],
+  ['follow_up', 'Dopo il servizio'],
+  ['feedback', 'Feedback'],
+  ['recensione', 'Recensione'],
+  ['ritorno', 'Ritorno del cliente'],
+  ['upsell', 'Servizio in più'],
+  ['altro', 'Altro'],
+] as const;
+export type Categoria = (typeof CATEGORIE)[number][0];
+export type Modello = { id: string; nome: string; categoria: Categoria; testo: string };
+
+export const MODELLI_KEY = 'eliseo:modelli';
+export const ETICHETTE_KEY = 'eliseo:etichette';
+const MAX_MODELLI = 40;
+
+export const MODELLI_INIZIALI: Modello[] = [
+  { id: 'm-ritorno', nome: 'È ora di tornare', categoria: 'ritorno', testo: "Ciao {nome}, è passato un po' dall'ultima visita da Barberia Garofalo. Se vuoi ti teniamo un posto con {barbiere}: prenoti qui {prenota}" },
+  { id: 'm-promemoria', nome: 'Promemoria appuntamento', categoria: 'promemoria', testo: 'Ciao {nome}, ti ricordiamo il tuo appuntamento da Barberia Garofalo. Ti aspettiamo!' },
+  { id: 'm-follow', nome: 'Come ti trovi?', categoria: 'follow_up', testo: 'Ciao {nome}, come ti trovi con il taglio di questi giorni? Se c’è qualcosa da sistemare, passa pure.' },
+  { id: 'm-recensione', nome: 'Recensione', categoria: 'recensione', testo: 'Ciao {nome}, grazie per essere passato da noi! Se ti va, lasciaci una recensione: per una barberia di quartiere conta tanto.' },
+  { id: 'm-benvenuto', nome: 'Benvenuto', categoria: 'benvenuto', testo: 'Ciao {nome}, benvenuto da Barberia Garofalo! Per prenotare la prossima volta basta un clic: {prenota}' },
+];
+
+const clean = (v: unknown, max: number) =>
+  String(v ?? '')
+    .replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, ' ')
+    .trim()
+    .slice(0, max);
+
+/** Controlla e pulisce la lista dei modelli che arriva dal browser. */
+export function cleanModelli(raw: unknown): { ok: true; modelli: Modello[] } | { ok: false; error: string } {
+  if (!Array.isArray(raw)) return { ok: false, error: 'Dati non validi.' };
+  if (raw.length > MAX_MODELLI) return { ok: false, error: `Al massimo ${MAX_MODELLI} modelli.` };
+  const out: Modello[] = [];
+  for (const r of raw as Record<string, unknown>[]) {
+    const nome = clean(r?.nome, 60).replace(/\s+/g, ' ');
+    const testo = clean(r?.testo, 1000);
+    if (!nome || !testo) return { ok: false, error: 'Ogni modello ha bisogno di nome e testo.' };
+    const categoria = (CATEGORIE.find(([k]) => k === r?.categoria)?.[0] ?? 'altro') as Categoria;
+    const id = /^[a-z0-9-]{1,40}$/.test(String(r?.id ?? '')) ? String(r.id) : `m-${out.length}-${nome.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 20)}`;
+    out.push({ id, nome, categoria, testo });
+  }
+  return { ok: true, modelli: out };
+}
+
+/** {nome}, {barbiere} e {prenota} si riempiono da soli. */
+export function fillTemplate(testo: string, c: { customer_name?: string | null; barbiere?: string | null }, prenotaUrl = ''): string {
+  const nome = (c.customer_name ?? '').trim().split(/\s+/)[0] ?? '';
+  const n = nome === 'Senza' ? '' : nome;
+  const barb = (c.barbiere ?? '').trim().split(/\s+/)[0] || 'noi';
+  return testo
+    .replace(/\{nome\}/g, n)
+    .replace(/\{barbiere\}/g, barb)
+    .replace(/\{prenota\}/g, prenotaUrl)
+    .replace(/ +,/g, ',')
+    .replace(/ {2,}/g, ' ')
+    .trim();
+}
+
+/** Etichette: minuscole, senza doppioni, al massimo 10 da 30 caratteri. */
+export function cleanTags(v: unknown): string[] {
+  const list = Array.isArray(v) ? v : String(v ?? '').split(',');
+  const out: string[] = [];
+  for (const t of list) {
+    const x = clean(t, 30).replace(/\s+/g, ' ').toLowerCase();
+    if (x && !out.includes(x) && out.length < 10) out.push(x);
+  }
+  return out;
+}
+
+/** La chiave di un contatto viene dalla rubrica: tel:…, email:… oppure id:…. */
+export const isContactKey = (k: unknown): k is string => typeof k === 'string' && k.length <= 140 && /^(tel:\d{6,20}|email:[^\s@]+@[^\s@]+|id:[0-9a-f-]{36})$/.test(k);

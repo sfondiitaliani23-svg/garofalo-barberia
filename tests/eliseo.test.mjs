@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
+  cleanModelli,
+  cleanTags,
+  fillTemplate,
+  isContactKey,
+  MODELLI_INIZIALI,
   buildContatti,
   contactKey,
   faseDi,
@@ -108,7 +113,14 @@ test('azione: solo lettura, controllo accesso, tester senza dati personali', () 
   assert.match(src, /await requireAdminView\(\)/);
   assert.match(src, /maskForTester\(contatti\)/);
   assert.match(src, /key: `c\$\{i\}`/);
-  assert.doesNotMatch(src, /\.(insert|update|delete|upsert)\(/);
+  assert.doesNotMatch(src, /\.(insert|update|delete)\(/);
+  assert.equal((src.match(/\.upsert\(/g) || []).length, 1, 'scrive solo in un punto (site_content)');
+  assert.match(src, /from\('site_content'\)\s*\.upsert\(\{ key, title: 'Eliseo', body: JSON\.stringify\(value\), is_active: false/);
+  for (const fn of ['setEtichetteAction', 'saveModelliAction']) {
+    const body = src.slice(src.indexOf(`export async function ${fn}`)).split('export async function')[1];
+    assert.match(body, /await requireAdmin\(\)/, `${fn} controlla il permesso`);
+  }
+  assert.match(src, /isContactKey\(key\)/);
   assert.doesNotMatch(src, /console\./);
 });
 
@@ -125,4 +137,27 @@ test('la scheda si apre dentro Eliseo, non porta alla galleria (l’account sull
   const src = fs.readFileSync(new URL('../components/admin/AdminEliseo.tsx', import.meta.url), 'utf8');
   assert.doesNotMatch(src, /galleria|customer_id/);
   assert.match(src, /function Scheda/);
+});
+
+test('modelli: segnaposto, controlli, iniziali validi', () => {
+  assert.equal(fillTemplate('Ciao {nome}, ti aspetta {barbiere}: {prenota}', { customer_name: 'Mario Rossi', barbiere: 'Luigi Garofalo' }, 'https://x/prenota'), 'Ciao Mario, ti aspetta Luigi: https://x/prenota');
+  assert.equal(fillTemplate('Ciao {nome}, a presto', { customer_name: 'Senza nome' }), 'Ciao, a presto');
+  assert.equal(cleanModelli(MODELLI_INIZIALI).ok, true);
+  assert.equal(cleanModelli([{ nome: '', testo: 'x' }]).ok, false);
+  assert.equal(cleanModelli('x').ok, false);
+  const r = cleanModelli([{ id: '<script>', nome: ' A ', testo: 'B', categoria: 'boh' }]);
+  assert.equal(r.ok && r.modelli[0].categoria, 'altro');
+  assert.match(r.ok && r.modelli[0].id, /^m-0-/);
+});
+
+test('etichette e chiavi dei contatti', () => {
+  assert.deepEqual(cleanTags(' Sposo, sposo ,studente'), ['sposo', 'studente']);
+  assert.equal(cleanTags(Array.from({ length: 20 }, (_, i) => 't' + i)).length, 10);
+  assert.equal(isContactKey('tel:393331112222'), true);
+  assert.equal(isContactKey('email:a@b.it'), true);
+  assert.equal(isContactKey('c3'), false, 'la chiave finta del tester non vale');
+  assert.equal(isContactKey('tel:abc'), false);
+  const list = buildContatti([appt({ starts_at: daysAgo(10) })], NOW).map((c) => ({ ...c, etichette: ['sposo'] }));
+  assert.equal(filtraContatti(list, { etichetta: 'sposo' }).length, 1);
+  assert.equal(filtraContatti(list, { etichetta: 'altro' }).length, 0);
 });
