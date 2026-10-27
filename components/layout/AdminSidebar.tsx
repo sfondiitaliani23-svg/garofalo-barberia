@@ -26,6 +26,7 @@ import {
   BellRing,
   Lightbulb,
   CircleDashed,
+  BookUser,
 } from 'lucide-react';
 
 const links = [
@@ -33,6 +34,7 @@ const links = [
   { href: '/admin/prenotazioni', label: 'Prenotazioni', icon: Calendar, exact: true },
   { href: '/admin/prenotazioni/storico', label: 'Storico Prenotazioni', icon: ClipboardList },
   { href: '/admin/clienti', label: 'Clienti', icon: Users },
+  { href: '/admin/eliseo', label: 'Eliseo', icon: BookUser },
   { href: '/admin/servizi', label: 'Servizi', icon: Scissors },
   { href: '/admin/promozioni', label: 'Promozioni', icon: Tag },
   { href: '/admin/inventario', label: 'Inventario', icon: Package },

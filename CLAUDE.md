@@ -73,3 +73,8 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 ## Altro
 - `.agents/AGENTS.md` e `.gemini/` vengono da altri strumenti: il loro flusso di deploy (`git push origin master:main`, `npx vercel --prod`) è vecchio. Con Claude vale questo file.
 - Migrazione `011_qr_login_sicuro.sql`: eseguita da Eliseo (login con QR).
+
+## Eliseo (rubrica clienti)
+- `/admin/eliseo`: rubrica costruita dagli appuntamenti degli ultimi 2 anni, nessuna tabella nuova. Stessa persona = stesso telefono (`normalizeItalianPhone`), poi email, poi account.
+- Fasi calcolate in `lib/utils/eliseo.ts` (test `eliseo.test.mjs`): prenotato, nuovo, abituale (3+ visite in un anno), cliente, da richiamare (passati 35 giorni dal taglio, 42 baby, 21 altro), perso (oltre 90).
+- «Da richiamare»: messaggio WhatsApp già scritto, lo manda a mano chi è in negozio. Nessun invio automatico. Il tester vede nomi e numeri nascosti (`maskForTester`).

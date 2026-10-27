@@ -13,6 +13,7 @@ const SECTIONS: [string, string][] = [
   ['/admin/prenotazioni/storico', 'Storico prenotazioni'],
   ['/admin/prenotazioni', 'Prenotazioni'],
   ['/admin/clienti', 'Clienti'],
+  ['/admin/eliseo', 'Eliseo'],
   ['/admin/servizi', 'Servizi'],
   ['/admin/promozioni', 'Promozioni'],
   ['/admin/inventario', 'Inventario'],
