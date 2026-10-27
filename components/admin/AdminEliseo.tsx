@@ -1,8 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Columns3, List, MessageCircle, PhoneCall, Search } from 'lucide-react';
+import { ChevronDown, Columns3, List, MessageCircle, PhoneCall, Search } from 'lucide-react';
 import {
   FASE_HINT,
   FASE_LABEL,
@@ -46,9 +45,10 @@ function Badge({ fase }: { fase: Fase }) {
   );
 }
 
-function Azioni({ c, tester, prenotaUrl }: { c: Contatto; tester: boolean; prenotaUrl: string }) {
-  if (tester) return null;
-  const wa = whatsappUrl(c.customer_phone, testoRichiamo(c, prenotaUrl));
+const STATO: Record<string, string> = { confirmed: 'Prenotato', completed: 'Fatto', no_show: 'Non venuto' };
+
+function Azioni({ c, tester, prenotaUrl, aperta, onScheda }: { c: Contatto; tester: boolean; prenotaUrl: string; aperta: boolean; onScheda: () => void }) {
+  const wa = tester ? null : whatsappUrl(c.customer_phone, testoRichiamo(c, prenotaUrl));
   return (
     <div className="flex flex-wrap gap-2">
       {wa && (
@@ -56,21 +56,64 @@ function Azioni({ c, tester, prenotaUrl }: { c: Contatto; tester: boolean; preno
           <MessageCircle size={15} aria-hidden /> WhatsApp
         </a>
       )}
-      {c.customer_phone && (
+      {!tester && c.customer_phone && (
         <a href={`tel:${c.customer_phone.replace(/[^\d+]/g, '')}`} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80">
           <PhoneCall size={15} aria-hidden /> Chiama
         </a>
       )}
-      {c.customer_id && (
-        <Link href={`/admin/clienti/${c.customer_id}/galleria`} className="inline-flex min-h-10 items-center rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80">
-          Scheda
-        </Link>
-      )}
+      <button
+        type="button"
+        onClick={onScheda}
+        aria-expanded={aperta}
+        className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/15 px-4 text-sm font-semibold text-white/80"
+      >
+        Scheda <ChevronDown size={15} aria-hidden className={`transition ${aperta ? 'rotate-180' : ''}`} />
+      </button>
+    </div>
+  );
+}
+
+/** Scheda del contatto: dati e ultimi appuntamenti, presi dalle prenotazioni (non dall'account del sito). */
+function Scheda({ c }: { c: Contatto }) {
+  return (
+    <div className="mt-3 border-t border-dashed border-white/15 pt-3 text-sm">
+      <dl className="grid gap-1 text-white/75 sm:grid-cols-2">
+        <div>
+          <dt className="text-[11px] uppercase tracking-widest text-white/40">Telefono</dt>
+          <dd className="tabular-nums">{c.customer_phone || '—'}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-widest text-white/40">Email</dt>
+          <dd className="break-all">{c.customer_email || '—'}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-widest text-white/40">Torna di solito</dt>
+          <dd>ogni {c.ritornoGiorni} giorni circa</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-widest text-white/40">Prossimo appuntamento</dt>
+          <dd>{giorno(c.prossimo)}</dd>
+        </div>
+      </dl>
+      <p className="mt-3 text-[11px] uppercase tracking-widest text-white/40">Ultimi appuntamenti</p>
+      <ul className="mt-1 divide-y divide-white/5">
+        {c.storico.map((v, i) => (
+          <li key={`${v.starts_at}-${i}`} className="flex flex-wrap items-baseline justify-between gap-x-3 py-1.5">
+            <span className="text-white/85">{giorno(v.starts_at)}</span>
+            <span className="min-w-0 flex-1 text-white/60">
+              {v.servizio ?? '—'}
+              {v.barbiere ? ` · ${v.barbiere}` : ''}
+            </span>
+            <span className={`text-xs ${v.stato === 'no_show' ? 'text-white/40' : v.stato === 'confirmed' ? 'text-gold-light' : 'text-white/55'}`}>{STATO[v.stato] ?? v.stato}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 function Card({ c, tester, prenotaUrl, compact = false }: { c: Contatto; tester: boolean; prenotaUrl: string; compact?: boolean }) {
+  const [aperta, setAperta] = useState(false);
   return (
     <article className="rounded-xl border border-white/10 bg-[#0e0e0e] p-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -87,9 +130,15 @@ function Card({ c, tester, prenotaUrl, compact = false }: { c: Contatto; tester:
       {!compact && c.ultimoServizio && <p className="mt-0.5 text-xs text-white/40">{c.ultimoServizio}</p>}
       {!compact && (
         <div className="mt-3">
-          <Azioni c={c} tester={tester} prenotaUrl={prenotaUrl} />
+          <Azioni c={c} tester={tester} prenotaUrl={prenotaUrl} aperta={aperta} onScheda={() => setAperta((v) => !v)} />
         </div>
       )}
+      {compact && (
+        <button type="button" onClick={() => setAperta((v) => !v)} aria-expanded={aperta} className="mt-2 text-xs font-semibold text-gold-light">
+          {aperta ? 'Chiudi scheda' : 'Apri scheda'}
+        </button>
+      )}
+      {aperta && <Scheda c={c} />}
     </article>
   );
 }

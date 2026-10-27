@@ -62,7 +62,12 @@ export type Contatto = {
   barbiere: string | null;
   ultimoServizio: string | null;
   fase: Fase;
+  /** Ultimi appuntamenti (al massimo 12, dal più recente): data, servizio, barbiere, stato. */
+  storico: Visita[];
 };
+
+export type Visita = { starts_at: string; servizio: string | null; barbiere: string | null; stato: string };
+const STORICO_MAX = 12;
 
 const one = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
 
@@ -104,6 +109,7 @@ export function buildContatti(rows: ApptRow[], now = new Date()): Contatto[] {
     id: string | null;
     future: string | null;
     noShow: number;
+    all: ApptRow[];
   };
   const map = new Map<string, Acc>();
   const sorted = [...rows].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
@@ -112,12 +118,13 @@ export function buildContatti(rows: ApptRow[], now = new Date()): Contatto[] {
     if (r.status === 'cancelled') continue;
     const key = contactKey(r);
     if (!key) continue;
-    const acc = map.get(key) ?? { rows: [], name: '', phone: null, email: null, id: null, future: null, noShow: 0 };
+    const acc = map.get(key) ?? { rows: [], name: '', phone: null, email: null, id: null, future: null, noShow: 0, all: [] };
     if (r.customer_name?.trim()) acc.name = r.customer_name.trim();
     if (r.customer_phone?.trim()) acc.phone = r.customer_phone.trim();
     if (r.customer_email?.includes('@')) acc.email = r.customer_email.trim().toLowerCase();
     if (r.customer_id) acc.id = r.customer_id;
     const future = new Date(r.starts_at).getTime() > now.getTime();
+    acc.all.push(r);
     if (r.status === 'no_show') acc.noShow++;
     else if (future && r.status === 'confirmed') acc.future ??= r.starts_at;
     else if (!future) acc.rows.push(r);
@@ -156,6 +163,10 @@ export function buildContatti(rows: ApptRow[], now = new Date()): Contatto[] {
       ritornoGiorni: ritorno,
       barbiere,
       ultimoServizio: last ? one(last.service)?.name ?? null : null,
+      storico: a.all
+        .slice(-STORICO_MAX)
+        .reverse()
+        .map((r) => ({ starts_at: r.starts_at, servizio: one(r.service)?.name ?? null, barbiere: one(r.barber)?.name ?? null, stato: r.status })),
       fase: faseDi({ visite: days.size, giorniDa, ritornoGiorni: ritorno, prossimo: a.future, visiteAnno: daysYear.size }),
     });
   }

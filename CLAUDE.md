@@ -77,4 +77,5 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 ## Eliseo (rubrica clienti)
 - `/admin/eliseo`: rubrica costruita dagli appuntamenti degli ultimi 2 anni, nessuna tabella nuova. Stessa persona = stesso telefono (`normalizeItalianPhone`), poi email, poi account.
 - Fasi calcolate in `lib/utils/eliseo.ts` (test `eliseo.test.mjs`): prenotato, nuovo, abituale (3+ visite in un anno), cliente, da richiamare (passati 35 giorni dal taglio, 42 baby, 21 altro), perso (oltre 90).
+- «Scheda» si apre dentro la card (telefono, email, ultimi 12 appuntamenti). Non porta alla galleria: il `customer_id` di un appuntamento può essere l'account di chi ha prenotato (es. Luigi), non del cliente.
 - «Da richiamare»: messaggio WhatsApp già scritto, lo manda a mano chi è in negozio. Nessun invio automatico. Il tester vede nomi e numeri nascosti (`maskForTester`).

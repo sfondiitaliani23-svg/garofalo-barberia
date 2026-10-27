@@ -111,3 +111,18 @@ test('azione: solo lettura, controllo accesso, tester senza dati personali', () 
   assert.doesNotMatch(src, /\.(insert|update|delete|upsert)\(/);
   assert.doesNotMatch(src, /console\./);
 });
+
+test('scheda: storico degli appuntamenti dal più recente, senza disdette', () => {
+  const list = buildContatti(
+    [appt({ starts_at: daysAgo(60) }), appt({ starts_at: daysAgo(30), status: 'no_show' }), appt({ starts_at: daysAgo(10) }), appt({ starts_at: daysAgo(5), status: 'cancelled' })],
+    NOW
+  );
+  assert.deepEqual(list[0].storico.map((v) => v.stato), ['completed', 'no_show', 'completed']);
+  assert.equal(list[0].storico[0].servizio, 'Taglio e shampoo');
+});
+
+test('la scheda si apre dentro Eliseo, non porta alla galleria (l’account sull’appuntamento può essere di chi ha prenotato)', () => {
+  const src = fs.readFileSync(new URL('../components/admin/AdminEliseo.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(src, /galleria|customer_id/);
+  assert.match(src, /function Scheda/);
+});
