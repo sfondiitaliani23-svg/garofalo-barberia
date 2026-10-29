@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { L, type Lang } from '@/lib/i18n';
@@ -28,6 +28,7 @@ export function StoriesBar({ slides, lang, size, empty = null }: { slides: Story
   const [wrapped, setWrapped] = useState<StorySlide[]>([]);
   const [open, setOpen] = useState<number | null>(null);
   const [seen, setSeen] = useState<Set<string>>(new Set());
+  const hashOpened = useRef(false);
 
   useEffect(() => {
     setSeen(readSeen());
@@ -56,6 +57,23 @@ export function StoriesBar({ slides, lang, size, empty = null }: { slides: Story
     if (wrapped.length) out.push({ id: 'wrapped', label: wrapped[0]?.bigNumber ? L(lang, `Il tuo ${wrapped[0].bigNumber}`, `Your ${wrapped[0].bigNumber}`) : L(lang, 'Il tuo anno', 'Your year'), slides: wrapped });
     return out;
   }, [slides, wrapped, lang]);
+
+  useEffect(() => {
+    const openFromHash = () => {
+      if (window.location.hash !== '#storie') {
+        hashOpened.current = false;
+        return;
+      }
+      if (hashOpened.current) return;
+      const index = groups.findIndex((group) => group.id === 'novita');
+      if (index < 0) return;
+      hashOpened.current = true;
+      setOpen(index);
+    };
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+    return () => window.removeEventListener('hashchange', openFromHash);
+  }, [groups]);
 
   const markSeen = useCallback((id: string) => {
     setSeen((prev) => {

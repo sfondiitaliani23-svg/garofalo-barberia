@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import dynamic from 'next/dynamic';
 import { ArrowDown, ArrowUp, Eye, Film, Hash, ImageIcon, Pencil, Plus, Trash2, Type, Upload } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,10 +11,12 @@ import {
   MAX_VIDEO_BYTES,
   MAX_VIDEO_SECONDS,
   VIDEO_TYPES,
-  isStoryLive,
+  STORY_MS,
   isStoryRatio,
   moveInOrder,
   sortStories,
+  storyCoversDay,
+  storyStartMs,
   toSlide,
   type StoryKind,
 } from '@/lib/utils/stories';
@@ -43,8 +45,6 @@ type Form = {
   cta_label_en: string;
   cta_href: string;
   starts_on: string;
-  durata: 'giorno' | 'fino' | 'sempre';
-  ends_on: string;
   has_release: boolean;
 };
 
@@ -61,8 +61,6 @@ const blank = (day: string): Form => ({
   cta_label_en: '',
   cta_href: '',
   starts_on: day,
-  durata: 'giorno',
-  ends_on: day,
   has_release: false,
 });
 
@@ -73,6 +71,19 @@ const addDays = (day: string, n: number) => {
 };
 const fmtDay = (day: string) =>
   new Date(`${day}T12:00:00Z`).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+function untilLabel(story: { starts_on: string; created_at: string }) {
+  const start = storyStartMs(story);
+  if (!Number.isFinite(start)) return '24 ore';
+  const when = new Date(start + STORY_MS).toLocaleString('it-IT', {
+    timeZone: 'Europe/Rome',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `24 ore · fino al ${when}`;
+}
 
 /** Larghezza e altezza di una foto o di un video, letti nel browser. */
 function mediaSize(file: File, video: boolean): Promise<{ w: number; h: number }> {
@@ -120,15 +131,36 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
   const [form, setForm] = useState<Form | null>(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [pickedName, setPickedName] = useState('');
   const [pending, start] = useTransition();
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const onFileRef = useRef<(file: File) => void>(() => {});
 
-  const ofDay = useMemo(() => sortStories(stories.filter((s) => isStoryLive(s, day))), [stories, day]);
+  useEffect(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.tabIndex = -1;
+    input.setAttribute('aria-hidden', 'true');
+    input.style.cssText = 'position:fixed;left:-100px;top:0;width:1px;height:1px;opacity:0;';
+    input.addEventListener('change', () => {
+      const picked = input.files?.[0];
+      input.value = '';
+      if (picked) void onFileRef.current(picked);
+    });
+    document.body.appendChild(input);
+    fileRef.current = input;
+    return () => {
+      input.remove();
+      if (fileRef.current === input) fileRef.current = null;
+    };
+  }, []);
+
+  const ofDay = useMemo(() => sortStories(stories.filter((s) => storyCoversDay(s, day))), [stories, day]);
   const daysWithStories = useMemo(() => {
     const map = new Map<string, number>();
     for (let k = -3; k <= 14; k++) {
       const d = addDays(today, k);
-      const n = stories.filter((s) => isStoryLive(s, d)).length;
+      const n = stories.filter((s) => storyCoversDay(s, d)).length;
       if (n || k === 0 || k === 1) map.set(d, n);
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
@@ -142,12 +174,15 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
 
   async function onFile(file: File) {
     if (!form) return;
+    setPickedName(file.name);
     const isVideo = VIDEO_TYPES.includes(file.type);
     const isImage = IMAGE_TYPES.includes(file.type);
     if (form.kind === 'video' && !isVideo) return toast.error('Scegli un video MP4, WebM o MOV.');
     if (form.kind === 'foto' && !isImage) return toast.error('Scegli una foto JPG, PNG o WebP.');
     if (file.size > (isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES)) return toast.error(isVideo ? 'Il video supera 20 MB.' : 'La foto supera 8 MB.');
+    setForm((current) => (current ? { ...current, mediaUrl: URL.createObjectURL(file) } : current));
     const { w, h } = await mediaSize(file, isVideo);
+    if (!(w > 0 && h > 0)) return toast.error('Non riesco a leggere questo file. Scaricalo di nuovo e riprova.');
     if (!isStoryRatio(w, h)) return toast.error(`Formato non valido (${w}x${h}). Servono foto e video verticali 9:16, per esempio 1080x1920.`);
     if (isVideo) {
       const secs = await videoSeconds(file);
@@ -168,6 +203,7 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
       setUploading(false);
     }
   }
+  onFileRef.current = onFile;
 
   function edit(s: AdminStory) {
     setForm({
@@ -184,10 +220,9 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
       cta_label_en: s.cta_label_en ?? '',
       cta_href: s.cta_href ?? '',
       starts_on: s.starts_on,
-      durata: !s.ends_on ? 'sempre' : s.ends_on === s.starts_on ? 'giorno' : 'fino',
-      ends_on: s.ends_on ?? s.starts_on,
       has_release: s.has_release,
     });
+    setPickedName('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -206,14 +241,13 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
       cta_label_en: form.cta_label_en,
       cta_href: form.cta_href,
       starts_on: form.starts_on,
-      ends_on: form.durata === 'sempre' ? null : form.durata === 'giorno' ? form.starts_on : form.ends_on,
       has_release: form.has_release,
     };
     start(async () => {
       const { saveStoryAction } = await import('@/lib/actions/stories');
       const res = await saveStoryAction(input);
       if (!res.ok) return void toast.error(res.error);
-      toast.success(form.id ? 'Storia aggiornata' : 'Storia pubblicata');
+      toast.success(res.message);
       setDay(form.starts_on);
       setForm(null);
       await refresh();
@@ -301,20 +335,10 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="inline-flex min-h-10 items-center gap-2 border border-gold/60 px-4 text-sm font-semibold text-gold-light hover:bg-gold/10 disabled:opacity-60">
+                <button type="button" onClick={() => { if (fileRef.current) fileRef.current.accept = (form.kind === 'video' ? VIDEO_TYPES : IMAGE_TYPES).join(','); fileRef.current?.click(); }} disabled={uploading} className="inline-flex min-h-10 items-center gap-2 border border-gold/60 px-4 text-sm font-semibold text-gold-light hover:bg-gold/10 disabled:opacity-60">
                   <Upload size={15} aria-hidden /> {uploading ? 'Caricamento…' : form.media_path ? 'Cambia file' : form.kind === 'video' ? 'Scegli il video' : 'Scegli la foto'}
                 </button>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  hidden
-                  accept={(form.kind === 'video' ? VIDEO_TYPES : IMAGE_TYPES).join(',')}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    e.target.value = '';
-                    if (f) void onFile(f);
-                  }}
-                />
+                <span className="text-xs text-white/70">{pickedName || (form.media_path ? 'File già caricato' : 'Nessun file selezionato')}</span>
                 {form.mediaUrl && (
                   <span className="relative block h-28 w-16 overflow-hidden border border-white/15 bg-black">
                     {form.kind === 'video' ? (
@@ -367,26 +391,15 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
               <input className={input} maxLength={30} value={form.cta_label_en} onChange={(e) => set('cta_label_en', e.target.value)} placeholder="Button" aria-label="Pulsante in inglese" />
             </div>
           </details>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div>
-              <label className={label} htmlFor="st-from">Dal giorno</label>
-              <input id="st-from" type="date" className={input} value={form.starts_on} onChange={(e) => set('starts_on', e.target.value)} />
-            </div>
-            <div>
-              <label className={label} htmlFor="st-dur">Durata</label>
-              <select id="st-dur" className={input} value={form.durata} onChange={(e) => set('durata', e.target.value as Form['durata'])}>
-                <option value="giorno">Solo quel giorno</option>
-                <option value="fino">Fino al giorno…</option>
-                <option value="sempre">Finché non la tolgo</option>
-              </select>
-            </div>
-            {form.durata === 'fino' && (
-              <div>
-                <label className={label} htmlFor="st-to">Fino al</label>
-                <input id="st-to" type="date" className={input} min={form.starts_on} value={form.ends_on} onChange={(e) => set('ends_on', e.target.value)} />
-              </div>
-            )}
+          <div>
+            <label className={label} htmlFor="st-from">Dal giorno</label>
+            <input id="st-from" type="date" className={`${input} max-w-xs`} min={form.id ? undefined : today} disabled={!!form.id} value={form.starts_on} onChange={(e) => set('starts_on', e.target.value)} />
           </div>
+          <p className="border border-gold/30 bg-[#14110c] px-3 py-2 text-sm text-white/80">
+            Durata fissa: 24 ore, né di più né di meno. Se il giorno è oggi, parte da adesso. Se è un giorno futuro, parte a mezzanotte.
+          </p>
+          {!form.id && <p className="text-sm text-white/55">Se la storia è visibile oggi, chi ha attivato gli avvisi riceve una notifica sul telefono.</p>}
+          {form.id && <p className="text-sm text-white/55">Le 24 ore restano quelle di quando l’hai pubblicata.</p>}
           <div className="flex flex-wrap gap-2 pt-1">
             <button type="button" onClick={save} disabled={pending || uploading} className="inline-flex min-h-10 items-center gap-2 bg-gold px-5 text-sm font-bold uppercase tracking-wider text-black hover:bg-gold-light disabled:opacity-60">
               {pending ? 'Salvo…' : form.id ? 'Salva modifiche' : 'Pubblica'}
@@ -398,7 +411,7 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
         </section>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => setForm(blank(day))} className="inline-flex min-h-11 items-center gap-2 bg-gold px-5 text-sm font-bold uppercase tracking-wider text-black hover:bg-gold-light">
+          <button type="button" onClick={() => { setPickedName(''); setForm(blank(day < today ? today : day)); }} className="inline-flex min-h-11 items-center gap-2 bg-gold px-5 text-sm font-bold uppercase tracking-wider text-black hover:bg-gold-light">
             <Plus size={16} aria-hidden /> Nuova storia
           </button>
           {ofDay.length > 0 && (
@@ -434,7 +447,7 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm text-white">{s.title || s.body || KINDS.find((x) => x.id === s.kind)?.label}</span>
                   <span className="block text-xs text-white/45">
-                    {KINDS.find((x) => x.id === s.kind)?.label} · di {s.author} · {s.ends_on === s.starts_on ? 'solo ' + fmtDay(s.starts_on) : s.ends_on ? `${fmtDay(s.starts_on)} → ${fmtDay(s.ends_on)}` : `dal ${fmtDay(s.starts_on)}, senza fine`}
+                    {KINDS.find((x) => x.id === s.kind)?.label} · di {s.author} · {untilLabel(s)}
                   </span>
                 </span>
                 <span className="flex shrink-0 items-center gap-1">

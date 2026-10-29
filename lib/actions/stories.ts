@@ -5,6 +5,7 @@ import { revalidateTag } from 'next/cache';
 import { getProfile, getSession } from '@/lib/auth';
 import { isStaffRole } from '@/lib/auth/staff';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { sendPushToAll } from '@/lib/utils/push';
 import { STORIES_BUCKET, STORIES_TAG, storyMediaUrl } from '@/lib/stories-server';
 import {
   IMAGE_TYPES,
@@ -13,9 +14,11 @@ import {
   STORY_KINDS,
   VIDEO_TYPES,
   computeWrapped,
+  isLiveNow,
   isStoryRatio,
   romeToday,
   safeCtaHref,
+  storySlot,
   wrappedSlides,
   type StoryKind,
   type StoryRow,
@@ -146,13 +149,12 @@ const txt = (v: unknown, max: number) => {
 };
 const isDay = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
-/** Crea o modifica una storia. Il tester modifica solo le sue. */
-export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id: string } | Fail> {
+/** Crea o modifica una storia. Il tester modifica solo le sue. La durata è sempre 24 ore e non si sposta. */
+export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id: string; message: string } | Fail> {
   const me = await editor();
   if (!me) return { ok: false, error: 'Accesso non consentito.' };
   if (!STORY_KINDS.includes(input.kind)) return { ok: false, error: 'Tipo di storia non valido.' };
-  if (!isDay(input.starts_on)) return { ok: false, error: 'Scegli il giorno di inizio.' };
-  if (input.ends_on && (!isDay(input.ends_on) || input.ends_on < input.starts_on)) return { ok: false, error: 'La fine deve essere uguale o dopo l\'inizio.' };
+  if (!input.id && !isDay(input.starts_on)) return { ok: false, error: 'Scegli il giorno di inizio.' };
   const media = input.kind === 'foto' || input.kind === 'video';
   const mediaPath = media ? txt(input.media_path, 200) : null;
   if (media && (!mediaPath || !/^\d{4}-\d{2}-\d{2}\/[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm|mov)$/.test(mediaPath))) return { ok: false, error: input.kind === 'video' ? 'Carica il video.' : 'Carica la foto.' };
@@ -178,31 +180,52 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
     cta_label: href ? txt(input.cta_label, 30) : null,
     cta_label_en: href ? txt(input.cta_label_en, 30) : null,
     cta_href: href,
-    starts_on: input.starts_on,
-    ends_on: input.ends_on || null,
     has_release: media ? true : false,
     updated_at: new Date().toISOString(),
   };
 
   if (input.id) {
-    const { data: old } = await supabase.from('stories').select('created_by').eq('id', input.id).maybeSingle();
+    const { data: old } = await supabase.from('stories').select('created_by, kind').eq('id', input.id).maybeSingle();
     if (!old) return { ok: false, error: 'Storia non trovata.' };
     if (me.tester && old.created_by !== me.id) return { ok: false, error: 'Puoi modificare solo le storie che hai caricato tu.' };
-    const { error } = await supabase.from('stories').update(row).eq('id', input.id);
+    const { error } = await supabase.from('stories').update({ ...row, kind: old.kind }).eq('id', input.id);
     if (error) return { ok: false, error: 'Salvataggio non riuscito.' };
     revalidateTag(STORIES_TAG);
-    return { ok: true, id: input.id };
+    return { ok: true, id: input.id, message: 'Storia aggiornata. Le 24 ore non cambiano.' };
   }
 
-  const { count } = await supabase.from('stories').select('id', { head: true, count: 'exact' }).eq('starts_on', input.starts_on);
+  let slot: { starts_on: string; ends_on: string; created_at: string };
+  try {
+    slot = storySlot(input.starts_on, Date.now());
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Il giorno di inizio è oggi o un giorno futuro.' };
+  }
+  const { count } = await supabase.from('stories').select('id', { head: true, count: 'exact' }).eq('starts_on', slot.starts_on);
   const { data, error } = await supabase
     .from('stories')
-    .insert({ ...row, sort_order: count ?? 0, created_by: me.id })
+    .insert({ ...row, ...slot, sort_order: count ?? 0, created_by: me.id })
     .select('id')
     .single();
   if (error || !data) return { ok: false, error: 'Salvataggio non riuscito.' };
   revalidateTag(STORIES_TAG);
-  return { ok: true, id: data.id as string };
+
+  let message = isLiveNow(slot) ? 'Storia pubblicata. È già online.' : 'Storia pubblicata. Si vedrà per 24 ore dal giorno scelto.';
+  if (isLiveNow(slot)) {
+    try {
+      const push = await sendPushToAll({
+        title: (title || 'Nuova storia').slice(0, 60),
+        body: (row.body || bigNumber || 'C’è una nuova storia sul sito. Aprilo per vederla.').slice(0, 160),
+        url: '/#storie',
+        tag: 'storia-nuova',
+      });
+      message += push.sent > 0
+        ? ` Avviso inviato a ${push.sent} ${push.sent === 1 ? 'dispositivo' : 'dispositivi'}.`
+        : ' Nessun dispositivo ha gli avvisi attivi.';
+    } catch {
+      message += ' L’avviso sul telefono non è partito.';
+    }
+  }
+  return { ok: true, id: data.id as string, message };
 }
 
 /** Elimina una storia e il suo file. Il tester elimina solo le sue. */

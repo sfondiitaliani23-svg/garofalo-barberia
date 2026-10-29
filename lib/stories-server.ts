@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { createServiceClient } from '@/lib/supabase/server';
-import { isStoryLive, romeToday, sortStories, toSlide, type StoryRow, type StorySlide } from '@/lib/utils/stories';
+import { STORY_MS, isLiveNow, romeToday, sortStories, toSlide, type StoryRow, type StorySlide } from '@/lib/utils/stories';
 
 export const STORIES_BUCKET = 'storie';
 export const STORIES_TAG = 'stories';
@@ -18,14 +18,17 @@ const loadLiveRows = unstable_cache(
       const supabase = await createServiceClient();
       if (!supabase) return [];
       const today = romeToday();
+      // Ieri e oggi: copre le 24 ore che scavalcano la mezzanotte e le storie
+      // programmate (partono a mezzanotte anche se sono state create prima).
+      const fromDay = romeToday(Date.now() - STORY_MS);
       const { data, error } = await supabase
         .from('stories')
         .select('*')
+        .gte('starts_on', fromDay)
         .lte('starts_on', today)
-        .or(`ends_on.is.null,ends_on.gte.${today}`)
         .limit(60);
       if (error || !data) return [];
-      return sortStories((data as StoryRow[]).filter((s) => isStoryLive(s, today)));
+      return sortStories((data as StoryRow[]).filter((s) => isLiveNow(s)));
     } catch {
       // Tabella non ancora creata (migrazione 016 da eseguire): nessuna storia.
       return [];

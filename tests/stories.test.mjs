@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 import {
   computeWrapped,
   humanMinutes,
+  isLiveNow,
   isStoryLive,
   moveInOrder,
   safeCtaHref,
   sortStories,
+  storyAgo,
+  storySlot,
   toSlide,
   wrappedSlides,
 } from '../lib/utils/stories.ts';
@@ -16,6 +19,30 @@ test('storia visibile solo nei giorni scelti', () => {
   assert.equal(isStoryLive({ starts_on: '2026-10-26', ends_on: '2026-10-26' }, '2026-10-27'), false);
   assert.equal(isStoryLive({ starts_on: '2026-10-27', ends_on: null }, '2026-10-26'), false);
   assert.equal(isStoryLive({ starts_on: '2026-10-01', ends_on: null }, '2026-12-31'), true);
+});
+
+test('una storia dura 24 ore e un giorno futuro parte a mezzanotte a Roma', () => {
+  const now = Date.parse('2026-10-29T12:00:00.000Z');
+  const today = storySlot('2026-10-29', now);
+  assert.equal(today.created_at, '2026-10-29T12:00:00.000Z');
+  assert.equal(Date.parse(today.created_at) + 24 * 60 * 60 * 1000 - Date.parse(today.created_at), 24 * 60 * 60 * 1000);
+  assert.equal(isLiveNow(today, now + 24 * 60 * 60 * 1000 - 1), true);
+  assert.equal(isLiveNow(today, now + 24 * 60 * 60 * 1000), false);
+  assert.equal(isLiveNow({ starts_on: '2026-10-01', created_at: '2026-10-01T08:00:00.000Z' }, now), false);
+  const future = storySlot('2026-10-30', now);
+  assert.equal(future.created_at, '2026-10-29T23:00:00.000Z');
+  assert.equal(future.starts_on, '2026-10-30');
+  assert.equal(isLiveNow(future, now), false);
+  assert.throws(() => storySlot('2026-10-28', now));
+});
+
+test('l’orario si legge come nelle storie di Instagram', () => {
+  const t = Date.parse('2026-10-29T10:00:00.000Z');
+  assert.equal(storyAgo(t, t + 5_000, false), 'adesso');
+  assert.equal(storyAgo(t, t + 5 * 60_000, false), '5 min');
+  assert.equal(storyAgo(t, t + 3 * 3600_000, false), '3 h');
+  assert.equal(storyAgo(t, t + 5 * 60_000, true), '5m');
+  assert.equal(storyAgo(null, t, false), '');
 });
 
 test('ordine: posizione scelta, poi la più vecchia', () => {

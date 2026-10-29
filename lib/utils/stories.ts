@@ -37,6 +37,8 @@ export type StorySlide = {
   ctaHref: string | null;
   /** Durata in millisecondi (i video usano la loro durata). */
   duration: number;
+  /** Istante in cui la storia è diventata visibile. Vuoto per le storie di base e il Wrapped. */
+  publishedAt?: number | null;
 };
 
 export const STORY_KINDS: StoryKind[] = ['foto', 'video', 'testo', 'numero'];
@@ -55,6 +57,103 @@ export const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 /** Data di oggi a Roma, "AAAA-MM-GG". */
 export function romeToday(nowMs: number = Date.now()): string {
   return new Date(nowMs).toLocaleDateString('en-CA', { timeZone: 'Europe/Rome' });
+}
+
+/** Una storia dura sempre 24 ore: né di più, né di meno. */
+export const STORY_MS = 24 * 60 * 60 * 1000;
+
+/** Istante UTC di un orario civile a Roma. Il giorno è AAAA-MM-GG. */
+export function romeInstant(day: string, h = 0, m = 0, s = 0): number {
+  const [Y, M, D] = day.split('-').map(Number);
+  const want = Date.UTC(Y, M - 1, D, h, m, s);
+  let utc = want;
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Rome',
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  for (let i = 0; i < 2; i++) {
+    const parts = Object.fromEntries(fmt.formatToParts(new Date(utc)).filter((x) => x.type !== 'literal').map((x) => [x.type, x.value]));
+    const hour = parts.hour === '24' ? 0 : Number(parts.hour);
+    const got = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), hour, Number(parts.minute), Number(parts.second));
+    utc -= got - want;
+  }
+  return utc;
+}
+
+/** Oggi parte all'istante della pubblicazione. Un giorno futuro parte a mezzanotte. */
+export function storyStartMs(story: { starts_on: string; created_at: string }): number {
+  const created = Date.parse(story.created_at);
+  if (!Number.isFinite(created)) return NaN;
+  if (story.starts_on > romeToday(created)) return romeInstant(story.starts_on);
+  return created;
+}
+
+export function isLiveNow(story: { starts_on: string; created_at: string }, now = Date.now()): boolean {
+  const start = storyStartMs(story);
+  return Number.isFinite(start) && start <= now && now < start + STORY_MS;
+}
+
+/** Il giorno scelto copre la finestra di 24 ore? */
+export function storyCoversDay(story: { starts_on: string; created_at: string }, day: string): boolean {
+  const start = storyStartMs(story);
+  if (!Number.isFinite(start)) return false;
+  return romeToday(start) === day || romeToday(start + STORY_MS - 1) === day;
+}
+
+export function storySlot(day: string, now = Date.now()): { starts_on: string; ends_on: string; created_at: string } {
+  const today = romeToday(now);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day || '') || day < today) {
+    throw new Error('Il giorno di inizio è oggi o un giorno futuro.');
+  }
+  const start = day === today ? now : romeInstant(day);
+  return {
+    starts_on: romeToday(start),
+    ends_on: romeToday(start + STORY_MS - 1),
+    created_at: new Date(start).toISOString(),
+  };
+}
+
+function storyAge(ms: number, now: number) {
+  if (!Number.isFinite(ms) || ms > now + 5000) return null;
+  const sec = Math.floor(Math.max(0, now - ms) / 1000);
+  if (sec < 60) return { unit: 'now' as const, n: 0 };
+  const min = Math.floor(sec / 60);
+  if (min < 60) return { unit: 'm' as const, n: min };
+  const ore = Math.floor(min / 60);
+  if (ore < 24) return { unit: 'h' as const, n: ore };
+  return { unit: 'd' as const, n: Math.floor(ore / 24) };
+}
+
+/** Testo corto, come nelle storie di Instagram. */
+export function storyAgo(ms: number | null, now = Date.now(), en = false): string {
+  if (ms == null) return '';
+  const age = storyAge(ms, now);
+  if (!age) return '';
+  if (age.unit === 'now') return en ? 'now' : 'adesso';
+  if (age.unit === 'm') return en ? `${age.n}m` : `${age.n} min`;
+  if (age.unit === 'h') return en ? `${age.n}h` : `${age.n} h`;
+  return en ? `${age.n}d` : `${age.n} g`;
+}
+
+export function storyAgoLabel(ms: number | null, now = Date.now(), en = false): string {
+  if (ms == null) return '';
+  const age = storyAge(ms, now);
+  if (!age) return '';
+  if (age.unit === 'now') return en ? 'Published just now' : 'Pubblicata adesso';
+  if (en) {
+    if (age.unit === 'm') return `Published ${age.n} ${age.n === 1 ? 'minute' : 'minutes'} ago`;
+    if (age.unit === 'h') return `Published ${age.n} ${age.n === 1 ? 'hour' : 'hours'} ago`;
+    return `Published ${age.n} ${age.n === 1 ? 'day' : 'days'} ago`;
+  }
+  if (age.unit === 'm') return `Pubblicata ${age.n} ${age.n === 1 ? 'minuto' : 'minuti'} fa`;
+  if (age.unit === 'h') return `Pubblicata ${age.n} ${age.n === 1 ? 'ora' : 'ore'} fa`;
+  return `Pubblicata ${age.n} ${age.n === 1 ? 'giorno' : 'giorni'} fa`;
 }
 
 /** La storia è visibile nel giorno indicato? */
@@ -92,6 +191,7 @@ export function toSlide(row: StoryRow, lang: 'it' | 'en', mediaUrl: string | nul
     ctaLabel: pick(row.cta_label, row.cta_label_en),
     ctaHref: safeCtaHref(row.cta_href),
     duration: row.kind === 'testo' || row.kind === 'numero' ? 6000 : 5000,
+    publishedAt: Number.isFinite(storyStartMs(row)) ? storyStartMs(row) : null,
   };
 }
 

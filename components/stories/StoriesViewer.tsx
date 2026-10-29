@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { ChevronRight, Share2, Volume2, VolumeX, X } from 'lucide-react';
 import { LocLink as Link } from '@/components/i18n/LocLink';
 import { L, type Lang } from '@/lib/i18n';
-import type { StorySlide } from '@/lib/utils/stories';
+import { storyAgo, storyAgoLabel, type StorySlide } from '@/lib/utils/stories';
 import { buildWrappedCard, shareOrDownload } from './shareCard';
 import './stories.css';
 
@@ -53,6 +53,7 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(true);
   const [sharing, setSharing] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const press = useRef<{ t: number; x: number; y: number } | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -60,6 +61,11 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
 
   const group = groups[g];
   const slide = group?.slides[i];
+
+  useEffect(() => {
+    const clock = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(clock);
+  }, []);
 
   const next = useCallback(() => {
     if (!group) return;
@@ -188,7 +194,14 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
         </div>
 
         <div className="story-head" data-story-ui>
-          <span className="story-head-label">{group.label}</span>
+          <span className="story-head-who">
+            <span className="story-head-label">{group.label}</span>
+            {slide.publishedAt ? (
+              <time className="story-head-ago" dateTime={new Date(slide.publishedAt).toISOString()} aria-label={storyAgoLabel(slide.publishedAt, now, lang === 'en')}>
+                {storyAgo(slide.publishedAt, now, lang === 'en')}
+              </time>
+            ) : null}
+          </span>
           <div className="story-head-actions">
             {slide.kind === 'video' && (
               <button type="button" onClick={() => setMuted((m) => !m)} aria-label={muted ? L(lang, 'Attiva l\'audio', 'Unmute') : L(lang, 'Togli l\'audio', 'Mute')}>
