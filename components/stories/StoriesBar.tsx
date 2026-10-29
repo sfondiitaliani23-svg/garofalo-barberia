@@ -26,6 +26,7 @@ function readSeen(): Set<string> {
 /** Cerchi dorati in home: "Novità" (storie del salone) e "Il tuo anno" (Wrapped del cliente con accesso). */
 export function StoriesBar({ slides, lang, size, empty = null }: { slides: StorySlide[]; lang: Lang; size?: 'lg'; empty?: React.ReactNode }) {
   const [wrapped, setWrapped] = useState<StorySlide[]>([]);
+  const [live, setLive] = useState<StorySlide[] | null>(null);
   const [open, setOpen] = useState<number | null>(null);
   const [seen, setSeen] = useState<Set<string>>(new Set());
   const hashOpened = useRef(false);
@@ -51,12 +52,27 @@ export function StoriesBar({ slides, lang, size, empty = null }: { slides: Story
     };
   }, [lang]);
 
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/storie?lang=${lang === 'en' ? 'en' : 'it'}`, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (alive && data && Array.isArray(data.slides) && data.slides.length) setLive(data.slides);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [lang]);
+
+  const salonSlides = live && live.length ? live : slides;
+
   const groups: StoryGroup[] = useMemo(() => {
     const out: StoryGroup[] = [];
-    if (slides.length) out.push({ id: 'novita', label: L(lang, 'Novità', 'News'), slides });
+    if (salonSlides.length) out.push({ id: 'novita', label: L(lang, 'Novità', 'News'), slides: salonSlides });
     if (wrapped.length) out.push({ id: 'wrapped', label: wrapped[0]?.bigNumber ? L(lang, `Il tuo ${wrapped[0].bigNumber}`, `Your ${wrapped[0].bigNumber}`) : L(lang, 'Il tuo anno', 'Your year'), slides: wrapped });
     return out;
-  }, [slides, wrapped, lang]);
+  }, [salonSlides, wrapped, lang]);
 
   useEffect(() => {
     const openFromHash = () => {

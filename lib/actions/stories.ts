@@ -1,7 +1,7 @@
 'use server';
 
 import { randomUUID } from 'node:crypto';
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { getProfile, getSession } from '@/lib/auth';
 import { isStaffRole } from '@/lib/auth/staff';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
@@ -149,6 +149,14 @@ const txt = (v: unknown, max: number) => {
 };
 const isDay = (v: unknown) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
+function touchStories() {
+  revalidateTag(STORIES_TAG);
+  revalidatePath('/');
+  revalidatePath('/en');
+  revalidatePath('/wrapped');
+  revalidatePath('/en/wrapped');
+}
+
 /** Crea o modifica una storia. Il tester modifica solo le sue. La durata è sempre 24 ore e non si sposta. */
 export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id: string; message: string } | Fail> {
   const me = await editor();
@@ -190,7 +198,7 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
     if (me.tester && old.created_by !== me.id) return { ok: false, error: 'Puoi modificare solo le storie che hai caricato tu.' };
     const { error } = await supabase.from('stories').update({ ...row, kind: old.kind }).eq('id', input.id);
     if (error) return { ok: false, error: 'Salvataggio non riuscito.' };
-    revalidateTag(STORIES_TAG);
+    touchStories();
     return { ok: true, id: input.id, message: 'Storia aggiornata. Le 24 ore non cambiano.' };
   }
 
@@ -207,7 +215,7 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
     .select('id')
     .single();
   if (error || !data) return { ok: false, error: 'Salvataggio non riuscito.' };
-  revalidateTag(STORIES_TAG);
+  touchStories();
 
   let message = isLiveNow(slot) ? 'Storia pubblicata. È già online.' : 'Storia pubblicata. Si vedrà per 24 ore dal giorno scelto.';
   if (isLiveNow(slot)) {
@@ -220,7 +228,9 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
       });
       message += push.sent > 0
         ? ` Avviso inviato a ${push.sent} ${push.sent === 1 ? 'dispositivo' : 'dispositivi'}.`
-        : ' Nessun dispositivo ha gli avvisi attivi.';
+        : push.total > 0
+          ? ' L’avviso sul telefono non è partito.'
+          : ' Nessun dispositivo ha gli avvisi attivi.';
     } catch {
       message += ' L’avviso sul telefono non è partito.';
     }
@@ -240,7 +250,7 @@ export async function deleteStoryAction(id: string): Promise<{ ok: true } | Fail
   const { error } = await supabase.from('stories').delete().eq('id', id);
   if (error) return { ok: false, error: 'Eliminazione non riuscita.' };
   if (old.media_path) await supabase.storage.from(STORIES_BUCKET).remove([old.media_path as string]);
-  revalidateTag(STORIES_TAG);
+  touchStories();
   return { ok: true };
 }
 
@@ -255,6 +265,6 @@ export async function reorderStoriesAction(ids: string[]): Promise<{ ok: true } 
     const { error } = await supabase.from('stories').update({ sort_order: i }).eq('id', ids[i]);
     if (error) return { ok: false, error: 'Riordino non riuscito.' };
   }
-  revalidateTag(STORIES_TAG);
+  touchStories();
   return { ok: true };
 }
