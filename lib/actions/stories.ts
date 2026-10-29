@@ -238,6 +238,27 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
   return { ok: true, id: data.id as string, message };
 }
 
+/** Manda l’avviso di questa storia a tutti i telefoni che hanno le notifiche attive. */
+export async function notifyStoryAction(id: string): Promise<{ ok: true; message: string } | Fail> {
+  const me = await editor();
+  if (!me) return { ok: false, error: 'Accesso non consentito.' };
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return { ok: false, error: 'Storia non trovata.' };
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+  const { data: story } = await supabase.from('stories').select('title, body, big_number').eq('id', id).maybeSingle();
+  if (!story) return { ok: false, error: 'Storia non trovata.' };
+  const title = String(story.title || 'Nuova storia').slice(0, 60);
+  const body = String(story.body || story.big_number || 'C’è una nuova storia sul sito. Aprilo per vederla.').slice(0, 160);
+  try {
+    const push = await sendPushToAll({ title, body, url: '/#storie', tag: `storia-${id}-${Date.now()}` });
+    if (push.sent > 0) return { ok: true, message: `Avviso inviato a ${push.sent} ${push.sent === 1 ? 'dispositivo' : 'dispositivi'}.` };
+    if (push.total > 0) return { ok: false, error: 'L’avviso sul telefono non è partito.' };
+    return { ok: false, error: 'Nessun dispositivo ha gli avvisi attivi.' };
+  } catch {
+    return { ok: false, error: 'L’avviso sul telefono non è partito.' };
+  }
+}
+
 /** Elimina una storia e il suo file. Il tester elimina solo le sue. */
 export async function deleteStoryAction(id: string): Promise<{ ok: true } | Fail> {
   const me = await editor();

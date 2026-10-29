@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import dynamic from 'next/dynamic';
-import { ArrowDown, ArrowUp, Eye, Film, Hash, ImageIcon, Pencil, Plus, Trash2, Type, Upload } from 'lucide-react';
+import { ArrowDown, ArrowUp, Bell, Eye, Film, Hash, ImageIcon, Pencil, Plus, Trash2, Type, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -265,6 +265,15 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
     });
   }
 
+  function notify(s: AdminStory) {
+    start(async () => {
+      const { notifyStoryAction } = await import('@/lib/actions/stories');
+      const res = await notifyStoryAction(s.id);
+      if (!res.ok) return void toast.error(res.error);
+      toast.success(res.message);
+    });
+  }
+
   function move(id: string, dir: -1 | 1) {
     const ids = moveInOrder(ofDay.map((s) => s.id), id, dir);
     const pos = new Map(ids.map((x, k) => [x, k]));
@@ -450,6 +459,9 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
                     {KINDS.find((x) => x.id === s.kind)?.label} · di {s.author} · {untilLabel(s)}
                   </span>
                 </span>
+                <button type="button" onClick={() => notify(s)} disabled={pending} className="inline-flex h-9 shrink-0 items-center gap-1.5 border border-gold/70 bg-gold/10 px-3 text-xs font-bold uppercase tracking-wide text-gold-light hover:bg-gold hover:text-black disabled:opacity-40">
+                  <Bell size={14} aria-hidden /> Avvisa
+                </button>
                 <span className="flex shrink-0 items-center gap-1">
                   <button type="button" onClick={() => move(s.id, -1)} disabled={k === 0 || pending} aria-label="Sposta su" className="grid h-9 w-9 place-items-center border border-white/10 text-white/70 hover:border-gold disabled:opacity-30">
                     <ArrowUp size={15} />
