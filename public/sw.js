@@ -40,9 +40,10 @@ self.addEventListener('push', (event) => {
       } catch (e) {
         data = { title: 'Barberia Garofalo', body: 'C’è una novità sul sito.' };
       }
-      const title = data.title || 'Barberia Garofalo';
-      const body = data.body || 'Apri il sito per vederla.';
-      const tag = data.tag || 'garofalo';
+      const note = data.notification || {};
+      const title = note.title || data.title || 'Barberia Garofalo';
+      const body = note.body || data.body || 'Apri il sito per vederla.';
+      const tag = note.tag || data.tag || 'garofalo';
       const options = {
         body,
         icon: '/pwa/icon-192.png',
@@ -50,7 +51,7 @@ self.addEventListener('push', (event) => {
         tag,
         renotify: true,
         requireInteraction: true,
-        data: { url: data.url || '/' },
+        data: { url: data.url || note.navigate || '/' },
       };
       try {
         await self.registration.showNotification(title, options);

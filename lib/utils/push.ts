@@ -10,6 +10,34 @@ import { createServiceClient } from '@/lib/supabase/server';
 
 type Vapid = { publicKey: string; privateKey: string };
 export type PushPayload = { title: string; body: string; url?: string; tag?: string };
+
+const SITE = 'https://barberiagarofalo.it';
+
+/** Testo che Chrome legge ancora, più il formato che l’iPhone mostra anche senza il service worker. */
+export function pushWireBody(payload: PushPayload): string {
+  const title = (payload.title || 'Barberia Garofalo').slice(0, 60);
+  const body = (payload.body || 'Apri il sito per vederla.').slice(0, 160);
+  const path = payload.url && payload.url.startsWith('/') ? payload.url : '/';
+  const tag = (payload.tag || 'garofalo').slice(0, 64);
+  const navigate = `${SITE}${path}`;
+  return JSON.stringify({
+    web_push: 8030,
+    notification: {
+      title,
+      body,
+      lang: 'it',
+      dir: 'ltr',
+      navigate,
+      silent: false,
+      tag,
+      icon: `${SITE}/pwa/icon-192.png`,
+    },
+    title,
+    body,
+    url: path,
+    tag,
+  });
+}
 type StoredSub = { userId: string; sub: webpush.PushSubscription; at: string; ua?: string };
 
 let cached: Vapid | null = null;
@@ -95,7 +123,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
       continue;
     }
     try {
-      await webpush.sendNotification(s.sub, JSON.stringify(payload), { TTL: 60 * 60 * 48, urgency: 'high' });
+      await webpush.sendNotification(s.sub, pushWireBody(payload), { TTL: 60 * 60 * 48, urgency: 'high' });
       ok++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;
@@ -128,7 +156,7 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
   }
   let sent = 0;
   const users = new Set<string>();
-  const body = JSON.stringify(payload);
+  const body = pushWireBody(payload);
   for (let i = 0; i < rows.length; i += 20) {
     await Promise.all(
       rows.slice(i, i + 20).map(async (row) => {
