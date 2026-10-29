@@ -382,14 +382,19 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className={label} htmlFor="st-title">Titolo {form.kind === 'testo' ? '(obbligatorio)' : '(facoltativo)'}</label>
+              <label className={label} htmlFor="st-title">
+                {form.kind === 'foto' || form.kind === 'video' ? 'Titolo della notifica (facoltativo)' : `Titolo ${form.kind === 'testo' ? '(obbligatorio)' : '(facoltativo)'}`}
+              </label>
               <input id="st-title" className={input} maxLength={90} value={form.title} onChange={(e) => set('title', e.target.value)} placeholder={form.kind === 'numero' ? 'es. Tagli fatti nel 2026' : 'es. Promo di novembre'} />
             </div>
             <div>
-              <label className={label} htmlFor="st-body">Testo (facoltativo)</label>
+              <label className={label} htmlFor="st-body">{form.kind === 'foto' || form.kind === 'video' ? 'Testo della notifica (facoltativo)' : 'Testo (facoltativo)'}</label>
               <input id="st-body" className={input} maxLength={280} value={form.body} onChange={(e) => set('body', e.target.value)} placeholder="Una o due frasi" />
             </div>
           </div>
+          {(form.kind === 'foto' || form.kind === 'video') && (
+            <p className="text-sm text-white/55">Titolo e testo arrivano solo sull&apos;avviso del telefono. Sulla foto e sul video non si vedono.</p>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className={label} htmlFor="st-cta">Pulsante (facoltativo)</label>

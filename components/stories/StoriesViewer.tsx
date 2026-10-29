@@ -217,7 +217,7 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
         {/* Contenuto */}
         {slide.kind === 'foto' && slide.mediaUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="story-media" src={slide.mediaUrl} alt={slide.title || L(lang, 'Storia di Barberia Garofalo', 'Barberia Garofalo story')} draggable={false} />
+          <img className="story-media" src={slide.mediaUrl} alt={L(lang, 'Storia di Barberia Garofalo', 'Barberia Garofalo story')} draggable={false} />
         )}
         {slide.kind === 'video' && slide.mediaUrl && (
           <video
@@ -239,26 +239,23 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
         )}
         {(slide.kind === 'foto' || slide.kind === 'video') && <div className="story-shade" aria-hidden />}
 
-        <div className={`story-text story-text--${slide.kind}`} key={slide.id}>
-          {slide.kind === 'numero' ? (
-            <>
-              {slide.title && <p className="story-eyebrow">{slide.title}</p>}
-              <p className="story-big font-display">{slide.bigNumber}</p>
-              {slide.body && <p className="story-body">{slide.body}</p>}
-            </>
-          ) : slide.kind === 'testo' ? (
-            <>
-              {slide.bigNumber && <p className="story-big story-big--small font-display">{slide.bigNumber}</p>}
-              <p className="story-title font-display">{slide.title}</p>
-              {slide.body && <p className="story-body">{slide.body}</p>}
-            </>
-          ) : (
-            <>
-              {slide.title && <p className="story-title story-title--media font-display">{slide.title}</p>}
-              {slide.body && <p className="story-body">{slide.body}</p>}
-            </>
-          )}
-        </div>
+        {(slide.kind === 'numero' || slide.kind === 'testo') && (
+          <div className={`story-text story-text--${slide.kind}`} key={slide.id}>
+            {slide.kind === 'numero' ? (
+              <>
+                {slide.title && <p className="story-eyebrow">{slide.title}</p>}
+                <p className="story-big font-display">{slide.bigNumber}</p>
+                {slide.body && <p className="story-body">{slide.body}</p>}
+              </>
+            ) : (
+              <>
+                {slide.bigNumber && <p className="story-big story-big--small font-display">{slide.bigNumber}</p>}
+                <p className="story-title font-display">{slide.title}</p>
+                {slide.body && <p className="story-body">{slide.body}</p>}
+              </>
+            )}
+          </div>
+        )}
 
         <div className="story-foot" data-story-ui>
           {slide.id === 'wrapped-share' ? (
