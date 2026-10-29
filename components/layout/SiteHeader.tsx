@@ -36,9 +36,14 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
   const lang = useLang();
   const { navLeft, navRight, allNavLinks } = navLinks(lang);
   const [open, setOpen] = useState(false);
+  const [isApp, setIsApp] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(initialLoggedIn);
   const [userLabel, setUserLabel] = useState<string | null>(initialUserLabel ?? null);
+
+  useEffect(() => {
+    setIsApp(document.documentElement.classList.contains('is-app'));
+  }, []);
 
   useEffect(() => {
     if (initialLoggedIn) return;
@@ -210,7 +215,7 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
 
       {/* Pannello drawer */}
       <nav
-        className={`fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col xl:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
+        className={`site-drawer fixed top-0 right-0 h-full z-[150] w-[75vw] max-w-[300px] bg-[#0a0a0a] border-l border-white/10 flex flex-col xl:hidden shadow-[-8px_0_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-in-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
         aria-label={L(lang, 'Menu di navigazione', 'Navigation menu')}
@@ -276,6 +281,15 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
           <div className="px-6 py-4 border-b border-white/5">
             <LanguageSwitch onNavigate={close} />
           </div>
+          {isApp && (
+            <Link
+              href="/impostazioni"
+              className="flex items-center gap-3 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.2em] text-gold border-b border-white/5 hover:text-gold-light hover:bg-white/[0.03] transition-all"
+              onClick={close}
+            >
+              {L(lang, 'Impostazioni', 'Settings')}
+            </Link>
+          )}
         </nav>
 
         {/* CTA Prenota in fondo */}

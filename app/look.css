@@ -1,0 +1,283 @@
+/* Versione oro dell'app: lo sfondo nero diventa oro, le scritte oro diventano nere. */
+
+html[data-look='gold'] {
+  --color-black: #e4c36a;
+  --color-white: #1a140c;
+  --color-gold: #1a140c;
+  --color-gold-light: #3d2e18;
+  --color-gold-dark: #0e0c09;
+  background: #e4c36a;
+  color-scheme: light;
+}
+
+html[data-look='gold'] body {
+  background: #e4c36a;
+  color: #1a140c;
+}
+
+html[data-look='gold'] .home-page,
+html[data-look='gold'] .public-page,
+html[data-look='gold'] .page-chi-siamo {
+  --gold: #1a140c;
+  --gold-light: #3d2e18;
+  --gold-dark: #0e0c09;
+  --black: #e4c36a;
+  --white: #1a140c;
+  --muted: rgba(26, 20, 12, 0.66);
+}
+
+/* La foto grande della home resta scura, con le scritte chiare. */
+html[data-look='gold'] .hero-section {
+  color: #fff;
+}
+
+html[data-look='gold'] .section-lead,
+html[data-look='gold'] .newsletter-heading {
+  color: rgba(26, 20, 12, 0.78);
+}
+
+html[data-look='gold'] .newsletter-input {
+  background: #fff8e8;
+  color: #1a140c;
+  border-color: rgba(26, 20, 12, 0.28);
+}
+
+html[data-look='gold'] .newsletter-input::placeholder {
+  color: rgba(26, 20, 12, 0.45);
+}
+
+html[data-look='gold'] .home-ticker-wrapper {
+  background: #d7b15e;
+  border-color: rgba(26, 20, 12, 0.22);
+}
+
+html[data-look='gold'] .home-ticker-wrapper::before {
+  background: linear-gradient(to right, #e4c36a 10%, transparent);
+}
+
+html[data-look='gold'] .home-ticker-wrapper::after {
+  background: linear-gradient(to left, #e4c36a 10%, transparent);
+}
+
+html[data-look='gold'] .home-ticker-link {
+  color: rgba(26, 20, 12, 0.78);
+}
+
+html[data-look='gold'] .home-ticker-link:hover,
+html[data-look='gold'] .home-ticker-sep {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .perfume-card-back {
+  color: #f6efe2;
+}
+
+html[data-look='gold'] .site-drawer {
+  background: #e4c36a;
+  border-left-color: rgba(26, 20, 12, 0.16);
+  box-shadow: -8px 0 40px rgba(80, 50, 10, 0.28);
+}
+
+html[data-look='gold'] header img,
+html[data-look='gold'] .site-drawer img {
+  mix-blend-mode: normal !important;
+  filter: brightness(0);
+}
+
+html.is-app[data-look='gold'] .app-tabbar {
+  --dock-bg: #f2d78f;
+  --dock-dark: rgba(80, 50, 8, 0.28);
+  --dock-light: rgba(255, 248, 230, 0.75);
+  --dock-glow: rgba(26, 20, 12, 0.28);
+  background: linear-gradient(to top, #e4c36a 0%, #e4c36a 78%, rgba(228, 195, 106, 0) 100%);
+}
+
+html[data-look='gold'] .app-tab.is-active {
+  background: linear-gradient(135deg, #f6e4b0 0%, #e8c97a 100%);
+  color: #1a140c;
+}
+
+/* L'area riservata e l'admin restano neri anche se l'app è in versione oro. */
+html[data-look='gold'] .adm-root,
+html[data-look='gold'] .cust-skin,
+html[data-look='gold'] [data-sonner-toaster] {
+  --color-black: #000;
+  --color-white: #fff;
+  --color-gold: #cd9a4f;
+  --color-gold-light: #ffb949;
+  --color-gold-dark: #c88c23;
+}
+
+html[data-look='gold'] body:has(.adm-root),
+html[data-look='gold'] body:has(.cust-skin) {
+  background: #0a0807;
+  color: #f3e6c8;
+}
+
+/* Pagina Impostazioni */
+.app-settings {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 2.2rem 1.25rem 3rem;
+}
+
+.app-settings h1 {
+  font-family: var(--font-display), 'Rye', Georgia, serif;
+  font-size: clamp(2rem, 8vw, 2.8rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.app-settings-lead {
+  margin-top: 0.7rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  opacity: 0.72;
+}
+
+.app-settings-block {
+  margin-top: 1.8rem;
+}
+
+.app-settings-label {
+  margin-bottom: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.app-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.app-settings-row h2 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.app-settings-row p {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  opacity: 0.7;
+}
+
+.app-switch {
+  position: relative;
+  flex: 0 0 auto;
+  width: 3.4rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 22%, transparent);
+  cursor: pointer;
+}
+
+.app-switch[aria-checked='true'] {
+  background: #1a140c;
+}
+
+html[data-look='gold'] .app-switch[aria-checked='true'] {
+  background: #1a140c;
+}
+
+html:not([data-look='gold']) .app-switch[aria-checked='true'] {
+  background: #cd9a4f;
+}
+
+.app-switch i {
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+}
+
+.app-switch[aria-checked='true'] i {
+  transform: translateX(1.4rem);
+  background: #e4c36a;
+}
+
+html:not([data-look='gold']) .app-switch[aria-checked='true'] i {
+  background: #111;
+}
+
+.app-switch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.app-looks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.app-look {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.7rem;
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.app-look.is-on {
+  border-color: currentColor;
+  box-shadow: 0 0 0 1px currentColor;
+}
+
+.app-look-face {
+  display: grid;
+  align-content: end;
+  height: 7.5rem;
+  padding: 0.7rem;
+  font-family: var(--font-display), 'Rye', Georgia, serif;
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+}
+
+.app-look-face--black {
+  background: #0c0c0c;
+  color: #e4c36a;
+}
+
+.app-look-face--gold {
+  background: #e4c36a;
+  color: #1a140c;
+}
+
+.app-look span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.app-settings-note {
+  margin-top: 0.7rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  opacity: 0.72;
+}
+
+.app-settings-note a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}

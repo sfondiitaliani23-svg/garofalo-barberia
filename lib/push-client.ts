@@ -55,6 +55,49 @@ export async function syncPushSubscription(): Promise<'saved' | 'off' | 'denied'
   }
 }
 
+export type PushUiState = 'unsupported' | 'ios-install' | 'off' | 'on' | 'denied';
+
+/** Stato delle notifiche su questo telefono, senza chiedere il permesso. */
+export async function readPushState(): Promise<PushUiState> {
+  if (typeof window === 'undefined') return 'off';
+  const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const alone = window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
+  if (!supported()) return ios && !alone ? 'ios-install' : 'unsupported';
+  if (Notification.permission === 'denied') return 'denied';
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = await reg?.pushManager.getSubscription();
+    return sub && Notification.permission === 'granted' ? 'on' : 'off';
+  } catch {
+    return 'off';
+  }
+}
+
+/** Spegne le notifiche solo su questo telefono. */
+export async function disablePushOnDevice(): Promise<'off' | 'unsupported'> {
+  if (!supported()) return 'unsupported';
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sub = await reg?.pushManager.getSubscription();
+    if (sub) {
+      await fetch('/api/push/subscribe', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: sub.endpoint }),
+      });
+      await sub.unsubscribe();
+      try {
+        localStorage.removeItem('push-endpoint');
+      } catch {
+        /* l'iscrizione sul telefono è già tolta */
+      }
+    }
+    return 'off';
+  } catch {
+    return 'unsupported';
+  }
+}
+
 /** Dal clic di Avvisa: se manca il permesso lo chiede, poi salva questo browser. */
 export async function enablePushFromClick(): Promise<'saved' | 'denied' | 'logged-out' | 'unsupported'> {
   if (!supported()) return 'unsupported';

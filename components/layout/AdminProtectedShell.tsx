@@ -32,7 +32,7 @@ export function AdminProtectedShell({ children, readOnly = false, areaLabel = 'A
   return (
     <AdminSaveProvider>
       <AutoRefreshOnUpdate />
-      <div className="flex min-h-screen bg-[#0a0807] print:bg-white">
+      <div className="adm-root flex min-h-screen bg-[#0a0807] print:bg-white">
         <div className="contents print:hidden">
           <AdminSidebar areaLabel={areaLabel} />
         </div>

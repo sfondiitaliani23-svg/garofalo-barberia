@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './look.css';
 
 @theme {
   --color-gold: #cd9a4f;
