@@ -5,7 +5,12 @@ const CACHE = 'garofalo-offline-v2';
 const PRECACHE = ['/offline.html', '/pwa/icon-192.png'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((c) => c.addAll(PRECACHE).catch(() => {}))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -27,22 +32,32 @@ self.addEventListener('fetch', (event) => {
 
 // Notifiche sul telefono (promemoria, novità). Il tocco apre la pagina indicata.
 self.addEventListener('push', (event) => {
-  let data = {};
-  try {
-    data = event.data ? event.data.json() : {};
-  } catch (e) {
-    data = { title: 'Barberia Garofalo', body: event.data ? event.data.text() : '' };
-  }
-  const title = data.title || 'Barberia Garofalo';
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body: data.body || '',
-      icon: '/pwa/icon-192.png',
-      badge: '/pwa/icon-192.png',
-      tag: data.tag || undefined,
-      data: { url: data.url || '/' },
-      vibrate: [60, 40, 60],
-    })
+    (async () => {
+      let data = {};
+      try {
+        data = event.data ? event.data.json() : {};
+      } catch (e) {
+        data = { title: 'Barberia Garofalo', body: 'C’è una novità sul sito.' };
+      }
+      const title = data.title || 'Barberia Garofalo';
+      const body = data.body || 'Apri il sito per vederla.';
+      const tag = data.tag || 'garofalo';
+      const options = {
+        body,
+        icon: '/pwa/icon-192.png',
+        badge: '/pwa/icon-192.png',
+        tag,
+        renotify: true,
+        requireInteraction: true,
+        data: { url: data.url || '/' },
+      };
+      try {
+        await self.registration.showNotification(title, options);
+      } catch (e) {
+        await self.registration.showNotification(title, { body, tag, renotify: true, data: options.data });
+      }
+    })()
   );
 });
 

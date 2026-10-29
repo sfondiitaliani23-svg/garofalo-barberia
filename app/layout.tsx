@@ -7,6 +7,7 @@ import { SITE_URL } from '@/lib/seo';
 import { LoadingScreen } from '@/components/layout/LoadingScreen';
 import { ImageProtection } from '@/components/layout/ImageProtection';
 import { ServiceWorkerRegister } from '@/components/layout/ServiceWorkerRegister';
+import { PushSync } from '@/components/customer/PushSync';
 import { PresencePing } from '@/components/layout/PresencePing';
 
 const montserrat = Montserrat({
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LoadingScreen />
         <ImageProtection />
         <ServiceWorkerRegister />
+        <PushSync />
         <PresencePing />
         {children}
         <Toaster

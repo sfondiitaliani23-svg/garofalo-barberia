@@ -251,7 +251,10 @@ export async function notifyStoryAction(id: string): Promise<{ ok: true; message
   const body = String(story.body || story.big_number || 'C’è una nuova storia sul sito. Aprilo per vederla.').slice(0, 160);
   try {
     const push = await sendPushToAll({ title, body, url: '/#storie', tag: `storia-${id}-${Date.now()}` });
-    if (push.sent > 0) return { ok: true, message: `Avviso inviato a ${push.sent} ${push.sent === 1 ? 'dispositivo' : 'dispositivi'}.` };
+    if (push.sent > 0) {
+      const n = `${push.sent} ${push.sent === 1 ? 'dispositivo' : 'dispositivi'}`;
+      return { ok: true, message: `Avviso inviato a ${n}. Resta sullo schermo finché non lo chiudi, solo dove le notifiche del sito sono ancora accese.` };
+    }
     if (push.total > 0) return { ok: false, error: 'L’avviso sul telefono non è partito.' };
     return { ok: false, error: 'Nessun dispositivo ha gli avvisi attivi.' };
   } catch {

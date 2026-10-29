@@ -21,6 +21,7 @@ import {
   type StoryKind,
 } from '@/lib/utils/stories';
 import type { AdminStory, StoryInput } from '@/lib/actions/stories';
+import { enablePushFromClick } from '@/lib/push-client';
 
 const StoriesViewer = dynamic(() => import('@/components/stories/StoriesViewer').then((m) => m.StoriesViewer), { ssr: false });
 
@@ -266,12 +267,19 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
   }
 
   function notify(s: AdminStory) {
-    start(async () => {
-      const { notifyStoryAction } = await import('@/lib/actions/stories');
-      const res = await notifyStoryAction(s.id);
-      if (!res.ok) return void toast.error(res.error);
-      toast.success(res.message);
-    });
+    void (async () => {
+      try {
+        await enablePushFromClick();
+      } catch {
+        /* l'invio agli altri dispositivi continua */
+      }
+      start(async () => {
+        const { notifyStoryAction } = await import('@/lib/actions/stories');
+        const res = await notifyStoryAction(s.id);
+        if (!res.ok) return void toast.error(res.error);
+        toast.success(res.message, { duration: 8000 });
+      });
+    })();
   }
 
   function move(id: string, dir: -1 | 1) {
