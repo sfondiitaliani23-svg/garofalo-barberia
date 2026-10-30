@@ -224,7 +224,7 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
         title: (title || 'Nuova storia').slice(0, 60),
         body: (row.body || bigNumber || 'C’è una nuova storia sul sito. Aprilo per vederla.').slice(0, 160),
         url: '/#storie',
-        tag: 'storia-nuova',
+        tag: `storia-${data.id}-${Date.now()}`,
       });
       message += push.sent > 0
         ? ` Avviso inviato a ${push.sent} ${push.sent === 1 ? 'dispositivo' : 'dispositivi'}.`
