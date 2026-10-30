@@ -544,6 +544,8 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
   /* In app la barra sostituisce il pulsante WhatsApp; l'assistente sta sopra la barra, senza coprire i pulsanti */
   html.is-app body:has(.app-tabbar) a[aria-label="WhatsApp"].fixed { display: none; }
   html.is-app body:has(.app-tabbar) #eliseo-chat-btn { bottom: calc(118px + env(safe-area-inset-bottom)) !important; }
+  /* Nell'app il fumetto copre il pulsante e le ultime righe. Resta il cerchio. */
+  html.is-app .ai-fab-hint { display: none !important; }
   html.is-app body:has(.app-tabbar) .eliseo-chat {
     bottom: calc(190px + env(safe-area-inset-bottom)) !important;
     max-height: calc(100dvh - 240px - env(safe-area-inset-bottom)) !important;
