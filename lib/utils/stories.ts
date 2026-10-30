@@ -43,7 +43,6 @@ export type StorySlide = {
 
 export const STORY_KINDS: StoryKind[] = ['foto', 'video', 'testo', 'numero'];
 export const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
-export const MAX_VIDEO_SECONDS = 15;
 /** Solo formato verticale 9:16 (es. 1080x1920). Tolleranza del 2% per i tagli dei telefoni. */
 export const STORY_RATIO = 9 / 16;
 export function isStoryRatio(width: number, height: number): boolean {
@@ -130,15 +129,20 @@ function storyAge(ms: number, now: number) {
   return { unit: 'd' as const, n: Math.floor(ore / 24) };
 }
 
-/** Testo corto, come nelle storie di Instagram. */
+/** Quanto tempo fa, come nelle storie: «5 minuti fa», non «5 min». */
 export function storyAgo(ms: number | null, now = Date.now(), en = false): string {
   if (ms == null) return '';
   const age = storyAge(ms, now);
   if (!age) return '';
   if (age.unit === 'now') return en ? 'now' : 'adesso';
-  if (age.unit === 'm') return en ? `${age.n}m` : `${age.n} min`;
-  if (age.unit === 'h') return en ? `${age.n}h` : `${age.n} h`;
-  return en ? `${age.n}d` : `${age.n} g`;
+  if (en) {
+    if (age.unit === 'm') return `${age.n} ${age.n === 1 ? 'minute' : 'minutes'} ago`;
+    if (age.unit === 'h') return `${age.n} ${age.n === 1 ? 'hour' : 'hours'} ago`;
+    return `${age.n} ${age.n === 1 ? 'day' : 'days'} ago`;
+  }
+  if (age.unit === 'm') return `${age.n} ${age.n === 1 ? 'minuto' : 'minuti'} fa`;
+  if (age.unit === 'h') return `${age.n} ${age.n === 1 ? 'ora' : 'ore'} fa`;
+  return `${age.n} ${age.n === 1 ? 'giorno' : 'giorni'} fa`;
 }
 
 export function storyAgoLabel(ms: number | null, now = Date.now(), en = false): string {

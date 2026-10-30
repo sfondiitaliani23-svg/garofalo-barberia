@@ -141,6 +141,8 @@ export type StoryInput = {
   starts_on: string;
   ends_on?: string | null;
   has_release?: boolean;
+  /** Solo in pubblicazione. Spento di default: l’avviso parte se è true e la storia è già online. */
+  notify?: boolean;
 };
 
 const txt = (v: unknown, max: number) => {
@@ -166,7 +168,6 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
   const media = input.kind === 'foto' || input.kind === 'video';
   const mediaPath = media ? txt(input.media_path, 200) : null;
   if (media && (!mediaPath || !/^\d{4}-\d{2}-\d{2}\/[0-9a-f-]{36}\.(jpg|png|webp|mp4|webm|mov)$/.test(mediaPath))) return { ok: false, error: input.kind === 'video' ? 'Carica il video.' : 'Carica la foto.' };
-  if (media && input.has_release !== true) return { ok: false, error: 'Conferma la liberatoria (o che non ci sono persone riconoscibili).' };
   const title = txt(input.title, 90);
   const bigNumber = txt(input.big_number, 24);
   if (input.kind === 'numero' && !bigNumber) return { ok: false, error: 'Scrivi il numero da mostrare.' };
@@ -218,7 +219,7 @@ export async function saveStoryAction(input: StoryInput): Promise<{ ok: true; id
   touchStories();
 
   let message = isLiveNow(slot) ? 'Storia pubblicata. È già online.' : 'Storia pubblicata. Si vedrà per 24 ore dal giorno scelto.';
-  if (isLiveNow(slot)) {
+  if (isLiveNow(slot) && input.notify === true) {
     try {
       const push = await sendPushToAll({
         title: (title || 'Nuova storia').slice(0, 60),

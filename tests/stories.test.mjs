@@ -39,9 +39,10 @@ test('una storia dura 24 ore e un giorno futuro parte a mezzanotte a Roma', () =
 test('l’orario si legge come nelle storie di Instagram', () => {
   const t = Date.parse('2026-10-29T10:00:00.000Z');
   assert.equal(storyAgo(t, t + 5_000, false), 'adesso');
-  assert.equal(storyAgo(t, t + 5 * 60_000, false), '5 min');
-  assert.equal(storyAgo(t, t + 3 * 3600_000, false), '3 h');
-  assert.equal(storyAgo(t, t + 5 * 60_000, true), '5m');
+  assert.equal(storyAgo(t, t + 60_000, false), '1 minuto fa');
+  assert.equal(storyAgo(t, t + 5 * 60_000, false), '5 minuti fa');
+  assert.equal(storyAgo(t, t + 3 * 3600_000, false), '3 ore fa');
+  assert.equal(storyAgo(t, t + 5 * 60_000, true), '5 minutes ago');
   assert.equal(storyAgo(null, t, false), '');
 });
 

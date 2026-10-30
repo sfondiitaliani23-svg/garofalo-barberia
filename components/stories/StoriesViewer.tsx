@@ -51,7 +51,7 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
   const [i, setI] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -116,13 +116,24 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
     return () => cancelAnimationFrame(raf);
   }, [slide, paused, sharing, next]);
 
-  // Video: segue la sua durata
+  // Il tocco che apre la storia è il permesso dell’audio. Se il telefono lo rifiuta, il video continua senza suono.
   useEffect(() => {
     const v = videoRef.current;
     if (!v || slide?.kind !== 'video') return;
-    if (paused) v.pause();
-    else v.play().catch(() => {});
-  }, [paused, slide]);
+    v.muted = muted;
+    v.volume = 1;
+    if (paused) {
+      v.pause();
+      return;
+    }
+    v.play().catch(() => {
+      if (!v.muted) {
+        v.muted = true;
+        setMuted(true);
+        v.play().catch(() => {});
+      }
+    });
+  }, [paused, slide, muted]);
 
   // Tastiera, scorrimento della pagina bloccato, focus sul pulsante di chiusura
   useEffect(() => {
@@ -237,8 +248,6 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
             onError={next}
           />
         )}
-        {(slide.kind === 'foto' || slide.kind === 'video') && <div className="story-shade" aria-hidden />}
-
         {(slide.kind === 'numero' || slide.kind === 'testo') && (
           <div className={`story-text story-text--${slide.kind}`} key={slide.id}>
             {slide.kind === 'numero' ? (

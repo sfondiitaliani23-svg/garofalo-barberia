@@ -9,7 +9,6 @@ import {
   IMAGE_TYPES,
   MAX_IMAGE_BYTES,
   MAX_VIDEO_BYTES,
-  MAX_VIDEO_SECONDS,
   VIDEO_TYPES,
   STORY_MS,
   isStoryRatio,
@@ -27,7 +26,7 @@ const StoriesViewer = dynamic(() => import('@/components/stories/StoriesViewer')
 
 const KINDS: { id: StoryKind; label: string; icon: typeof ImageIcon; hint: string }[] = [
   { id: 'foto', label: 'Foto', icon: ImageIcon, hint: 'Solo verticale 9:16 (es. 1080x1920). JPG, PNG o WebP fino a 8 MB.' },
-  { id: 'video', label: 'Video', icon: Film, hint: `Solo verticale 9:16 (es. 1080x1920), fino a ${MAX_VIDEO_SECONDS} secondi e 20 MB.` },
+  { id: 'video', label: 'Video', icon: Film, hint: 'Solo verticale 9:16 (es. 1080x1920), fino a 20 MB.' },
   { id: 'testo', label: 'Testo o promo', icon: Type, hint: 'Un annuncio, una promo, un orario speciale.' },
   { id: 'numero', label: 'Numero', icon: Hash, hint: 'Stile Wrapped: un numero grande (es. "1.200 tagli nel 2026").' },
 ];
@@ -46,7 +45,7 @@ type Form = {
   cta_label_en: string;
   cta_href: string;
   starts_on: string;
-  has_release: boolean;
+  notify: boolean;
 };
 
 const blank = (day: string): Form => ({
@@ -62,7 +61,7 @@ const blank = (day: string): Form => ({
   cta_label_en: '',
   cta_href: '',
   starts_on: day,
-  has_release: false,
+  notify: false,
 });
 
 const addDays = (day: string, n: number) => {
@@ -106,23 +105,6 @@ function mediaSize(file: File, video: boolean): Promise<{ w: number; h: number }
       img.onerror = () => done(0, 0);
       img.src = url;
     }
-  });
-}
-
-function videoSeconds(file: File): Promise<number> {
-  return new Promise((resolve) => {
-    const v = document.createElement('video');
-    const url = URL.createObjectURL(file);
-    v.preload = 'metadata';
-    v.onloadedmetadata = () => {
-      URL.revokeObjectURL(url);
-      resolve(v.duration || 0);
-    };
-    v.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve(0);
-    };
-    v.src = url;
   });
 }
 
@@ -185,10 +167,6 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
     const { w, h } = await mediaSize(file, isVideo);
     if (!(w > 0 && h > 0)) return toast.error('Non riesco a leggere questo file. Scaricalo di nuovo e riprova.');
     if (!isStoryRatio(w, h)) return toast.error(`Formato non valido (${w}x${h}). Servono foto e video verticali 9:16, per esempio 1080x1920.`);
-    if (isVideo) {
-      const secs = await videoSeconds(file);
-      if (secs > MAX_VIDEO_SECONDS + 0.5) return toast.error(`Il video dura ${Math.round(secs)} secondi: il massimo è ${MAX_VIDEO_SECONDS}.`);
-    }
     setUploading(true);
     try {
       const { createStoryUploadAction } = await import('@/lib/actions/stories');
@@ -221,14 +199,14 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
       cta_label_en: s.cta_label_en ?? '',
       cta_href: s.cta_href ?? '',
       starts_on: s.starts_on,
-      has_release: s.has_release,
+      notify: false,
     });
     setPickedName('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function save() {
-    if (!form) return;
+    if (!form || pending || uploading) return;
     const input: StoryInput = {
       id: form.id,
       kind: form.kind,
@@ -242,7 +220,7 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
       cta_label_en: form.cta_label_en,
       cta_href: form.cta_href,
       starts_on: form.starts_on,
-      has_release: form.has_release,
+      notify: !form.id && form.notify && form.starts_on <= today,
     };
     start(async () => {
       const { saveStoryAction } = await import('@/lib/actions/stories');
@@ -251,7 +229,9 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
       toast.success(res.message);
       setDay(form.starts_on);
       setForm(null);
+      window.scrollTo(0, 0);
       await refresh();
+      window.scrollTo(0, 0);
     });
   }
 
@@ -333,7 +313,7 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
                 role="radio"
                 aria-checked={form.kind === k.id}
                 disabled={!!form.id}
-                onClick={() => setForm({ ...form, kind: k.id, media_path: null, mediaUrl: null, has_release: false })}
+                onClick={() => setForm({ ...form, kind: k.id, media_path: null, mediaUrl: null })}
                 className={`inline-flex min-h-10 items-center gap-2 border px-3 text-sm transition disabled:opacity-60 ${form.kind === k.id ? 'border-gold bg-gold text-black' : 'border-white/15 text-white/75 hover:border-gold/60'}`}
               >
                 <k.icon size={15} aria-hidden /> {k.label}
@@ -348,7 +328,7 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
                 <span className="mt-0.5 inline-flex h-12 w-7 shrink-0 items-center justify-center border-2 border-gold text-[10px] font-bold text-gold" aria-hidden>9:16</span>
                 <span>
                   <strong className="block text-gold-light">Solo formato verticale 9:16</strong>
-                  {form.kind === 'video' ? 'Il video deve essere verticale, come una storia di Instagram (es. 1080x1920), e durare al massimo 15 secondi.' : 'La foto deve essere verticale, come una storia di Instagram (es. 1080x1920).'} Foto e video in altri formati (quadrati, 4:5, orizzontali) vengono rifiutati.
+                  {form.kind === 'video' ? 'Il video deve essere verticale, come una storia di Instagram (es. 1080x1920).' : 'La foto deve essere verticale, come una storia di Instagram (es. 1080x1920).'} Foto e video in altri formati (quadrati, 4:5, orizzontali) vengono rifiutati.
                 </span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
@@ -367,10 +347,6 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
                   </span>
                 )}
               </div>
-              <label className="flex items-start gap-2 text-sm text-white/80">
-                <input type="checkbox" checked={form.has_release} onChange={(e) => set('has_release', e.target.checked)} className="mt-1 accent-[#cd9a4f]" />
-                <span>Non ci sono persone riconoscibili, oppure ho la <strong>liberatoria firmata</strong> di chi compare (obbligatorio).</span>
-              </label>
             </div>
           )}
 
@@ -380,15 +356,34 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
               <input id="st-num" className={input} maxLength={24} value={form.big_number} onChange={(e) => set('big_number', e.target.value)} placeholder="es. 1.200" />
             </div>
           )}
+          {!form.id && (
+            <label className="flex items-start gap-2 text-sm text-white/80">
+              <input
+                type="checkbox"
+                checked={form.notify && form.starts_on <= today}
+                disabled={form.starts_on > today}
+                onChange={(e) => set('notify', e.target.checked)}
+                className="mt-1 accent-[#cd9a4f]"
+              />
+              <span>
+                Invia un avviso a tutti i clienti della nuova storia.
+                <span className="mt-1 block text-xs text-white/50">
+                  {form.starts_on > today
+                    ? 'La storia inizia in un altro giorno: l’avviso non parte ora.'
+                    : 'Arriva solo a chi ha attivato le notifiche sul telefono.'}
+                </span>
+              </span>
+            </label>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className={label} htmlFor="st-title">
-                {form.kind === 'foto' || form.kind === 'video' ? 'Titolo della notifica (facoltativo)' : `Titolo ${form.kind === 'testo' ? '(obbligatorio)' : '(facoltativo)'}`}
+                {`Titolo ${form.kind === 'testo' ? '(obbligatorio)' : '(facoltativo)'}`}
               </label>
               <input id="st-title" className={input} maxLength={90} value={form.title} onChange={(e) => set('title', e.target.value)} placeholder={form.kind === 'numero' ? 'es. Tagli fatti nel 2026' : 'es. Promo di novembre'} />
             </div>
             <div>
-              <label className={label} htmlFor="st-body">{form.kind === 'foto' || form.kind === 'video' ? 'Testo della notifica (facoltativo)' : 'Testo (facoltativo)'}</label>
+              <label className={label} htmlFor="st-body">Testo (facoltativo)</label>
               <input id="st-body" className={input} maxLength={280} value={form.body} onChange={(e) => set('body', e.target.value)} placeholder="Una o due frasi" />
             </div>
           </div>
@@ -420,13 +415,13 @@ export function AdminStories({ initial, today, tester }: { initial: AdminStory[]
           <p className="border border-gold/30 bg-[#14110c] px-3 py-2 text-sm text-white/80">
             Durata fissa: 24 ore, né di più né di meno. Se il giorno è oggi, parte da adesso. Se è un giorno futuro, parte a mezzanotte.
           </p>
-          {!form.id && <p className="text-sm text-white/55">Se la storia è visibile oggi, chi ha attivato gli avvisi riceve una notifica sul telefono.</p>}
+
           {form.id && <p className="text-sm text-white/55">Le 24 ore restano quelle di quando l’hai pubblicata.</p>}
           <div className="flex flex-wrap gap-2 pt-1">
             <button type="button" onClick={save} disabled={pending || uploading} className="inline-flex min-h-10 items-center gap-2 bg-gold px-5 text-sm font-bold uppercase tracking-wider text-black hover:bg-gold-light disabled:opacity-60">
-              {pending ? 'Salvo…' : form.id ? 'Salva modifiche' : 'Pubblica'}
+              {pending ? (form.id ? 'Salvo…' : 'Pubblico…') : form.id ? 'Salva modifiche' : 'Pubblica'}
             </button>
-            <button type="button" onClick={() => setForm(null)} className="inline-flex min-h-10 items-center border border-white/15 px-4 text-sm text-white/75 hover:border-white/40">
+            <button type="button" onClick={() => { setForm(null); window.scrollTo(0, 0); }} className="inline-flex min-h-10 items-center border border-white/15 px-4 text-sm text-white/75 hover:border-white/40">
               Annulla
             </button>
           </div>
