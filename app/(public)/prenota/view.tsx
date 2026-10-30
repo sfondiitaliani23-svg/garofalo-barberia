@@ -32,7 +32,7 @@ export default async function PrenotaView({
   ]);
 
   return (
-    <section className="py-16">
+    <section className="prenota-screen py-16">
       <div className="container-lux min-w-0 overflow-x-hidden">
         <div className="mb-10 text-center">
           <h1 className="font-display text-4xl uppercase">{L(lang, 'Prenota il tuo appuntamento', 'Book your appointment')}</h1>

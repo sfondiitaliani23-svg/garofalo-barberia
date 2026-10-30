@@ -557,20 +557,50 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
     padding-top: 1.15rem;
     padding-bottom: 1rem;
   }
-  /* Avanti resta sopra la barra e a sinistra del cerchio dell'assistente. */
-  html.is-app .booking-actions {
-    position: fixed;
-    z-index: 180;
-    left: 0.75rem;
-    right: 5.25rem;
-    bottom: calc(124px + env(safe-area-inset-bottom));
-    margin: 0;
-    padding-top: 0;
-    border-top: none;
-    background: transparent;
+  /* La scheda resta sopra la barra: i servizi scorrono, Avanti sta in fondo e non finisce sotto il cerchio. */
+  html.is-app .prenota-screen {
+    padding-top: 0.85rem;
+    padding-bottom: 0.25rem;
   }
-  html.is-app .booking-sheet {
-    margin-bottom: 4.5rem;
+  html.is-app .prenota-screen > .container-lux > .mb-10 {
+    margin-bottom: 0.75rem;
+  }
+  html.is-app .prenota-screen h1 {
+    font-size: 1.7rem;
+    line-height: 1.05;
+  }
+  html.is-app .booking-steps {
+    margin-bottom: 0.65rem;
+  }
+  html.is-app div.booking-sheet {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 4rem - 10.75rem - 124px - env(safe-area-inset-bottom));
+    margin-bottom: 0;
+    overflow: hidden;
+  }
+  html.is-app div.booking-sheet > :first-child {
+    flex: 0 0 auto;
+  }
+  html.is-app div.booking-sheet > :last-child {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+  html.is-app div.booking-sheet > :last-child > :first-child {
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+  }
+  html.is-app .booking-actions {
+    position: static;
+    flex: 0 0 auto;
+    margin: 0;
+    padding-top: 0.75rem;
+    padding-right: 4.25rem;
+    background: transparent;
   }
   html.is-app .contact-message-card .btn-primary {
     width: calc(100% - 4.5rem);

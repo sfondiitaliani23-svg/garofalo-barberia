@@ -596,7 +596,7 @@ export function BookingWizard({
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-3xl">
-      <div className="mb-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-3 sm:gap-x-5">
+      <div className="booking-steps mb-8 flex flex-wrap items-center justify-center gap-x-3 gap-y-3 sm:gap-x-5">
         {STEPS.map((label, i) => {
           const n = i + 1;
           const active = step === n;
