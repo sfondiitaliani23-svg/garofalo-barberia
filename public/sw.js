@@ -53,7 +53,7 @@ self.addEventListener('push', (event) => {
       try {
         await self.registration.showNotification(title, {
           ...options,
-          badge: '/pwa/badge.png',
+          badge: '/pwa/badge-v2.png',
           renotify: true,
           requireInteraction: true,
         });
