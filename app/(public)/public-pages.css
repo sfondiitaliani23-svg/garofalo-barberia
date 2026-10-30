@@ -286,6 +286,13 @@
   border: 0;
 }
 
+/* Sul telefono il riquadro ufficiale di Instagram si rompe: riquadri grigi e didascalia fuori posto. */
+@media (max-width: 900px) {
+  .public-page .contatti-instagram-embed {
+    display: none;
+  }
+}
+
 .public-page .contact-message-card {
   width: 100%;
 }

@@ -1030,7 +1030,7 @@ export function BookingWizard({
 
           <div
             className={cn(
-              'grid gap-3 border-t border-gold/25 pt-4',
+              'booking-actions grid gap-3 border-t border-gold/25 pt-4',
               step === 3 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-[auto_1fr] md:items-center'
             )}
           >

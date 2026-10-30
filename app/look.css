@@ -36,10 +36,40 @@ html[data-look='gold'] .newsletter-heading {
   color: rgba(26, 20, 12, 0.78);
 }
 
+html[data-look='gold'] .newsletter-logo {
+  filter: brightness(0);
+}
+
 html[data-look='gold'] .newsletter-input {
   background: #fff8e8;
   color: #1a140c;
   border-color: rgba(26, 20, 12, 0.28);
+}
+
+html[data-look='gold'] .review-card-lux {
+  background: #fff8e6;
+  border: 1px solid rgba(26, 20, 12, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(80, 50, 10, 0.08);
+}
+
+html[data-look='gold'] .review-stars,
+html[data-look='gold'] .review-text,
+html[data-look='gold'] .review-card-lux:hover .review-stars,
+html[data-look='gold'] .review-card-lux:hover .review-text {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .review-author,
+html[data-look='gold'] .review-card-lux:hover .review-author {
+  color: rgba(26, 20, 12, 0.62);
+}
+
+html[data-look='gold'] .review-card-lux:hover {
+  background: #fff8e6;
+  border-color: rgba(26, 20, 12, 0.28);
+  box-shadow: 0 10px 24px rgba(80, 50, 10, 0.12);
+  transform: none;
 }
 
 html[data-look='gold'] .newsletter-input::placeholder {
@@ -335,10 +365,16 @@ html[data-look='gold'] .public-page .form-card .border-t {
   border-color: rgba(26, 20, 12, 0.14);
 }
 
+html[data-look='gold'] .public-page .form-card {
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(80, 50, 10, 0.12);
+}
+
 html[data-look='gold'] .public-page .form-input {
-  background: #fff;
+  background: #f4e6c0;
   color: #1a140c;
-  border-color: rgba(26, 20, 12, 0.28);
+  border-color: rgba(26, 20, 12, 0.24);
+  border-radius: 10px;
 }
 
 html[data-look='gold'] .public-page .form-input::placeholder {
@@ -363,9 +399,17 @@ html[data-look='gold'] .public-page .qr-cta-text {
 }
 
 html[data-look='gold'] .public-page .ct-info {
-  background: #f3d98a;
-  border-top-color: rgba(26, 20, 12, 0.12);
-  border-bottom-color: rgba(26, 20, 12, 0.12);
+  background: transparent;
+  border: none;
+  padding: 0.35rem 1rem 1.35rem;
+}
+
+html[data-look='gold'] .public-page .ct-info-grid {
+  background: #fff8e6;
+  border: 1px solid rgba(26, 20, 12, 0.16);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(80, 50, 10, 0.1);
 }
 
 html[data-look='gold'] .public-page .ct-col-title,
