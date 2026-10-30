@@ -13,13 +13,24 @@ export type PushPayload = { title: string; body: string; url?: string; tag?: str
 
 const SITE = 'https://barberiagarofalo.it';
 
-/** Testo che Chrome legge ancora, più il formato che l’iPhone mostra anche senza il service worker. */
-export function pushWireBody(payload: PushPayload): string {
+const PUSH_OPTS = { TTL: 60 * 60 * 48, urgency: 'high' as const };
+
+function isApplePush(endpoint: string) {
+  return endpoint.includes('://web.push.apple.com');
+}
+
+/**
+ * Android, con l’app chiusa, deve ricevere solo titolo e testo: se nel messaggio
+ * c’è anche il formato dell’iPhone, Chrome non sveglia il service worker e non mostra nulla.
+ * L’iPhone tiene il formato dichiarativo, che si vede anche senza il service worker.
+ */
+export function pushWireBody(payload: PushPayload, endpoint = ''): string {
   const title = (payload.title || 'Barberia Garofalo').slice(0, 60);
   const body = (payload.body || 'Apri il sito per vederla.').slice(0, 160);
   const path = payload.url && payload.url.startsWith('/') ? payload.url : '/';
   const tag = (payload.tag || 'garofalo').slice(0, 64);
-  const navigate = `${SITE}${path}`;
+  const flat = { title, body, url: path, tag };
+  if (!isApplePush(endpoint)) return JSON.stringify(flat);
   return JSON.stringify({
     web_push: 8030,
     notification: {
@@ -27,15 +38,12 @@ export function pushWireBody(payload: PushPayload): string {
       body,
       lang: 'it',
       dir: 'ltr',
-      navigate,
+      navigate: `${SITE}${path}`,
       silent: false,
       tag,
       icon: `${SITE}/pwa/icon-192.png`,
     },
-    title,
-    body,
-    url: path,
-    tag,
+    ...flat,
   });
 }
 type StoredSub = { userId: string; sub: webpush.PushSubscription; at: string; ua?: string };
@@ -123,7 +131,7 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
       continue;
     }
     try {
-      await webpush.sendNotification(s.sub, pushWireBody(payload), { TTL: 60 * 60 * 48, urgency: 'high' });
+      await webpush.sendNotification(s.sub, pushWireBody(payload, s.sub.endpoint), PUSH_OPTS);
       ok++;
     } catch (e) {
       const code = (e as { statusCode?: number }).statusCode;
@@ -156,7 +164,6 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
   }
   let sent = 0;
   const users = new Set<string>();
-  const body = pushWireBody(payload);
   for (let i = 0; i < rows.length; i += 20) {
     await Promise.all(
       rows.slice(i, i + 20).map(async (row) => {
@@ -167,7 +174,7 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
           return;
         }
         try {
-          await webpush.sendNotification(s.sub, body, { TTL: 60 * 60 * 48, urgency: 'high' });
+          await webpush.sendNotification(s.sub, pushWireBody(payload, s.sub.endpoint), PUSH_OPTS);
           sent++;
           users.add(s.userId);
         } catch (e) {

@@ -47,16 +47,22 @@ self.addEventListener('push', (event) => {
       const options = {
         body,
         icon: '/pwa/icon-192.png',
-        badge: '/pwa/badge.png',
         tag,
-        renotify: true,
-        requireInteraction: true,
         data: { url: data.url || note.navigate || '/' },
       };
       try {
-        await self.registration.showNotification(title, options);
+        await self.registration.showNotification(title, {
+          ...options,
+          badge: '/pwa/badge.png',
+          renotify: true,
+          requireInteraction: true,
+        });
       } catch (e) {
-        await self.registration.showNotification(title, { body, tag, renotify: true, data: options.data });
+        try {
+          await self.registration.showNotification(title, options);
+        } catch (e2) {
+          await self.registration.showNotification(title, { body, data: options.data });
+        }
       }
     })()
   );
