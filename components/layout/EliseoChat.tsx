@@ -272,7 +272,7 @@ export function EliseoChat() {
       {/* ── Chat window ── */}
       <div
         className={cn(
-          "fixed z-[301] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.7)] border border-gold/20 overflow-hidden flex flex-col bg-[#090909] transition-all duration-300 origin-bottom-right right-4",
+          "eliseo-chat fixed z-[301] w-[340px] max-w-[calc(100vw-2rem)] rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.7)] border border-gold/20 overflow-hidden flex flex-col bg-[#090909] transition-all duration-300 origin-bottom-right right-4",
           isCustomerArea
             ? (showScrollToTop
                 ? "bottom-[calc(13.25rem+env(safe-area-inset-bottom))] lg:bottom-[calc(9.25rem+env(safe-area-inset-bottom))]"

@@ -540,10 +540,15 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
       -10px -10px 26px var(--dock-light),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
-  html.is-app body:has(.app-tabbar) { padding-bottom: calc(124px + env(safe-area-inset-bottom)); }
-  /* In app la barra sostituisce il pulsante WhatsApp; l'assistente sale sopra la barra */
+  html.is-app body:has(.app-tabbar) { padding-bottom: calc(210px + env(safe-area-inset-bottom)); }
+  /* In app la barra sostituisce il pulsante WhatsApp; l'assistente sta sopra la barra, senza coprire i pulsanti */
   html.is-app body:has(.app-tabbar) a[aria-label="WhatsApp"].fixed { display: none; }
-  html.is-app body:has(.app-tabbar) #eliseo-chat-btn { bottom: calc(124px + env(safe-area-inset-bottom)) !important; }
+  html.is-app body:has(.app-tabbar) #eliseo-chat-btn { bottom: calc(118px + env(safe-area-inset-bottom)) !important; }
+  html.is-app body:has(.app-tabbar) .eliseo-chat {
+    bottom: calc(190px + env(safe-area-inset-bottom)) !important;
+    max-height: calc(100dvh - 240px - env(safe-area-inset-bottom)) !important;
+  }
+  html.is-app .hero-section { padding-bottom: calc(17rem + env(safe-area-inset-bottom)); }
 }
 .app-tab {
   position: relative;

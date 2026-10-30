@@ -85,16 +85,39 @@ html[data-look='gold'] .site-drawer img {
 }
 
 html.is-app[data-look='gold'] .app-tabbar {
-  --dock-bg: #f2d78f;
-  --dock-dark: rgba(80, 50, 8, 0.28);
-  --dock-light: rgba(255, 248, 230, 0.75);
+  --dock-bg: #fff6dd;
+  --dock-dark: rgba(80, 50, 8, 0.22);
+  --dock-light: rgba(255, 255, 255, 0.35);
   --dock-glow: rgba(26, 20, 12, 0.28);
-  background: linear-gradient(to top, #e4c36a 0%, #e4c36a 78%, rgba(228, 195, 106, 0) 100%);
+  background: #e4c36a;
 }
 
-html[data-look='gold'] .app-tab.is-active {
-  background: linear-gradient(135deg, #f6e4b0 0%, #e8c97a 100%);
+html.is-app[data-look='gold'] .app-dock {
+  border: 1px solid rgba(26, 20, 12, 0.28);
+  box-shadow: 0 6px 16px rgba(80, 50, 8, 0.16);
+}
+
+html[data-look='gold'] .app-tab {
   color: #1a140c;
+  background: #fff6dd;
+  box-shadow: none;
+}
+
+html[data-look='gold'] .app-tab.is-active,
+html[data-look='gold'] .app-tab:active {
+  color: #e4c36a;
+  background: #1a140c;
+  box-shadow: none;
+}
+
+html[data-look='gold'] .app-tab.is-active .app-tab-icon {
+  filter: none;
+}
+
+html[data-look='gold'] .app-tab-dot,
+html[data-look='gold'] .app-tab.is-active .app-tab-dot {
+  background: #e4c36a;
+  box-shadow: none;
 }
 
 /* L'area riservata e l'admin restano neri anche se l'app è in versione oro. */
@@ -259,6 +282,7 @@ html:not([data-look='gold']) .app-switch[aria-checked='true'] i {
 .app-look-face--gold {
   background: #e4c36a;
   color: #1a140c;
+  box-shadow: inset 0 0 0 1px rgba(26, 20, 12, 0.45);
 }
 
 .app-look span {
@@ -280,4 +304,163 @@ html:not([data-look='gold']) .app-switch[aria-checked='true'] i {
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 0.15em;
+}
+
+/* Intestazione oro: il logo nero si legge, il pulsante menu non resta su una fascia nera. */
+html.is-app[data-look='gold'] header.sticky,
+html[data-look='gold'] header.sticky {
+  background-color: #e4c36a !important;
+  border-bottom-color: rgba(26, 20, 12, 0.16) !important;
+  box-shadow: none !important;
+  color: #1a140c;
+}
+
+html[data-look='gold'] header button {
+  background: transparent !important;
+  border-color: rgba(26, 20, 12, 0.45) !important;
+  color: #1a140c !important;
+}
+
+/* Pannelli che restavano neri mentre il testo era già diventato scuro. */
+html[data-look='gold'] .booking-sheet,
+html[data-look='gold'] .public-page .form-card {
+  background: #fff8e6 !important;
+  background-image: none !important;
+  color: #1a140c;
+  border-color: rgba(26, 20, 12, 0.22) !important;
+}
+
+html[data-look='gold'] .public-page .form-card-header,
+html[data-look='gold'] .public-page .form-card .border-t {
+  border-color: rgba(26, 20, 12, 0.14);
+}
+
+html[data-look='gold'] .public-page .form-input {
+  background: #fff;
+  color: #1a140c;
+  border-color: rgba(26, 20, 12, 0.28);
+}
+
+html[data-look='gold'] .public-page .form-input::placeholder {
+  color: rgba(26, 20, 12, 0.48);
+}
+
+html[data-look='gold'] .public-page .form-input:focus {
+  outline-color: #7a5a1e;
+}
+
+html[data-look='gold'] .public-page .form-card .heading-display,
+html[data-look='gold'] .public-page .contatti-instagram-handle,
+html[data-look='gold'] .public-page .contatti-instagram-text,
+html[data-look='gold'] .public-page .booking-qr-section .eyebrow-text,
+html[data-look='gold'] .public-page .hero-sub,
+html[data-look='gold'] .public-page .qr-cta-text {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .public-page .qr-cta-text {
+  color: rgba(26, 20, 12, 0.78);
+}
+
+html[data-look='gold'] .public-page .ct-info {
+  background: #f3d98a;
+  border-top-color: rgba(26, 20, 12, 0.12);
+  border-bottom-color: rgba(26, 20, 12, 0.12);
+}
+
+html[data-look='gold'] .public-page .ct-col-title,
+html[data-look='gold'] .public-page .ct-col-main,
+html[data-look='gold'] .public-page .ct-hours-row dd,
+html[data-look='gold'] .public-page .ct-icon,
+html[data-look='gold'] .public-page .ct-cta-title {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .public-page .ct-col-note,
+html[data-look='gold'] .public-page .ct-hours-row dt,
+html[data-look='gold'] .public-page .ct-hours-row dd.is-closed {
+  color: rgba(26, 20, 12, 0.66);
+}
+
+html[data-look='gold'] .public-page .ct-col + .ct-col,
+html[data-look='gold'] .public-page .ct-col:nth-child(even) {
+  border-color: rgba(26, 20, 12, 0.14);
+}
+
+html[data-look='gold'] .public-page .ct-btn-solid,
+html[data-look='gold'] .public-page .ct-btn-outline {
+  background: #1a140c;
+  border-color: #1a140c;
+  color: #e4c36a;
+}
+
+html[data-look='gold'] .public-page .qr-code-wrap {
+  background: #fff;
+  border-color: rgba(26, 20, 12, 0.2);
+}
+
+html[data-look='gold'] .public-page .qr-code-wrap svg {
+  filter: brightness(0);
+}
+
+html[data-look='gold'] .site-footer {
+  border-top-color: rgba(26, 20, 12, 0.16);
+  color: rgba(26, 20, 12, 0.82);
+}
+
+html[data-look='gold'] .site-footer .footer-heading,
+html[data-look='gold'] .site-footer .footer-location-name,
+html[data-look='gold'] .site-footer nav a,
+html[data-look='gold'] .site-footer .footer-copy,
+html[data-look='gold'] .site-footer .footer-copy a,
+html[data-look='gold'] .footer-contact-link,
+html[data-look='gold'] .footer-contact-item a {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .footer-icon {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .footer-social-link {
+  background: #1a140c;
+}
+
+html[data-look='gold'] .footer-social-link svg {
+  color: #e4c36a;
+}
+
+html[data-look='gold'] .site-footer .footer-copy {
+  border-top-color: rgba(26, 20, 12, 0.16);
+}
+
+html[data-look='gold'] .public-page .ct-col:nth-child(n + 3) {
+  border-top-color: rgba(26, 20, 12, 0.14);
+}
+
+/* Campi e riquadri della prenotazione che restavano neri, con la scritta già scura. */
+html[data-look='gold'] .booking-sheet .bg-\[\#1a1a1a\],
+html[data-look='gold'] .booking-sheet .bg-\[\#120e0a\] {
+  background-color: #fff;
+  color: #1a140c;
+  border-color: rgba(26, 20, 12, 0.28);
+}
+
+html[data-look='gold'] .booking-sheet .bg-\[\#f3e6c8\] {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .public-page .qr-arrow path {
+  stroke: #1a140c;
+}
+
+/* La chat e il banner dei cookie restano sul nero originale. */
+html[data-look='gold'] .eliseo-chat,
+html[data-look='gold'] [data-cookie-banner] {
+  --color-black: #000;
+  --color-white: #fff;
+  --color-gold: #cd9a4f;
+  --color-gold-light: #ffb949;
+  --color-gold-dark: #c88c23;
+  color: #fff;
 }

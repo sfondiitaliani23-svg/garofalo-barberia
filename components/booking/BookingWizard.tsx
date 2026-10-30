@@ -462,7 +462,7 @@ export function BookingWizard({
   if (confirmation) {
     return (
       <div className="mx-auto w-full min-w-0 max-w-3xl px-4 sm:px-0">
-        <Card className="rounded-none border-gold/55 bg-[#161616] text-white">
+        <Card className="booking-sheet rounded-none border-gold/55 bg-[#161616] text-white">
           <CardContent className="p-6 sm:p-8 space-y-0">
             {/* Header / Stato */}
             <div className="flex flex-col items-center text-center pb-6 border-b border-white/10">
@@ -615,7 +615,7 @@ export function BookingWizard({
       </div>
 
       <Card className="w-full min-w-0 overflow-hidden rounded-none border-gold/55 bg-black/40 p-1.5">
-        <div className="border border-gold/30 bg-gradient-to-b from-[#18130e] to-[#0c0a08]">
+        <div className="booking-sheet border border-gold/30 bg-gradient-to-b from-[#18130e] to-[#0c0a08]">
         <CardHeader className="border-gold/20 px-4 sm:px-6">
           <h2 className="font-display text-2xl uppercase tracking-wide text-gold">{L(lang, 'Prenotazione online', 'Online booking')}</h2>
           <p className="text-sm text-white/50">{L(lang, 'Scegli servizio, barbiere e orario — conferma automatica', 'Choose your service, barber and time — instant confirmation')}</p>
