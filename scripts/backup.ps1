@@ -17,7 +17,13 @@ New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
 $timestamp = Get-Date -Format "yyyy-MM-dd_HHmmss"
 $archiveName = "garofalo-barberia_$timestamp.zip"
 $archivePath = Join-Path $BackupDir $archiveName
-$tempCopy = Join-Path $env:TEMP "garofalo-backup-$timestamp"
+$tempParent = $env:TEMP
+$tempDrive = Get-PSDrive -Name $tempParent.Substring(0, 1) -ErrorAction SilentlyContinue
+if (-not $tempDrive -or $tempDrive.Free -lt 6GB) {
+    $tempParent = Join-Path $BackupDir "_work"
+    New-Item -ItemType Directory -Force -Path $tempParent | Out-Null
+}
+$tempCopy = Join-Path $tempParent "garofalo-backup-$timestamp"
 
 if (Test-Path $tempCopy) { Remove-Item $tempCopy -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $tempCopy | Out-Null
@@ -28,10 +34,11 @@ $robocopyArgs = @(
     '/MIR',
     '/XD', 'node_modules', '.next', '.vercel', 'dist', 'build', '.turbo',
     '/XF', '*.zip', '*.log',
+    '/R:2', '/W:5',
     '/NFL', '/NDL', '/NJH', '/NJS', '/NC', '/NS'
 )
 
-& robocopy @robocopyArgs | Out-Null
+& robocopy @robocopyArgs
 $rc = $LASTEXITCODE
 if ($rc -ge 8) {
     Write-Error "Robocopy fallito con codice $rc"
