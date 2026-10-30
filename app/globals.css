@@ -572,34 +572,15 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
   html.is-app .booking-steps {
     margin-bottom: 0.65rem;
   }
-  html.is-app div.booking-sheet {
-    display: flex;
-    flex-direction: column;
-    max-height: calc(100dvh - 4rem - 10.75rem - 124px - env(safe-area-inset-bottom));
-    margin-bottom: 0;
-    overflow: hidden;
-  }
-  html.is-app div.booking-sheet > :first-child {
-    flex: 0 0 auto;
-  }
-  html.is-app div.booking-sheet > :last-child {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    flex: 1 1 auto;
-    overflow: hidden;
-  }
-  html.is-app div.booking-sheet > :last-child > :first-child {
+  html.is-app .booking-services {
+    max-height: 10.5rem;
     overflow-y: auto;
-    min-height: 0;
-    flex: 1 1 auto;
   }
   html.is-app .booking-actions {
     position: static;
-    flex: 0 0 auto;
     margin: 0;
-    padding-top: 0.75rem;
-    padding-right: 4.25rem;
+    padding-top: 0.85rem;
+    padding-right: 4.5rem;
     background: transparent;
   }
   html.is-app .contact-message-card .btn-primary {

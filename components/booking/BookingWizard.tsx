@@ -623,7 +623,7 @@ export function BookingWizard({
         <CardContent className="min-w-0 space-y-6 overflow-x-hidden px-4 sm:px-6">
           {step === 1 && (
             <div className="space-y-6">
-              <div className="divide-y divide-dashed divide-gold/35 border-y border-dashed border-gold/35">
+              <div className="booking-services divide-y divide-dashed divide-gold/35 border-y border-dashed border-gold/35">
                 {services.map((s) => {
                   const isSelected = selectedServiceIds.includes(s.id);
                   return (
