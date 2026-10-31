@@ -80,3 +80,6 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - «Scheda» si apre dentro la card (telefono, email, ultimi 12 appuntamenti). Non porta alla galleria: il `customer_id` di un appuntamento può essere l'account di chi ha prenotato (es. Luigi), non del cliente.
 - Modelli di messaggio ed etichette dei contatti: salvati in `site_content` (chiavi `eliseo:modelli` ed `eliseo:etichette`, `is_active = false`, quindi privati). Nessuna migrazione. Azioni `saveModelliAction` e `setEtichetteAction` con `requireAdmin`; la chiave del contatto è controllata con `isContactKey`.
 - «Da richiamare»: messaggio WhatsApp già scritto, lo manda a mano chi è in negozio. Nessun invio automatico. Il tester vede nomi e numeri nascosti (`maskForTester`).
+
+## Regole automatiche (Hookify, dal 01/11/2026)
+In `.claude/hookify.*.local.md`. Bloccano: chiavi segrete in `NEXT_PUBLIC_*`, push forzato, modifiche al repository di Maurizio. Avvisano: migrazione già esistente modificata (farne una nuova), funzioni di invio in file `'use server'`, controlli prima del push.
