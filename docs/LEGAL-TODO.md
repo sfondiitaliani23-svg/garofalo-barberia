@@ -7,7 +7,7 @@ L'assistente (`lib/chat/ai.ts`) manda a un servizio esterno il messaggio del cli
 | Cosa | Perché | Chi |
 |---|---|---|
 | **Gemini: tolto dalla chat (fatto)** | Termini Gemini API: sul piano gratuito Google usa i contenuti per migliorare i prodotti e delle persone possono leggerli; chiede di non mandare dati personali; per app usate da persone in Europa i termini chiedono il piano a pagamento. Eliseo non vuole spese (01/11/2026): quindi Gemini si toglie. Fonte: ai.google.dev/gemini-api/terms (letto il 01/11/2026). | Eliseo |
-| Groq (diventa l'unica IA): attivare «Zero Data Retention» | Groq dice di non conservare le richieste, salvo registri fino a 30 giorni per guasti o abusi; i dati stanno negli Stati Uniti. Con ZDR (Impostazioni → Data Controls) non conserva nulla. Fonte: console.groq.com/docs/your-data (01/11/2026). Resta un trasferimento fuori dall'UE. | Eliseo |
+| Groq (unica IA): «Zero Data Retention» **attivo** (Global ZDR, 01/11/2026) | Groq dice di non conservare le richieste, salvo registri fino a 30 giorni per guasti o abusi; i dati stanno negli Stati Uniti. Con ZDR (Impostazioni → Data Controls) non conserva nulla. Fonte: console.groq.com/docs/your-data (01/11/2026). Resta un trasferimento fuori dall'UE. | Eliseo |
 | Informativa privacy del sito | Deve dire che la chat usa un servizio di IA esterno (Groq, server negli Stati Uniti), cosa riceve, dove sono i server, per quanto tempo. | Eliseo con consulente |
 | Accordo sul trattamento dei dati | Con Groq (termini e trattamento dei dati del piano gratuito). | Eliseo con consulente |
 
@@ -15,4 +15,5 @@ L'assistente (`lib/chat/ai.ts`) manda a un servizio esterno il messaggio del cli
 - Gemini spento nel codice (`GEMINI_IN_USE = false` in `lib/chat/ai.ts`): non si usa più, anche se la chiave resta salvata in admin. In admin è scritto «Spento».
 - Telefono ed email scritti dal cliente vengono tolti prima dell'invio all'IA (`lib/utils/redact-contacts.ts`, test `redact-contacts.test.mjs`).
 - Privacy (IT/EN): ora dice Groq, server negli Stati Uniti, contatti tolti prima dell'invio. Da far vedere al consulente.
-- Resta a Eliseo: Groq → Impostazioni → Data Controls → «Zero Data Retention» (gratis).
+- Groq: Global ZDR attivato da Eliseo (01/11/2026, ore 07:32). Chat provata dopo: risponde con l'IA.
+- Modelli Groq aggiornati (i Llama 3.x erano spenti dal 16/08): prima la chat rispondeva con l'IA 1 volta su 44.
