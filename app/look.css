@@ -508,3 +508,101 @@ html[data-look='gold'] [data-cookie-banner] {
   --color-gold-dark: #c88c23;
   color: #fff;
 }
+
+/* ── Controllo completo del 01/11/2026 ─────────────────────────────────────
+   1) Riquadri che restano neri anche nella versione oro: dentro si torna ai colori
+      originali, così titoli, prezzi e link oro non diventano neri su nero. */
+html[data-look='gold'] .perfume-card-back,
+html[data-look='gold'] .jr-card,
+html[data-look='gold'] .pr-card,
+html[data-look='gold'] .cp-faq details,
+html[data-look='gold'] .lp-faq-item,
+html[data-look='gold'] .lp-price-row,
+html[data-look='gold'] .qr-card-back,
+html[data-look='gold'] .public-page .ct-sede,
+html[data-look='gold'] .rf-panel,
+html[data-look='gold'] .sg-card,
+html[data-look='gold'] .bg-\[\#111\] {
+  --color-black: #000;
+  --color-white: #fff;
+  --color-gold: #cd9a4f;
+  --color-gold-light: #ffb949;
+  --color-gold-dark: #c88c23;
+  --gold: #cd9a4f;
+  --gold-light: #ffb949;
+  --gold-dark: #c88c23;
+  --black: #000;
+  --white: #fff;
+  --muted: rgba(255, 255, 255, 0.62);
+  color: #fff;
+}
+
+/* 2) Scritte bianche scritte "a mano" che finivano direttamente sull'oro. */
+html[data-look='gold'] .cp-h2,
+html[data-look='gold'] .sg-title,
+html[data-look='gold'] .lp-h2,
+html[data-look='gold'] .lp-point-title,
+html[data-look='gold'] .lp-hours dd,
+html[data-look='gold'] .of-empty h2,
+html[data-look='gold'] .lk-name,
+html[data-look='gold'] .lk-btn {
+  color: #1a140c;
+}
+
+html[data-look='gold'] .team-studio-subtitle,
+html[data-look='gold'] .sg-sub,
+html[data-look='gold'] .svc-grid-sub,
+html[data-look='gold'] .lp-point p,
+html[data-look='gold'] .lp-address,
+html[data-look='gold'] .lp-hours dt,
+html[data-look='gold'] .lp-note,
+html[data-look='gold'] .of-empty p,
+html[data-look='gold'] .cp-cta p,
+html[data-look='gold'] .cp-field label,
+html[data-look='gold'] .cp-hint,
+html[data-look='gold'] .cp-check,
+html[data-look='gold'] .lk-sub,
+html[data-look='gold'] .lk-foot,
+html[data-look='gold'] .lk-foot a,
+html[data-look='gold'] .story-bubble-label {
+  color: rgba(26, 20, 12, 0.78);
+}
+
+/* Pulsanti "a contorno" e filtri: scritta e bordo scuri. */
+html[data-look='gold'] .cp-ghost,
+html[data-look='gold'] .lp-ghost,
+html[data-look='gold'] .lp-others a,
+html[data-look='gold'] .public-page .filter-btn:not(.active) {
+  color: #1a140c;
+  border-color: rgba(26, 20, 12, 0.35);
+}
+
+html[data-look='gold'] .lp-point {
+  background: rgba(255, 248, 230, 0.35);
+}
+
+html[data-look='gold'] .lp-hours div,
+html[data-look='gold'] .of-empty {
+  border-color: rgba(26, 20, 12, 0.18);
+}
+
+html[data-look='gold'] .lk-btn {
+  border-color: rgba(26, 20, 12, 0.22);
+  background: rgba(255, 248, 230, 0.35);
+}
+
+/* Pulsante pieno di /link: fondo scuro, scritta oro. */
+html[data-look='gold'] .lk-btn--main {
+  background: #1a140c;
+  border-color: #1a140c;
+  color: #e4c36a;
+}
+
+@media (hover: hover) {
+  html[data-look='gold'] .cp-ghost:hover,
+  html[data-look='gold'] .lp-ghost:hover,
+  html[data-look='gold'] .lp-others a:hover {
+    color: #1a140c;
+    border-color: #1a140c;
+  }
+}
