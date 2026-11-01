@@ -41,16 +41,23 @@ export type AiProvider = 'gemini' | 'groq';
 
 const DEFAULT_MODELS: Record<AiProvider, string> = {
   gemini: 'gemini-flash-latest',
-  groq: 'llama-3.3-70b-versatile',
+  groq: 'openai/gpt-oss-120b',
 };
+
+/**
+ * Modelli spenti dal servizio: se sono salvati in admin si saltano (altrimenti la chat ripiega sempre sulle regole).
+ * Groq ha spento llama-3.1-8b-instant e llama-3.3-70b-versatile il 16/08/2026 (console.groq.com/docs/deprecations).
+ */
+const RETIRED_MODELS = new Set(['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama3-70b-8192', 'llama3-8b-8192']);
 
 /** Modelli di riserva dello stesso servizio: se uno è sovraccarico (503) o non esiste più (404), si prova il successivo. */
 const FALLBACK_MODELS: Record<AiProvider, string[]> = {
   gemini: ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash'],
-  groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'openai/gpt-oss-20b'],
+  groq: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'],
 };
 
-function modelsFor(provider: AiProvider, preferred?: string) {
+export function modelsFor(provider: AiProvider, preferredIn?: string) {
+  const preferred = preferredIn && !RETIRED_MODELS.has(preferredIn) ? preferredIn : undefined;
   const list = FALLBACK_MODELS[provider];
   return preferred && !list.includes(preferred) ? [preferred, ...list] : preferred ? [preferred, ...list.filter((m) => m !== preferred)] : list;
 }
@@ -168,7 +175,8 @@ async function callProvider(provider: AiProvider, key: string, model: string, me
     const res = await fetch(ENDPOINTS[provider], {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: maxTokens }),
+      // I modelli gpt-oss ragionano prima di rispondere: con ragionamento "low" la risposta resta veloce e non finisce i token.
+      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: maxTokens, ...(model.startsWith('openai/gpt-oss') ? { reasoning_effort: 'low' } : {}) }),
       signal: ctrl.signal,
     });
     if (!res.ok) throw new Error(`${provider} ${res.status}`);

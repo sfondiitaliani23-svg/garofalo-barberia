@@ -87,3 +87,4 @@ In `.claude/hookify.*.local.md`. Bloccano: chiavi segrete in `NEXT_PUBLIC_*`, pu
 ## Chat IA (dal 01/11/2026)
 - Solo Groq, poi il motore a regole. Gemini spento con `GEMINI_IN_USE = false` (`lib/chat/ai.ts`): il piano gratuito di Google non va bene per utenti in Europa ed Eliseo non vuole spese. Non riaccenderlo.
 - Prima dell'invio all'IA, `redactContacts` toglie telefono ed email da messaggio, cronologia e risposta di riferimento.
+- Modelli Groq: `openai/gpt-oss-120b`, poi `openai/gpt-oss-20b` (ragionamento "low"). I Llama 3.x sono stati spenti da Groq il 16/08/2026: stanno in `RETIRED_MODELS` e si saltano anche se salvati in admin. Quando Groq spegne un modello, aggiungerlo lì (elenco: console.groq.com/docs/deprecations).
