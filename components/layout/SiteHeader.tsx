@@ -11,6 +11,7 @@ import { SITE_CONFIG } from '@/lib/site-config';
 
 import { createClient } from '@/lib/supabase/client';
 import { InstallAppButton } from '@/components/layout/InstallAppPrompt';
+import { UpdateAppButton } from '@/components/layout/UpdateAppButton';
 
 function navLinks(lang: 'it' | 'en') {
   const home = { href: '/', label: 'Home' };
@@ -258,6 +259,11 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             onAction={close}
             label={L(lang, 'Installa App', 'Install app')}
             className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
+          />
+          {/* Dentro l'app installata: Aggiorna app (allineato a Maximize e Maurizio) */}
+          <UpdateAppButton
+            label={L(lang, 'Aggiorna App', 'Update app')}
+            className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-gold border-b border-white/5 hover:bg-white/[0.03] transition-all"
           />
 
           {/* Area cliente */}
