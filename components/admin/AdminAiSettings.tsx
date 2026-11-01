@@ -11,14 +11,14 @@ const PROVIDERS: { id: Provider; name: string; role: string; url: string; steps:
   {
     id: 'gemini',
     name: 'Google Gemini',
-    role: 'Prima scelta',
+    role: 'Spento (il piano gratuito non va bene in Europa)',
     url: 'https://aistudio.google.com/apikey',
     steps: ['Apri il link e accedi con un account Google.', 'Tocca "Create API key" (crea chiave).', 'Copia la chiave e incollala qui sotto.'],
   },
   {
     id: 'groq',
     name: 'Groq',
-    role: 'Riserva',
+    role: 'In uso',
     url: 'https://console.groq.com/keys',
     steps: ['Apri il link e registrati (anche con Google).', 'Tocca "Create API Key".', 'Copia la chiave e incollala qui sotto.'],
   },
@@ -81,8 +81,8 @@ export function AdminAiSettings({ initial }: { initial: AiSettingsView }) {
             <div>
               <p className="font-semibold text-white">Assistente della chat con AI gratuita</p>
               <p className="mt-1 max-w-xl text-sm text-white/60">
-                La chat del sito risponde a qualsiasi domanda usando solo i dati veri del salone. Ordine: Gemini → Groq → risposte
-                automatiche di sempre. Se un servizio è al limite, passa da solo al successivo: la chat non si blocca mai.
+                La chat del sito risponde a qualsiasi domanda usando solo i dati veri del salone. Ordine: Groq → risposte automatiche
+                di sempre (Gemini è spento dal 01/11/2026). Se un servizio è al limite, passa da solo al successivo: la chat non si blocca mai.
               </p>
             </div>
           </div>

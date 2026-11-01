@@ -83,3 +83,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 
 ## Regole automatiche (Hookify, dal 01/11/2026)
 In `.claude/hookify.*.local.md`. Bloccano: chiavi segrete in `NEXT_PUBLIC_*`, push forzato, modifiche al repository di Maurizio. Avvisano: migrazione già esistente modificata (farne una nuova), funzioni di invio in file `'use server'`, controlli prima del push.
+
+## Chat IA (dal 01/11/2026)
+- Solo Groq, poi il motore a regole. Gemini spento con `GEMINI_IN_USE = false` (`lib/chat/ai.ts`): il piano gratuito di Google non va bene per utenti in Europa ed Eliseo non vuole spese. Non riaccenderlo.
+- Prima dell'invio all'IA, `redactContacts` toglie telefono ed email da messaggio, cronologia e risposta di riferimento.

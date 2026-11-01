@@ -10,6 +10,24 @@ import { ALL_FAQ } from '@/lib/data/faq';
 import { createServiceClient } from '@/lib/supabase/server';
 import type { ChatHistoryItem, ChatKnowledge } from '@/lib/chat/assistant';
 import type { Lang } from '@/lib/i18n';
+import { redactContacts } from '@/lib/utils/redact-contacts';
+
+/**
+ * Gemini è spento (01/11/2026). Il piano gratuito di Google usa i contenuti per migliorare i suoi prodotti,
+ * persone possono leggerli e i termini chiedono il piano a pagamento per chi usa il sito dall'Europa.
+ * Decisione di Eliseo: niente a pagamento. Quindi la chat usa solo Groq, poi il motore a regole.
+ * La chiave Gemini salvata in admin resta, ma non viene usata. Vedi docs/LEGAL-TODO.md.
+ */
+export const GEMINI_IN_USE = false;
+
+/** Servizi usati davvero, nell'ordine in cui si provano. */
+function providerChain(cfg: AiConfig): { provider: AiProvider; key?: string; model: string }[] {
+  const all: { provider: AiProvider; key?: string; model: string }[] = [
+    { provider: 'gemini', key: cfg.geminiKey, model: cfg.geminiModel || DEFAULT_MODELS.gemini },
+    { provider: 'groq', key: cfg.groqKey, model: cfg.groqModel || DEFAULT_MODELS.groq },
+  ];
+  return all.filter((s) => GEMINI_IN_USE || s.provider !== 'gemini');
+}
 
 export type AiConfig = {
   enabled: boolean;
@@ -169,14 +187,13 @@ export type AiAnswer = { text: string; provider: AiProvider } | null;
 export async function askAi(message: string, history: ChatHistoryItem[], k: ChatKnowledge, reference: string, cfgIn?: AiConfig, lang: Lang = 'it'): Promise<AiAnswer> {
   const cfg = cfgIn ?? (await readAiConfig());
   if (!cfg.enabled) return null;
-  const chain: { provider: AiProvider; key?: string; model: string }[] = [
-    { provider: 'gemini', key: cfg.geminiKey, model: cfg.geminiModel || DEFAULT_MODELS.gemini },
-    { provider: 'groq', key: cfg.groqKey, model: cfg.groqModel || DEFAULT_MODELS.groq },
-  ];
+  const chain = providerChain(cfg);
+  // Telefono ed email scritti dal cliente non escono dal sito (l'assistente non deve usarli).
+  const r = (t: string) => redactContacts(t, lang === 'en' ? 'en' : 'it');
   const messages: Msg[] = [
-    { role: 'system', content: systemPrompt(buildFacts(k), reference, lang) },
-    ...history.slice(-8).map((h) => ({ role: h.role, content: h.content })),
-    { role: 'user', content: message },
+    { role: 'system', content: systemPrompt(buildFacts(k), r(reference), lang) },
+    ...history.slice(-8).map((h) => ({ role: h.role, content: r(h.content) })),
+    { role: 'user', content: r(message) },
   ];
   for (const step of chain) {
     if (!step.key) continue;
@@ -210,15 +227,12 @@ export async function testProvider(provider: AiProvider, key: string, model?: st
   }
 }
 
-/** Richiesta libera all'AI gratuita (Gemini → Groq). Torna null se nessun servizio risponde. Usata dagli assistenti delle segnalazioni. */
+/** Richiesta libera all'AI gratuita (solo Groq finché GEMINI_IN_USE è false). Torna null se nessun servizio risponde. Usata dagli assistenti delle segnalazioni. */
 export async function askAiRaw(messages: { role: 'system' | 'user' | 'assistant'; content: string }[], maxTokens = 1200): Promise<{ text: string; provider: AiProvider } | { error: string }> {
   const cfg = await readAiConfig();
   if (!cfg.enabled) return { error: 'L\'IA è spenta nelle impostazioni.' };
   const errors: string[] = [];
-  const chain: { provider: AiProvider; key?: string; model: string }[] = [
-    { provider: 'gemini', key: cfg.geminiKey, model: cfg.geminiModel || DEFAULT_MODELS.gemini },
-    { provider: 'groq', key: cfg.groqKey, model: cfg.groqModel || DEFAULT_MODELS.groq },
-  ];
+  const chain = providerChain(cfg);
   for (const step of chain) {
     if (!step.key) continue;
     try {
@@ -229,5 +243,5 @@ export async function askAiRaw(messages: { role: 'system' | 'user' | 'assistant'
       errors.push((e as Error).message);
     }
   }
-  return { error: errors.length ? errors.join(' · ') : 'Nessuna chiave IA salvata.' };
+  return { error: errors.length ? errors.join(' · ') : 'Nessuna chiave Groq salvata (Gemini è spento).' };
 }
