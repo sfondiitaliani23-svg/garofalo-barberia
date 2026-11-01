@@ -253,19 +253,6 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
             </Link>
           ))}
 
-          {/* Installa l'app (nascosta se il sito è già aperto come app) */}
-          <InstallAppButton
-            always
-            onAction={close}
-            label={L(lang, 'Installa App', 'Install app')}
-            className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
-          />
-          {/* Dentro l'app installata: Aggiorna app (allineato a Maximize e Maurizio) */}
-          <UpdateAppButton
-            label={L(lang, 'Aggiorna App', 'Update app')}
-            className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-gold border-b border-white/5 hover:bg-white/[0.03] transition-all"
-          />
-
           {/* Area cliente */}
           {isLoggedIn ? (
             <Link
@@ -284,9 +271,8 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
               {L(lang, 'Accedi', 'Sign in')}
             </Link>
           )}
-          <div className="px-6 py-4 border-b border-white/5">
-            <LanguageSwitch onNavigate={close} />
-          </div>
+          {/* Ordine (01/11/2026, uguale nei tre siti): 1 account · 2 Impostazioni (con la lingua dentro) · 3 Installa o Aggiorna app.
+              Nel browser non c'è la pagina Impostazioni: la lingua resta qui. */}
           {isApp && (
             <Link
               href="/impostazioni"
@@ -296,6 +282,24 @@ export function SiteHeader({ isLoggedIn: initialLoggedIn = false, userLabel: ini
               {L(lang, 'Impostazioni', 'Settings')}
             </Link>
           )}
+          {!isApp && (
+            <div className="px-6 py-4 border-b border-white/5">
+              <LanguageSwitch onNavigate={close} />
+            </div>
+          )}
+          {/* Installa l'app (nascosta se il sito è già aperto come app) */}
+          <InstallAppButton
+            always
+            onAction={close}
+            label={L(lang, 'Installa App', 'Install app')}
+            className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-white/70 border-b border-white/5 hover:text-gold hover:bg-white/[0.03] transition-all"
+          />
+          {/* Dentro l'app installata: Aggiorna app (allineato a Maximize e Maurizio) */}
+          <UpdateAppButton
+            label={L(lang, 'Aggiorna App', 'Update app')}
+            className="flex w-full items-center gap-3 px-6 py-4 text-left text-[11px] font-bold uppercase tracking-[0.2em] text-gold border-b border-white/5 hover:bg-white/[0.03] transition-all"
+          />
+
         </nav>
 
         {/* CTA Prenota in fondo */}

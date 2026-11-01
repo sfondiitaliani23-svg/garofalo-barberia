@@ -8,6 +8,7 @@ import { L } from '@/lib/i18n';
 import { applyLook, readLook, type Look } from '@/lib/look';
 import { disablePushOnDevice, enablePushFromClick, readPushState, type PushUiState } from '@/lib/push-client';
 import { createClient } from '@/lib/supabase/client';
+import { LanguageSwitch } from '@/components/i18n/LanguageSwitch';
 
 /**
  * Impostazioni dell'app: notifiche di questo telefono e scelta tra versione nera e versione oro.
@@ -90,8 +91,19 @@ export function AppSettings() {
     <section className="app-settings">
       <h1>{L(lang, 'Impostazioni', 'Settings')}</h1>
       <p className="app-settings-lead">
-        {L(lang, 'Qui decidi gli avvisi di questo telefono e il colore dell’app.', 'Choose the alerts for this phone and the colour of the app.')}
+        {L(lang, 'Qui scegli la lingua, gli avvisi di questo telefono e il colore dell’app.', 'Choose the language, the alerts for this phone and the colour of the app.')}
       </p>
+
+      <div className="app-settings-block">
+        <p className="app-settings-label">{L(lang, 'Lingua', 'Language')}</p>
+        <div className="app-settings-row">
+          <div>
+            <h2>{L(lang, 'Lingua dell’app', 'App language')}</h2>
+            <p>{L(lang, 'Italiano · English. Cambia tutte le pagine.', 'Italiano · English. Changes every page.')}</p>
+          </div>
+          <LanguageSwitch className="text-sm font-bold tracking-[0.2em]" />
+        </div>
+      </div>
 
       <div className="app-settings-block">
         <p className="app-settings-label">{L(lang, 'Notifiche', 'Notifications')}</p>
