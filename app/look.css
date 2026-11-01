@@ -522,6 +522,8 @@ html[data-look='gold'] .qr-card-back,
 html[data-look='gold'] .public-page .ct-sede,
 html[data-look='gold'] .rf-panel,
 html[data-look='gold'] .sg-card,
+html[data-look='gold'] .cp-step,
+html[data-look='gold'] .login-bar,
 html[data-look='gold'] .bg-\[\#111\] {
   --color-black: #000;
   --color-white: #fff;
@@ -551,7 +553,6 @@ html[data-look='gold'] .lk-btn {
 
 html[data-look='gold'] .team-studio-subtitle,
 html[data-look='gold'] .sg-sub,
-html[data-look='gold'] .svc-grid-sub,
 html[data-look='gold'] .lp-point p,
 html[data-look='gold'] .lp-address,
 html[data-look='gold'] .lp-hours dt,
