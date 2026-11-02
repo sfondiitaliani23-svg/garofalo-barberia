@@ -936,21 +936,6 @@ html.is-app .ct-sede { display: none !important; }
 }
 
 /* ── Stories veloci (components/stories/QuickStory.tsx), solo staff ── */
-.fab-switch {
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(140deg, #f0c378, #c48f45);
-  color: #111;
-  border: 2px solid #0a0a0a;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
 .qs-menu {
   position: fixed;
   right: 1.5rem;
@@ -1008,3 +993,8 @@ html.is-app body:has(.app-tabbar) .qs-menu { bottom: calc(196px + env(safe-area-
 .qs-btn:disabled { opacity: 0.5; }
 .qs-btn--ghost { background: transparent; color: #f4efe7; border: 1px solid rgba(244, 239, 231, 0.3); }
 @keyframes qs-up { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+/* Stories veloci: il pulsante gira quando si scorre tra IA e fotocamera */
+.ai-fab-core[data-flip] { animation: fab-flip .32s cubic-bezier(.22,1,.36,1); }
+@keyframes fab-flip { from { transform: rotateY(90deg) scale(.9); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .ai-fab-core[data-flip] { animation: none; } }

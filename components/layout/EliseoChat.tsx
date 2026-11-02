@@ -61,7 +61,7 @@ export function EliseoChat() {
   const WELCOME: Message = { id: '0', role: 'assistant', content: t.welcome };
   const QUICK_QUESTIONS = t.quick;
   const [isOpen, setIsOpen] = useState(false);
-  // Stories veloci: solo per lo staff. Il pulsante passa dall'IA alla fotocamera con ⇄ (la scelta resta su questo telefono).
+  // Stories veloci: solo per lo staff. Scorrendo il dito sul pulsante si passa dall'IA alla fotocamera (la scelta resta su questo telefono).
   const [canStory, setCanStory] = useState(false);
   const [fabMode, setFabMode] = useState<'ai' | 'camera'>('ai');
   const [storyMenu, setStoryMenu] = useState(false);
@@ -88,6 +88,22 @@ export function EliseoChat() {
     try { localStorage.setItem(FAB_MODE_KEY, next); } catch { /* memoria non disponibile */ }
   };
   const cameraMode = canStory && fabMode === 'camera';
+  // Scorrendo il dito sul pulsante (a destra o a sinistra) si passa tra IA e Stories. Un tocco normale apre come sempre.
+  const swipeRef = useRef<{ x: number; y: number } | null>(null);
+  const swipedRef = useRef(false);
+  const onFabPointerDown = (e: React.PointerEvent) => { swipeRef.current = { x: e.clientX, y: e.clientY }; swipedRef.current = false; };
+  const onFabPointerUp = (e: React.PointerEvent) => {
+    const start = swipeRef.current;
+    swipeRef.current = null;
+    if (!start) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+      swipedRef.current = true;
+      switchFab();
+      try { navigator.vibrate?.(12); } catch { /* vibrazione non disponibile */ }
+    }
+  };
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -443,16 +459,17 @@ export function EliseoChat() {
                 : "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")
         )}
       >
-      {canStory && (
-        <button type="button" className="fab-switch" onClick={switchFab} aria-label={cameraMode ? 'Passa all’assistente' : 'Passa alle Stories'} title={cameraMode ? 'Assistente' : 'Stories'}>
-          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M7 4 3 8l4 4" /><path d="M3 8h14" /><path d="m17 20 4-4-4-4" /><path d="M21 16H7" />
-          </svg>
-        </button>
-      )}
       <button
         type="button"
-        onClick={() => (cameraMode ? setStoryMenu((o) => !o) : setIsOpen((o) => !o))}
+        onPointerDown={canStory ? onFabPointerDown : undefined}
+        onPointerUp={canStory ? onFabPointerUp : undefined}
+        onPointerCancel={canStory ? () => { swipeRef.current = null; } : undefined}
+        style={canStory ? { touchAction: 'pan-y' } : undefined}
+        title={canStory ? (cameraMode ? 'Scorri per l’assistente' : 'Scorri per le Stories') : undefined}
+        onClick={() => {
+          if (swipedRef.current) { swipedRef.current = false; return; }
+          if (cameraMode) setStoryMenu((o) => !o); else setIsOpen((o) => !o);
+        }}
         aria-label={cameraMode ? 'Nuova storia' : isOpen ? t.closeEliseo : t.openEliseo}
         aria-expanded={cameraMode ? storyMenu : isOpen}
         data-evt={cameraMode ? 'storia-veloce' : 'assistente'}
@@ -466,7 +483,7 @@ export function EliseoChat() {
         )}
         <span className={cn('ai-fab', isOpen && 'is-open')}>
           <span className="ai-fab-ring" aria-hidden />
-          <span className="ai-fab-core">
+          <span className="ai-fab-core" key={cameraMode ? 'camera' : 'ai'} data-flip={canStory ? '' : undefined}>
             {cameraMode
               ? (storyMenu ? <X size={22} className="text-[#f0c378]" /> : <span className="text-[#f0c378]"><CameraIcon size={24} /></span>)
               : isOpen ? <X size={22} className="text-[#f0c378]" /> : <Sparkles size={22} className="ai-fab-icon" />}

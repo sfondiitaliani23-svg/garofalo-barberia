@@ -752,3 +752,47 @@ html[data-look='gold'] .perfume-card-front .service-card-body span {
 html[data-look='gold'] .perfume-card-front.service-card-luxury::after {
   background: linear-gradient(transparent 45%, rgba(0, 0, 0, 0.85));
 }
+
+/* ── Ritocchi del 02/11/2026 (sera) ── */
+
+/* Oro: sotto la barra di stato una sfumatura dall'oro, come nel piè di pagina: nessun distacco netto oro/marrone. */
+html[data-look='gold'] body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(2.6rem + env(safe-area-inset-top, 0px));
+  background: linear-gradient(to bottom, #e4c36a 0%, rgba(228, 195, 106, 0.72) 35%, rgba(228, 195, 106, 0) 100%);
+  pointer-events: none;
+  z-index: 90;
+}
+html[data-look='gold'] body.story-open::before { display: none; }
+
+/* Oro: le schede dei valori (Chi siamo) in marrone chiaro, per staccarle dallo sfondo. */
+html[data-look='gold'] .section-cream .team-card-lux {
+  background: #c99d55 !important;
+  border-color: rgba(26, 20, 12, 0.14) !important;
+}
+html[data-look='gold'] .section-cream .team-card-lux p { color: rgba(26, 20, 12, 0.78) !important; }
+
+/* Oro: la striscia di foto in home finisce nell'oro, non in una fascia nera. */
+html[data-look='gold'] .photo-strip-section::after {
+  background: linear-gradient(to top, #e4c36a 40%, rgba(228, 195, 106, 0));
+}
+html[data-look='gold'] .photo-strip-item::after {
+  background: linear-gradient(to top, rgba(26, 20, 12, 0.7) 0%, rgba(26, 20, 12, 0.3) 18%, transparent 45%);
+}
+
+/* Nero: niente linea sotto l'intestazione, come nella versione oro. */
+html:not([data-look='gold']) header.sticky {
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Nero: il legno sfuma di più nel nero, ai bordi e in alto e in basso. */
+html:not([data-look='gold']) .hero-section::before {
+  background:
+    radial-gradient(ellipse 85% 75% at 50% 48%, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.6) 58%, rgba(0, 0, 0, 0.92) 100%),
+    linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0) 16%, rgba(0, 0, 0, 0) 68%, #000 100%);
+}

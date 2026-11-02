@@ -39,6 +39,14 @@ export function StoriesViewer({ groups, startGroup, lang, onClose: onCloseProp, 
       if (history.state?.gbStory) history.replaceState({ ...history.state, gbStory: false }, '');
     };
   }, []);
+  // La barra di stato del telefono prende il colore della storia (nero caldo): icone chiare e leggibili.
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    const before = meta?.getAttribute('content') ?? null;
+    meta?.setAttribute('content', '#0d0b08');
+    return () => { if (meta && before) meta.setAttribute('content', before); };
+  }, []);
+
   const onClose = useCallback(() => {
     if (closedRef.current) return;
     if (history.state?.gbStory) history.back();
