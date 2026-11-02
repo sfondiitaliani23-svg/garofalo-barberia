@@ -64,110 +64,127 @@ export default async function CustomerDashboardPage() {
     { href: '/area-cliente/assistenza', label: L(lang, 'Assistenza', 'Support'), sub: L(lang, 'Hai bisogno di aiuto?', 'Need help?'), icon: HelpCircle },
   ];
 
+  const next = upcoming[0];
+  const nextBarber = (next?.barber as { name: string } | null) ?? null;
+  const nextService = (next?.service as { name: string } | null) ?? null;
+  const progress = totalCount >= 10 ? 100 : Math.round((totalCount / (totalCount >= 5 ? 10 : 5)) * 100);
+  const initial = (firstName[0] ?? 'G').toUpperCase();
+
   return (
-    <div className="space-y-8">
+    <div className="app-dash space-y-7">
       <PushManager variant="popup" />
 
-      {/* Benvenuto: cornice doppia a insegna */}
-      <section className="border border-gold/55 bg-black/35 p-1.5">
-        <div className="border border-gold/30 bg-gradient-to-b from-[#1a140e]/95 to-[#0c0a08]/95 px-6 py-7 sm:px-8">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <p className="text-[11px] uppercase tracking-[0.4em] text-gold">{greeting}</p>
-            <Link href={localHref(lang, '/')} className="inline-flex min-h-10 items-center gap-2 border border-dashed border-gold/60 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-gold transition-colors hover:bg-gold/10">
-              <Home size={15} aria-hidden /> {L(lang, 'Vai al sito', 'Go to the website')}
-            </Link>
-          </div>
-          <h1 className="mt-1.5 font-display text-4xl leading-tight text-[#f7ecd0] sm:text-5xl">{firstName}</h1>
-          <p className="mt-1 text-sm text-[#bda980]">
-            {L(lang, 'Benvenuto nel tuo spazio riservato, Barberia Garofalo, Foggia', 'Welcome to your private area, Barberia Garofalo, Foggia')}
-          </p>
+      {/* Intestazione da app: avatar, saluto, ritorno al sito */}
+      <header className="flex items-center gap-3.5">
+        <span className="app-avatar" aria-hidden>{initial}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] text-[#bda980]">{greeting},</p>
+          <h1 className="truncate text-2xl font-extrabold leading-tight text-[#f7ecd0]">{firstName}</h1>
+        </div>
+        <Link href={localHref(lang, '/')} className="app-round-btn" aria-label={L(lang, 'Vai al sito', 'Go to the website')}>
+          <Home size={19} aria-hidden />
+        </Link>
+      </header>
 
-          <div className="mt-6 flex flex-wrap gap-3.5">
-            <div className="flex items-center gap-3.5 border border-dashed border-gold/50 px-4 py-3">
-              <Scissors size={22} className="text-gold" aria-hidden />
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-[#bda980]">{L(lang, 'Tagli effettuati', 'Haircuts done')}</p>
-                <p className="font-display text-3xl leading-tight text-[#f7ecd0]">{totalCount}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3.5 border border-dashed border-gold/50 px-4 py-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-double border-gold font-display text-sm text-gold">{tier[0]}</span>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-[#bda980]">{L(lang, 'Cliente fedele', 'Loyalty level')}</p>
-                <p className="font-display text-2xl leading-tight text-gold">{tier}</p>
-              </div>
-              {toNext > 0 && (
-                <p className="max-w-[130px] text-[11px] leading-snug text-[#bda980]">
-                  {lang === 'en'
-                    ? `${toNext} more ${toNext === 1 ? 'haircut' : 'haircuts'} to reach ${nextTier}`
-                    : `Ancora ${toNext} ${toNext === 1 ? 'taglio' : 'tagli'} per il livello ${nextTier}`}
-                </p>
-              )}
-            </div>
-          </div>
+      {/* Scheda principale: il prossimo appuntamento, oppure l'invito a prenotare */}
+      <section className="app-hero">
+        <div className="app-hero__bg" aria-hidden />
+        <div className="relative z-[1] flex min-h-[200px] flex-col justify-end gap-3 p-6 sm:p-7">
+          {next ? (
+            <>
+              <span className="app-chip">{statusLabel(lang, 'confirmed')}</span>
+              <p className="text-[12px] uppercase tracking-[0.22em] text-[#f0d79f]">{L(lang, 'Il tuo prossimo appuntamento', 'Your next appointment')}</p>
+              <h2 className="max-w-[16ch] text-[28px] font-extrabold leading-[1.08] text-white sm:text-[34px]">
+                {nextService?.name ? displayServiceName(lang, nextService.name) : L(lang, 'Appuntamento', 'Appointment')}
+              </h2>
+              <p className="text-sm text-[#f3e6c8]">
+                {fmtDateTimeShort(lang, parseISO(next.starts_at))}
+                {nextBarber?.name && <> · {L(lang, 'con', 'with')} <strong className="text-gold">{nextBarber.name}</strong></>}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-[12px] uppercase tracking-[0.22em] text-[#f0d79f]">{L(lang, 'Nessun appuntamento in programma', 'No upcoming appointments')}</p>
+              <h2 className="max-w-[14ch] text-[28px] font-extrabold leading-[1.08] text-white sm:text-[34px]">{L(lang, 'È ora del prossimo taglio?', 'Time for your next cut?')}</h2>
+              <Link href={localHref(lang, '/prenota')} className="app-pill self-start">
+                {L(lang, 'Prenota ora', 'Book now')} <ChevronRight size={16} aria-hidden />
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
-      {/* Prossimi appuntamenti: tagliandi */}
+      {/* Numeri in due schede */}
+      <section className="grid grid-cols-2 gap-3">
+        <div className="app-card flex flex-col gap-2 p-4">
+          <span className="app-icon-tile"><Scissors size={18} aria-hidden /></span>
+          <p className="text-[11px] text-[#bda980]">{L(lang, 'Tagli effettuati', 'Haircuts done')}</p>
+          <p className="text-3xl font-extrabold leading-none text-[#f7ecd0]">{totalCount}</p>
+        </div>
+        <div className="app-card flex flex-col gap-2 p-4">
+          <span className="app-icon-tile font-display text-sm">{tier[0]}</span>
+          <p className="text-[11px] text-[#bda980]">{L(lang, 'Cliente fedele', 'Loyalty level')}</p>
+          <p className="text-2xl font-extrabold leading-none text-gold">{tier}</p>
+          <div className="app-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ width: `${progress}%` }} /></div>
+          {toNext > 0 && (
+            <p className="text-[11px] leading-snug text-[#bda980]">
+              {lang === 'en'
+                ? `${toNext} more ${toNext === 1 ? 'haircut' : 'haircuts'} to ${nextTier}`
+                : `Ancora ${toNext} ${toNext === 1 ? 'taglio' : 'tagli'} per ${nextTier}`}
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Sezioni: riquadri con icona piena, come le categorie di un'app */}
       <section>
-        <div className="mb-3.5 flex items-baseline justify-between">
-          <h2 className="font-display text-2xl text-gold">{L(lang, 'Prossimi appuntamenti', 'Upcoming appointments')}</h2>
-          <Link href="/area-cliente/storico" className="flex items-center gap-1 text-[11px] uppercase tracking-[0.25em] text-[#bda980] transition-colors hover:text-gold">
-            {L(lang, 'Vedi tutti', 'View all')} <ChevronRight size={12} />
+        <h2 className="app-title mb-3">{L(lang, 'Il tuo spazio', 'Your space')}</h2>
+        <div className="grid grid-cols-4 gap-2.5">
+          {quick.map(({ href, label, icon: Icon }) => (
+            <Link key={href} href={href} className="app-cat group">
+              <span className="app-icon-tile app-icon-tile--lg"><Icon size={22} aria-hidden /></span>
+              <span className="text-[12px] font-semibold text-[#f3e6c8] group-hover:text-gold">{label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Prossimi appuntamenti: schede che scorrono di lato */}
+      <section>
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 className="app-title">{L(lang, 'Prossimi appuntamenti', 'Upcoming appointments')}</h2>
+          <Link href="/area-cliente/storico" className="flex items-center gap-1 text-[12px] font-semibold text-gold">
+            {L(lang, 'Vedi tutti', 'View all')} <ChevronRight size={14} />
           </Link>
         </div>
 
         {upcoming.length === 0 ? (
-          <div className="border border-dashed border-gold/40 bg-black/25 p-8 text-center">
-            <Clock size={28} className="mx-auto mb-3 text-gold/50" />
-            <p className="text-sm text-[#bda980]">{L(lang, 'Nessun appuntamento in programma.', 'No upcoming appointments.')}</p>
-            <Link
-              href={localHref(lang, '/prenota')}
-              className="mt-4 inline-flex items-center gap-2 bg-gold px-6 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#0a0807] transition-colors hover:bg-gold-light"
-            >
-              {L(lang, 'Prenota ora', 'Book now')}
-            </Link>
+          <div className="app-card flex items-center gap-4 p-5">
+            <span className="app-icon-tile app-icon-tile--soft"><Clock size={20} aria-hidden /></span>
+            <p className="flex-1 text-sm text-[#bda980]">{L(lang, 'Nessun appuntamento in programma.', 'No upcoming appointments.')}</p>
+            <Link href={localHref(lang, '/prenota')} className="app-pill app-pill--sm">{L(lang, 'Prenota', 'Book')}</Link>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="app-scroller">
             {upcoming.map((apt) => {
               const barber = apt.barber as { name: string } | null;
               const service = apt.service as { name: string } | null;
               return (
-                <div key={apt.id} className="flex items-stretch border border-gold/45 bg-black/30 transition-colors hover:border-gold/70">
-                  <DateTear startsAt={apt.starts_at} lang={lang} />
-                  <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-3 border-l-2 border-dashed border-[#0a0807] px-5 py-4">
-                    <div className="min-w-0">
-                      <p className="text-lg font-semibold tracking-wide text-white">{service?.name ? displayServiceName(lang, service.name) : service?.name}</p>
-                      <p className="mt-1 text-sm text-[#bda980]">
-                        {fmtDateTimeShort(lang, parseISO(apt.starts_at))} · {L(lang, 'con', 'with')}{' '}
-                        <span className="font-semibold text-gold">{barber?.name}</span>
-                      </p>
-                    </div>
-                    <span className="shrink-0 border border-gold px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-gold">
-                      {statusLabel(lang, 'confirmed')}
-                    </span>
+                <div key={apt.id} className="app-card app-appt">
+                  <div className="overflow-hidden rounded-2xl"><DateTear startsAt={apt.starts_at} lang={lang} /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-bold text-white">{service?.name ? displayServiceName(lang, service.name) : service?.name}</p>
+                    <p className="mt-1 text-[13px] text-[#bda980]">{fmtDateTimeShort(lang, parseISO(apt.starts_at))}</p>
+                    <p className="mt-2 flex items-center justify-between gap-2 text-[13px]">
+                      <span>{L(lang, 'con', 'with')} <strong className="text-gold">{barber?.name}</strong></span>
+                      <span className="app-chip app-chip--sm">{statusLabel(lang, 'confirmed')}</span>
+                    </p>
                   </div>
                 </div>
               );
             })}
           </div>
         )}
-      </section>
-
-      {/* Accesso rapido sezioni */}
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {quick.map(({ href, label, sub, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="group flex flex-col gap-2.5 border border-gold/35 bg-black/25 p-4 transition-colors hover:border-gold hover:bg-gold/5"
-          >
-            <Icon size={26} className="text-gold" aria-hidden />
-            <span className="text-[13px] font-bold uppercase tracking-[0.16em] text-[#f3e6c8] group-hover:text-gold">{label}</span>
-            <span className="text-[11px] text-[#bda980]">{sub}</span>
-          </Link>
-        ))}
       </section>
 
       {/* Logout */}

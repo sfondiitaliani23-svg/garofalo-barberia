@@ -1,61 +1,208 @@
 /*
- * Aspetto «Insegna» dell'area cliente (nero e oro, angoli squadrati, linee tratteggiate).
+ * Area cliente in stile «app» (02/11/2026): schede arrotondate, riquadri icona pieni d'oro,
+ * scheda principale con foto, schede che scorrono di lato. Palette Garofalo: nero, marrone e oro.
  * Solo grafica: nessuna funzione cambia. Tutto limitato a .cust-skin.
  */
 .cust-skin {
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.016) 0 2px, rgba(0, 0, 0, 0) 2px 118px),
-    #0a0807;
+    radial-gradient(120% 60% at 50% -10%, rgba(205, 154, 79, 0.14), transparent 60%),
+    #0c0907;
   color: #f3e6c8;
 }
 
-/* Riquadri scuri: bordo oro sottile, angoli squadrati */
+/* Schede: marrone scuro, angoli morbidi, bordo leggero */
 .cust-skin :is(.rounded-xl, .rounded-2xl, .rounded-lg).border {
-  border-radius: 0;
-  border-color: rgba(205, 154, 79, 0.4);
-  background-color: rgba(0, 0, 0, 0.32);
-  box-shadow: none;
+  border-radius: 22px;
+  border-color: rgba(205, 154, 79, 0.16);
+  background-color: #17110b;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 .cust-skin :is(.rounded-xl, .rounded-2xl).border-dashed {
   border-style: dashed;
+  border-color: rgba(205, 154, 79, 0.3);
 }
 
-/* Campi e bottoni a riquadro */
+/* Campi: arrotondati, fondo scuro */
 .cust-skin :is(input, select, textarea) {
-  border-radius: 0 !important;
-  border-color: rgba(205, 154, 79, 0.4) !important;
-  background-color: rgba(0, 0, 0, 0.4) !important;
+  border-radius: 14px !important;
+  border-color: rgba(205, 154, 79, 0.28) !important;
+  background-color: #100b07 !important;
 }
 .cust-skin :is(input, select, textarea):focus {
   border-color: #cd9a4f !important;
 }
-.cust-skin button:not(.rounded-full),
-.cust-skin a.rounded-lg,
-.cust-skin button.rounded-md {
-  border-radius: 0;
-}
-.cust-skin .bg-gold {
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+
+/* Pulsanti: a pillola */
+.cust-skin .bg-gold:is(a, button) {
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-/* Titoli dei riquadri in carattere insegna */
+/* Titoli dei riquadri: grassetto pulito, come le schermate di un'app */
 .cust-skin :is(h2, h3).font-display {
-  font-family: var(--font-display), 'Rye', Georgia, serif;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  color: #cd9a4f;
+  font-family: inherit;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #f7ecd0;
 }
 
-/* Linee di separazione tratteggiate */
+/* Linee di separazione leggere */
 .cust-skin .divide-y > :not([hidden]) ~ :not([hidden]) {
-  border-top-style: dashed;
-  border-color: rgba(205, 154, 79, 0.25);
+  border-color: rgba(205, 154, 79, 0.14);
 }
 
-/* Pulsanti e badge a pillola: squadrati come il resto */
-.cust-skin .rounded-full[class*='px-'] {
-  border-radius: 0;
-  letter-spacing: 0.14em;
+/* ── Dashboard ── */
+.app-dash { padding-bottom: 0.5rem; }
+
+.app-avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f0c378, #cd9a4f 55%, #8a5a1c);
+  color: #1a120a;
+  font-weight: 800;
+  font-size: 20px;
+  box-shadow: 0 0 0 3px #0c0907, 0 0 0 4px rgba(205, 154, 79, 0.5);
+}
+
+.app-round-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 999px;
+  background: #17110b;
+  color: #cd9a4f;
+  border: 1px solid rgba(205, 154, 79, 0.25);
+  transition: background-color 0.15s;
+}
+
+.app-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 28px;
+  background: #2a1b0e;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+.app-hero__bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(18, 11, 5, 0.96) 0%, rgba(18, 11, 5, 0.7) 45%, rgba(18, 11, 5, 0.15) 100%),
+    radial-gradient(80% 80% at 90% 0%, rgba(240, 195, 120, 0.35), transparent 60%),
+    url('/assets/sostituisci-immagini/homepage/1.jpg') center / cover no-repeat;
+}
+
+.app-chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(205, 154, 79, 0.18);
+  color: #f0c378;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+.app-chip--sm { padding: 4px 9px; font-size: 10px; }
+
+.app-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: #cd9a4f;
+  color: #140d06;
+  font-size: 14px;
+  font-weight: 800;
+  transition: background-color 0.15s;
+}
+.app-pill--sm { min-height: 38px; padding: 0 16px; font-size: 13px; }
+
+.app-card {
+  border-radius: 22px;
+  background: #17110b;
+  border: 1px solid rgba(205, 154, 79, 0.14);
+}
+
+.app-icon-tile {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #cd9a4f;
+  color: #140d06;
+}
+.app-icon-tile--lg { width: 56px; height: 56px; border-radius: 18px; }
+.app-icon-tile--soft { background: rgba(205, 154, 79, 0.16); color: #cd9a4f; }
+
+.app-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(205, 154, 79, 0.15);
+  overflow: hidden;
+}
+.app-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #8a5a1c, #f0c378);
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #f7ecd0;
+  letter-spacing: -0.01em;
+}
+
+.app-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 4px;
+  border-radius: 20px;
+  background: #17110b;
+  border: 1px solid rgba(205, 154, 79, 0.12);
+  text-align: center;
+}
+
+.app-scroller {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min(86%, 340px);
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 6px;
+  margin-inline: -4px;
+  padding-inline: 4px;
+  scrollbar-width: none;
+}
+.app-scroller::-webkit-scrollbar { display: none; }
+.app-appt {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  padding: 12px;
+  scroll-snap-align: start;
+}
+
+@media (hover: hover) {
+  .app-round-btn:hover { background: #241a10; }
+  .app-pill:hover { background: #e5b565; }
+  .app-cat:hover { border-color: rgba(205, 154, 79, 0.4); }
 }

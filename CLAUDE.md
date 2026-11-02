@@ -68,7 +68,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Dopo l'accesso (`LoginForm.tsx`, `AdminLoginForm.tsx`) usare `window.location.assign`, non `router.push`.
 
 ## Grafica "Insegna" (nero e oro)
-- Cliente: `components/layout/cust-skin.css` (`.cust-skin`). Admin: `admin-insegna.css` (`.adm-skin`, `.adm-side`), caricato dopo `admin-skin.css`. Dashboard: classi `ov-*` in `components/admin/overview/overview.css`; scheda "Oggi" in `AdminOverview.tsx` (`todaySummary` in `lib/utils/dashboard-overview.ts`).
+- Cliente (dal 02/11/2026 in stile app, modello «Video Apps»): `components/layout/cust-skin.css` (`.cust-skin`, classi `app-*`), schede arrotondate, riquadri icona d'oro, dashboard in `app/area-cliente/dashboard/page.tsx`. Admin: `admin-insegna.css` (`.adm-skin`, `.adm-side`), caricato dopo `admin-skin.css`. Dashboard: classi `ov-*` in `components/admin/overview/overview.css`; scheda "Oggi" in `AdminOverview.tsx` (`todaySummary` in `lib/utils/dashboard-overview.ts`).
 - Solo grafica, la logica non si tocca. Oro `#cd9a4f`, titoli in Rye (`font-display`), angoli squadrati, linee tratteggiate.
 - Finestre e portali stanno fuori da `.adm-skin` e vanno stilizzati a parte (le `role="dialog"` hanno sfondo pieno in `admin-insegna.css`).
 
