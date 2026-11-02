@@ -26,6 +26,9 @@ import {
   BellRing,
   Lightbulb,
   CircleDashed,
+  Home,
+  BarChart3,
+  MoreHorizontal,
   BookUser,
 } from 'lucide-react';
 
@@ -84,10 +87,10 @@ export function AdminSidebar({ areaLabel = 'Admin' }: { areaLabel?: string }) {
 
   // 4 link principali visibili nella barra inferiore mobile
   const mobileNavItems = [
-    { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/admin/prenotazioni', label: 'Prenota', icon: Calendar },
+    { href: '/admin/dashboard', label: 'Oggi', icon: Home },
+    { href: '/admin/prenotazioni', label: 'Agenda', icon: Calendar },
     { href: '/admin/clienti', label: 'Clienti', icon: Users },
-    { href: '/admin/staff', label: 'Staff', icon: UserCog },
+    { href: '/admin/analytics', label: 'Numeri', icon: BarChart3 },
   ];
 
   return (
@@ -160,12 +163,12 @@ export function AdminSidebar({ areaLabel = 'Admin' }: { areaLabel?: string }) {
               prefetch={true}
               onClick={closeMenu}
               className={cn(
-                'flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors',
-                isActive ? 'text-gold' : 'text-white/60 hover:text-white/70'
+                'adm-tab flex flex-col items-center justify-center gap-1 flex-1 py-2.5 text-[11px] font-semibold transition-colors',
+                isActive ? 'text-gold is-active' : 'text-[#bda980]'
               )}
             >
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
-              <span className="leading-none mt-0.5">{label}</span>
+              <Icon size={22} strokeWidth={isActive ? 2.4 : 1.9} />
+              <span className="leading-none">{label}</span>
             </Link>
           );
         })}
@@ -174,12 +177,13 @@ export function AdminSidebar({ areaLabel = 'Admin' }: { areaLabel?: string }) {
           type="button"
           onClick={toggleMenu}
           className={cn(
-            'flex flex-col items-center justify-center gap-0.5 flex-1 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-colors',
-            menuOpen ? 'text-gold' : 'text-white/60 hover:text-white/70'
+            'adm-tab flex flex-col items-center justify-center gap-1 flex-1 py-2.5 text-[11px] font-semibold transition-colors',
+            menuOpen ? 'text-gold is-active' : 'text-[#bda980]'
           )}
+          aria-expanded={menuOpen}
         >
-          {menuOpen ? <X size={20} strokeWidth={2.5} /> : <Menu size={20} strokeWidth={1.75} />}
-          <span className="leading-none mt-0.5">Menu</span>
+          {menuOpen ? <X size={22} strokeWidth={2.4} /> : <MoreHorizontal size={22} strokeWidth={1.9} />}
+          <span className="leading-none">Altro</span>
         </button>
       </nav>
 
@@ -189,13 +193,13 @@ export function AdminSidebar({ areaLabel = 'Admin' }: { areaLabel?: string }) {
         // Il body è bloccato (useEffect sopra), quindi nessuna scrollbar appare.
         // Il contenuto interno scorre separatamente tramite inner-scroll con scrollbar nascosta.
         <div
-          className="fixed inset-0 z-[210] bg-black/95 backdrop-blur-md flex flex-col lg:hidden"
+          className="adm-altro fixed inset-0 z-[210] bg-[#0c0907] flex flex-col lg:hidden"
           style={{ overflow: 'hidden' }}
         >
           {/* Header Overlay */}
           <div className="flex-shrink-0 flex items-center justify-between border-b border-white/10 px-6 py-4">
-            <span className="font-display text-sm uppercase tracking-wider text-gold">
-              Menu Amministratore
+            <span className="text-2xl font-extrabold tracking-tight text-[#f7ecd0]">
+              Altro
             </span>
             <button
               type="button"
@@ -231,11 +235,11 @@ export function AdminSidebar({ areaLabel = 'Admin' }: { areaLabel?: string }) {
                     prefetch={true}
                     onClick={closeMenu}
                     className={cn(
-                      'flex items-center gap-3.5 px-4 py-3 text-sm font-semibold uppercase tracking-[0.12em] transition',
-                      isActive ? 'bg-gold text-[#0a0807]' : 'text-[#bda980] hover:bg-gold/10 hover:text-gold'
+                      'flex min-h-12 items-center gap-3.5 rounded-2xl px-4 py-3 text-[15px] font-semibold transition',
+                      isActive ? 'bg-gold text-[#0a0807]' : 'bg-[#17110b] text-[#f3e6c8] hover:bg-[#1d150d]'
                     )}
                   >
-                    <Icon size={20} className={isActive ? 'text-[#0a0807]' : 'text-gold/70'} />
+                    <Icon size={20} className={isActive ? 'text-[#0a0807]' : 'text-gold'} />
                     {label}
                   </Link>
                 );

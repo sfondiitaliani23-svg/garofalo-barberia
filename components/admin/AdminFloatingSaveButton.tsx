@@ -12,14 +12,14 @@ export function AdminFloatingSaveButton() {
 
   return (
     <>
-      <div className="pointer-events-none fixed bottom-[4.5rem] right-4 z-40 flex items-center gap-2 lg:bottom-6 lg:right-6 lg:gap-3">
+      <div className="adm-fab-wrap pointer-events-none fixed bottom-[4.5rem] right-4 z-40 flex items-center gap-2 lg:bottom-6 lg:right-6 lg:gap-3">
         {/* Bottone Prenotazione Istantanea */}
         <button
           type="button"
           onClick={() => setModalOpen(true)}
           title="Prenotazione istantanea"
           aria-label="Prenotazione istantanea"
-          className="group pointer-events-auto inline-flex h-10 items-center bg-gold px-2.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[#0a0807] shadow-lg shadow-black/60 transition hover:bg-gold-light focus-visible:bg-gold-light"
+          className="adm-fab group pointer-events-auto inline-flex h-10 items-center bg-gold px-2.5 text-[11px] font-bold uppercase tracking-[0.16em] text-[#0a0807] shadow-lg shadow-black/60 transition hover:bg-gold-light focus-visible:bg-gold-light"
         >
           <Plus size={20} />
           {/* Etichetta: compare solo al passaggio del mouse o con la tastiera, per non coprire i contenuti */}

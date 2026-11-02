@@ -313,7 +313,7 @@ export function AdminInstantBookingModal({ isOpen, onClose }: AdminInstantBookin
         role="dialog"
         aria-modal="true"
         aria-label="Prenotazione istantanea"
-        className="flex max-h-[94vh] w-full max-w-lg cursor-default flex-col overflow-hidden border border-gold/50 bg-[#0c0a08] shadow-2xl sm:max-h-[90vh]"
+        className="adm-sheet flex max-h-[94vh] w-full max-w-lg cursor-default flex-col overflow-hidden border border-gold/50 bg-[#0c0a08] shadow-2xl sm:max-h-[90vh]"
       >
         {/* Testata */}
         <div className="flex items-start justify-between gap-4 border-b border-gold/25 px-5 py-4">

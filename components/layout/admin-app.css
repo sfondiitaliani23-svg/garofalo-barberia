@@ -165,3 +165,85 @@
     overflow: hidden;
   }
 }
+
+/* ───────── Admin come app (telefono), dal 02/11/2026 ───────── */
+@media (max-width: 1023px) {
+  /* Barra: voci con etichetta corta, attiva in oro con un punto sotto */
+  html nav.adm-tabbar { height: 72px; }
+  html nav.adm-tabbar .adm-tab { position: relative; -webkit-tap-highlight-color: transparent; transition: transform .12s ease, color .15s ease; }
+  html nav.adm-tabbar .adm-tab:active { transform: scale(.92); }
+  html nav.adm-tabbar .adm-tab.is-active::after { content: ''; position: absolute; bottom: 7px; width: 5px; height: 5px; border-radius: 9px; background: #cd9a4f; }
+
+  /* Pulsante + : quadrato morbido d'oro sopra la barra, raggiungibile col pollice */
+  html .adm-fab-wrap { bottom: calc(6.4rem + env(safe-area-inset-bottom, 0px)); right: 18px; }
+  html .adm-fab { width: 60px; height: 60px; justify-content: center; padding: 0; border-radius: 22px; box-shadow: 0 14px 30px rgba(205, 154, 79, 0.35); transition: transform .12s ease; }
+  html .adm-fab:active { transform: scale(.92); }
+  html .adm-fab svg { width: 26px; height: 26px; }
+
+  /* Nuova prenotazione: foglio che sale dal basso */
+  html .adm-sheet {
+    border: 0;
+    border-radius: 30px 30px 0 0;
+    background: #17110b;
+    box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.6);
+    padding-top: 14px;
+    position: relative;
+    animation: adm-sheet-in .32s cubic-bezier(.22, 1, .36, 1);
+  }
+  html .adm-sheet::before { content: ''; position: absolute; top: 8px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 9px; background: rgba(247, 236, 208, 0.25); }
+  html .adm-sheet h2 { font-family: inherit !important; text-transform: none !important; letter-spacing: -0.01em !important; font-weight: 800 !important; color: #f7ecd0 !important; font-size: 1.35rem !important; }
+  html .adm-sheet :is(button, a).bg-gold { border-radius: 999px; }
+
+  /* Menu «Altro» a schermo intero, voci a scheda */
+  html .adm-altro nav { display: grid; gap: 8px; }
+  html .adm-altro nav > * { margin: 0 !important; }
+
+  /* Sulla dashboard il saluto vecchio non serve: c'è «Oggi» */
+  html .adm-skin .ov-quick { display: none; }
+}
+@keyframes adm-sheet-in { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
+
+/* ── Schermata «Oggi» ── */
+.app-today { margin: -0.25rem 0 1.75rem; color: #f7ecd0; }
+.app-today-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; }
+.app-today-date { margin: 0; font-size: 13px; font-weight: 600; color: #bda980; }
+.app-today-title { margin: 0 !important; font-family: inherit !important; font-size: 34px !important; font-weight: 800 !important; letter-spacing: -0.02em !important; color: #f7ecd0 !important; line-height: 1.1; }
+.app-icon-btn { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: #1d150d; color: #f7ecd0; }
+.app-avatar-btn { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: linear-gradient(135deg, #f0c378, #cd9a4f 55%, #8a5a1c); color: #140d06; font-weight: 800; font-size: 15px; }
+
+.app-week { display: flex; gap: 8px; margin: 16px -16px 0; padding: 0 16px 4px; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+.app-week::-webkit-scrollbar { display: none; }
+.app-day { flex: none; width: 50px; height: 66px; border-radius: 16px; background: #17110b; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; scroll-snap-align: start; transition: transform .12s ease; }
+.app-day:active { transform: scale(.94); }
+.app-day.is-today { background: #cd9a4f; color: #140d06; }
+.app-day-dow { font-size: 11px; font-weight: 700; color: #bda980; }
+.app-day.is-today .app-day-dow { color: #140d06; }
+.app-day-num { font-size: 19px; font-weight: 800; }
+
+.app-next { position: relative; overflow: hidden; isolation: isolate; margin-top: 16px; border-radius: 28px; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(140deg, #3a2612, #1d140b 60%); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5); }
+.app-next-glow { position: absolute; z-index: -1; right: -40px; top: -40px; width: 170px; height: 170px; border-radius: 999px; background: rgba(240, 195, 120, 0.16); }
+.app-next-when { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #f0c378; }
+.app-next-ok { font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 99px; background: rgba(91, 181, 122, 0.18); color: #7fd39c; }
+.app-next-title { margin: 0 !important; font-family: inherit !important; font-size: 26px !important; font-weight: 800 !important; letter-spacing: -0.02em !important; color: #f7ecd0 !important; line-height: 1.15; }
+.app-next-sub { margin: 0; font-size: 14px; color: #e8dcc2; }
+.app-next-sub b { color: #f0c378; }
+.app-next-main { flex: 1; min-height: 46px; border-radius: 999px; background: #cd9a4f; color: #140d06; font-weight: 800; font-size: 15px; transition: transform .12s ease; }
+.app-next-main:active, .app-next-round:active { transform: scale(.95); }
+.app-next-round { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #f7ecd0; }
+
+.app-today-sec { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 10px; }
+.app-today-sec h2 { margin: 0 !important; font-family: inherit !important; font-size: 19px !important; font-weight: 800 !important; color: #f7ecd0 !important; letter-spacing: -0.01em !important; }
+.app-today-sec a { font-size: 13px; font-weight: 700; color: #cd9a4f; }
+
+.app-list { list-style: none; margin: 0; padding: 0; border-radius: 22px; background: #17110b; overflow: hidden; }
+.app-row { position: relative; overflow: hidden; }
+.app-row + .app-row { border-top: 1px solid rgba(205, 154, 79, 0.1); }
+.app-row-actions { position: absolute; inset: 0 0 0 auto; display: flex; }
+.app-row-act { width: 66px; font-size: 12px; font-weight: 800; color: #fff; }
+.app-row-act--ok { background: #2f8a4f; }
+.app-row-act--ko { background: #b3463f; }
+.app-row-main { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: #17110b; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.app-row-time { width: 46px; flex: none; font-size: 14px; font-weight: 800; color: #f7ecd0; font-variant-numeric: tabular-nums; }
+.app-row-bar { width: 4px; height: 36px; flex: none; border-radius: 9px; background: #cd9a4f; }
+.app-row-bar.is-done { background: #5bb57a; }
+.app-hint { margin: 8px 2px 0; font-size: 12px; color: #bda980; }
