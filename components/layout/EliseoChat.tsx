@@ -288,9 +288,8 @@ export function EliseoChat() {
         <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[#111] to-[#0e0e0e] border-b border-gold/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] flex items-center justify-center shadow-[0_0_14px_rgba(205,154,79,0.45)]">
-                <Scissors size={16} className="text-black" />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/eliseo-avatar.svg" alt="" width={36} height={36} className="w-9 h-9 rounded-full shadow-[0_0_14px_rgba(205,154,79,0.45)]" />
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#111]" />
             </div>
             <div>
@@ -314,9 +313,8 @@ export function EliseoChat() {
             <div key={msg.id}>
             <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] flex items-center justify-center shrink-0 mr-2 mt-0.5">
-                  <Scissors size={10} className="text-black" />
-                </div>
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src="/assets/eliseo-avatar.svg" alt="" width={24} height={24} className="w-6 h-6 rounded-full shrink-0 mr-2 mt-0.5" />
               )}
               <div
                 className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
@@ -339,9 +337,8 @@ export function EliseoChat() {
           {/* Typing indicator */}
           {loading && (
             <div className="flex justify-start items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#cd9a4f] to-[#8f6520] flex items-center justify-center shrink-0">
-                <Scissors size={10} className="text-black" />
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/eliseo-avatar.svg" alt="" width={24} height={24} className="w-6 h-6 rounded-full shrink-0" />
               <div className="bg-[#161616] border border-white/5 rounded-2xl rounded-bl-sm px-4 py-3">
                 <div className="flex gap-1 items-center">
                   {[0, 150, 300].map(delay => (
