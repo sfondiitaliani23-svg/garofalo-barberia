@@ -385,12 +385,24 @@ html[data-look='gold'] header button {
   color: #1a140c !important;
 }
 
-/* Pannelli che restavano neri mentre il testo era già diventato scuro. */
+/* Pannello della prenotazione in oro: marrone scuro come le altre schede (02/11/2026).
+   Dentro torna la tavolozza scura del sito, con l'oro della versione oro. */
 html[data-look='gold'] .booking-sheet {
-  background: #fff8e6 !important;
+  --color-black: #000;
+  --color-white: #fff;
+  --color-gold: #e4c36a;
+  --color-gold-light: #f0d68e;
+  --color-gold-dark: #b8933f;
+  --gold: #e4c36a;
+  --gold-light: #f0d68e;
+  --gold-dark: #b8933f;
+  --black: #1a140c;
+  --white: #fff4d6;
+  --muted: rgba(255, 244, 214, 0.66);
+  background: #1a140c !important;
   background-image: none !important;
-  color: #1a140c;
-  border-color: rgba(26, 20, 12, 0.22) !important;
+  color: #fff4d6;
+  border-color: rgba(228, 195, 106, 0.35) !important;
 }
 
 /* Schede di Contatti (messaggio, Instagram) in oro: marrone scuro come i pulsanti;
@@ -553,12 +565,13 @@ html[data-look='gold'] .public-page .ct-col:nth-child(n + 3) {
   border-top-color: rgba(26, 20, 12, 0.14);
 }
 
-/* Campi e riquadri della prenotazione che restavano neri, con la scritta già scura. */
+/* Campi e riquadri dentro la prenotazione: marrone più chiaro, come i pulsanti delle schede. */
 html[data-look='gold'] .booking-sheet .bg-\[\#1a1a1a\],
-html[data-look='gold'] .booking-sheet .bg-\[\#120e0a\] {
-  background-color: #fff;
-  color: #1a140c;
-  border-color: rgba(26, 20, 12, 0.28);
+html[data-look='gold'] .booking-sheet .bg-\[\#120e0a\],
+html[data-look='gold'] .booking-sheet .bg-\[\#1a1410\] {
+  background-color: #3d2e18;
+  color: #fff4d6;
+  border-color: rgba(228, 195, 106, 0.3);
 }
 
 html[data-look='gold'] .booking-sheet .bg-\[\#f3e6c8\] {
