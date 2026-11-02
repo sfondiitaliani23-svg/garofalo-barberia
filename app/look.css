@@ -539,9 +539,34 @@ html[data-look='gold'] .public-page .qr-code-wrap svg {
   filter: brightness(0);
 }
 
+/* Piè di pagina in oro: da «Servizi» fino in fondo sfuma verso il marrone (02/11/2026). */
 html[data-look='gold'] .site-footer {
   border-top-color: rgba(26, 20, 12, 0.16);
   color: rgba(26, 20, 12, 0.82);
+  background: linear-gradient(to bottom, #e4c36a 0%, #d2ad57 40%, #b78f43 75%, #a27a36 100%) !important;
+}
+
+/* Nell'app la sfumatura continua anche sotto, dietro la barra in basso: niente bordo netto. */
+html.is-app[data-look='gold'] body:has(.app-tabbar) .site-footer {
+  margin-bottom: calc(-210px - env(safe-area-inset-bottom));
+  padding-bottom: calc(3rem + 210px + env(safe-area-inset-bottom));
+}
+
+/* Fascia della barra in basso: velo oro sfocato invece del pieno, così sopra il fondo marrone non fa un gradino. */
+html.is-app[data-look='gold'] .app-tabbar {
+  background: transparent;
+}
+
+html.is-app[data-look='gold'] .app-tabbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  -webkit-mask-image: linear-gradient(to top, #000 65%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 65%, transparent 100%);
+  pointer-events: none;
 }
 
 html[data-look='gold'] .site-footer .footer-heading,
