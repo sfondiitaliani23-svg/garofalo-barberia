@@ -630,3 +630,38 @@ html[data-look='gold'] .of-empty {
     border-color: #1a140c;
   }
 }
+
+/* Team (Chi siamo) in oro: la foto sta in una scheda marrone come le recensioni,
+   così il fondo nero della foto non fa più un gradino sull'oro (02/11/2026). */
+html[data-look='gold'] .page-chi-siamo .team-studio-photo-wrap {
+  padding: 0;
+  border-radius: 14px;
+  border: 1px solid rgba(228, 195, 106, 0.35);
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 22%, rgba(205, 154, 79, 0.38), transparent 70%),
+    linear-gradient(#2a2013, #0b0906 70%);
+  box-shadow: 0 10px 26px rgba(80, 50, 10, 0.25);
+}
+
+html[data-look='gold'] .page-chi-siamo .team-studio-photo-bg {
+  display: none;
+}
+
+/* Al tocco: un alone oro dietro la persona, al posto del gradiente. */
+html[data-look='gold'] .page-chi-siamo .team-studio-photo-wrap::before {
+  top: 0;
+  height: 100%;
+  background: radial-gradient(ellipse 75% 55% at 50% 35%, rgba(228, 195, 106, 0.4), transparent 72%);
+}
+
+/* Pagine del team: stesso fondo marrone dietro le foto. */
+html[data-look='gold'] .tm-photo,
+html[data-look='gold'] .tm-hero-photo {
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 22%, rgba(205, 154, 79, 0.38), transparent 70%),
+    linear-gradient(#2a2013, #0b0906 70%);
+}
+
+html[data-look='gold'] .tm-hero-photo {
+  border-color: rgba(228, 195, 106, 0.35);
+}
