@@ -58,10 +58,22 @@ html[data-look='gold'] .newsletter-logo {
   filter: brightness(0);
 }
 
+/* Campo email in oro: marrone poco più chiaro del pulsante «Invia», per staccarlo (02/11/2026). */
 html[data-look='gold'] .newsletter-input {
-  background: #fff8e8;
-  color: #1a140c;
-  border-color: rgba(26, 20, 12, 0.28);
+  background: #3d2e18;
+  color: #fff4d6;
+  border-color: rgba(228, 195, 106, 0.35);
+  caret-color: #e4c36a;
+}
+
+html[data-look='gold'] .newsletter-input:focus {
+  border-color: #e4c36a;
+}
+
+/* Email suggerita dal telefono: niente riquadro chiaro del browser. */
+html[data-look='gold'] .newsletter-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 40px #3d2e18 inset;
+  -webkit-text-fill-color: #fff4d6;
 }
 
 /* Recensioni in oro: schede marrone scuro come il pulsante «Tutte le recensioni» (02/11/2026). */
@@ -95,7 +107,7 @@ html[data-look='gold'] .review-card-lux:hover {
 }
 
 html[data-look='gold'] .newsletter-input::placeholder {
-  color: rgba(26, 20, 12, 0.45);
+  color: rgba(255, 244, 214, 0.6);
 }
 
 html[data-look='gold'] .home-ticker-wrapper {
