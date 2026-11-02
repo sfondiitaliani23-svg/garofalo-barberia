@@ -64,29 +64,33 @@ html[data-look='gold'] .newsletter-input {
   border-color: rgba(26, 20, 12, 0.28);
 }
 
+/* Recensioni in oro: schede marrone scuro come il pulsante «Tutte le recensioni» (02/11/2026). */
 html[data-look='gold'] .review-card-lux {
-  background: #fff8e6;
-  border: 1px solid rgba(26, 20, 12, 0.16);
+  background: #1a140c;
+  border: 1px solid rgba(228, 195, 106, 0.28);
   border-radius: 14px;
-  box-shadow: 0 8px 22px rgba(80, 50, 10, 0.08);
+  box-shadow: 0 8px 22px rgba(80, 50, 10, 0.18);
 }
 
 html[data-look='gold'] .review-stars,
+html[data-look='gold'] .review-card-lux:hover .review-stars {
+  color: #e4c36a;
+}
+
 html[data-look='gold'] .review-text,
-html[data-look='gold'] .review-card-lux:hover .review-stars,
 html[data-look='gold'] .review-card-lux:hover .review-text {
-  color: #1a140c;
+  color: rgba(255, 244, 214, 0.92);
 }
 
 html[data-look='gold'] .review-author,
 html[data-look='gold'] .review-card-lux:hover .review-author {
-  color: rgba(26, 20, 12, 0.62);
+  color: rgba(228, 195, 106, 0.8);
 }
 
 html[data-look='gold'] .review-card-lux:hover {
-  background: #fff8e6;
-  border-color: rgba(26, 20, 12, 0.28);
-  box-shadow: 0 10px 24px rgba(80, 50, 10, 0.12);
+  background: #1a140c;
+  border-color: rgba(228, 195, 106, 0.55);
+  box-shadow: 0 10px 24px rgba(80, 50, 10, 0.24);
   transform: none;
 }
 
