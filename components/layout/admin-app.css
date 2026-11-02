@@ -1,0 +1,167 @@
+/*
+ * Area admin in stile «app» (02/11/2026, modello «Video Apps»), sopra l'aspetto Insegna.
+ * Schede marroni arrotondate, riquadri icona pieni d'oro, pulsanti a pillola, titoli in grassetto pulito,
+ * saluto in una grande scheda con il legno. Solo grafica: nessuna funzione cambia.
+ */
+@media screen {
+  html .adm-skin {
+    background:
+      radial-gradient(110% 50% at 50% -10%, rgba(205, 154, 79, 0.14), transparent 60%),
+      #0c0907;
+  }
+
+  /* Angoli morbidi ovunque (al posto dei riquadri squadrati) */
+  html .adm-skin :is(.rounded-md, .rounded-lg) { border-radius: 14px; }
+  html .adm-skin :is(.rounded-xl, .rounded-2xl, .rounded-3xl) { border-radius: 22px; }
+  html .adm-skin .rounded-full[class*='px-'],
+  html .adm-skin :is(button, a).rounded-full:not([role='switch']) { border-radius: 999px; }
+  html .adm-skin :is(button, a):is(.rounded-lg, .rounded-md, .rounded-xl) { border-radius: 999px; }
+
+  /* Schede: marrone scuro pieno, bordo leggero, ombra morbida */
+  html .adm-skin :is(.rounded-xl, .rounded-2xl, .rounded-lg).border,
+  html .adm-skin :is(.bg-\[\#111\], .bg-\[\#0e0e0e\], .bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-\[\#0a0a0a\], .bg-black\/45, .bg-\[\#0e0e0e\]\/90).border {
+    border-radius: 22px;
+    background: #17110b;
+    border-color: rgba(205, 154, 79, 0.14);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  }
+  html .adm-skin [role='dialog'][aria-modal='true'].border { border-radius: 24px; background: #120d08; }
+
+  /* Titoli: grassetto pulito come le schermate dell'app */
+  html .adm-skin h1 {
+    font-family: inherit !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+    color: #f7ecd0;
+  }
+  html .adm-skin :is(h2, h3):not(table *),
+  html .adm-skin :is(h2, h3).font-display,
+  html .adm-skin .ov-h2 {
+    font-family: inherit;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #f7ecd0;
+  }
+
+  /* Campi e linguette arrotondati */
+  html .adm-skin :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']) {
+    border-radius: 14px;
+    border-color: rgba(205, 154, 79, 0.25);
+    background-color: #100b07;
+  }
+  html .adm-skin [role='tab'] { border-radius: 999px; }
+  html .adm-skin .bg-gold:is(a, button) { border-radius: 999px; font-weight: 700; }
+
+  /* Tabelle: intestazione marrone con testo oro, righe leggere */
+  html .adm-skin table thead tr { background: #241a10; }
+  html .adm-skin table thead th, html .adm-skin table thead th * { color: #e5b565 !important; }
+  html .adm-skin table thead th:first-child { border-radius: 12px 0 0 12px; }
+  html .adm-skin table thead th:last-child { border-radius: 0 12px 12px 0; }
+  html .adm-skin table tbody tr { border-bottom-style: solid; border-color: rgba(205, 154, 79, 0.1); }
+  html .adm-skin .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-style: solid; border-color: rgba(205, 154, 79, 0.1); }
+
+  /* Menu laterale: voce attiva a pillola piena d'oro */
+  html .adm-side { background: #120d08; border-right: 1px solid rgba(205, 154, 79, 0.12); }
+  html .adm-side .adm-link { border-radius: 999px; }
+  html .adm-side .adm-link.is-active { border-radius: 999px; box-shadow: 0 8px 20px rgba(205, 154, 79, 0.25); }
+  html .adm-side .adm-promo { border-radius: 22px; }
+  html .adm-side .adm-promo-btn { border-radius: 999px; }
+
+  /* ── Dashboard ── */
+  html .adm-skin .ov-card {
+    border-radius: 24px;
+    border: 1px solid rgba(205, 154, 79, 0.14);
+    background: #17110b;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  }
+  html .adm-skin .ov-card::before { display: none; }
+  html .adm-skin .ov-kpi:hover { border-color: rgba(205, 154, 79, 0.45); transform: translateY(-2px); }
+  html .adm-skin .ov-kpi-icon {
+    border-radius: 14px;
+    background: #cd9a4f;
+    color: #140d06;
+    border: 0;
+  }
+  html .adm-skin .ov-kpi-icon svg { color: #140d06; }
+  html .adm-skin .ov-link { text-transform: none; letter-spacing: 0; font-size: 0.8rem; font-weight: 700; }
+  html .adm-skin :is(.ov-search, .ov-range-btn, .ov-pin-bar, .ov-meter, .ov-badge, .ov-badge--ok, .ov-progress) { border-radius: 999px; }
+  html .adm-skin :is(.ov-live-grid, .ov-live) > * { border-radius: 22px; }
+
+  /* Saluto: grande scheda con il legno, come la scheda principale di un'app */
+  html .adm-skin .ov-quick-row {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 150px;
+    align-items: flex-end;
+    padding: 1.4rem 1.4rem 1.2rem;
+    border-radius: 28px;
+    background:
+      linear-gradient(to top, rgba(18, 11, 5, 0.95) 0%, rgba(18, 11, 5, 0.6) 55%, rgba(18, 11, 5, 0.2) 100%),
+      radial-gradient(70% 90% at 95% 0%, rgba(240, 195, 120, 0.35), transparent 60%),
+      url('/assets/sostituisci-immagini/homepage/1.jpg') center / cover no-repeat;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    margin-bottom: 1rem;
+  }
+  html .adm-skin .ov-quick-hello {
+    font-family: inherit;
+    font-size: 1.05rem;
+    color: #f0d79f;
+  }
+  html .adm-skin .ov-quick-hello strong { display: block; font-size: 1.9rem; font-weight: 800; line-height: 1.1; color: #fff; letter-spacing: -0.02em; }
+  html .adm-skin .ov-quick-hello span { color: #e8dcc2; }
+  html .adm-skin .ov-home-link {
+    border: 0;
+    border-radius: 999px;
+    background: #cd9a4f;
+    color: #140d06;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    font-size: 0.85rem;
+    padding: 0 1.1rem;
+  }
+
+  /* Azioni rapide: riquadri da app, icona in un quadrato d'oro sopra il testo */
+  html .adm-skin .ov-quick-btn {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 0.65rem;
+    min-height: 6.2rem;
+    padding: 0.95rem;
+    border-radius: 22px;
+    border: 1px solid rgba(205, 154, 79, 0.14);
+    background: #17110b;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  html .adm-skin .ov-quick-btn svg {
+    box-sizing: content-box;
+    width: 20px;
+    height: 20px;
+    padding: 10px;
+    border-radius: 14px;
+    background: #cd9a4f;
+    color: #140d06;
+  }
+  html .adm-skin .ov-quick-btn:hover,
+  html .adm-skin .ov-quick-btn:focus-visible { border-style: solid; border-color: rgba(205, 154, 79, 0.5); background: #1d150d; }
+  html .adm-skin .ov-quick-badge { position: absolute; top: 0.8rem; right: 0.8rem; border-radius: 999px; }
+}
+
+/* Barra in basso sul telefono: pillola marrone che galleggia, come la barra di un'app */
+@media (max-width: 1023px) {
+  html nav.adm-tabbar {
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    border: 1px solid rgba(205, 154, 79, 0.2);
+    border-radius: 26px;
+    background: #17110b;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+    padding-bottom: 0;
+    overflow: hidden;
+  }
+}

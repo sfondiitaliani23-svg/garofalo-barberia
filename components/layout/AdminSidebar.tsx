@@ -150,7 +150,7 @@ export function AdminSidebar({ areaLabel = 'Admin' }: { areaLabel?: string }) {
       </aside>
 
       {/* ── 2. BARRA DI NAVIGAZIONE INFERIORE MOBILE (< lg) ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[190] lg:hidden bg-[#0c0a08] border-t border-gold/35 flex items-stretch justify-around safe-b h-16">
+      <nav className="adm-tabbar fixed bottom-0 left-0 right-0 z-[190] lg:hidden bg-[#0c0a08] border-t border-gold/35 flex items-stretch justify-around safe-b h-16">
         {mobileNavItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname.startsWith(`${href}/`);
           return (

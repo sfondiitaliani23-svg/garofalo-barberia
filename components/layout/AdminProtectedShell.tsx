@@ -7,6 +7,7 @@ import { AdminSaveProvider } from '@/components/admin/AdminSaveContext';
 import { AutoRefreshOnUpdate } from '@/components/layout/AutoRefreshOnUpdate';
 import './admin-skin.css';
 import './admin-insegna.css';
+import './admin-app.css';
 
 /** Etichetta della sezione mostrata sopra il titolo di ogni pagina (come "Dashboard" nella dashboard). */
 const SECTIONS: [string, string][] = [
