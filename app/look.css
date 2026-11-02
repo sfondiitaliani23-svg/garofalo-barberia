@@ -32,9 +32,18 @@ html[data-look='gold'] .hero-section {
   color: #1a140c;
 }
 
+/* Il legno sfuma nell'oro in alto e in basso: nessun bordo netto (02/11/2026). */
 html[data-look='gold'] .hero-section::before {
-  background: linear-gradient(rgba(228, 195, 106, 0.18), rgba(228, 195, 106, 0.18)),
-    linear-gradient(transparent 60%, rgba(150, 108, 42, 0.35));
+  background:
+    linear-gradient(
+      to bottom,
+      #e4c36a 0%,
+      rgba(228, 195, 106, 0.55) 7%,
+      rgba(228, 195, 106, 0.22) 18%,
+      rgba(228, 195, 106, 0.22) 62%,
+      rgba(228, 195, 106, 0.6) 84%,
+      #e4c36a 100%
+    );
 }
 
 html[data-look='gold'] .hero-section .hero-heading,
