@@ -149,7 +149,7 @@ html[data-look='gold'] .site-drawer img {
 }
 
 html.is-app[data-look='gold'] .app-tabbar {
-  --dock-bg: #fff6dd;
+  --dock-bg: #1a140c;
   --dock-dark: rgba(80, 50, 8, 0.22);
   --dock-light: rgba(255, 255, 255, 0.35);
   --dock-glow: rgba(26, 20, 12, 0.28);
@@ -157,21 +157,21 @@ html.is-app[data-look='gold'] .app-tabbar {
 }
 
 html.is-app[data-look='gold'] .app-dock {
-  border: 1px solid rgba(26, 20, 12, 0.28);
+  border: 1px solid rgba(228, 195, 106, 0.35);
   box-shadow: 0 6px 16px rgba(80, 50, 8, 0.16);
 }
 
 html[data-look='gold'] .app-tab {
-  color: #1a140c;
-  background: #fff6dd;
+  color: #e4c36a;
+  background: #1a140c;
   box-shadow: none;
 }
 
 html[data-look='gold'] .app-tab.is-active,
 html[data-look='gold'] .app-tab:active {
   color: #e4c36a;
-  background: #1a140c;
-  box-shadow: none;
+  background: #3d2e18;
+  box-shadow: inset 0 0 0 1px rgba(228, 195, 106, 0.45);
 }
 
 html[data-look='gold'] .app-tab.is-active .app-tab-icon {
@@ -386,17 +386,45 @@ html[data-look='gold'] header button {
 }
 
 /* Pannelli che restavano neri mentre il testo era già diventato scuro. */
-html[data-look='gold'] .booking-sheet,
-html[data-look='gold'] .public-page .form-card {
+html[data-look='gold'] .booking-sheet {
   background: #fff8e6 !important;
   background-image: none !important;
   color: #1a140c;
   border-color: rgba(26, 20, 12, 0.22) !important;
 }
 
+/* Schede di Contatti (messaggio, Instagram) in oro: marrone scuro come i pulsanti;
+   i pulsanti dentro diventano marrone più chiaro (02/11/2026). */
+html[data-look='gold'] .public-page .form-card {
+  background: #1a140c !important;
+  background-image: none !important;
+  color: #fff4d6;
+  border-color: rgba(228, 195, 106, 0.32) !important;
+}
+
 html[data-look='gold'] .public-page .form-card-header,
 html[data-look='gold'] .public-page .form-card .border-t {
-  border-color: rgba(26, 20, 12, 0.14);
+  border-color: rgba(228, 195, 106, 0.2);
+}
+
+html[data-look='gold'] .public-page .form-card label,
+html[data-look='gold'] .public-page .form-card-header p {
+  color: rgba(255, 244, 214, 0.85);
+}
+
+html[data-look='gold'] .public-page .form-card .btn-primary,
+html[data-look='gold'] .public-page .ct-info-grid .ct-btn-solid {
+  background: #3d2e18;
+  color: #e4c36a;
+  border: 1px solid rgba(228, 195, 106, 0.4);
+}
+
+html[data-look='gold'] .public-page .form-card .eyebrow-text {
+  color: rgba(255, 244, 214, 0.85);
+}
+
+html[data-look='gold'] .public-page .form-card .eyebrow-line {
+  background: #e4c36a;
 }
 
 html[data-look='gold'] .public-page .form-card {
@@ -419,9 +447,15 @@ html[data-look='gold'] .public-page .form-input:focus {
   outline-color: #7a5a1e;
 }
 
-html[data-look='gold'] .public-page .form-card .heading-display,
+html[data-look='gold'] .public-page .form-card .heading-display {
+  color: #e4c36a;
+}
+
 html[data-look='gold'] .public-page .contatti-instagram-handle,
-html[data-look='gold'] .public-page .contatti-instagram-text,
+html[data-look='gold'] .public-page .contatti-instagram-text {
+  color: #fff4d6;
+}
+
 html[data-look='gold'] .public-page .booking-qr-section .eyebrow-text,
 html[data-look='gold'] .public-page .hero-sub,
 html[data-look='gold'] .public-page .qr-cta-text {
@@ -439,8 +473,8 @@ html[data-look='gold'] .public-page .ct-info {
 }
 
 html[data-look='gold'] .public-page .ct-info-grid {
-  background: #fff8e6;
-  border: 1px solid rgba(26, 20, 12, 0.16);
+  background: #1a140c;
+  border: 1px solid rgba(228, 195, 106, 0.32);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 10px 28px rgba(80, 50, 10, 0.1);
@@ -449,20 +483,23 @@ html[data-look='gold'] .public-page .ct-info-grid {
 html[data-look='gold'] .public-page .ct-col-title,
 html[data-look='gold'] .public-page .ct-col-main,
 html[data-look='gold'] .public-page .ct-hours-row dd,
-html[data-look='gold'] .public-page .ct-icon,
 html[data-look='gold'] .public-page .ct-cta-title {
-  color: #1a140c;
+  color: #fff4d6;
+}
+
+html[data-look='gold'] .public-page .ct-icon {
+  color: #e4c36a;
 }
 
 html[data-look='gold'] .public-page .ct-col-note,
 html[data-look='gold'] .public-page .ct-hours-row dt,
 html[data-look='gold'] .public-page .ct-hours-row dd.is-closed {
-  color: rgba(26, 20, 12, 0.66);
+  color: rgba(228, 195, 106, 0.8);
 }
 
 html[data-look='gold'] .public-page .ct-col + .ct-col,
 html[data-look='gold'] .public-page .ct-col:nth-child(even) {
-  border-color: rgba(26, 20, 12, 0.14);
+  border-color: rgba(228, 195, 106, 0.2);
 }
 
 html[data-look='gold'] .public-page .ct-btn-solid,
