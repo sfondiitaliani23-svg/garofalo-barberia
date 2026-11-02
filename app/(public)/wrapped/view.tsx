@@ -1,4 +1,4 @@
-import { LocLink as Link } from '@/components/i18n/LocLink';
+import { WrappedCta } from '@/components/wrapped/WrappedCta';
 import { ContentHero } from '@/components/content/ContentHero';
 import { StoriesBar } from '@/components/stories/StoriesBar';
 import { getLiveStories } from '@/lib/stories-server';
@@ -27,13 +27,7 @@ export default async function WrappedView({ lang }: { lang: Lang }) {
             size="lg"
             empty={<p className="text-white/60">{L(lang, 'Oggi non ci sono storie. Torna presto!', 'No stories today. Come back soon!')}</p>}
           />
-          <div className="cp-cta" style={{ marginTop: '3rem' }}>
-            <p>{L(lang, 'Vuoi il tuo Wrapped? Accedi: contiamo visite, tempo in poltrona e il tuo servizio preferito.', 'Want your Wrapped? Sign in: we count your visits, time in the chair and your favourite service.')}</p>
-            <div className="cp-cta-actions">
-              <Link href="/login" className="btn-primary">{L(lang, 'Accedi', 'Sign in')}</Link>
-              <Link href="/prenota" className="cp-ghost">{L(lang, 'Prenota', 'Book')}</Link>
-            </div>
-          </div>
+          <WrappedCta lang={lang} />
         </div>
       </section>
     </div>
