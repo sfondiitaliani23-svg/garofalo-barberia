@@ -293,3 +293,12 @@ export async function reorderStoriesAction(ids: string[]): Promise<{ ok: true } 
   touchStories();
   return { ok: true };
 }
+
+/** Il pulsante «Stories veloci» (fotocamera al posto dell'IA) compare solo a chi può caricare storie. */
+export async function canQuickStoryAction(): Promise<{ ok: true; can: boolean }> {
+  try {
+    return { ok: true, can: Boolean(await editor()) };
+  } catch {
+    return { ok: true, can: false };
+  }
+}

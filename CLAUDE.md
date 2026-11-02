@@ -57,6 +57,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Calcoli puri in `lib/utils/stories.ts` (test `stories.test.mjs`); lettura pubblica in `lib/stories-server.ts` (cache 60 s, tag `stories`); azioni in `lib/actions/stories.ts`.
 - Home: `components/stories/StoriesBar.tsx` sotto "Prenota ora"; visore `StoriesViewer.tsx`; immagine da condividere `shareCard.ts` (1080x1920, niente dati privati).
 - Wrapped personale: solo per il cliente con accesso, visite fatte dell'anno, combo = una visita, **mai importi**.
+- Stories veloci (02/11/2026): per admin, dipendente e tester il pulsante dell'IA ha un pulsantino ⇄ che lo trasforma in fotocamera (`components/stories/QuickStory.tsx`, scelta in `localStorage` `gb-fab-mode`). Menu: «Scatta una nuova foto» (`capture="environment"`) / «Allega una foto». La foto si taglia al centro in 9:16 1080x1920 JPEG, si conferma la liberatoria e si pubblica per 24 ore con le stesse azioni dell'admin. Chi può: `canQuickStoryAction`.
 - Admin: `/admin/storie`. Admin, dipendente e tester caricano e riordinano; il tester modifica ed elimina solo le sue. Foto e video richiedono la casella della liberatoria. Video fino a 15 secondi. Solo formato verticale 9:16 (`isStoryRatio`, tolleranza 2%), controllato nel browser e nell'azione.
 
 ## Sessione e uscita

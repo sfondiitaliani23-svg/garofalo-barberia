@@ -159,9 +159,9 @@ html[data-look='gold'] .site-drawer img {
 
 html.is-app[data-look='gold'] .app-tabbar {
   --dock-bg: #1a140c;
-  --dock-dark: rgba(80, 50, 8, 0.22);
-  --dock-light: rgba(255, 255, 255, 0.35);
-  --dock-glow: rgba(26, 20, 12, 0.28);
+  --dock-dark: rgba(0, 0, 0, 0.55);
+  --dock-light: rgba(255, 236, 190, 0.07);
+  --dock-glow: rgba(228, 195, 106, 0.5);
   background: #e4c36a;
 }
 
@@ -170,27 +170,19 @@ html.is-app[data-look='gold'] .app-dock {
   box-shadow: 0 6px 16px rgba(80, 50, 8, 0.16);
 }
 
+/* Pulsanti in rilievo come su Maurizio Barber Shop e Maximize (02/11/2026). */
 html[data-look='gold'] .app-tab {
-  color: #e4c36a;
-  background: #1a140c;
-  box-shadow: none;
+  color: rgba(244, 228, 190, 0.6);
 }
 
 html[data-look='gold'] .app-tab.is-active,
 html[data-look='gold'] .app-tab:active {
   color: #e4c36a;
-  background: #3d2e18;
-  box-shadow: inset 0 0 0 1px rgba(228, 195, 106, 0.45);
-}
-
-html[data-look='gold'] .app-tab.is-active .app-tab-icon {
-  filter: none;
 }
 
 html[data-look='gold'] .app-tab-dot,
 html[data-look='gold'] .app-tab.is-active .app-tab-dot {
   background: #e4c36a;
-  box-shadow: none;
 }
 
 /* L'area riservata e l'admin restano neri anche se l'app è in versione oro. */
@@ -541,9 +533,11 @@ html[data-look='gold'] .public-page .qr-code-wrap svg {
 
 /* Piè di pagina in oro: da «Servizi» fino in fondo sfuma verso il marrone (02/11/2026). */
 html[data-look='gold'] .site-footer {
-  border-top-color: rgba(26, 20, 12, 0.16);
-  color: rgba(26, 20, 12, 0.82);
-  background: linear-gradient(to bottom, #e4c36a 0%, #d2ad57 40%, #b78f43 75%, #a27a36 100%) !important;
+  border-top-color: transparent;
+  color: rgba(255, 244, 214, 0.86);
+  /* Dall'inizio del piè di pagina fino a «Taglio baby» (circa 9rem) l'oro sfuma nel marrone di «Invia»; poi solo marrone. */
+  background:
+    linear-gradient(to bottom, #e4c36a 0, #a98039 3.5rem, #4a3719 6.5rem, #1a140c 9rem, #1a140c 100%) !important;
 }
 
 /* Nell'app la sfumatura continua anche sotto, dietro la barra in basso: niente bordo netto. */
@@ -552,39 +546,35 @@ html.is-app[data-look='gold'] body:has(.app-tabbar) .site-footer {
   padding-bottom: calc(3rem + 210px + env(safe-area-inset-bottom));
 }
 
-/* Fascia della barra in basso: velo oro sfocato invece del pieno, così sopra il fondo marrone non fa un gradino. */
+/* Fascia della barra in basso: trasparente, senza sfocatura. La sfocatura dietro la barra rallentava lo scorrimento
+   (soprattutto sopra le foto dei profumi) e lasciava un bordo visibile. */
 html.is-app[data-look='gold'] .app-tabbar {
   background: transparent;
 }
 
-html.is-app[data-look='gold'] .app-tabbar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  -webkit-mask-image: linear-gradient(to top, #000 65%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 65%, transparent 100%);
-  pointer-events: none;
+html[data-look='gold'] .site-footer .footer-heading,
+html[data-look='gold'] .site-footer .footer-location-name {
+  color: #e4c36a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-html[data-look='gold'] .site-footer .footer-heading,
-html[data-look='gold'] .site-footer .footer-location-name,
 html[data-look='gold'] .site-footer nav a,
 html[data-look='gold'] .site-footer .footer-copy,
 html[data-look='gold'] .site-footer .footer-copy a,
 html[data-look='gold'] .footer-contact-link,
-html[data-look='gold'] .footer-contact-item a {
-  color: #1a140c;
+html[data-look='gold'] .footer-contact-item a,
+html[data-look='gold'] .site-footer .footer-list a {
+  color: #fff4d6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 html[data-look='gold'] .footer-icon {
-  color: #1a140c;
+  color: #e4c36a;
 }
 
 html[data-look='gold'] .footer-social-link {
-  background: #1a140c;
+  background: #3d2e18;
+  border: 1px solid rgba(228, 195, 106, 0.4);
 }
 
 html[data-look='gold'] .footer-social-link svg {
@@ -592,7 +582,7 @@ html[data-look='gold'] .footer-social-link svg {
 }
 
 html[data-look='gold'] .site-footer .footer-copy {
-  border-top-color: rgba(26, 20, 12, 0.16);
+  border-top-color: rgba(228, 195, 106, 0.2);
 }
 
 html[data-look='gold'] .public-page .ct-col:nth-child(n + 3) {
@@ -748,4 +738,17 @@ html[data-look='gold'] .tm-hero-photo {
 
 html[data-look='gold'] .tm-hero-photo {
   border-color: rgba(228, 195, 106, 0.35);
+}
+
+
+/* Profumi in oro: nome e «Scopri di più» chiari sopra la foto (in oro le variabili --white diventano scure). */
+html[data-look='gold'] .perfume-card-front .service-card-body,
+html[data-look='gold'] .perfume-card-front .service-card-body h3,
+html[data-look='gold'] .perfume-card-front .service-card-body span {
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+html[data-look='gold'] .perfume-card-front.service-card-luxury::after {
+  background: linear-gradient(transparent 45%, rgba(0, 0, 0, 0.85));
 }

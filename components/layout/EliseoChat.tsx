@@ -13,6 +13,7 @@ import { chatText } from '@/lib/i18n/content-widgets';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SITE_CONFIG } from '@/lib/site-config';
+import { QuickStory, CameraIcon, FAB_MODE_KEY } from '@/components/stories/QuickStory';
 
 interface ChatAction {
   label: string;
@@ -60,6 +61,33 @@ export function EliseoChat() {
   const WELCOME: Message = { id: '0', role: 'assistant', content: t.welcome };
   const QUICK_QUESTIONS = t.quick;
   const [isOpen, setIsOpen] = useState(false);
+  // Stories veloci: solo per lo staff. Il pulsante passa dall'IA alla fotocamera con ⇄ (la scelta resta su questo telefono).
+  const [canStory, setCanStory] = useState(false);
+  const [fabMode, setFabMode] = useState<'ai' | 'camera'>('ai');
+  const [storyMenu, setStoryMenu] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    let cookie = false;
+    try { cookie = /sb-[^=]+-auth-token/.test(document.cookie); } catch { cookie = false; }
+    if (!cookie) return;
+    import('@/lib/actions/stories')
+      .then((m) => m.canQuickStoryAction())
+      .then((r) => {
+        if (!alive || !r.can) return;
+        setCanStory(true);
+        try { if (localStorage.getItem(FAB_MODE_KEY) === 'camera') setFabMode('camera'); } catch { /* memoria non disponibile */ }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  const switchFab = () => {
+    const next = fabMode === 'ai' ? 'camera' : 'ai';
+    setFabMode(next);
+    setStoryMenu(false);
+    setIsOpen(false);
+    try { localStorage.setItem(FAB_MODE_KEY, next); } catch { /* memoria non disponibile */ }
+  };
+  const cameraMode = canStory && fabMode === 'camera';
   const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -125,7 +153,10 @@ export function EliseoChat() {
   useEffect(() => {
     if (isOpen) {
       setUnread(false);
-      setTimeout(() => inputRef.current?.focus(), 300);
+      // Tastiera solo se l'utente tocca «Scrivi un messaggio…» (02/11/2026): sul telefono niente focus automatico.
+      // Con mouse e tastiera (computer) il campo resta pronto per scrivere.
+      const desktop = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+      if (desktop) setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 300);
     }
   }, [isOpen]);
 
@@ -396,12 +427,11 @@ export function EliseoChat() {
         </p>
       </div>
 
+      {canStory && <QuickStory open={cameraMode && storyMenu} onClose={() => setStoryMenu(false)} />}
+
       {/* ── FAB toggle button ── */}
-      <button
+      <div
         id="eliseo-chat-btn"
-        onClick={() => setIsOpen(o => !o)}
-        aria-label={isOpen ? t.closeEliseo : t.openEliseo}
-        data-evt="assistente"
         className={cn(
           "fixed z-[302] group flex flex-col items-center transition-all duration-300 right-6",
           isCustomerArea
@@ -413,8 +443,23 @@ export function EliseoChat() {
                 : "bottom-[calc(1.5rem+env(safe-area-inset-bottom))]")
         )}
       >
+      {canStory && (
+        <button type="button" className="fab-switch" onClick={switchFab} aria-label={cameraMode ? 'Passa all’assistente' : 'Passa alle Stories'} title={cameraMode ? 'Assistente' : 'Stories'}>
+          <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M7 4 3 8l4 4" /><path d="M3 8h14" /><path d="m17 20 4-4-4-4" /><path d="M21 16H7" />
+          </svg>
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => (cameraMode ? setStoryMenu((o) => !o) : setIsOpen((o) => !o))}
+        aria-label={cameraMode ? 'Nuova storia' : isOpen ? t.closeEliseo : t.openEliseo}
+        aria-expanded={cameraMode ? storyMenu : isOpen}
+        data-evt={cameraMode ? 'storia-veloce' : 'assistente'}
+        className="flex flex-col items-center"
+      >
         {/* Fumetto "Chiedi a Eliseo": al passaggio del mouse e per pochi secondi alla prima visita */}
-        {!isOpen && (
+        {!isOpen && !cameraMode && (
           <span className={cn('ai-fab-hint', hint && 'is-shown')} aria-hidden>
             {t.askPrefix}<strong>Eliseo</strong>
           </span>
@@ -422,9 +467,11 @@ export function EliseoChat() {
         <span className={cn('ai-fab', isOpen && 'is-open')}>
           <span className="ai-fab-ring" aria-hidden />
           <span className="ai-fab-core">
-            {isOpen ? <X size={22} className="text-[#f0c378]" /> : <Sparkles size={22} className="ai-fab-icon" />}
+            {cameraMode
+              ? (storyMenu ? <X size={22} className="text-[#f0c378]" /> : <span className="text-[#f0c378]"><CameraIcon size={24} /></span>)
+              : isOpen ? <X size={22} className="text-[#f0c378]" /> : <Sparkles size={22} className="ai-fab-icon" />}
           </span>
-          {!isOpen && <span className="ai-fab-badge" aria-hidden>AI</span>}
+          {!isOpen && !cameraMode && <span className="ai-fab-badge" aria-hidden>AI</span>}
           {/* Avviso di nuovo messaggio */}
           {unread && !isOpen && (
             <span className="absolute -top-1 -left-1 w-4 h-4 bg-red-500 rounded-full border-2 border-black text-[9px] font-bold text-white flex items-center justify-center">
@@ -433,6 +480,7 @@ export function EliseoChat() {
           )}
         </span>
       </button>
+      </div>
     </>
   );
 }

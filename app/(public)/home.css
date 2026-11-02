@@ -735,16 +735,11 @@
   aspect-ratio: 4/5;
   cursor: pointer;
   outline: none;
-  filter: drop-shadow(0 14px 32px rgba(13, 13, 13, 0.22)) drop-shadow(0 4px 12px rgba(13, 13, 13, 0.12));
+  /* 02/11/2026: tolto il doppio filter: drop-shadow, che rifaceva l'ombra a ogni scorrimento e rallentava la pagina.
+     L'ombra resta quella (più leggera da disegnare) delle due facce. */
   transition:
     transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1),
-    filter 0.45s ease,
     opacity 0.45s ease;
-}
-
-.perfume-card-flip.is-flipped,
-.perfume-card-flip:focus-visible {
-  filter: drop-shadow(0 20px 44px rgba(13, 13, 13, 0.3)) drop-shadow(0 8px 18px rgba(13, 13, 13, 0.16));
 }
 
 .perfume-card-inner {

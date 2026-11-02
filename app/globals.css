@@ -531,8 +531,8 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
   html.is-app .app-dock {
     display: flex;
     align-items: center;
-    gap: 18px;
-    padding: 14px 24px;
+    gap: 16px;
+    padding: 14px 22px;
     border-radius: 36px;
     background: var(--dock-bg);
     box-shadow:
@@ -592,8 +592,8 @@ body.menu-open a[aria-label="WhatsApp"].fixed {
   position: relative;
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   color: rgba(244, 239, 231, 0.55);
   background: var(--dock-bg, #171614);
@@ -928,3 +928,83 @@ html.is-app .ct-sede { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   .ai-fab-ring, .ai-fab-icon { animation: none; }
 }
+
+/* Telefoni stretti: quattro pulsanti stanno sempre nella barra. */
+@media (max-width: 360px) {
+  html.is-app .app-dock { gap: 10px; padding: 12px 14px; }
+  .app-tab { width: 48px; height: 48px; }
+}
+
+/* ── Stories veloci (components/stories/QuickStory.tsx), solo staff ── */
+.fab-switch {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #f0c378, #c48f45);
+  color: #111;
+  border: 2px solid #0a0a0a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.qs-menu {
+  position: fixed;
+  right: 1.5rem;
+  bottom: calc(6.5rem + env(safe-area-inset-bottom));
+  z-index: 303;
+  width: min(17rem, calc(100vw - 3rem));
+  padding: 0.6rem;
+  border-radius: 18px;
+  background: #121110;
+  border: 1px solid rgba(205, 154, 79, 0.35);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  animation: qs-up 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+html.is-app body:has(.app-tabbar) .qs-menu { bottom: calc(196px + env(safe-area-inset-bottom)); }
+.qs-menu-title { margin: 0.2rem 0.6rem 0.5rem; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(240, 195, 120, 0.8); }
+.qs-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.85rem 0.75rem;
+  border-radius: 12px;
+  color: #f4efe7;
+  font-size: 0.95rem;
+  text-align: left;
+}
+.qs-menu-item svg { color: #f0c378; flex-shrink: 0; }
+.qs-menu-item:active { background: rgba(205, 154, 79, 0.16); }
+@media (hover: hover) { .qs-menu-item:hover { background: rgba(205, 154, 79, 0.12); } }
+.qs-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.78);
+}
+.qs-sheet-card {
+  width: min(22rem, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 1rem;
+  border-radius: 20px;
+  background: #121110;
+  border: 1px solid rgba(205, 154, 79, 0.35);
+  color: #f4efe7;
+}
+.qs-preview { display: block; width: 100%; max-height: 52dvh; object-fit: contain; border-radius: 14px; background: #000; }
+.qs-check { display: flex; gap: 0.6rem; align-items: flex-start; margin-top: 0.9rem; font-size: 0.85rem; line-height: 1.4; }
+.qs-check input { margin-top: 0.15rem; width: 1.1rem; height: 1.1rem; accent-color: #cd9a4f; flex-shrink: 0; }
+.qs-note { margin: 0.6rem 0 0; font-size: 0.75rem; color: rgba(244, 239, 231, 0.6); }
+.qs-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; }
+.qs-btn { padding: 0.7rem 1.3rem; border-radius: 999px; background: linear-gradient(140deg, #f0c378, #c48f45); color: #111; font-weight: 700; }
+.qs-btn:disabled { opacity: 0.5; }
+.qs-btn--ghost { background: transparent; color: #f4efe7; border: 1px solid rgba(244, 239, 231, 0.3); }
+@keyframes qs-up { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: none; } }
