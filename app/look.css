@@ -26,9 +26,27 @@ html[data-look='gold'] .page-chi-siamo {
   --muted: rgba(26, 20, 12, 0.66);
 }
 
-/* La foto grande della home resta scura, con le scritte chiare. */
+/* Home in oro: il legno scuro diventa legno dorato, le scritte diventano scure (02/11/2026). */
 html[data-look='gold'] .hero-section {
-  color: #fff;
+  background-image: url('/assets/sostituisci-immagini/homepage/legno-oro.jpg') !important;
+  color: #1a140c;
+}
+
+html[data-look='gold'] .hero-section::before {
+  background: linear-gradient(rgba(228, 195, 106, 0.18), rgba(228, 195, 106, 0.18)),
+    linear-gradient(transparent 60%, rgba(150, 108, 42, 0.35));
+}
+
+html[data-look='gold'] .hero-section .hero-heading,
+html[data-look='gold'] .hero-section .hero-sub {
+  color: #1a140c;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, 0.45);
+}
+
+/* Logo bianco su nero: in oro diventa nero, senza riquadro. */
+html[data-look='gold'] .hero-section .hero-mobile-logo {
+  filter: invert(1);
+  mix-blend-mode: multiply !important;
 }
 
 html[data-look='gold'] .section-lead,
@@ -565,9 +583,9 @@ html[data-look='gold'] .story-bubble-label {
   color: rgba(26, 20, 12, 0.78);
 }
 
-/* Nella foto scura della home l'etichetta delle storie resta chiara. */
+/* Sul legno dorato della home l'etichetta delle storie è scura. */
 html[data-look='gold'] .hero-section .story-bubble-label {
-  color: rgba(255, 255, 255, 0.85);
+  color: #1a140c;
 }
 
 /* Pulsanti "a contorno" e filtri: scritta e bordo scuri. */
