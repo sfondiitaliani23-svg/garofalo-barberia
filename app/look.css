@@ -383,7 +383,7 @@ html:not([data-look='gold']) .app-switch[aria-checked='true'] i {
 html.is-app[data-look='gold'] header.sticky,
 html[data-look='gold'] header.sticky {
   background-color: #e4c36a !important;
-  border-bottom-color: rgba(26, 20, 12, 0.16) !important;
+  border-bottom-color: transparent !important; /* niente linea sotto l'intestazione (02/11/2026) */
   box-shadow: none !important;
   color: #1a140c;
 }
