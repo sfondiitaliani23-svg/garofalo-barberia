@@ -359,7 +359,7 @@ export function baseSlides(lang: 'it' | 'en', ratings: number[] = []): StorySlid
   }
   out.push(
     slide('prima', 'testo', en ? 'First time with us?' : 'Prima volta da noi?', en ? 'Here is what to expect, step by step.' : 'Ecco cosa ti aspetta, passo dopo passo.', en ? 'First visit' : 'Prima visita', '/prima-visita'),
-    slide('wrapped', 'testo', en ? 'Your year at Garofalo' : 'Il tuo anno da Garofalo', en ? 'Sign in to see your Wrapped: visits, time in the chair, favourite service.' : 'Accedi per vedere il tuo Wrapped: visite, tempo in poltrona, servizio preferito.', en ? 'Sign in' : 'Accedi', '/login'),
+    slide('wrapped', 'testo', en ? 'Your year at Garofalo' : 'Il tuo anno da Garofalo', en ? 'Sign in to see your year: visits, time in the chair, favourite service.' : 'Accedi per vedere il tuo anno: visite, tempo in poltrona, servizio preferito.', en ? 'Sign in' : 'Accedi', '/login'),
   );
   return out;
 }

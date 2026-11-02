@@ -97,6 +97,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: '/index.html', destination: '/', permanent: true },
+      // 02/11/2026: «Wrapped» rinominato «Stories» (storie del giorno).
+      { source: '/wrapped', destination: '/stories', permanent: true },
+      { source: '/en/wrapped', destination: '/en/stories', permanent: true },
       { source: '/chi-siamo.html', destination: '/chi-siamo', permanent: true },
       { source: '/servizi.html', destination: '/servizi', permanent: true },
       { source: '/galleria.html', destination: '/galleria', permanent: true },

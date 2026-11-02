@@ -52,6 +52,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Non c'è un campo "prenotato dal sito": l'email parte per ogni appuntamento con email, anche se inserito dall'admin. Per limitarla al sito serve una colonna `source` (migrazione, la esegue Eliseo).
 
 ## Storie (Wrapped + storie di Instagram)
+- 02/11/2026: la pagina si chiama **Stories** (storie del giorno), indirizzo `/stories` e `/en/stories`; `/wrapped` reindirizza lì (`next.config.ts`). «Wrapped» non compare più al pubblico: il riepilogo personale è il cerchio «Il tuo anno».
 - Tabella `stories` e spazio file `storie` (pubblico, 20 MB, solo immagini e video): migrazione `016_storie.sql`, eseguita da Eliseo il 26/10/2026. Se mancasse, il sito funziona e il cerchio "Novità" non compare.
 - Calcoli puri in `lib/utils/stories.ts` (test `stories.test.mjs`); lettura pubblica in `lib/stories-server.ts` (cache 60 s, tag `stories`); azioni in `lib/actions/stories.ts`.
 - Home: `components/stories/StoriesBar.tsx` sotto "Prenota ora"; visore `StoriesViewer.tsx`; immagine da condividere `shareCard.ts` (1080x1920, niente dati privati).

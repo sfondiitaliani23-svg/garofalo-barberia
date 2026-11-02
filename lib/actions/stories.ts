@@ -155,8 +155,8 @@ function touchStories() {
   revalidateTag(STORIES_TAG);
   revalidatePath('/');
   revalidatePath('/en');
-  revalidatePath('/wrapped');
-  revalidatePath('/en/wrapped');
+  revalidatePath('/stories');
+  revalidatePath('/en/stories');
 }
 
 /** Crea o modifica una storia. Il tester modifica solo le sue. La durata è sempre 24 ore e non si sposta. */

@@ -6,11 +6,11 @@ import { createClient } from '@/lib/supabase/client';
 import { L, type Lang } from '@/lib/i18n';
 
 /**
- * Invito sotto le storie del Wrapped. Chi ha già fatto l'accesso non vede «Accedi»:
+ * Invito sotto le storie (pagina Stories). Chi ha già fatto l'accesso non vede «Accedi»:
  * vede dove trova il suo anno e la sua area. La pagina è statica, quindi il controllo
  * si fa nel browser; finché non si sa, il riquadro resta invisibile (niente «Accedi» a lampo).
  */
-export function WrappedCta({ lang }: { lang: Lang }) {
+export function StoriesCta({ lang }: { lang: Lang }) {
   const [state, setState] = useState<{ in: boolean; name: string | null } | null>(null);
 
   useEffect(() => {
@@ -48,8 +48,8 @@ export function WrappedCta({ lang }: { lang: Lang }) {
         <>
           <p>
             {state?.name
-              ? L(lang, `Ciao ${state.name}! Il tuo Wrapped è il cerchio «Il tuo anno» qui sopra: compare dopo la tua prima visita.`, `Hi ${state.name}! Your Wrapped is the «Your year» circle above: it appears after your first visit.`)
-              : L(lang, 'Il tuo Wrapped è il cerchio «Il tuo anno» qui sopra: compare dopo la tua prima visita.', 'Your Wrapped is the «Your year» circle above: it appears after your first visit.')}
+              ? L(lang, `Ciao ${state.name}! Qui trovi ogni giorno le novità del salone. Dopo la tua prima visita compare anche il cerchio «Il tuo anno».`, `Hi ${state.name}! Here you find the shop's news every day. After your first visit, the «Your year» circle appears too.`)
+              : L(lang, 'Qui trovi ogni giorno le novità del salone. Dopo la tua prima visita compare anche il cerchio «Il tuo anno».', 'Here you find the shop\'s news every day. After your first visit, the «Your year» circle appears too.')}
           </p>
           <div className="cp-cta-actions">
             <Link href="/prenota" className="btn-primary">{L(lang, 'Prenota', 'Book')}</Link>
@@ -58,7 +58,7 @@ export function WrappedCta({ lang }: { lang: Lang }) {
         </>
       ) : (
         <>
-          <p>{L(lang, 'Vuoi il tuo Wrapped? Accedi: contiamo visite, tempo in poltrona e il tuo servizio preferito.', 'Want your Wrapped? Sign in: we count your visits, time in the chair and your favourite service.')}</p>
+          <p>{L(lang, 'Accedi: oltre alle storie del giorno trovi il tuo anno da Garofalo, con visite e servizio preferito.', 'Sign in: besides today\'s stories you will find your year at Garofalo, with visits and favourite service.')}</p>
           <div className="cp-cta-actions">
             <Link href="/login" className="btn-primary">{L(lang, 'Accedi', 'Sign in')}</Link>
             <Link href="/prenota" className="cp-ghost">{L(lang, 'Prenota', 'Book')}</Link>

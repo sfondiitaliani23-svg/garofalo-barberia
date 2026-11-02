@@ -28,7 +28,7 @@ const KINDS: { id: StoryKind; label: string; icon: typeof ImageIcon; hint: strin
   { id: 'foto', label: 'Foto', icon: ImageIcon, hint: 'Solo verticale 9:16 (es. 1080x1920). JPG, PNG o WebP fino a 8 MB.' },
   { id: 'video', label: 'Video', icon: Film, hint: 'Solo verticale 9:16 (es. 1080x1920), fino a 20 MB.' },
   { id: 'testo', label: 'Testo o promo', icon: Type, hint: 'Un annuncio, una promo, un orario speciale.' },
-  { id: 'numero', label: 'Numero', icon: Hash, hint: 'Stile Wrapped: un numero grande (es. "1.200 tagli nel 2026").' },
+  { id: 'numero', label: 'Numero', icon: Hash, hint: 'Un numero grande (es. "1.200 tagli nel 2026").' },
 ];
 
 type Form = {

@@ -20,7 +20,7 @@ function navLinks(lang: 'it' | 'en') {
   const gallery = { href: '/galleria', label: L(lang, 'Galleria', 'Gallery') };
   const reviews = { href: '/recensioni', label: L(lang, 'Recensioni', 'Reviews') };
   const contacts = { href: '/contatti', label: L(lang, 'Contatti', 'Contact') };
-  const wrapped = { href: '/wrapped', label: 'Wrapped' };
+  const wrapped = { href: '/stories', label: 'Stories' };
   return {
     navLeft: [home, about, services, gallery],
     navRight: [reviews, contacts, wrapped],
