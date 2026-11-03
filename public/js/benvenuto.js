@@ -36,6 +36,13 @@ const DUE_MESI = 60 * 24 * 60 * 60 * 1000;
  * Non compare nelle pagine di accesso (cfg.escludi) e nel browser normale. Prova nel browser: ?benvenuto=1
  */
 export async function benvenuto(cfg) {
+  // Il sito può coprire la pagina in anticipo (classe bv-attesa nell'<head>) per non far vedere la home prima della schermata
+  const libera = () => document.documentElement.classList.remove('bv-attesa');
+  try { return await mostra(cfg); } finally { libera(); }
+}
+
+async function mostra(cfg) {
+  if (!document.body) await new Promise((ok) => document.addEventListener('DOMContentLoaded', ok, { once: true }));
   const prova = new URLSearchParams(location.search).has('benvenuto');
   if (!prova && !standalone()) return;
   if ((cfg.escludi || []).some((p) => (p instanceof RegExp ? p.test(location.pathname) : location.pathname.startsWith(p)))) return;
@@ -53,7 +60,11 @@ export async function benvenuto(cfg) {
   // Da qui in poi: al prossimo accesso riuscito il contatore riparte dalla pagina successiva
   try { localStorage.removeItem(chiaveUso); } catch { /* niente */ }
   if (document.querySelector('.bv')) return;
-  if (cfg.css && !document.querySelector(`link[href="${cfg.css}"]`)) { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = cfg.css; document.head.append(l); }
+  if (cfg.css) {
+    let l = document.querySelector(`link[href="${cfg.css}"]`);
+    if (!l) { l = document.createElement('link'); l.rel = 'stylesheet'; l.href = cfg.css; document.head.append(l); }
+    if (!l.sheet) await new Promise((ok) => { l.addEventListener('load', ok, { once: true }); l.addEventListener('error', ok, { once: true }); setTimeout(ok, 2500); });
+  }
 
   const T = () => cfg.testi[cfg.lingua() === 'en' ? 'en' : 'it'];
   const ricorda = () => { try { sessionStorage.setItem(`bv-${cfg.chiave}`, '1'); } catch { /* niente */ } };
