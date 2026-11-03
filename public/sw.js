@@ -1,9 +1,9 @@
 // Service worker leggero di Barberia Garofalo.
 // Non mette in cache le pagine: il sito resta sempre aggiornato.
 // Serve solo a mostrare /offline.html quando manca la connessione.
-const CACHE = 'garofalo-offline-v3';
+const CACHE = 'garofalo-offline-v4';
 // Avvio istantaneo dell'app (03/11/2026): la pagina d'avvio e la schermata d'ingresso stanno nel telefono.
-const AVVIO = ['/app.html', '/css/benvenuto.css?v=20261103g', '/js/benvenuto.js?v=20261103g', '/js/benvenuto-garofalo.js?v=20261103g', '/assets/app/ingresso-poster.jpg?v=3'];
+const AVVIO = ['/app.html', '/css/benvenuto.css?v=20261103h', '/js/benvenuto.js?v=20261103h', '/js/benvenuto-garofalo.js?v=20261103h', '/assets/app/ingresso-poster.jpg?v=3'];
 const PRECACHE = ['/offline.html', '/pwa/icon-192.png', ...AVVIO];
 
 self.addEventListener('install', (event) => {

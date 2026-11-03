@@ -52,6 +52,13 @@ html.bv-aperto, html.bv-aperto body { overflow: hidden; }
 .bv-lingue { display: inline-flex; box-shadow: inset 0 0 0 1.5px var(--bv-bordo); }
 .bv-lingue button { min-width: 48px; min-height: 40px; font-size: 13px; font-weight: 700; letter-spacing: .12em; }
 .bv-lingue button[aria-pressed="true"] { background: var(--bv-accento); color: var(--bv-su-accento); }
+.bv-pannello--doc { z-index: 3; }
+.bv-doc { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 8px 24px calc(env(safe-area-inset-bottom, 0px) + 32px); }
+.bv-doc h3 { margin: 18px 0 10px; font-family: var(--bv-titoli, inherit); font-size: 22px; line-height: 1.2; color: var(--bv-titolo, inherit); }
+.bv-doc h4 { margin: 22px 0 8px; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; color: var(--bv-titolo, inherit); }
+.bv-doc p { margin: 0 0 12px; font-size: 15px; line-height: 1.6; color: var(--bv-morbido); overflow-wrap: anywhere; }
+.bv-doc .bv-doc-voce { padding-left: 16px; position: relative; }
+.bv-doc .bv-doc-voce::before { content: ""; position: absolute; left: 2px; top: .7em; width: 5px; height: 5px; border-radius: 50%; background: var(--bv-accento); }
 .bv-versione { margin: 22px 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--bv-morbido); }
 .bv :focus-visible { outline: 2px solid var(--bv-accento); outline-offset: 2px; }
 @media (min-width: 700px) { .bv-foglio { width: 520px; margin: 0 auto; } .bv.info .bv-foglio { left: 50%; right: auto; width: 520px; transform: translateX(-50%); } .bv-pannello { left: 50%; right: auto; width: 520px; margin-left: -260px; } }

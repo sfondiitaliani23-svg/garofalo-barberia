@@ -135,7 +135,44 @@ async function mostra(cfg) {
   const pannello = el('div', 'bv-pannello', el('div', 'bv-pannello-top', indietro, titImp, el('span')), lista, ver);
   pannello.hidden = true;
 
-  root.append(fondo, velo, top, centro, foglio, pannello);
+  // Documenti (privacy, accessibilità): si leggono dentro la schermata, senza entrare nel sito (03/11/2026)
+  const indietroDoc = el('button', 'bv-indietro', icona(I.indietro)); indietroDoc.type = 'button';
+  const titDoc = el('h2', 'bv-imp-titolo');
+  const testoDoc = el('div', 'bv-doc');
+  const docPan = el('div', 'bv-pannello bv-pannello--doc', el('div', 'bv-pannello-top', indietroDoc, titDoc, el('span')), testoDoc);
+  docPan.hidden = true;
+
+  root.append(fondo, velo, top, centro, foglio, pannello, docPan);
+
+  async function apriDoc(titolo, url) {
+    vibra();
+    titDoc.textContent = titolo;
+    testoDoc.replaceChildren(el('p', 'bv-doc-attesa', T().caricamento || '…'));
+    docPan.hidden = false; requestAnimationFrame(() => docPan.classList.add('su'));
+    indietroDoc.focus({ preventScroll: true });
+    try {
+      const r = await fetch(url, { credentials: 'same-origin' });
+      const html = await r.text();
+      const d = new DOMParser().parseFromString(html, 'text/html');
+      const base = d.querySelector('main') || d.body;
+      base.querySelectorAll('nav, header, footer, script, style, noscript, aside, form, button, svg, [aria-hidden="true"], [hidden]').forEach((n) => n.remove());
+      const blocchi = [];
+      base.querySelectorAll('h1, h2, h3, h4, p, li, td').forEach((n) => {
+        if (n.tagName !== 'LI' && n.closest('li')) return;
+        if (n.tagName === 'P' && n.closest('td')) return;
+        const t = n.textContent.replace(/\s+/g, ' ').trim();
+        if (!t) return;
+        const tag = /^H[1-4]$/.test(n.tagName) ? (n.tagName === 'H1' ? 'h3' : 'h4') : 'p';
+        blocchi.push(el(tag, n.tagName === 'LI' ? 'bv-doc-voce' : null, t));
+      });
+      if (!blocchi.length) throw new Error('vuoto');
+      testoDoc.replaceChildren(...blocchi);
+      testoDoc.scrollTop = 0;
+    } catch {
+      testoDoc.replaceChildren(el('p', null, T().docErrore || 'Non riesco a caricare il testo. Riprova.'));
+    }
+  }
+  indietroDoc.addEventListener('click', () => { docPan.classList.remove('su'); setTimeout(() => { docPan.hidden = true; }, 280); indietro.focus({ preventScroll: true }); });
 
   function riga(etichetta, sotto, azione, destra) {
     const b = el(azione.href ? 'a' : 'button', 'bv-riga', el('span', 'bv-riga-t', etichetta, sotto ? el('small', null, sotto) : null), destra || icona(I.avanti));
@@ -162,10 +199,11 @@ async function mostra(cfg) {
       const li = el('li', null, el('div', 'bv-riga', el('span', 'bv-riga-t', t.lingua), sel));
       righe.push(li);
     }
-    if (cfg.notifiche) righe.push(riga(t.notifiche, t.notificheSotto, { href: cfg.notifiche }));
-    if (cfg.privacy) righe.push(riga(t.privacy, null, { href: cfg.privacy }));
+    // Con l'accesso obbligatorio niente link verso il sito: le notifiche si attivano dopo l'accesso
+    if (cfg.notifiche && !cfg.obbligo) righe.push(riga(t.notifiche, t.notificheSotto, { href: cfg.notifiche }));
+    if (cfg.privacy) righe.push(riga(t.privacy, null, { click: () => apriDoc(t.privacy, cfg.privacy) }));
     if (cfg.assistenza) righe.push(riga(t.assistenza, t.assistenzaSotto, { href: cfg.assistenza, esterno: true }));
-    if (cfg.accessibilita) righe.push(riga(t.accessibilita, null, { href: cfg.accessibilita }));
+    if (cfg.accessibilita) righe.push(riga(t.accessibilita, null, { click: () => apriDoc(t.accessibilita, cfg.accessibilita) }));
     lista.replaceChildren(...righe);
     ver.textContent = cfg.versione ? `${cfg.nome} · ${cfg.versione}` : cfg.nome;
   }
@@ -189,7 +227,7 @@ async function mostra(cfg) {
   btnX.addEventListener('click', chiudi);
   root.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (!pannello.hidden) indietro.click(); else if (foglio.classList.contains('aperto')) apriInfo(false); else if (!cfg.obbligo) chiudi();
+    if (!docPan.hidden) indietroDoc.click(); else if (!pannello.hidden) indietro.click(); else if (foglio.classList.contains('aperto')) apriInfo(false); else if (!cfg.obbligo) chiudi();
   });
 
   document.body.append(root);
@@ -217,6 +255,6 @@ async function mostra(cfg) {
 }
 
 export const TESTI_BASE = {
-  it: { impostazioni: 'Impostazioni', chiudi: 'Chiudi', indietro: 'Indietro', lingua: 'Lingua', notifiche: 'Notifiche', notificheSotto: 'Le attivi dalla tua area', privacy: 'Privacy e cookie', assistenza: 'Servizio clienti', assistenzaSotto: 'Scrivici su WhatsApp', accessibilita: 'Accessibilità' },
-  en: { impostazioni: 'Settings', chiudi: 'Close', indietro: 'Back', lingua: 'Language', notifiche: 'Notifications', notificheSotto: 'Turn them on in your area', privacy: 'Privacy and cookies', assistenza: 'Customer service', assistenzaSotto: 'Message us on WhatsApp', accessibilita: 'Accessibility' },
+  it: { caricamento: 'Caricamento…', docErrore: 'Non riesco a caricare il testo. Controlla la connessione e riprova.', impostazioni: 'Impostazioni', chiudi: 'Chiudi', indietro: 'Indietro', lingua: 'Lingua', notifiche: 'Notifiche', notificheSotto: 'Le attivi dalla tua area', privacy: 'Privacy e cookie', assistenza: 'Servizio clienti', assistenzaSotto: 'Scrivici su WhatsApp', accessibilita: 'Accessibilità' },
+  en: { caricamento: 'Loading…', docErrore: 'Cannot load the text. Check your connection and try again.', impostazioni: 'Settings', chiudi: 'Close', indietro: 'Back', lingua: 'Language', notifiche: 'Notifications', notificheSotto: 'Turn them on in your area', privacy: 'Privacy and cookies', assistenza: 'Customer service', assistenzaSotto: 'Message us on WhatsApp', accessibilita: 'Accessibility' },
 };

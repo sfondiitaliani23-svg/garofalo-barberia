@@ -77,7 +77,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 // App installata: schermata d'ingresso con accesso obbligatorio (03/11/2026). Prova nel browser: ?benvenuto=1
                 // Senza accesso la pagina resta coperta (nero + primo fotogramma del video) finché la schermata non è pronta:
                 // così all'apertura dell'app si vede subito l'ingresso e non la home per mezzo secondo.
-                "try{var bvH=document.documentElement,bvP=location.search.indexOf('benvenuto')>-1;if(bvH.classList.contains('is-app')||bvP){var bvV='20261103g';" +
+                "try{var bvH=document.documentElement,bvP=location.search.indexOf('benvenuto')>-1;if(bvH.classList.contains('is-app')||bvP){var bvV='20261103h';" +
                 "var bvE=/^\\/(en\\/)?(login|register|reimposta-password|privacy)|^\\/(auth|admin|area-cliente|qr|link)/.test(location.pathname);" +
                 "var bvL=/(?:^|;\\s*)sb-[^=]+-auth-token(?:\\.0)?=/.test(document.cookie);" +
                 "if(!bvE&&(!bvL||bvP)){bvH.classList.add('bv-attesa');var bvS=document.createElement('style');bvS.textContent='html.bv-attesa::before{content:\\'\\';position:fixed;inset:0;z-index:2147482999;background:#000 url(/assets/app/ingresso-poster.jpg?v=3) center/cover no-repeat}html.bv-attesa body>*:not(.bv){visibility:hidden!important}';document.head.appendChild(bvS);" +
