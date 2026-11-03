@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="it" class="is-app">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex">
+<title>Barberia Garofalo</title>
+<!-- Avvio dell'app (03/11/2026): pagina statica che il service worker tiene nel telefono.
+     Il video parte nell'istante in cui si apre l'app; chi ha già fatto l'accesso va subito alla home. -->
+<script>
+  try {
+    if (/(?:^|;\s*)sb-[^=]+-auth-token(?:\.0)?=/.test(document.cookie) && location.search.indexOf('benvenuto') < 0) location.replace('/');
+  } catch (e) {}
+</script>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #bv-pre { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000 url(/assets/app/ingresso-poster.jpg?v=3) center / cover no-repeat; }
+</style>
+<link rel="stylesheet" href="/css/benvenuto.css?v=20261103g">
+<link rel="modulepreload" href="/js/benvenuto.js?v=20261103g">
+</head>
+<body>
+<video id="bv-pre" autoplay muted playsinline loop preload="auto" aria-hidden="true" poster="/assets/app/ingresso-poster.jpg?v=3" src="/assets/app/ingresso.mp4?v=3"></video>
+<script>
+  (function () { var v = document.getElementById('bv-pre'); v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function () {}); v.addEventListener('canplay', function () { if (v.paused) v.play().catch(function () {}); }); })();
+</script>
+<script type="module" src="/js/benvenuto-garofalo.js?v=20261103g"></script>
+</body>
+</html>

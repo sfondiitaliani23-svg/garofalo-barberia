@@ -38,7 +38,10 @@ const DUE_MESI = 60 * 24 * 60 * 60 * 1000;
 export async function benvenuto(cfg) {
   // Il sito può coprire la pagina in anticipo (classe bv-attesa nell'<head>) per non far vedere la home prima della schermata
   const libera = () => { document.documentElement.classList.remove('bv-attesa'); document.getElementById('bv-pre')?.remove(); };
-  try { return await mostra(cfg); } finally { libera(); }
+  let fatto = null;
+  try { fatto = await mostra(cfg); } finally { libera(); }
+  if (!fatto) cfg.dopo?.(); // schermata non necessaria (es. utente già dentro): il sito decide dove andare
+  return fatto;
 }
 
 async function mostra(cfg) {

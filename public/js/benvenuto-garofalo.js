@@ -1,6 +1,6 @@
 // Schermata d'ingresso dell'app Barberia Garofalo (03/11/2026): nell'app installata l'accesso è obbligatorio.
 // Dopo 2 mesi senza aprire l'app si rifà l'accesso. Il resto è in benvenuto.js (uguale nei quattro siti).
-import { benvenuto, TESTI_BASE } from './benvenuto.js?v=20261103f';
+import { benvenuto, TESTI_BASE } from './benvenuto.js?v=20261103g';
 
 const EN = /(?:^|;\s*)gb_lang=en/.test(document.cookie) || location.pathname.startsWith('/en');
 // Sessione Supabase nei cookie (non httpOnly): sb-<progetto>-auth-token, a volte in pezzi .0 .1
@@ -12,7 +12,7 @@ const esci = () => {
 benvenuto({
   chiave: 'garofalo',
   classe: 'bv-garofalo',
-  css: '/css/benvenuto.css?v=20261103f',
+  css: '/css/benvenuto.css?v=20261103g',
   nome: 'Barberia Garofalo',
   logo: null, // con il video il logo non serve: si vede già sull'insegna (richiesta di Eliseo, 03/11/2026)
   sfondo: '/assets/sostituisci-immagini/homepage/legno-oro.jpg',
@@ -35,6 +35,8 @@ benvenuto({
   assistenza: 'https://wa.me/393201886277',
   versione: '',
   loggato: dentro,
+  // Pagina d'avvio dell'app (/app.html): se la schermata non serve si va subito alla home
+  dopo: () => { if (location.pathname === '/app.html' || new URLSearchParams(location.search).get('app') === '1') location.replace('/'); },
   esci,
   testi: {
     it: { ...TESTI_BASE.it, accedi: 'Accedi', iscriviti: 'Crea un nuovo account', vantaggiTitolo: 'Vantaggi per i clienti', vantaggi: 'Nell\'app prenoti con Luigi, Francesco e Vittorio in pochi secondi, entri in lista d\'attesa quando il giorno è pieno e ricevi le notifiche dei tuoi appuntamenti.', iscrivitiTitolo: 'Iscriviti gratis', iscrivitiTesto: 'Crea l\'account con la tua email: ti serve un minuto. Dopo ritrovi le tue visite e il riepilogo del tuo anno.', gia: 'Hai già un account? Accedi con i tuoi dati.' },

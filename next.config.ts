@@ -75,7 +75,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/:all*(svg|jpg|jpeg|png|webp|avif|gif|ico|woff|woff2|ttf|eot)',
+        source: '/:all*(svg|jpg|jpeg|png|webp|avif|gif|ico|woff|woff2|ttf|eot|mp4|webm)',
         headers: [
           {
             key: 'Cache-Control',

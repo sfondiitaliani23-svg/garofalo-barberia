@@ -1,8 +1,10 @@
 // Service worker leggero di Barberia Garofalo.
 // Non mette in cache le pagine: il sito resta sempre aggiornato.
 // Serve solo a mostrare /offline.html quando manca la connessione.
-const CACHE = 'garofalo-offline-v2';
-const PRECACHE = ['/offline.html', '/pwa/icon-192.png'];
+const CACHE = 'garofalo-offline-v3';
+// Avvio istantaneo dell'app (03/11/2026): la pagina d'avvio e la schermata d'ingresso stanno nel telefono.
+const AVVIO = ['/app.html', '/css/benvenuto.css?v=20261103g', '/js/benvenuto.js?v=20261103g', '/js/benvenuto-garofalo.js?v=20261103g', '/assets/app/ingresso-poster.jpg?v=3'];
+const PRECACHE = ['/offline.html', '/pwa/icon-192.png', ...AVVIO];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -22,9 +24,29 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Prima dalla memoria del telefono (subito), intanto si aggiorna dalla rete per la volta dopo.
+function veloce(event, chiave) {
+  event.respondWith(
+    caches.open(CACHE).then((c) =>
+      c.match(chiave).then((salvata) => {
+        const rete = fetch(chiave, { cache: 'no-store' }).then((r) => { if (r.ok) c.put(chiave, r.clone()); return r; });
+        if (salvata) { event.waitUntil(rete.catch(() => {})); return salvata; }
+        return rete.catch(() => caches.match('/offline.html'));
+      })
+    )
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-  if (req.method !== 'GET' || req.mode !== 'navigate') return;
+  if (req.method !== 'GET') return;
+  const u = new URL(req.url);
+  if (u.origin === self.location.origin) {
+    // Apertura dell'app (start_url «/?app=1») o pagina d'avvio: risposta istantanea
+    if (req.mode === 'navigate' && ((u.pathname === '/' && u.searchParams.get('app') === '1') || u.pathname === '/app.html')) { veloce(event, '/app.html'); return; }
+    if (AVVIO.includes(u.pathname + u.search) && u.pathname !== '/app.html') { veloce(event, u.pathname + u.search); return; }
+  }
+  if (req.mode !== 'navigate') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith('/admin') || url.pathname.startsWith('/api')) return;
   event.respondWith(fetch(req).catch(() => caches.match('/offline.html')));
