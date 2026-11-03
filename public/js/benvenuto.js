@@ -66,21 +66,22 @@ export async function benvenuto(cfg) {
   // Fondo: foto mossa (come in movimento) + velo scuro
   const fondo = el('div', 'bv-fondo');
   if (cfg.sfondo) fondo.style.backgroundImage = `url("${cfg.sfondo}")`;
-  // Video di sfondo (senza audio): se c'è, prende il posto della foto. Fermo con «riduci movimento» o «risparmio dati».
+  // Video di sfondo (senza audio): se c'è, prende il posto della foto. Parte sempre (richiesta di Eliseo, 03/11/2026):
+  // se il telefono blocca l'avvio automatico, riparte al primo tocco.
+  let video = null;
   if (cfg.video) {
-    const fermo = matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData;
     fondo.classList.add('bv-fondo--video');
     if (cfg.poster) fondo.style.backgroundImage = `url("${cfg.poster}")`;
-    if (!fermo) {
-      const v = document.createElement('video');
-      v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.preload = 'auto';
-      v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
-      if (cfg.poster) v.poster = cfg.poster;
-      v.src = cfg.video;
-      fondo.append(v);
-      v.play?.().catch(() => {});
-    }
+    video = document.createElement('video');
+    video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true; video.autoplay = true; video.preload = 'auto';
+    ['muted', 'playsinline', 'webkit-playsinline', 'autoplay', 'loop'].forEach((a) => video.setAttribute(a, ''));
+    video.setAttribute('aria-hidden', 'true'); video.disablePictureInPicture = true;
+    if (cfg.poster) video.poster = cfg.poster;
+    const src = document.createElement('source'); src.src = cfg.video; src.type = 'video/mp4';
+    video.append(src);
+    fondo.append(video);
   }
+  const avvia = () => { if (video && video.paused) video.play?.().catch(() => {}); };
   const velo = el('div', 'bv-velo');
 
   // Barra in alto
@@ -90,7 +91,8 @@ export async function benvenuto(cfg) {
   const top = el('div', 'bv-top', btnImp, cfg.obbligo ? el('span') : btnX);
 
   // Marchio al centro
-  const logo = el('img', 'bv-logo'); logo.src = cfg.logo; logo.alt = cfg.logoAlt || cfg.nome; logo.decoding = 'async';
+  let logo = null;
+  if (cfg.logo) { logo = el('img', 'bv-logo'); logo.src = cfg.logo; logo.alt = cfg.logoAlt || cfg.nome; logo.decoding = 'async'; }
   const centro = el('div', 'bv-centro', logo);
 
   // Foglio in basso
@@ -168,6 +170,12 @@ export async function benvenuto(cfg) {
 
   document.body.append(root);
   document.documentElement.classList.add('bv-aperto');
+  if (video) {
+    avvia();
+    ['loadeddata', 'canplay'].forEach((ev) => video.addEventListener(ev, avvia));
+    root.addEventListener('pointerdown', avvia, { passive: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) avvia(); });
+  }
   if (cfg.tema) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', cfg.tema);
   requestAnimationFrame(() => root.classList.add('dentro'));
   (cfg.obbligo ? bIsc : btnX).focus({ preventScroll: true });

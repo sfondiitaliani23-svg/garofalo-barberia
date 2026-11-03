@@ -14,7 +14,7 @@ benvenuto({
   classe: 'bv-garofalo',
   css: '/css/benvenuto.css',
   nome: 'Barberia Garofalo',
-  logo: '/assets/logo.png',
+  logo: null, // col video il logo non serve: si vede già sull'insegna (richiesta di Eliseo, 03/11/2026)
   sfondo: '/assets/sostituisci-immagini/homepage/legno-oro.jpg',
   // Video del negozio (03/11/2026): liberatorie confermate da Eliseo, anche quella dei genitori per il bambino.
   video: '/assets/app/ingresso.mp4',
