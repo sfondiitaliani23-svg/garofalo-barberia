@@ -174,6 +174,16 @@ export async function benvenuto(cfg) {
     avvia();
     ['loadeddata', 'canplay'].forEach((ev) => video.addEventListener(ev, avvia));
     root.addEventListener('pointerdown', avvia, { passive: true });
+    // Se dopo 1,5 secondi il video è ancora fermo (telefono che blocca i video), al suo posto va l'animazione WebP
+    if (cfg.videoRiserva) {
+      setTimeout(() => {
+        if (!video.isConnected || (!video.paused && video.currentTime > 0.2)) return;
+        const img = document.createElement('img');
+        img.src = cfg.videoRiserva; img.alt = ''; img.className = 'bv-riserva'; img.decoding = 'async';
+        img.onload = () => { video.remove(); };
+        fondo.append(img);
+      }, 1500);
+    }
     document.addEventListener('visibilitychange', () => { if (!document.hidden) avvia(); });
   }
   if (cfg.tema) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', cfg.tema);

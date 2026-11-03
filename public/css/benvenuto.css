@@ -7,7 +7,7 @@ html.bv-aperto, html.bv-aperto body { overflow: hidden; }
 .bv button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 .bv-fondo { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(14px) saturate(1.05); transform: scale(1.08) skewX(-4deg); animation: bv-scorre 22s ease-in-out infinite alternate; }
 .bv-fondo--video { inset: 0; filter: none; transform: none; animation: none; }
-.bv-fondo--video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bv-fondo--video video, .bv-fondo--video .bv-riserva { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 @keyframes bv-scorre { from { transform: scale(1.08) skewX(-4deg) translateX(-18px); } to { transform: scale(1.14) skewX(-4deg) translateX(18px); } }
 .bv-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .55) 0%, rgba(0, 0, 0, .15) 30%, rgba(0, 0, 0, .25) 60%, rgba(0, 0, 0, .75) 100%), var(--bv-tinta, transparent); }
 .bv-top { position: relative; display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 0 20px; }
