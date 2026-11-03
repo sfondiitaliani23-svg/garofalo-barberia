@@ -77,10 +77,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 // App installata: schermata d'ingresso con accesso obbligatorio (03/11/2026). Prova nel browser: ?benvenuto=1
                 // Senza accesso la pagina resta coperta (nero + primo fotogramma del video) finché la schermata non è pronta:
                 // così all'apertura dell'app si vede subito l'ingresso e non la home per mezzo secondo.
-                "try{var bvH=document.documentElement,bvP=location.search.indexOf('benvenuto')>-1;if(bvH.classList.contains('is-app')||bvP){var bvV='20261103e';" +
+                "try{var bvH=document.documentElement,bvP=location.search.indexOf('benvenuto')>-1;if(bvH.classList.contains('is-app')||bvP){var bvV='20261103f';" +
                 "var bvE=/^\\/(en\\/)?(login|register|reimposta-password|privacy)|^\\/(auth|admin|area-cliente|qr|link)/.test(location.pathname);" +
                 "var bvL=/(?:^|;\\s*)sb-[^=]+-auth-token(?:\\.0)?=/.test(document.cookie);" +
                 "if(!bvE&&(!bvL||bvP)){bvH.classList.add('bv-attesa');var bvS=document.createElement('style');bvS.textContent='html.bv-attesa::before{content:\\'\\';position:fixed;inset:0;z-index:2147482999;background:#000 url(/assets/app/ingresso-poster.jpg?v=3) center/cover no-repeat}html.bv-attesa body>*:not(.bv){visibility:hidden!important}';document.head.appendChild(bvS);" +
+                "var bvVd=document.createElement('video');bvVd.id='bv-pre';bvVd.muted=true;bvVd.defaultMuted=true;bvVd.loop=true;bvVd.playsInline=true;bvVd.autoplay=true;bvVd.preload='auto';bvVd.setAttribute('muted','');bvVd.setAttribute('playsinline','');bvVd.setAttribute('aria-hidden','true');bvVd.poster='/assets/app/ingresso-poster.jpg?v=3';bvVd.src='/assets/app/ingresso.mp4?v=3';bvVd.setAttribute('style','position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:2147483000;background:#000');bvH.appendChild(bvVd);var bvPl=function(){var q=bvVd.play();if(q&&q.catch)q.catch(function(){})};bvPl();bvVd.addEventListener('canplay',bvPl);" +
                 "var bvC=document.createElement('link');bvC.rel='stylesheet';bvC.href='/css/benvenuto.css?v='+bvV;document.head.appendChild(bvC);setTimeout(function(){bvH.classList.remove('bv-attesa')},5000)}" +
                 "import('/js/benvenuto-garofalo.js?v='+bvV).catch(function(){bvH.classList.remove('bv-attesa')})}}catch(e){}" +
                 "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__gbBIP=e;window.dispatchEvent(new Event('gb-bip'))});" +

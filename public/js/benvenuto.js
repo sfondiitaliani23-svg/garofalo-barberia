@@ -37,7 +37,7 @@ const DUE_MESI = 60 * 24 * 60 * 60 * 1000;
  */
 export async function benvenuto(cfg) {
   // Il sito può coprire la pagina in anticipo (classe bv-attesa nell'<head>) per non far vedere la home prima della schermata
-  const libera = () => document.documentElement.classList.remove('bv-attesa');
+  const libera = () => { document.documentElement.classList.remove('bv-attesa'); document.getElementById('bv-pre')?.remove(); };
   try { return await mostra(cfg); } finally { libera(); }
 }
 
@@ -83,13 +83,15 @@ async function mostra(cfg) {
   if (cfg.video) {
     fondo.classList.add('bv-fondo--video');
     if (cfg.poster) fondo.style.backgroundImage = `url("${cfg.poster}")`;
-    video = document.createElement('video');
+    // Se il sito ha già fatto partire il video nell'<head> (id bv-pre), si usa quello: niente ripartenza.
+    const pre = document.getElementById('bv-pre');
+    video = pre || document.createElement('video');
+    if (pre) { pre.removeAttribute('style'); pre.removeAttribute('id'); }
     video.muted = true; video.defaultMuted = true; video.loop = true; video.playsInline = true; video.autoplay = true; video.preload = 'auto';
     ['muted', 'playsinline', 'webkit-playsinline', 'autoplay', 'loop'].forEach((a) => video.setAttribute(a, ''));
     video.setAttribute('aria-hidden', 'true'); video.disablePictureInPicture = true;
     if (cfg.poster) video.poster = cfg.poster;
-    const src = document.createElement('source'); src.src = cfg.video; src.type = 'video/mp4';
-    video.append(src);
+    if (!pre) { const src = document.createElement('source'); src.src = cfg.video; src.type = 'video/mp4'; video.append(src); }
     fondo.append(video);
   }
   // Animazione (WebP animato): parte sempre da sola, anche dove il telefono blocca i video (03/11/2026)
