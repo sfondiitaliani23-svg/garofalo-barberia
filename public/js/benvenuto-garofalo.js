@@ -16,6 +16,9 @@ benvenuto({
   nome: 'Barberia Garofalo',
   logo: '/assets/logo.png',
   sfondo: '/assets/sostituisci-immagini/homepage/legno-oro.jpg',
+  // Video del negozio (03/11/2026): liberatorie confermate da Eliseo, anche quella dei genitori per il bambino.
+  video: '/assets/app/ingresso.mp4',
+  poster: '/assets/app/ingresso-poster.jpg',
   tema: '#000000',
   obbligo: true,
   lingua: () => (EN ? 'en' : 'it'),

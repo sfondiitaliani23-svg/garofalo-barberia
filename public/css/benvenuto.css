@@ -6,6 +6,8 @@ html.bv-aperto, html.bv-aperto body { overflow: hidden; }
 .bv.via { opacity: 0; pointer-events: none; }
 .bv button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 .bv-fondo { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(14px) saturate(1.05); transform: scale(1.08) skewX(-4deg); animation: bv-scorre 22s ease-in-out infinite alternate; }
+.bv-fondo--video { inset: 0; filter: none; transform: none; animation: none; }
+.bv-fondo--video video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 @keyframes bv-scorre { from { transform: scale(1.08) skewX(-4deg) translateX(-18px); } to { transform: scale(1.14) skewX(-4deg) translateX(18px); } }
 .bv-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .55) 0%, rgba(0, 0, 0, .15) 30%, rgba(0, 0, 0, .25) 60%, rgba(0, 0, 0, .75) 100%), var(--bv-tinta, transparent); }
 .bv-top { position: relative; display: flex; align-items: center; justify-content: space-between; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 0 20px; }
@@ -58,7 +60,7 @@ html.bv-aperto, html.bv-aperto body { overflow: hidden; }
 
 /* Barberia Garofalo: nero e oro, titoli in Rye */
 .bv-garofalo { --bv-fondo: #000; --bv-foglio: #0c0c0c; --bv-testo: #f5f1e8; --bv-morbido: rgba(245, 241, 232, .7); --bv-linea: rgba(255, 255, 255, .12); --bv-bordo: #f5f1e8; --bv-accento: #cd9a4f; --bv-accento-2: #e4c36a; --bv-su-accento: #000; --bv-titolo: #cd9a4f; --bv-linea-oro: rgba(205, 154, 79, .45);
-  --bv-font: var(--font-montserrat, "Montserrat", system-ui, sans-serif); --bv-titoli: var(--font-rye, "Rye", serif); --bv-raggio: 18px; --bv-logo-w: 210px; --bv-tinta: rgba(0, 0, 0, .25); }
+  --bv-font: var(--font-montserrat, "Montserrat", system-ui, sans-serif); --bv-titoli: var(--font-rye, "Rye", serif); --bv-raggio: 18px; --bv-logo-w: 210px; --bv-tinta: rgba(0, 0, 0, .15); }
 .bv-garofalo .bv-btn { border-radius: 14px; }
 .bv-garofalo .bv-info h2 { text-transform: none; letter-spacing: .02em; }
 .bv-garofalo .bv-logo { border-radius: 50%; }

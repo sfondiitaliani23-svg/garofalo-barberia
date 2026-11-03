@@ -66,6 +66,21 @@ export async function benvenuto(cfg) {
   // Fondo: foto mossa (come in movimento) + velo scuro
   const fondo = el('div', 'bv-fondo');
   if (cfg.sfondo) fondo.style.backgroundImage = `url("${cfg.sfondo}")`;
+  // Video di sfondo (senza audio): se c'è, prende il posto della foto. Fermo con «riduci movimento» o «risparmio dati».
+  if (cfg.video) {
+    const fermo = matchMedia('(prefers-reduced-motion: reduce)').matches || navigator.connection?.saveData;
+    fondo.classList.add('bv-fondo--video');
+    if (cfg.poster) fondo.style.backgroundImage = `url("${cfg.poster}")`;
+    if (!fermo) {
+      const v = document.createElement('video');
+      v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.preload = 'auto';
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true');
+      if (cfg.poster) v.poster = cfg.poster;
+      v.src = cfg.video;
+      fondo.append(v);
+      v.play?.().catch(() => {});
+    }
+  }
   const velo = el('div', 'bv-velo');
 
   // Barra in alto
