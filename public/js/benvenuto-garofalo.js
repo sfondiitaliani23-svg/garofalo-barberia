@@ -1,6 +1,6 @@
 // Schermata d'ingresso dell'app Barberia Garofalo (03/11/2026): nell'app installata l'accesso è obbligatorio.
 // Dopo 2 mesi senza aprire l'app si rifà l'accesso. Il resto è in benvenuto.js (uguale nei quattro siti).
-import { benvenuto, TESTI_BASE } from './benvenuto.js?v=20261103b';
+import { benvenuto, TESTI_BASE } from './benvenuto.js?v=20261103d';
 
 const EN = /(?:^|;\s*)gb_lang=en/.test(document.cookie) || location.pathname.startsWith('/en');
 // Sessione Supabase nei cookie (non httpOnly): sb-<progetto>-auth-token, a volte in pezzi .0 .1
@@ -12,14 +12,16 @@ const esci = () => {
 benvenuto({
   chiave: 'garofalo',
   classe: 'bv-garofalo',
-  css: '/css/benvenuto.css?v=20261103b',
+  css: '/css/benvenuto.css?v=20261103d',
   nome: 'Barberia Garofalo',
-  logo: null, // col video il logo non serve: si vede già sull'insegna (richiesta di Eliseo, 03/11/2026)
+  logo: null, // con il video il logo non serve: si vede già sull'insegna (richiesta di Eliseo, 03/11/2026)
   sfondo: '/assets/sostituisci-immagini/homepage/legno-oro.jpg',
   // Video del negozio (03/11/2026): liberatorie confermate da Eliseo, anche quella dei genitori per il bambino.
-  video: '/assets/app/ingresso.mp4',
-  poster: '/assets/app/ingresso-poster.jpg',
-  videoRiserva: '/assets/app/ingresso.webp',
+  poster: '/assets/app/ingresso-poster.jpg?v=3',
+  // Video in alta qualità (25 fotogrammi al secondo). Se il telefono blocca l'avvio automatico,
+  // dopo 1,2 secondi parte la stessa scena in WebP animato, sempre a 25 fotogrammi.
+  video: '/assets/app/ingresso.mp4?v=3',
+  videoRiserva: '/assets/app/ingresso.webp?v=3',
   tema: '#000000',
   obbligo: true,
   lingua: () => (EN ? 'en' : 'it'),

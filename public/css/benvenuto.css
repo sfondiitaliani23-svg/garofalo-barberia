@@ -1,8 +1,7 @@
 /* Schermata di benvenuto dell'app (03/11/2026). I colori arrivano dalle variabili --bv-* di ogni sito. */
 html.bv-aperto, html.bv-aperto body { overflow: hidden; }
 .bv, .bv *, .bv *::before, .bv *::after { box-sizing: border-box; }
-.bv { position: fixed; inset: 0; overflow: clip; z-index: 2147483000; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; background: var(--bv-fondo); color: var(--bv-testo); font-family: var(--bv-font); opacity: 0; transition: opacity .3s ease; -webkit-tap-highlight-color: transparent; }
-.bv.dentro { opacity: 1; }
+.bv { position: fixed; inset: 0; overflow: clip; z-index: 2147483000; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; background: var(--bv-fondo); color: var(--bv-testo); font-family: var(--bv-font); transition: opacity .3s ease; -webkit-tap-highlight-color: transparent; }
 .bv.via { opacity: 0; pointer-events: none; }
 .bv button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 .bv-fondo { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(14px) saturate(1.05); transform: scale(1.08) skewX(-4deg); animation: bv-scorre 22s ease-in-out infinite alternate; }

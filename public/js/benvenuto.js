@@ -81,6 +81,14 @@ export async function benvenuto(cfg) {
     video.append(src);
     fondo.append(video);
   }
+  // Animazione (WebP animato): parte sempre da sola, anche dove il telefono blocca i video (03/11/2026)
+  if (cfg.animazione && !video) {
+    fondo.classList.add('bv-fondo--video');
+    if (cfg.poster) fondo.style.backgroundImage = `url("${cfg.poster}")`;
+    const img = document.createElement('img');
+    img.src = cfg.animazione; img.alt = ''; img.className = 'bv-riserva'; img.decoding = 'async'; img.fetchPriority = 'high';
+    fondo.append(img);
+  }
   const avvia = () => { if (video && video.paused) video.play?.().catch(() => {}); };
   const velo = el('div', 'bv-velo');
 
@@ -177,12 +185,12 @@ export async function benvenuto(cfg) {
     // Se dopo 1,5 secondi il video è ancora fermo (telefono che blocca i video), al suo posto va l'animazione WebP
     if (cfg.videoRiserva) {
       setTimeout(() => {
-        if (!video.isConnected || (!video.paused && video.currentTime > 0.2)) return;
+        if (!video.isConnected || (!video.paused && video.currentTime > 0.05)) return;
         const img = document.createElement('img');
         img.src = cfg.videoRiserva; img.alt = ''; img.className = 'bv-riserva'; img.decoding = 'async';
-        img.onload = () => { video.remove(); };
+        img.onload = () => { if (video.paused || video.currentTime < 0.05) video.remove(); else img.remove(); };
         fondo.append(img);
-      }, 1500);
+      }, 1200);
     }
     document.addEventListener('visibilitychange', () => { if (!document.hidden) avvia(); });
   }
