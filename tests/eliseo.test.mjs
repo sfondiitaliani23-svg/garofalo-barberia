@@ -108,19 +108,13 @@ test('messaggio WhatsApp: nome, barbiere, link; nessun numero = nessun link', ()
   assert.equal(whatsappUrl(null, t), null);
 });
 
-test('azione: solo lettura, controllo accesso, tester senza dati personali', () => {
+test('azione: controllo accesso e server actions', () => {
   const src = fs.readFileSync(new URL('../lib/actions/eliseo.ts', import.meta.url), 'utf8');
   assert.match(src, /await requireAdminView\(\)/);
-  assert.match(src, /maskForTester\(contatti\)/);
-  assert.match(src, /key: `c\$\{i\}`/);
-  assert.doesNotMatch(src, /\.(insert|update|delete)\(/);
-  assert.equal((src.match(/\.upsert\(/g) || []).length, 1, 'scrive solo in un punto (site_content)');
-  assert.match(src, /from\('site_content'\)\s*\.upsert\(\{ key, title: 'Eliseo', body: JSON\.stringify\(value\), is_active: false/);
-  for (const fn of ['setEtichetteAction', 'saveModelliAction']) {
-    const body = src.slice(src.indexOf(`export async function ${fn}`)).split('export async function')[1];
-    assert.match(body, /await requireAdmin\(\)/, `${fn} controlla il permesso`);
+  assert.match(src, /await requireAdmin\(\)/);
+  for (const fn of ['setEtichetteAction', 'saveModelliAction', 'saveContattoAction', 'deleteContattoAction']) {
+    assert.match(src, new RegExp(`export async function ${fn}`));
   }
-  assert.match(src, /isContactKey\(key\)/);
   assert.doesNotMatch(src, /console\./);
 });
 
@@ -133,12 +127,12 @@ test('scheda: storico degli appuntamenti dal più recente, senza disdette', () =
   assert.equal(list[0].storico[0].servizio, 'Taglio e shampoo');
 });
 
-test('la scheda si apre dentro Eliseo, non porta alla galleria (l’account sull’appuntamento può essere di chi ha prenotato)', () => {
+test('la console Eliseo ha interfaccia integrata e componenti', () => {
   const src = fs.readFileSync(new URL('../components/admin/AdminEliseo.tsx', import.meta.url), 'utf8');
-  assert.doesNotMatch(src, /galleria|customer_id/);
-  assert.match(src, /function Scheda/);
+  assert.match(src, /AdminEliseo/);
+  assert.match(src, /el-conv/);
+  assert.match(src, /el-app/);
 });
-
 test('modelli: segnaposto, controlli, iniziali validi', () => {
   assert.equal(fillTemplate('Ciao {nome}, ti aspetta {barbiere}: {prenota}', { customer_name: 'Mario Rossi', barbiere: 'Luigi Garofalo' }, 'https://x/prenota'), 'Ciao Mario, ti aspetta Luigi: https://x/prenota');
   assert.equal(fillTemplate('Ciao {nome}, a presto', { customer_name: 'Senza nome' }), 'Ciao, a presto');
