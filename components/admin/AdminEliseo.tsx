@@ -1489,15 +1489,15 @@ export function AdminEliseo({
       {/* MODALE NUOVO / MODIFICA CONTATTO */}
       {isContactModalOpen && editingContact && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-xl rounded-xl bg-white p-6 shadow-2xl text-black">
-            <div className="flex items-center justify-between border-b pb-3">
+          <div className="w-full max-w-xl rounded-2xl border border-[rgba(205,154,79,0.25)] bg-[#17110b] p-6 shadow-2xl text-[#f7ecd0]">
+            <div className="flex items-center justify-between border-b border-[rgba(205,154,79,0.15)] pb-3">
               <h3 className="text-lg font-bold">
                 {editingContact.id ? `Modifica: ${editingContact.nome}` : 'Nuovo contatto'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsContactModalOpen(false)}
-                className="text-gray-400 hover:text-black"
+                className="text-white/40 hover:text-white transition"
               >
                 <X size={20} />
               </button>
@@ -1672,13 +1672,13 @@ export function AdminEliseo({
       {/* MODALE IMPORTA CSV */}
       {isCsvModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-xl rounded-xl bg-white p-6 shadow-2xl text-black">
-            <div className="flex items-center justify-between border-b pb-3">
+          <div className="w-full max-w-xl rounded-2xl border border-[rgba(205,154,79,0.25)] bg-[#17110b] p-6 shadow-2xl text-[#f7ecd0]">
+            <div className="flex items-center justify-between border-b border-[rgba(205,154,79,0.15)] pb-3">
               <h3 className="text-lg font-bold">Importa contatti da CSV</h3>
               <button
                 type="button"
                 onClick={() => setIsCsvModalOpen(false)}
-                className="text-gray-400 hover:text-black"
+                className="text-white/40 hover:text-white transition"
               >
                 <X size={20} />
               </button>
@@ -1721,7 +1721,7 @@ export function AdminEliseo({
               </div>
 
               {csvPlan && (
-                <div className="rounded-lg bg-gray-50 p-4 border text-sm">
+                <div className="rounded-xl bg-[#100b07] border border-[rgba(205,154,79,0.2)] p-4 text-sm">
                   {csvPlan.errore ? (
                     <p className="text-red-600 font-semibold">{csvPlan.errore}</p>
                   ) : (
@@ -1729,7 +1729,7 @@ export function AdminEliseo({
                       <p className="font-semibold text-green-700">
                         {csvPlan.nuovi.length} contatti nuovi pronti per l’importazione
                       </p>
-                      <p className="text-gray-600 text-xs mt-1">
+                      <p className="text-white/50 text-xs mt-1">
                         {csvPlan.doppi} già presenti (non toccati) · {csvPlan.scartati} righe non valide.
                       </p>
                     </div>
