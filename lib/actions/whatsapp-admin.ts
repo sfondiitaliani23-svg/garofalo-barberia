@@ -284,3 +284,23 @@ export async function markReminderGroupSentAction(ids: string[]): Promise<{ ok: 
   const { error } = await supabase.from('appointments').update({ reminder_whatsapp_sent_at: new Date().toISOString() }).in('id', ids);
   return { ok: !error };
 }
+
+
+/**
+ * Disconnette la sessione WhatsApp corrente da Green API (logout reale).
+ */
+export async function logoutWhatsAppInstanceAction(): Promise<{ ok: boolean; error?: string }> {
+  await requireAdmin();
+  const creds = getGreenApiCredentials();
+  if (!creds) return { ok: false, error: 'Green API non configurato' };
+
+  try {
+    const res = await fetch(`${creds.host}/waInstance${creds.instanceId}/logout/${creds.token}`, {
+      method: 'GET',
+    });
+    if (!res.ok) return { ok: false, error: 'Errore disconnessione Green API' };
+    return { ok: true };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Errore di rete durante la disconnessione' };
+  }
+}

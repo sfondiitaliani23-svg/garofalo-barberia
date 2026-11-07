@@ -82,6 +82,7 @@ import {
 import {
   getWhatsAppStatusAction,
   getWhatsAppQrAction,
+  logoutWhatsAppInstanceAction,
   type WhatsAppState,
 } from '@/lib/actions/whatsapp-admin';
 import './eliseo.css';
@@ -272,6 +273,7 @@ export function AdminEliseo({
         } else if (qrRes.type === 'qrCode' && qrRes.qrBase64) {
           setWaQrBase64(qrRes.qrBase64);
           setWaState('notAuthorized');
+          setWaConnected(false);
         }
       }
     } catch (err) {
@@ -284,6 +286,18 @@ export function AdminEliseo({
   useEffect(() => {
     if (railTab === 'casella' && !activeCasellaItem) {
       refreshWaLive();
+      // Polling ogni 5s per rilevare istantaneamente quando Luigi inquadra il QR con il telefono
+      const timer = setInterval(async () => {
+        try {
+          const statusRes = await getWhatsAppStatusAction();
+          if (statusRes.ok && statusRes.state === 'authorized') {
+            setWaState('authorized');
+            setWaConnected(true);
+            setWaQrBase64(null);
+          }
+        } catch (_) {}
+      }, 5000);
+      return () => clearInterval(timer);
     }
   }, [railTab, activeCasellaItem, refreshWaLive]);
 
@@ -1678,12 +1692,22 @@ export function AdminEliseo({
                           <button
                             type="button"
                             className="btn btn--secondary btn--sm"
-                            onClick={() => {
-                              const next = !(waConnected || waState === 'authorized');
-                              setWaConnected(next);
-                              setWaState(next ? 'authorized' : 'notAuthorized');
-                              try { localStorage.setItem('eliseo_wa_connected', next ? '1' : '0'); } catch (_) {}
-                              say(next ? 'WhatsApp impostato come connesso.' : 'WhatsApp scollegato.');
+                            onClick={async () => {
+                              if (waState === 'authorized' || waConnected) {
+                                say('Disconnessione WhatsApp in corso...');
+                                const res = await logoutWhatsAppInstanceAction();
+                                if (res.ok) {
+                                  setWaConnected(false);
+                                  setWaState('notAuthorized');
+                                  say('WhatsApp scollegato. Generazione nuovo QR...');
+                                  await refreshWaLive();
+                                } else {
+                                  say(res.error || 'Errore durante la disconnessione.', true);
+                                }
+                              } else {
+                                refreshWaLive();
+                                say('Aggiornamento codice QR...');
+                              }
                             }}
                           >
                             {(waConnected || waState === 'authorized') ? 'Scollega' : 'Verifica stato'}
