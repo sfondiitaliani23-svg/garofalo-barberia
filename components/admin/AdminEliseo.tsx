@@ -179,26 +179,45 @@ export function AdminEliseo({
   // Casella State
   // ───────────────────────────────────────────────
   const [casellaChi, setCasellaChi] = useState<string>('');
-  const [casellaVista, setCasellaVista] = useState<'tutte' | 'aperte' | 'nuove' | 'chiuse'>('tutte');
+  const [casellaVista, setCasellaVista] = useState<'tutte' | 'aperte' | 'nuove' | 'richieste' | 'chiuse'>('tutte');
+  const [casellaCartella, setCasellaCartella] = useState<string>('');
+  const [casellaCartellaSearch, setCasellaCartellaSearch] = useState<string>('');
+  const [cartellaSearchOpen, setCartellaSearchOpen] = useState<boolean>(false);
+  const [casellaOrd, setCasellaOrd] = useState<'recenti' | 'meno_recenti'>('recenti');
+  const [customCartelle, setCustomCartelle] = useState<string[]>([]);
   const [casellaQ, setCasellaQ] = useState<string>('');
   const [casellaPick, setCasellaPick] = useState<string>(initialCasella[0]?.rif || '');
   const [selectedModelloForCasella, setSelectedModelloForCasella] = useState<string>('');
 
+  const allCartelle = useMemo(() => {
+    const fromItems = casella.map((x) => x.cartella).filter(Boolean) as string[];
+    return Array.from(new Set([...fromItems, ...customCartelle])).sort();
+  }, [casella, customCartelle]);
+
   const filteredCasella = useMemo(() => {
-    return casella.filter((item) => {
+    const list = casella.filter((item) => {
       if (casellaChi === '__none' && item.assegnato) return false;
       if (casellaChi && casellaChi !== '__none' && item.assegnato !== casellaChi) return false;
       if (casellaVista === 'nuove' && !item.nuovo) return false;
       if (casellaVista === 'aperte' && item.stato === 'chiusa') return false;
+      if (casellaVista === 'richieste' && item.tipo !== 'richiesta') return false;
       if (casellaVista === 'chiuse' && item.stato !== 'chiusa') return false;
+      if (casellaCartella && (item.cartella || '') !== casellaCartella) return false;
       if (casellaQ) {
         const q = casellaQ.toLowerCase();
-        const m = (item.nome || '').toLowerCase().includes(q) || (item.messaggio || '').toLowerCase().includes(q);
+        const m = (item.nome || '').toLowerCase().includes(q) || (item.messaggio || '').toLowerCase().includes(q) || (item.contatto || '').toLowerCase().includes(q);
         if (!m) return false;
       }
       return true;
     });
-  }, [casella, casellaChi, casellaVista, casellaQ]);
+
+    if (casellaOrd === 'meno_recenti') {
+      list.sort((a, b) => String(a.quando).localeCompare(String(b.quando)));
+    } else {
+      list.sort((a, b) => String(b.quando).localeCompare(String(a.quando)));
+    }
+    return list;
+  }, [casella, casellaChi, casellaVista, casellaCartella, casellaQ, casellaOrd]);
 
   const activeCasellaItem = useMemo(() => {
     return casella.find((c) => c.rif === casellaPick) || filteredCasella[0] || null;
@@ -207,7 +226,7 @@ export function AdminEliseo({
   const handleUpdateCasellaStato = (
     tipo: 'chat' | 'richiesta',
     rif: string,
-    patch: { stato?: 'aperta' | 'in_corso' | 'chiusa'; assegnato?: string | null; contatto_id?: string | null }
+    patch: { stato?: 'aperta' | 'in_corso' | 'chiusa'; assegnato?: string | null; contatto_id?: string | null; cartella?: string | null }
   ) => {
     if (tester) return;
     setCasella((prev) =>
@@ -221,6 +240,7 @@ export function AdminEliseo({
         stato: patch.stato || (active?.stato as 'aperta' | 'in_corso' | 'chiusa') || 'aperta',
         assegnato: patch.assegnato !== undefined ? patch.assegnato : (active?.assegnato || null),
         contatto_id: patch.contatto_id !== undefined ? patch.contatto_id : (active?.contatto_id || null),
+        cartella: patch.cartella !== undefined ? patch.cartella : (active?.cartella || null),
       });
       if (res.ok) say('Casella aggiornata.');
       else say(res.error, true);
@@ -1018,90 +1038,251 @@ export function AdminEliseo({
       {/* 3. Main Stage */}
       <div className="el-stage">
         <div className="el-body">
-          {/* TAB: CASELLA */}
+          {/* TAB: CASELLA (STILE CONSOLE KEPLERO COMPLETA) */}
           {railTab === 'casella' && (
             <div className="el-conv">
               <aside className="el-conv__side">
-                <p className="el-group">Team</p>
-                <div className="el-folders">
+                {/* Header laterale con + per nuovo contatto/messaggio */}
+                <div className="el-conv__sidehead">
+                  <strong>Conversazioni</strong>
                   <button
                     type="button"
-                    className="el-folder"
+                    className="el-side-iconbtn"
+                    title="Nuovo contatto o messaggio"
+                    aria-label="Nuovo contatto o messaggio"
+                    onClick={handleOpenNewContact}
+                  >
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="14" y2="12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Sezione TEAM con avatar colorati */}
+                <p className="el-group el-group--collapsible">
+                  <span>Team</span>
+                  <span className="el-group__chev">▾</span>
+                </p>
+                <div className="el-folders" role="group" aria-label="Team">
+                  <button
+                    type="button"
+                    className="el-folder el-folder--av"
                     aria-pressed={casellaChi === ''}
                     onClick={() => setCasellaChi('')}
                   >
-                    <span>Tutto il team</span>
+                    <span className="el-side-av el-side-av--muted" />
+                    <span className="el-folder__txt">Tutti</span>
                     <b>{casella.length}</b>
                   </button>
                   <button
                     type="button"
-                    className="el-folder"
+                    className="el-folder el-folder--av"
                     aria-pressed={casellaChi === '__none'}
                     onClick={() => setCasellaChi('__none')}
                   >
-                    <span>Non assegnate</span>
+                    <span className="el-side-av el-side-av--muted" />
+                    <span className="el-folder__txt">Non assegnato</span>
                     <b>{casella.filter((x) => !x.assegnato).length}</b>
                   </button>
-                  {team.map((p) => (
+                  {team.map((p, idx) => (
                     <button
                       key={p.id}
                       type="button"
-                      className="el-folder"
+                      className="el-folder el-folder--av"
                       aria-pressed={casellaChi === p.nome}
                       onClick={() => setCasellaChi(p.nome)}
                     >
-                      <span>{p.nome}</span>
+                      <span className="el-side-av" data-tone={String(idx % 5)}>
+                        {(p.nome || '?').charAt(0).toUpperCase()}
+                      </span>
+                      <span className="el-folder__txt">{p.nome}</span>
                       <b>{casella.filter((x) => x.assegnato === p.nome).length}</b>
                     </button>
                   ))}
                 </div>
 
-                <p className="el-group">Stati</p>
-                <div className="el-folders">
+                {/* Sezione STATI con icone colorate autentiche */}
+                <p className="el-group el-group--collapsible">
+                  <span>Stati</span>
+                  <span className="el-group__chev">▾</span>
+                </p>
+                <div className="el-folders" role="group" aria-label="Stati">
                   <button
                     type="button"
-                    className="el-folder"
-                    aria-pressed={casellaVista === 'tutte'}
-                    onClick={() => setCasellaVista('tutte')}
-                  >
-                    <span>Tutte</span>
-                    <b>{casella.length}</b>
-                  </button>
-                  <button
-                    type="button"
-                    className="el-folder"
+                    className="el-folder el-folder--st"
                     aria-pressed={casellaVista === 'aperte'}
                     onClick={() => setCasellaVista('aperte')}
                   >
-                    <span>Aperte</span>
+                    <span className="el-status-ic st-aperti">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M8.5 12.5l2.5 2.5 5-5" />
+                      </svg>
+                    </span>
+                    <span className="el-folder__txt">Aperti</span>
                     <b>{casella.filter((x) => x.stato !== 'chiusa').length}</b>
                   </button>
                   <button
                     type="button"
-                    className="el-folder"
+                    className="el-folder el-folder--st"
                     aria-pressed={casellaVista === 'nuove'}
                     onClick={() => setCasellaVista('nuove')}
                   >
-                    <span>Da leggere</span>
+                    <span className="el-status-ic st-nuove">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                    </span>
+                    <span className="el-folder__txt">Da Leggere</span>
                     <b>{casella.filter((x) => x.nuovo).length}</b>
                   </button>
                   <button
                     type="button"
-                    className="el-folder"
+                    className="el-folder el-folder--st"
+                    aria-pressed={casellaVista === 'richieste'}
+                    onClick={() => setCasellaVista('richieste')}
+                  >
+                    <span className="el-status-ic st-richieste">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                        <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+                      </svg>
+                    </span>
+                    <span className="el-folder__txt">Richieste di supporto</span>
+                    <b>{casella.filter((x) => x.tipo === 'richiesta').length}</b>
+                  </button>
+                  <button
+                    type="button"
+                    className="el-folder el-folder--st"
                     aria-pressed={casellaVista === 'chiuse'}
                     onClick={() => setCasellaVista('chiuse')}
                   >
-                    <span>Chiuse</span>
+                    <span className="el-status-ic st-chiuse">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M8.5 12.5l2.5 2.5 5-5" />
+                      </svg>
+                    </span>
+                    <span className="el-folder__txt">Chiuso</span>
                     <b>{casella.filter((x) => x.stato === 'chiusa').length}</b>
                   </button>
+                </div>
+
+                {/* Sezione CARTELLE con ricerca e aggiunta */}
+                <div className="el-group el-group--tools">
+                  <span>Cartelle</span>
+                  <div className="el-group__acts">
+                    <button
+                      type="button"
+                      className="el-side-iconbtn"
+                      title="Cerca cartella"
+                      aria-label="Cerca cartella"
+                      onClick={() => setCartellaSearchOpen((prev) => !prev)}
+                    >
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="7" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="el-side-iconbtn"
+                      title="Nuova cartella"
+                      aria-label="Nuova cartella"
+                      onClick={() => {
+                        const nome = prompt('Nome della nuova cartella:');
+                        if (!nome?.trim()) return;
+                        const val = nome.trim().slice(0, 60);
+                        if (!customCartelle.includes(val)) {
+                          setCustomCartelle((prev) => [...prev, val].sort());
+                        }
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {cartellaSearchOpen && (
+                  <input
+                    type="search"
+                    className="el-search el-cartella-search"
+                    placeholder="Cerca cartella…"
+                    value={casellaCartellaSearch}
+                    onChange={(e) => setCasellaCartellaSearch(e.target.value)}
+                    autoFocus
+                  />
+                )}
+
+                <div className="el-folders" role="group" aria-label="Cartelle">
+                  <button
+                    type="button"
+                    className="el-folder el-folder--cart"
+                    aria-pressed={casellaCartella === ''}
+                    onClick={() => setCasellaCartella('')}
+                  >
+                    <span className="el-status-ic st-folder">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z" />
+                      </svg>
+                    </span>
+                    <span className="el-folder__txt">Tutte le cartelle</span>
+                    <b>{casella.length}</b>
+                  </button>
+
+                  {allCartelle
+                    .filter((c) => !casellaCartellaSearch || c.toLowerCase().includes(casellaCartellaSearch.toLowerCase()))
+                    .map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className="el-folder el-folder--cart"
+                        aria-pressed={casellaCartella === c}
+                        onClick={() => setCasellaCartella(c)}
+                      >
+                        <span className="el-status-ic st-folder">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z" />
+                          </svg>
+                        </span>
+                        <span className="el-folder__txt">{c}</span>
+                        <b>{casella.filter((x) => (x.cartella || '') === c).length}</b>
+                      </button>
+                    ))}
                 </div>
               </aside>
 
               <div className="el-conv__list">
                 <div className="el-conv__top">
-                  <strong>Conversazioni</strong>
-                  <span className="el-count">{filteredCasella.length}</span>
+                  <div className="el-conv__titlebox">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 6.5h14a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4 3v-3H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z" />
+                    </svg>
+                    <strong>Conversazioni</strong>
+                  </div>
+                  <div className="el-conv__topacts">
+                    <span className="el-count">{filteredCasella.length}</span>
+                  </div>
                 </div>
+
+                <div className="el-conv__sortbar">
+                  <select
+                    className="el-conv__sort"
+                    value={casellaOrd}
+                    onChange={(e) => setCasellaOrd(e.target.value as 'recenti' | 'meno_recenti')}
+                    aria-label="Ordinamento"
+                  >
+                    <option value="recenti">Dai più recenti ▾</option>
+                    <option value="meno_recenti">Dai meno recenti ▾</option>
+                  </select>
+                </div>
+
                 <div className="el-conv__search">
                   <input
                     type="search"
@@ -1111,31 +1292,62 @@ export function AdminEliseo({
                     onChange={(e) => setCasellaQ(e.target.value)}
                   />
                 </div>
+
                 <div className="el-conv__rows">
                   {filteredCasella.length === 0 ? (
-                    <p className="pempty">La casella è vuota.</p>
+                    <p className="pempty">Nessuna conversazione con questi filtri.</p>
                   ) : (
-                    filteredCasella.map((item) => (
-                      <button
-                        key={`${item.tipo}:${item.rif}`}
-                        type="button"
-                        className={`el-row ${item.rif === activeCasellaItem?.rif ? 'is-on' : ''}`}
-                        onClick={() => setCasellaPick(item.rif)}
-                      >
-                        <span className="el-av" data-tone={item.tipo === 'chat' ? '1' : '3'}>
-                          {(item.nome || '?').charAt(0).toUpperCase()}
-                        </span>
-                        <span className="el-row__body">
-                          <span className="el-row__top">
-                            <strong>{item.nome || 'Senza nome'}</strong>
-                            <small>{item.quando ? new Date(item.quando).toLocaleDateString('it-IT') : ''}</small>
+                    filteredCasella.map((item) => {
+                      const isWa = item.tipo === 'richiesta' && !item.contatto?.includes('@');
+                      return (
+                        <button
+                          key={`${item.tipo}:${item.rif}`}
+                          type="button"
+                          className={`el-row ${item.rif === activeCasellaItem?.rif ? 'is-on' : ''}`}
+                          onClick={() => setCasellaPick(item.rif)}
+                        >
+                          <span className="el-av" data-tone={item.tipo === 'chat' ? '1' : '3'}>
+                            {(item.nome || '?').charAt(0).toUpperCase()}
                           </span>
-                          <span className="el-row__prev">
-                            {item.messaggio || (item.tipo === 'chat' ? 'Chat del sito' : 'Modulo di richiesta')}
+                          <span className="el-row__body">
+                            <span className="el-row__top">
+                              <strong>{item.nome || 'Senza nome'}</strong>
+                              <span className="el-row__meta">
+                                {item.nuovo && <span className="el-row__dot" title="Non letto" />}
+                                {item.tipo === 'richiesta' && (
+                                  <span className="el-row__headset-ic" title="Richiesta di supporto">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                                      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+                                    </svg>
+                                  </span>
+                                )}
+                                <small>{item.quando ? new Date(item.quando).toLocaleDateString('it-IT') : ''}</small>
+                              </span>
+                            </span>
+                            <span className="el-row__prev">
+                              {isWa ? (
+                                <span className="el-row__chan el-row__chan--wa" title="WhatsApp">
+                                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M17.6 6.4A8 8 0 0 0 4.2 16.9L3 21l4.2-1.1a8 8 0 0 0 10.4-13.5z" />
+                                    <path d="M15.5 14.2c-.3-.1-1.6-.8-1.8-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.7.1-.2.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4c.2.3 2.4 3.7 5.8 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 2.1-.9 2.4-1.7.3-.8.3-1.6.2-1.7-.1-.2-.3-.3-.6-.5z" />
+                                  </svg>
+                                </span>
+                              ) : (
+                                <span className="el-row__chan el-row__chan--chat" title="Chat">
+                                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M5 6.5h14a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4 3v-3H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z" />
+                                  </svg>
+                                </span>
+                              )}
+                              <span className="el-row__snippet">
+                                {item.messaggio || (item.tipo === 'chat' ? 'Chat del sito' : 'Modulo di richiesta')}
+                              </span>
+                            </span>
                           </span>
-                        </span>
-                      </button>
-                    ))
+                        </button>
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -1200,6 +1412,31 @@ export function AdminEliseo({
                       </label>
                     </div>
 
+                    <div className="el-detail__ctrl el-detail__ctrl--full">
+                      <label className="field">
+                        <span>Cartella</span>
+                        <select
+                          value={activeCasellaItem.cartella || ''}
+                          onChange={(e) => {
+                            const val = e.target.value || null;
+                            if (val && !customCartelle.includes(val)) {
+                              setCustomCartelle((prev) => [...prev, val].sort());
+                            }
+                            handleUpdateCasellaStato(activeCasellaItem.tipo, activeCasellaItem.rif, {
+                              cartella: val,
+                            });
+                          }}
+                        >
+                          <option value="">— Nessuna cartella —</option>
+                          {allCartelle.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
                     <div className="el-detail__act">
                       {activeCasellaItem.contatto ? (
                         <>
@@ -1208,61 +1445,54 @@ export function AdminEliseo({
                             value={selectedModelloForCasella}
                             onChange={(e) => setSelectedModelloForCasella(e.target.value)}
                           >
-                            <option value="">Scegli modello di risposta...</option>
+                            <option value="">Senza modello</option>
                             {modelli.map((m) => (
                               <option key={m.id} value={m.id}>
                                 {m.nome}
                               </option>
                             ))}
                           </select>
-
-                          {activeCasellaItem.contatto.includes('@') ? (
-                            <a
-                              className="btn btn--primary"
-                              href={`mailto:${activeCasellaItem.contatto}?body=${encodeURIComponent(
-                                fillTemplate(
-                                  modelli.find((m) => m.id === selectedModelloForCasella)?.testo ||
-                                    'Ciao {nome}, grazie per il tuo messaggio.',
-                                  { nome: activeCasellaItem.nome }
-                                )
-                              )}`}
-                            >
-                              Rispondi per email
-                            </a>
-                          ) : (
-                            <a
-                              className="btn btn--primary"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              href={`https://wa.me/${activeCasellaItem.contatto.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                fillTemplate(
-                                  modelli.find((m) => m.id === selectedModelloForCasella)?.testo ||
-                                    'Ciao {nome}, grazie per averci scritto da Barberia Garofalo!',
-                                  { nome: activeCasellaItem.nome }
-                                )
-                              )}`}
-                            >
-                              Rispondi su WhatsApp
-                            </a>
-                          )}
+                          <a
+                            className="btn btn--secondary"
+                            href={(() => {
+                              const m = modelli.find((y) => y.id === selectedModelloForCasella);
+                              const t = m ? encodeURIComponent(m.testo.replace('{nome}', activeCasellaItem.nome)) : '';
+                              const c = activeCasellaItem.contatto || '';
+                              if (c.includes('@')) {
+                                return `mailto:${c}${t ? `?body=${t}` : ''}`;
+                              }
+                              const digits = c.replace(/\D/g, '');
+                              const num = digits.startsWith('39') ? digits : `39${digits}`;
+                              return `https://wa.me/${num}${t ? `?text=${t}` : ''}`;
+                            })()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {activeCasellaItem.contatto.includes('@') ? 'Rispondi per email' : 'Rispondi su WhatsApp'}
+                          </a>
                         </>
-                      ) : (
+                      ) : null}
+
+                      {!activeCasellaItem.contatto_id && (
                         <button
                           type="button"
                           className="btn btn--secondary"
                           onClick={() => {
                             setEditingContact({
-                              nome: activeCasellaItem.nome,
+                              nome: activeCasellaItem.nome || '',
                               email: activeCasellaItem.contatto?.includes('@') ? activeCasellaItem.contatto : '',
-                              telefono: !activeCasellaItem.contatto?.includes('@') ? activeCasellaItem.contatto : '',
+                              telefono: !activeCasellaItem.contatto?.includes('@') ? activeCasellaItem.contatto || '' : '',
                               fonte: 'sito',
                               fase: 'nuovo',
-                              note: activeCasellaItem.messaggio,
+                              barbiere: activeCasellaItem.assegnato || '',
+                              consenso_marketing: false,
+                              note: `Richiesta da casella: ${activeCasellaItem.messaggio || ''}`,
                             });
+                            setContactFormErrors({});
                             setIsContactModalOpen(true);
                           }}
                         >
-                          <Plus size={15} /> Aggiungi ai contatti
+                          Aggiungi ai contatti
                         </button>
                       )}
                     </div>

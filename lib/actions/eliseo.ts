@@ -227,6 +227,7 @@ export async function getEliseoAction(): Promise<EliseoPayload | EliseoError> {
         stato: (s?.stato ?? 'aperta') as 'aperta' | 'in_corso' | 'chiusa',
         assegnato: s?.assegnato ?? null,
         contatto_id: s?.contatto_id ?? null,
+        cartella: s?.cartella ?? null,
       };
     });
 
@@ -575,6 +576,7 @@ export async function saveCasellaStatoAction(input: {
   stato: 'aperta' | 'in_corso' | 'chiusa';
   assegnato: string | null;
   contatto_id: string | null;
+  cartella?: string | null;
 }): Promise<{ ok: boolean; error?: string }> {
   await requireAdmin();
   const supabase = await createServiceClient();
@@ -588,6 +590,7 @@ export async function saveCasellaStatoAction(input: {
         stato: input.stato,
         assegnato: input.assegnato,
         contatto_id: input.contatto_id,
+        cartella: input.cartella !== undefined ? input.cartella : null,
         aggiornato_il: new Date().toISOString(),
       },
       { onConflict: 'tipo,rif' }

@@ -142,6 +142,7 @@ export type CasellaItem = {
   stato: 'aperta' | 'in_corso' | 'chiusa';
   assegnato: string | null;
   contatto_id: string | null;
+  cartella?: string | null;
 };
 
 export const MOTIVI_MAP: Record<string, string> = {
