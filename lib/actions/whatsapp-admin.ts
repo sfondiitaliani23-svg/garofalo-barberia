@@ -141,6 +141,48 @@ export async function sendWhatsAppTestMessageAction(phoneNumber: string): Promis
 }
 
 /**
+ * Invia un messaggio WhatsApp a un cliente direttamente dalla chat di Eliseo.
+ */
+export async function sendWhatsAppChatMessageAction(
+  phoneNumber: string,
+  message: string
+): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  await requireAdmin();
+  const creds = getGreenApiCredentials();
+  if (!creds) return { ok: false, error: 'Green API non configurato' };
+
+  const normalized = normalizeItalianPhone(phoneNumber) || phoneNumber.replace(/\D/g, '');
+  if (!normalized || normalized.length < 9) {
+    return { ok: false, error: 'Numero di telefono non valido' };
+  }
+  if (!message || !message.trim()) {
+    return { ok: false, error: 'Il messaggio non può essere vuoto' };
+  }
+
+  try {
+    const res = await fetch(`${creds.host}/waInstance${creds.instanceId}/sendMessage/${creds.token}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chatId: `${normalized}@c.us`,
+        message: message.trim(),
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      const info = describeGreenApiError(errText);
+      return { ok: false, error: info.message };
+    }
+
+    const data = await res.json();
+    return { ok: true, messageId: data?.idMessage };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Errore durante l\'invio del messaggio' };
+  }
+}
+
+/**
  * Riavvia l'istanza Green API (utile in caso di sessione bloccata).
  */
 export async function rebootWhatsAppInstanceAction(): Promise<{ ok: boolean; error?: string }> {
@@ -285,7 +327,6 @@ export async function markReminderGroupSentAction(ids: string[]): Promise<{ ok: 
   return { ok: !error };
 }
 
-
 /**
  * Disconnette la sessione WhatsApp corrente da Green API (logout reale).
  */
@@ -357,8 +398,6 @@ export async function syncWhatsAppRecentChatsAction(): Promise<{
     const supabase = await createServiceClient();
     if (!supabase) return { ok: false, inserted: 0, items: [], error: 'Database non configurato' };
 
-    // Leggi i contatti già presenti per evitare duplicati per idMessage
-    // Usiamo il campo `contatto` per cercare per numero
     const phones = direct.map((m: any) => {
       const chatId: string = m.chatId || m.sender || '';
       return chatId.replace('@c.us', '').replace('@s.whatsapp.net', '');
@@ -369,7 +408,6 @@ export async function syncWhatsAppRecentChatsAction(): Promise<{
       .select('contatto, creato_il')
       .in('contatto', phones);
 
-    // Costruisci un set di (contatto, giorno) già presenti per deduplica giornaliera
     const existingSet = new Set<string>(
       (existing ?? []).map((r: any) => {
         const day = r.creato_il ? r.creato_il.slice(0, 10) : '';
@@ -390,7 +428,7 @@ export async function syncWhatsAppRecentChatsAction(): Promise<{
       const key = `${phone}::${day}`;
 
       if (existingSet.has(key)) continue;
-      existingSet.add(key); // evita inserimenti doppi nel batch corrente
+      existingSet.add(key);
 
       toInsert.push({
         nome: senderName.slice(0, 80),

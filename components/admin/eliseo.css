@@ -446,70 +446,304 @@
 }
 
 .el-conv__detail {
-  display: grid;
-  align-content: start;
-  gap: 16px;
-  padding: 24px;
-  background: #17110b;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: #140d07;
+  overflow: hidden;
+  height: 100%;
+  position: relative;
 }
 
-.el-detail__head {
+/* Chat Header WhatsApp */
+.el-chat-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #19110a;
+  border-bottom: 1px solid rgba(205, 154, 79, 0.16);
+  flex-shrink: 0;
 }
 
-.el-detail__head h2 {
+.el-chat-header__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.el-chat-header__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.el-chat-header__name {
   margin: 0;
-  font-size: 19px;
-  font-weight: 750;
+  font-size: 16px;
+  font-weight: 700;
   color: #f7ecd0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.el-detail__head p {
-  margin: 2px 0 0;
-  font-size: 12.5px;
-  color: rgba(244, 239, 231, 0.65);
-}
-
-.el-detail__text {
-  margin: 4px 0;
-  padding: 16px 18px;
-  background: #100b07;
-  border: 1px solid rgba(205, 154, 79, 0.16);
-  border-radius: 14px;
-  color: #f7ecd0;
-  font-size: 14px;
-  line-height: 1.55;
-  white-space: pre-line;
-}
-
-.el-detail__ctrl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.el-detail__act {
+.el-chat-header__sub {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(247, 236, 208, 0.6);
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
   align-items: center;
-  margin-top: 6px;
+  gap: 6px;
 }
 
-.el-dot {
+.el-chat-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.el-chat-action-btn {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
-  border-radius: 99px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: rgba(205, 154, 79, 0.08);
+  border: 1px solid rgba(205, 154, 79, 0.18);
+  color: #f7ecd0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.el-chat-action-btn:hover {
+  background: rgba(205, 154, 79, 0.2);
+  border-color: #cd9a4f;
+  color: #fff;
+}
+
+.el-chat-action-btn.is-active {
+  background: #cd9a4f;
+  color: #120d08;
+  border-color: #cd9a4f;
+}
+
+/* Chat Messages Timeline WhatsApp */
+.el-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: radial-gradient(circle at 50% 30%, rgba(205, 154, 79, 0.04) 0%, transparent 70%), #110b06;
+}
+
+.el-chat-date-pill {
+  align-self: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(23, 17, 11, 0.85);
+  border: 1px solid rgba(205, 154, 79, 0.18);
+  color: rgba(247, 236, 208, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+  margin: 6px 0;
+}
+
+.el-chat-bubble {
+  max-width: 72%;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 14px 8px;
+  border-radius: 14px;
+  position: relative;
+  word-break: break-word;
+  animation: elBubbleIn 0.15s ease-out;
+}
+
+@keyframes elBubbleIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.el-chat-bubble--in {
+  align-self: flex-start;
+  background: #1b130c;
+  border: 1px solid rgba(205, 154, 79, 0.2);
+  border-bottom-left-radius: 3px;
+  color: #f7ecd0;
+}
+
+.el-chat-bubble--out {
+  align-self: flex-end;
+  background: #163624;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-bottom-right-radius: 3px;
+  color: #e6f9ee;
+}
+
+.el-chat-bubble__sender {
   font-size: 11px;
   font-weight: 700;
-  background: rgba(205, 154, 79, 0.18);
+  color: #cd9a4f;
+  margin-bottom: 3px;
+}
+
+.el-chat-bubble__text {
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.el-chat-bubble__meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(247, 236, 208, 0.55);
+}
+
+.el-chat-bubble--out .el-chat-bubble__meta {
+  color: rgba(230, 249, 238, 0.65);
+}
+
+/* Chat Input Bar WhatsApp */
+.el-chat-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: #19110a;
+  border-top: 1px solid rgba(205, 154, 79, 0.16);
+  flex-shrink: 0;
+}
+
+.el-chat-input-bar input {
+  flex: 1;
+  background: #110b06;
+  border: 1px solid rgba(205, 154, 79, 0.22);
+  border-radius: 20px;
+  padding: 10px 16px;
   color: #f7ecd0;
-  border: 1px solid #cd9a4f;
-  width: fit-content;
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.el-chat-input-bar input:focus {
+  border-color: #cd9a4f;
+}
+
+.el-chat-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #cd9a4f;
+  color: #120d08;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.el-chat-send-btn:hover {
+  background: #e0af65;
+  transform: scale(1.04);
+}
+
+.el-chat-send-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* WhatsApp Filter Pills in Conv List */
+.el-wa-filters {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(205, 154, 79, 0.1);
+}
+
+.el-wa-pill {
+  border: 1px solid rgba(205, 154, 79, 0.18);
+  background: transparent;
+  color: rgba(247, 236, 208, 0.7);
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.el-wa-pill:hover {
+  background: rgba(205, 154, 79, 0.12);
+  color: #f7ecd0;
+}
+
+.el-wa-pill.is-active {
+  background: #cd9a4f;
+  color: #120d08;
+  border-color: #cd9a4f;
+}
+
+.el-wa-pill__count {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 99px;
+  padding: 1px 6px;
+  font-size: 10px;
+}
+
+.el-wa-pill.is-active .el-wa-pill__count {
+  background: rgba(255, 255, 255, 0.25);
+  color: #120d08;
+}
+
+/* Archived Banner Bar in WhatsApp List */
+.el-archived-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(205, 154, 79, 0.08);
+  border-bottom: 1px solid rgba(205, 154, 79, 0.14);
+  color: #f7ecd0;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.el-archived-banner:hover {
+  background: rgba(205, 154, 79, 0.15);
+}
+
+.el-badge-muted {
+  color: rgba(247, 236, 208, 0.45);
+  display: inline-flex;
+  align-items: center;
+}
+
+.el-badge-pinned {
+  color: #cd9a4f;
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Book / Contatti Layout */
