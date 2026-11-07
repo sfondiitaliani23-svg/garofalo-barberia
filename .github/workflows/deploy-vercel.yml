@@ -59,7 +59,9 @@ jobs:
 
       - name: Pubblica in produzione
         run: |
-          url=$(~/.vercel-cli/node_modules/.bin/vercel deploy --prod --yes --token="$VERCEL_TOKEN")
+          set -o pipefail
+          ~/.vercel-cli/node_modules/.bin/vercel deploy --prod --yes --token="$VERCEL_TOKEN" 2>&1 | tee /tmp/vercel-out.txt
+          url=$(tail -1 /tmp/vercel-out.txt)
           echo "Pubblicato: $url"
           echo "### Sito pubblicato" >> "$GITHUB_STEP_SUMMARY"
           echo "$url" >> "$GITHUB_STEP_SUMMARY"
