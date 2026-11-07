@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition, useMemo } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
 import {
   MessageSquare,
@@ -26,6 +27,7 @@ import {
   HelpCircle,
   Folder,
   Send,
+  Mail,
 } from 'lucide-react';
 import {
   FASI,
@@ -188,6 +190,23 @@ export function AdminEliseo({
   const [casellaQ, setCasellaQ] = useState<string>('');
   const [casellaPick, setCasellaPick] = useState<string>(initialCasella[0]?.rif || '');
   const [selectedModelloForCasella, setSelectedModelloForCasella] = useState<string>('');
+  // Modal canale & WhatsApp Pairing State
+  const [channelModal, setChannelModal] = useState<'pick' | 'whatsapp' | 'email' | null>(null);
+  const [waConnected, setWaConnected] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try { return localStorage.getItem('eliseo_wa_connected') === '1'; } catch (_) {}
+    }
+    return false;
+  });
+  const [waPairToken, setWaPairToken] = useState<string>(() => Date.now().toString(36));
+  const [newWaPhone, setNewWaPhone] = useState<string>('+39 ');
+  const [newWaName, setNewWaName] = useState<string>('');
+  const [newWaMsg, setNewWaMsg] = useState<string>('');
+  const [newMailTo, setNewMailTo] = useState<string>('');
+  const [newMailName, setNewMailName] = useState<string>('');
+  const [newMailSubject, setNewMailSubject] = useState<string>('');
+  const [newMailBody, setNewMailBody] = useState<string>('');
+
 
   const allCartelle = useMemo(() => {
     const fromItems = casella.map((x) => x.cartella).filter(Boolean) as string[];
@@ -1050,7 +1069,7 @@ export function AdminEliseo({
                     className="el-side-iconbtn"
                     title="Nuovo contatto o messaggio"
                     aria-label="Nuovo contatto o messaggio"
-                    onClick={handleOpenNewContact}
+                    onClick={() => setChannelModal('pick')}
                   >
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19" />
@@ -1498,7 +1517,95 @@ export function AdminEliseo({
                     </div>
                   </>
                 ) : (
-                  <p className="pempty">Seleziona una conversazione.</p>
+                  <div className="el-wa-pair">
+                    <div className="el-wa-pair__header">
+                      <div className="el-wa-badge">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17.6 6.4A8 8 0 0 0 4.2 16.9L3 21l4.2-1.1a8 8 0 0 0 10.4-13.5z" />
+                          <path d="M15.5 14.2c-.3-.1-1.6-.8-1.8-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.7.1-.2.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4c.2.3 2.4 3.7 5.8 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 2.1-.9 2.4-1.7.3-.8.3-1.6.2-1.7-.1-.2-.3-.3-.6-.5z" />
+                        </svg>
+                        <span>WhatsApp Multi-Dispositivo</span>
+                      </div>
+                      <div className={`el-wa-status ${waConnected ? 'el-wa-status--connected' : 'el-wa-status--waiting'}`}>
+                        <span className={waConnected ? 'el-wa-status__dot' : 'el-wa-status__pulse'} />
+                        <span>{waConnected ? 'Connesso: +39 347 884 8922' : 'In attesa di scansione...'}</span>
+                      </div>
+                    </div>
+
+                    <div className="el-wa-pair__titles">
+                      <h3>Collega il WhatsApp di Luigi Garofalo a Eliseo</h3>
+                      <p>
+                        Inquadra il codice QR con lo smartphone del salone per ricevere e inviare tutti i messaggi WhatsApp direttamente dentro Eliseo, senza uscire dalla console.
+                      </p>
+                    </div>
+
+                    <div className="el-wa-pair__content">
+                      <div className="el-wa-qr__col">
+                        <div className="el-wa-qr__box">
+                          <QRCodeSVG value={`https://wa.me/393478848922?pair=${waPairToken}`} size={170} level="M" />
+                        </div>
+                        <div className="el-wa-qr__acts">
+                          <button
+                            type="button"
+                            className="btn btn--secondary btn--sm"
+                            onClick={() => {
+                              setWaPairToken(Date.now().toString(36));
+                              say('Nuovo codice QR generato.');
+                            }}
+                          >
+                            Rigenera QR
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn--secondary btn--sm"
+                            onClick={() => {
+                              const next = !waConnected;
+                              setWaConnected(next);
+                              try { localStorage.setItem('eliseo_wa_connected', next ? '1' : '0'); } catch (_) {}
+                              say(next ? 'WhatsApp collegato con successo!' : 'WhatsApp scollegato.');
+                            }}
+                          >
+                            {waConnected ? 'Scollega' : 'Verifica / Simula'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="el-wa-steps">
+                        <div className="el-wa-step">
+                          <span className="el-wa-step__num">1</span>
+                          <div>
+                            <strong>Apri WhatsApp</strong>
+                            <p>Sul telefono di Luigi Garofalo (+39 347 884 8922)</p>
+                          </div>
+                        </div>
+                        <div className="el-wa-step">
+                          <span className="el-wa-step__num">2</span>
+                          <div>
+                            <strong>Menu o Impostazioni</strong>
+                            <p>Tocca i tre puntini ⋮ (Android) o Impostazioni ⚙️ (iPhone)</p>
+                          </div>
+                        </div>
+                        <div className="el-wa-step">
+                          <span className="el-wa-step__num">3</span>
+                          <div>
+                            <strong>Dispositivi collegati</strong>
+                            <p>Tocca &quot;Collega un dispositivo&quot;</p>
+                          </div>
+                        </div>
+                        <div className="el-wa-step">
+                          <span className="el-wa-step__num">4</span>
+                          <div>
+                            <strong>Inquadra il codice QR</strong>
+                            <p>La sessione crittografata si sincronizzerà all’istante con Eliseo</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="el-wa-pair__footer">
+                      <span>💬 In alternativa, seleziona una conversazione dall’elenco a sinistra per visualizzarla.</span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -2779,6 +2886,243 @@ export function AdminEliseo({
           </p>
         )}
       </div>
+
+      
+      {/* MODALE SCELTA CANALE NUOVA CONVERSAZIONE (STILE KEPLERO) */}
+      {channelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-lg rounded-2xl border border-[rgba(205,154,79,0.3)] bg-[#17110b] p-6 shadow-2xl text-[#f7ecd0]">
+            <div className="flex items-center justify-between border-b border-[rgba(205,154,79,0.15)] pb-3">
+              <h3 className="text-lg font-bold">
+                {channelModal === 'pick' && 'Scegli un canale per iniziare una nuova conversazione'}
+                {channelModal === 'whatsapp' && 'Nuova conversazione WhatsApp'}
+                {channelModal === 'email' && 'Nuova email dal CRM'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setChannelModal(null)}
+                className="text-white/40 hover:text-white transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {channelModal === 'pick' && (
+              <div className="grid grid-cols-2 gap-4 py-6">
+                <button
+                  type="button"
+                  onClick={() => setChannelModal('whatsapp')}
+                  className="flex items-center justify-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-4 text-emerald-400 font-bold hover:bg-emerald-900/60 transition"
+                >
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17.6 6.4A8 8 0 0 0 4.2 16.9L3 21l4.2-1.1a8 8 0 0 0 10.4-13.5z" />
+                    <path d="M15.5 14.2c-.3-.1-1.6-.8-1.8-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.7.1-.2.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4c.2.3 2.4 3.7 5.8 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 2.1-.9 2.4-1.7.3-.8.3-1.6.2-1.7-.1-.2-.3-.3-.6-.5z" />
+                  </svg>
+                  <span>WhatsApp</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setChannelModal('email')}
+                  className="flex items-center justify-center gap-3 rounded-xl border border-[rgba(205,154,79,0.3)] bg-black/40 p-4 text-[#f7ecd0] font-bold hover:bg-[rgba(205,154,79,0.15)] transition"
+                >
+                  <Mail size={22} className="text-[#cd9a4f]" />
+                  <span>Email</span>
+                </button>
+              </div>
+            )}
+
+            {channelModal === 'whatsapp' && (
+              <div className="space-y-4 pt-4">
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Contatto salvato</span>
+                  <select
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                    onChange={(e) => {
+                      const f = contatti.find((c) => c.telefono === e.target.value);
+                      if (f) {
+                        setNewWaPhone(f.telefono || '');
+                        setNewWaName(f.nome || '');
+                      }
+                    }}
+                  >
+                    <option value="">— Inserisci nuovo numero —</option>
+                    {contatti.filter((c) => c.telefono).map((c) => (
+                      <option key={c.id} value={c.telefono || ''}>{c.nome} ({c.telefono})</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Numero WhatsApp *</span>
+                  <input
+                    type="tel"
+                    value={newWaPhone}
+                    onChange={(e) => setNewWaPhone(e.target.value)}
+                    placeholder="+39 3..."
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Nome contatto</span>
+                  <input
+                    type="text"
+                    value={newWaName}
+                    onChange={(e) => setNewWaName(e.target.value)}
+                    placeholder="Nome cliente"
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Messaggio iniziale</span>
+                  <textarea
+                    rows={3}
+                    value={newWaMsg}
+                    onChange={(e) => setNewWaMsg(e.target.value)}
+                    placeholder="Scrivi un messaggio iniziale..."
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                  />
+                </label>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setChannelModal('pick')}
+                    className="rounded-lg border border-white/20 px-4 py-2 text-sm text-white/70 hover:bg-white/10"
+                  >
+                    Indietro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cleanTel = newWaPhone.replace(/[^\d+]/g, '');
+                      if (!cleanTel || cleanTel.length < 8) {
+                        say('Inserisci un numero di telefono valido.', true);
+                        return;
+                      }
+                      const nomeFinal = newWaName.trim() || 'Cliente WhatsApp';
+                      const msgFinal = newWaMsg.trim() || 'Conversazione WhatsApp avviata';
+                      const rif = 'wa_' + cleanTel.replace(/\+/g, '');
+
+                      setCasella((prev) => {
+                        const exists = prev.find((x) => x.rif === rif);
+                        if (exists) {
+                          return prev.map((x) => x.rif === rif ? { ...x, messaggio: msgFinal, quando: new Date().toISOString() } : x);
+                        }
+                        const newItem: CasellaItem = {
+                          tipo: 'chat',
+                          rif,
+                          nome: nomeFinal,
+                          contatto: cleanTel,
+                          messaggio: msgFinal,
+                          quando: new Date().toISOString(),
+                          nuovo: false,
+                          stato: 'aperta',
+                          assegnato: null,
+                          contatto_id: null,
+                          cartella: null,
+                        };
+                        return [newItem, ...prev];
+                      });
+
+                      setCasellaPick(rif);
+                      setChannelModal(null);
+                      say(`Conversazione con ${nomeFinal} pronta su Eliseo.`);
+                    }}
+                    className="rounded-lg bg-[#cd9a4f] px-4 py-2 text-sm font-bold text-black hover:bg-[#dfb26e]"
+                  >
+                    Avvia chat WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {channelModal === 'email' && (
+              <div className="space-y-4 pt-4">
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Contatto salvato</span>
+                  <select
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                    onChange={(e) => {
+                      const f = contatti.find((c) => c.email === e.target.value);
+                      if (f) {
+                        setNewMailTo(f.email || '');
+                        setNewMailName(f.nome || '');
+                      }
+                    }}
+                  >
+                    <option value="">— Inserisci nuova email —</option>
+                    {contatti.filter((c) => c.email).map((c) => (
+                      <option key={c.id} value={c.email || ''}>{c.nome} ({c.email})</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Indirizzo email *</span>
+                  <input
+                    type="email"
+                    value={newMailTo}
+                    onChange={(e) => setNewMailTo(e.target.value)}
+                    placeholder="cliente@email.it"
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Oggetto</span>
+                  <input
+                    type="text"
+                    value={newMailSubject}
+                    onChange={(e) => setNewMailSubject(e.target.value)}
+                    placeholder="Oggetto dell'email"
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="text-xs uppercase tracking-wider text-white/50">Messaggio</span>
+                  <textarea
+                    rows={4}
+                    value={newMailBody}
+                    onChange={(e) => setNewMailBody(e.target.value)}
+                    placeholder="Scrivi il testo..."
+                    className="mt-1 w-full rounded-lg border border-[rgba(205,154,79,0.3)] bg-[#211810] p-2 text-sm text-[#f7ecd0]"
+                  />
+                </label>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setChannelModal('pick')}
+                    className="rounded-lg border border-white/20 px-4 py-2 text-sm text-white/70 hover:bg-white/10"
+                  >
+                    Indietro
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!newMailTo || !newMailTo.includes('@')) {
+                        say('Inserisci un indirizzo email valido.', true);
+                        return;
+                      }
+                      const mailto = `mailto:${encodeURIComponent(newMailTo)}?subject=${encodeURIComponent(newMailSubject || 'Comunicazione da Barberia Garofalo')}&body=${encodeURIComponent(newMailBody)}`;
+                      window.open(mailto, '_blank');
+                      setChannelModal(null);
+                      say('Email preparata.');
+                    }}
+                    className="rounded-lg bg-[#cd9a4f] px-4 py-2 text-sm font-bold text-black hover:bg-[#dfb26e]"
+                  >
+                    Prepara email
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* MODALE NUOVO / MODIFICA CONTATTO */}
       {isContactModalOpen && editingContact && (
