@@ -1587,3 +1587,121 @@
   70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(234, 179, 8, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
 }
+
+/* Keplero FAQ dropdown in Barberia Garofalo */
+.el-faq__dropdown-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.el-faq__btn-nuovo {
+  border-radius: 9999px;
+  padding: 8px 18px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #cd9a4f;
+  color: #120e09;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.el-faq__btn-nuovo:hover {
+  background: #e5b565;
+  transform: translateY(-1px);
+}
+.el-faq__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: #17110b;
+  border: 1px solid rgba(205, 154, 79, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: el-fade-scale 0.15s ease-out;
+}
+.el-faq__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #f7ecd0;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin: 0;
+}
+.el-faq__dropdown-item:hover {
+  background: rgba(205, 154, 79, 0.15);
+  color: #e5b565;
+}
+.el-faq__dropdown-ic {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: #cd9a4f;
+}
+
+/* WhatsApp Setup Box */
+.el-wa-setup-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 20px;
+  background: #17110b;
+  border: 1px solid rgba(205, 154, 79, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  max-width: 280px;
+  gap: 14px;
+}
+.el-wa-setup-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(37, 211, 102, 0.15);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, 0.3);
+}
+.el-wa-setup-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(247, 236, 208, 0.7);
+}
+.el-wa-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #25d366 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+  text-decoration: none;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.el-wa-link-btn:hover {
+  background: #1ebe5d !important;
+  transform: translateY(-1px);
+}

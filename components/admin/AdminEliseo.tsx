@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useMemo } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useState, useTransition, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
   MessageSquare,
@@ -176,6 +175,8 @@ export function AdminEliseo({
   );
   const [versioniPrompt, setVersioniPrompt] = useState<AssistenteVersione[]>(initialVersioniPrompt);
   const [automazioni, setAutomazioni] = useState<AutomazioneItem[]>(initialAutomazioni);
+  const [faqDropdownOpen, setFaqDropdownOpen] = useState(false);
+  const faqCsvInputRef = useRef<HTMLInputElement>(null);
 
   // ───────────────────────────────────────────────
   // Casella State
@@ -570,6 +571,46 @@ export function AdminEliseo({
         say(res.error, true);
       }
     });
+  };
+
+  const handleFaqCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || tester) return;
+    try {
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      if (!lines.length) {
+        say('Il file CSV è vuoto.');
+        return;
+      }
+      const startIndex = lines[0].toLowerCase().includes('domanda') || lines[0].toLowerCase().includes('question') ? 1 : 0;
+      let count = 0;
+      for (let i = startIndex; i < lines.length; i++) {
+        const parts = lines[i].split(',').map((p) => p.replace(/^"|"$/g, '').trim());
+        if (parts.length >= 2 && parts[0] && parts[1]) {
+          const res = await saveFaqAction({
+            domanda: parts[0].slice(0, 200),
+            risposta: parts[1].slice(0, 1000),
+            cartella: (parts[2] || 'Generale').slice(0, 40),
+            parole: (parts[3] || '').slice(0, 300),
+            attiva: true,
+          });
+          if (res.ok) {
+            setFaqList((prev) => [...prev, res.item]);
+            count++;
+          }
+        }
+      }
+      if (count > 0) {
+        say(`${count} FAQ importate con successo!`);
+      } else {
+        say('Nessuna riga valida trovata. Formato: Domanda,Risposta[,Cartella,Parole]');
+      }
+    } catch (err: any) {
+      say(`Errore importazione CSV: ${err.message || 'file non valido'}`);
+    } finally {
+      if (e.target) e.target.value = '';
+    }
   };
 
   const handleDeleteSelectedFaq = () => {
@@ -1528,33 +1569,39 @@ export function AdminEliseo({
                       </div>
                       <div className={`el-wa-status ${waConnected ? 'el-wa-status--connected' : 'el-wa-status--waiting'}`}>
                         <span className={waConnected ? 'el-wa-status__dot' : 'el-wa-status__pulse'} />
-                        <span>{waConnected ? 'Connesso: +39 347 884 8922' : 'In attesa di scansione...'}</span>
+                        <span>{waConnected ? 'Connesso: +39 347 884 8922' : 'In attesa di collegamento...'}</span>
                       </div>
                     </div>
 
                     <div className="el-wa-pair__titles">
                       <h3>Collega il WhatsApp di Luigi Garofalo a Eliseo</h3>
                       <p>
-                        Inquadra il codice QR con lo smartphone del salone per ricevere e inviare tutti i messaggi WhatsApp direttamente dentro Eliseo, senza uscire dalla console.
+                        Apri WhatsApp Web su questo computer o usa il tasto rapido qui sotto per rispondere direttamente ai clienti con il numero del salone (+39 347 884 8922).
                       </p>
                     </div>
 
                     <div className="el-wa-pair__content">
                       <div className="el-wa-qr__col">
-                        <div className="el-wa-qr__box">
-                          <QRCodeSVG value={`https://wa.me/393478848922?pair=${waPairToken}`} size={170} level="M" />
+                        <div className="el-wa-setup-box">
+                          <div className="el-wa-setup-icon">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M17.6 6.4A8 8 0 0 0 4.2 16.9L3 21l4.2-1.1a8 8 0 0 0 10.4-13.5z" />
+                              <path d="M15.5 14.2c-.3-.1-1.6-.8-1.8-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.7.1-.2.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4c.2.3 2.4 3.7 5.8 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 2.1-.9 2.4-1.7.3-.8.3-1.6.2-1.7-.1-.2-.3-.3-.6-.5z" />
+                            </svg>
+                          </div>
+                          <p className="el-wa-setup-text">
+                            Apri la sessione ufficiale WhatsApp Web per collegare la barberia ad Eliseo.
+                          </p>
+                          <a
+                            href="https://web.whatsapp.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="el-wa-link-btn"
+                          >
+                            <ExternalLink size={15} /> Apri WhatsApp Web
+                          </a>
                         </div>
                         <div className="el-wa-qr__acts">
-                          <button
-                            type="button"
-                            className="btn btn--secondary btn--sm"
-                            onClick={() => {
-                              setWaPairToken(Date.now().toString(36));
-                              say('Nuovo codice QR generato.');
-                            }}
-                          >
-                            Rigenera QR
-                          </button>
                           <button
                             type="button"
                             className="btn btn--secondary btn--sm"
@@ -1562,10 +1609,10 @@ export function AdminEliseo({
                               const next = !waConnected;
                               setWaConnected(next);
                               try { localStorage.setItem('eliseo_wa_connected', next ? '1' : '0'); } catch (_) {}
-                              say(next ? 'WhatsApp collegato con successo!' : 'WhatsApp scollegato.');
+                              say(next ? 'WhatsApp contrassegnato come collegato!' : 'WhatsApp scollegato.');
                             }}
                           >
-                            {waConnected ? 'Scollega' : 'Verifica / Simula'}
+                            {waConnected ? 'Scollega' : 'Segna come connesso'}
                           </button>
                         </div>
                       </div>
@@ -1574,36 +1621,36 @@ export function AdminEliseo({
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">1</span>
                           <div>
-                            <strong>Apri WhatsApp</strong>
-                            <p>Sul telefono di Luigi Garofalo (+39 347 884 8922)</p>
+                            <strong>Apri WhatsApp Web</strong>
+                            <p>Clicca sul pulsante verde a sinistra per aprire la scheda di WhatsApp Web sul computer.</p>
                           </div>
                         </div>
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">2</span>
                           <div>
-                            <strong>Menu o Impostazioni</strong>
-                            <p>Tocca i tre puntini ⋮ (Android) o Impostazioni ⚙️ (iPhone)</p>
+                            <strong>WhatsApp sul telefono</strong>
+                            <p>Apri l'app WhatsApp sul telefono di Luigi Garofalo (+39 347 884 8922).</p>
                           </div>
                         </div>
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">3</span>
                           <div>
                             <strong>Dispositivi collegati</strong>
-                            <p>Tocca &quot;Collega un dispositivo&quot;</p>
+                            <p>Tocca Menu ⋮ (Android) o Impostazioni ⚙️ (iPhone) → Dispositivi collegati → Collega.</p>
                           </div>
                         </div>
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">4</span>
                           <div>
-                            <strong>Inquadra il codice QR</strong>
-                            <p>La sessione crittografata si sincronizzerà all’istante con Eliseo</p>
+                            <strong>Inquadra il QR di WhatsApp Web</strong>
+                            <p>Scansiona il codice ufficiale della schermata web di WhatsApp per sincronizzare i messaggi.</p>
                           </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="el-wa-pair__footer">
-                      <span>💬 In alternativa, seleziona una conversazione dall’elenco a sinistra per visualizzarla.</span>
+                      <span>💬 In alternativa, seleziona una conversazione dall'elenco a sinistra per visualizzarla.</span>
                     </div>
                   </div>
                 )}
@@ -1645,21 +1692,79 @@ export function AdminEliseo({
                       </button>
                     )}
 
-                    <button
-                      type="button"
-                      className="btn btn--primary"
-                      onClick={() =>
-                        setEditingFaq({
-                          cartella: 'Generale',
-                          domanda: '',
-                          parole: '',
-                          risposta: '',
-                          attiva: true,
-                        })
-                      }
-                    >
-                      <Plus size={15} /> Nuova FAQ
-                    </button>
+                    <div className="el-faq__dropdown-wrap">
+                      <button
+                        type="button"
+                        className="btn el-faq__btn-nuovo"
+                        onClick={() => setFaqDropdownOpen((prev) => !prev)}
+                        aria-haspopup="true"
+                        aria-expanded={faqDropdownOpen}
+                      >
+                        <Plus size={15} /> Nuovo
+                      </button>
+
+                      {faqDropdownOpen && (
+                        <div className="el-faq__dropdown" role="menu">
+                          <button
+                            type="button"
+                            className="el-faq__dropdown-item"
+                            onClick={() => {
+                              setEditingFaq({
+                                cartella: 'Generale',
+                                domanda: '',
+                                parole: '',
+                                risposta: '',
+                                attiva: true,
+                              });
+                              setFaqDropdownOpen(false);
+                            }}
+                          >
+                            <span className="el-faq__dropdown-ic"><HelpCircle size={15} /></span>
+                            <span>Nuova FAQ</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="el-faq__dropdown-item"
+                            onClick={() => {
+                              const nome = window.prompt('Inserisci il nome della nuova cartella:');
+                              if (nome && nome.trim()) {
+                                setEditingFaq({
+                                  cartella: nome.trim(),
+                                  domanda: '',
+                                  parole: '',
+                                  risposta: '',
+                                  attiva: true,
+                                });
+                              }
+                              setFaqDropdownOpen(false);
+                            }}
+                          >
+                            <span className="el-faq__dropdown-ic"><Folder size={15} /></span>
+                            <span>Nuova cartella</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="el-faq__dropdown-item"
+                            onClick={() => {
+                              faqCsvInputRef.current?.click();
+                              setFaqDropdownOpen(false);
+                            }}
+                          >
+                            <span className="el-faq__dropdown-ic"><Upload size={15} /></span>
+                            <span>Importa CSV</span>
+                          </button>
+                        </div>
+                      )}
+
+                      <input
+                        ref={faqCsvInputRef}
+                        type="file"
+                        accept=".csv,text/csv"
+                        className="hidden"
+                        style={{ display: 'none' }}
+                        onChange={handleFaqCsvImport}
+                      />
+                    </div>
                   </div>
 
                   {editingFaq && (
