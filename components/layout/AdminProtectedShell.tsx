@@ -28,8 +28,9 @@ const SECTIONS: [string, string][] = [
 
 export function AdminProtectedShell({ children, readOnly = false, areaLabel = 'Admin' }: { children: React.ReactNode; readOnly?: boolean; areaLabel?: string }) {
   const pathname = usePathname();
+  const isEliseo = pathname === '/admin/eliseo' || pathname.startsWith('/admin/eliseo');
   const wide = pathname === '/admin/dashboard';
-  const section = wide ? null : SECTIONS.find(([p]) => pathname === p || pathname.startsWith(`${p}/`))?.[1] ?? null;
+  const section = wide || isEliseo ? null : SECTIONS.find(([p]) => pathname === p || pathname.startsWith(`${p}/`))?.[1] ?? null;
   return (
     <AdminSaveProvider>
       <AutoRefreshOnUpdate />
@@ -37,8 +38,22 @@ export function AdminProtectedShell({ children, readOnly = false, areaLabel = 'A
         <div className="contents print:hidden">
           <AdminSidebar areaLabel={areaLabel} />
         </div>
-        <main className="adm-skin relative min-w-0 flex-1 p-6 pb-24 lg:ml-[198px] lg:p-8 lg:pb-24 print:ml-0 print:p-0">
-          <div className={`mx-auto w-full ${wide ? 'max-w-[1500px]' : 'max-w-6xl'}`}>
+        <main
+          className={`adm-skin relative min-w-0 flex-1 print:ml-0 print:p-0 ${
+            isEliseo
+              ? 'p-2 sm:p-3 lg:p-3 pb-3 lg:pb-3 lg:ml-[198px]'
+              : 'p-6 pb-24 lg:ml-[198px] lg:p-8 lg:pb-24'
+          }`}
+        >
+          <div
+            className={`w-full ${
+              isEliseo
+                ? 'max-w-none h-full'
+                : wide
+                ? 'mx-auto max-w-[1500px]'
+                : 'mx-auto max-w-6xl'
+            }`}
+          >
             {section && <p className="adm-eyebrow print:hidden">{section}</p>}
             {children}
           </div>
