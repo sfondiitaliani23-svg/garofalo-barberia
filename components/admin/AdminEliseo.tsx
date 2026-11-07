@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useMemo, useRef } from 'react';
+import React, { useState, useTransition, useMemo, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
   MessageSquare,
@@ -176,6 +176,45 @@ export function AdminEliseo({
   const [versioniPrompt, setVersioniPrompt] = useState<AssistenteVersione[]>(initialVersioniPrompt);
   const [automazioni, setAutomazioni] = useState<AutomazioneItem[]>(initialAutomazioni);
   const [faqDropdownOpen, setFaqDropdownOpen] = useState(false);
+  const [waState, setWaState] = useState<WhatsAppState>('starting');
+  const [waQrBase64, setWaQrBase64] = useState<string | null>(null);
+  const [waQrLoading, setWaQrLoading] = useState(false);
+
+  const refreshWaLive = useCallback(async () => {
+    setWaQrLoading(true);
+    try {
+      const statusRes = await getWhatsAppStatusAction();
+      if (statusRes.ok) {
+        setWaState(statusRes.state);
+        if (statusRes.state === 'authorized') {
+          setWaQrBase64(null);
+          setWaConnected(true);
+          return;
+        }
+      }
+      const qrRes = await getWhatsAppQrAction();
+      if (qrRes.ok) {
+        if (qrRes.type === 'alreadyAuthorized') {
+          setWaState('authorized');
+          setWaQrBase64(null);
+          setWaConnected(true);
+        } else if (qrRes.type === 'qrCode' && qrRes.qrBase64) {
+          setWaQrBase64(qrRes.qrBase64);
+          setWaState('notAuthorized');
+        }
+      }
+    } catch (err) {
+      console.error('Errore recupero QR WhatsApp:', err);
+    } finally {
+      setWaQrLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'casella' && !activeCasellaItem) {
+      refreshWaLive();
+    }
+  }, [activeTab, activeCasellaItem, refreshWaLive]);
   const faqCsvInputRef = useRef<HTMLInputElement>(null);
 
   // ───────────────────────────────────────────────
@@ -1567,52 +1606,82 @@ export function AdminEliseo({
                         </svg>
                         <span>WhatsApp Multi-Dispositivo</span>
                       </div>
-                      <div className={`el-wa-status ${waConnected ? 'el-wa-status--connected' : 'el-wa-status--waiting'}`}>
-                        <span className={waConnected ? 'el-wa-status__dot' : 'el-wa-status__pulse'} />
-                        <span>{waConnected ? 'Connesso: +39 347 884 8922' : 'In attesa di collegamento...'}</span>
+                      <div className={`el-wa-status ${(waConnected || waState === 'authorized') ? 'el-wa-status--connected' : 'el-wa-status--waiting'}`}>
+                        <span className={(waConnected || waState === 'authorized') ? 'el-wa-status__dot' : 'el-wa-status__pulse'} />
+                        <span>{(waConnected || waState === 'authorized') ? 'Connesso: +39 347 884 8922' : 'In attesa di scansione...'}</span>
                       </div>
                     </div>
 
                     <div className="el-wa-pair__titles">
-                      <h3>Collega il WhatsApp di Luigi Garofalo a Eliseo</h3>
+                      <h3>Collega il WhatsApp di Luigi Garofalo ad Eliseo</h3>
                       <p>
-                        Apri WhatsApp Web su questo computer o usa il tasto rapido qui sotto per rispondere direttamente ai clienti con il numero del salone (+39 347 884 8922).
+                        Inquadra il codice QR con lo smartphone del salone per ricevere e inviare tutti i messaggi WhatsApp direttamente dentro Eliseo, in modo 100% automatizzato.
                       </p>
                     </div>
 
                     <div className="el-wa-pair__content">
                       <div className="el-wa-qr__col">
-                        <div className="el-wa-setup-box">
-                          <div className="el-wa-setup-icon">
-                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M17.6 6.4A8 8 0 0 0 4.2 16.9L3 21l4.2-1.1a8 8 0 0 0 10.4-13.5z" />
-                              <path d="M15.5 14.2c-.3-.1-1.6-.8-1.8-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.7.1-.2.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4c.2.3 2.4 3.7 5.8 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 2.1-.9 2.4-1.7.3-.8.3-1.6.2-1.7-.1-.2-.3-.3-.6-.5z" />
-                            </svg>
-                          </div>
-                          <p className="el-wa-setup-text">
-                            Apri la sessione ufficiale WhatsApp Web per collegare la barberia ad Eliseo.
-                          </p>
-                          <a
-                            href="https://web.whatsapp.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="el-wa-link-btn"
-                          >
-                            <ExternalLink size={15} /> Apri WhatsApp Web
-                          </a>
+                        <div className="el-wa-qr__box">
+                          {(waConnected || waState === 'authorized') ? (
+                            <div className="flex flex-col items-center justify-center p-4 text-center">
+                              <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-2">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </div>
+                              <p className="text-sm font-bold text-emerald-400">WhatsApp Connesso</p>
+                              <p className="text-[11px] text-white/50 mt-1 max-w-[170px]">
+                                Sessione attiva con Green API. I messaggi sono sincronizzati.
+                              </p>
+                            </div>
+                          ) : waQrLoading ? (
+                            <div className="flex flex-col items-center justify-center p-6 text-center">
+                              <RefreshCw size={28} className="animate-spin text-gold mb-2" />
+                              <p className="text-xs text-white/60">Caricamento QR live...</p>
+                            </div>
+                          ) : waQrBase64 ? (
+                            <img
+                              src={`data:image/png;base64,${waQrBase64}`}
+                              alt="Codice QR WhatsApp"
+                              className="w-[170px] h-[170px] object-contain rounded-lg"
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center p-4 text-center">
+                              <p className="text-xs text-amber-300">Nessun QR disponibile.</p>
+                              <button
+                                type="button"
+                                className="btn btn--secondary btn--sm mt-2"
+                                onClick={refreshWaLive}
+                              >
+                                Riprova
+                              </button>
+                            </div>
+                          )}
                         </div>
                         <div className="el-wa-qr__acts">
                           <button
                             type="button"
                             className="btn btn--secondary btn--sm"
+                            disabled={waQrLoading}
                             onClick={() => {
-                              const next = !waConnected;
-                              setWaConnected(next);
-                              try { localStorage.setItem('eliseo_wa_connected', next ? '1' : '0'); } catch (_) {}
-                              say(next ? 'WhatsApp contrassegnato come collegato!' : 'WhatsApp scollegato.');
+                              refreshWaLive();
+                              say('Aggiornamento stato WhatsApp...');
                             }}
                           >
-                            {waConnected ? 'Scollega' : 'Segna come connesso'}
+                            <RefreshCw size={13} className={waQrLoading ? 'animate-spin' : ''} /> Aggiorna QR
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn--secondary btn--sm"
+                            onClick={() => {
+                              const next = !(waConnected || waState === 'authorized');
+                              setWaConnected(next);
+                              setWaState(next ? 'authorized' : 'notAuthorized');
+                              try { localStorage.setItem('eliseo_wa_connected', next ? '1' : '0'); } catch (_) {}
+                              say(next ? 'WhatsApp impostato come connesso.' : 'WhatsApp scollegato.');
+                            }}
+                          >
+                            {(waConnected || waState === 'authorized') ? 'Scollega' : 'Verifica stato'}
                           </button>
                         </div>
                       </div>
@@ -1621,29 +1690,29 @@ export function AdminEliseo({
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">1</span>
                           <div>
-                            <strong>Apri WhatsApp Web</strong>
-                            <p>Clicca sul pulsante verde a sinistra per aprire la scheda di WhatsApp Web sul computer.</p>
+                            <strong>Apri WhatsApp</strong>
+                            <p>Sul telefono del salone (+39 347 884 8922).</p>
                           </div>
                         </div>
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">2</span>
                           <div>
-                            <strong>WhatsApp sul telefono</strong>
-                            <p>Apri l'app WhatsApp sul telefono di Luigi Garofalo (+39 347 884 8922).</p>
+                            <strong>Menu o Impostazioni</strong>
+                            <p>Tocca i tre puntini ⋮ (Android) o Impostazioni ⚙️ (iPhone).</p>
                           </div>
                         </div>
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">3</span>
                           <div>
                             <strong>Dispositivi collegati</strong>
-                            <p>Tocca Menu ⋮ (Android) o Impostazioni ⚙️ (iPhone) → Dispositivi collegati → Collega.</p>
+                            <p>Tocca "Collega un dispositivo".</p>
                           </div>
                         </div>
                         <div className="el-wa-step">
                           <span className="el-wa-step__num">4</span>
                           <div>
-                            <strong>Inquadra il QR di WhatsApp Web</strong>
-                            <p>Scansiona il codice ufficiale della schermata web di WhatsApp per sincronizzare i messaggi.</p>
+                            <strong>Inquadra il codice QR</strong>
+                            <p>Il codice è generato dall'istanza Green API ed è accettato all'istante dall'app WhatsApp.</p>
                           </div>
                         </div>
                       </div>
