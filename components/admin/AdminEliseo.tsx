@@ -35,6 +35,12 @@ import {
   CheckCheck,
   Check,
   UserPlus,
+  Smile,
+  Paperclip,
+  Mic,
+  MoreVertical,
+  ChevronDown,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   FASI,
@@ -225,6 +231,7 @@ export function AdminEliseo({
   });
   const [chatReplyText, setChatReplyText] = useState<string>('');
   const [chatSending, setChatSending] = useState<boolean>(false);
+  const [showNotifyBanner, setShowNotifyBanner] = useState<boolean>(true);
   const [localSentMessages, setLocalSentMessages] = useState<Record<string, Array<{ id: string; text: string; time: string }>>>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -435,6 +442,44 @@ export function AdminEliseo({
       setWaQrLoading(false);
     }
   }, []);
+
+  // Polling automatico ogni secondo (1000ms) per sincronizzare WhatsApp in tempo reale
+  useEffect(() => {
+    if (railTab !== 'casella') return;
+    let isMounted = true;
+    let inFlight = false;
+
+    const pollSync = async () => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const res = await fetch('/api/whatsapp-sync', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.ok && Array.isArray(data.casella) && isMounted) {
+          setCasella((prev) => {
+            if (prev.length !== data.casella.length || (data.inserted && data.inserted > 0)) {
+              return data.casella;
+            }
+            if (data.casella[0]?.rif !== prev[0]?.rif || data.casella[0]?.quando !== prev[0]?.quando) {
+              return data.casella;
+            }
+            return prev;
+          });
+        }
+      } catch (_) {
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    pollSync();
+    const interval = setInterval(pollSync, 1000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [railTab]);
 
   useEffect(() => {
     if (railTab === 'casella' && !activeCasellaItem) {
@@ -1595,8 +1640,8 @@ export function AdminEliseo({
                   />
                 </div>
 
-                {/* Filtri rapidi WhatsApp */}
-                <div className="el-wa-filters" role="tablist" aria-label="Filtri stile WhatsApp">
+                {/* Filtri rapidi WhatsApp Web (Tutte, Da leggere, Preferiti, Gruppi) */}
+                <div className="el-wa-filters" role="tablist" aria-label="Filtri stile WhatsApp Web">
                   <button
                     type="button"
                     role="tab"
@@ -1613,7 +1658,7 @@ export function AdminEliseo({
                     className={`el-wa-pill ${waFilterTab === 'unread' ? 'is-active' : ''}`}
                     onClick={() => setWaFilterTab('unread')}
                   >
-                    Non lette {waCounts.unread > 0 && <span className="el-wa-pill__count">{waCounts.unread}</span>}
+                    Da leggere {waCounts.unread > 0 && <span className="el-wa-pill__count">{waCounts.unread}</span>}
                   </button>
                   <button
                     type="button"
@@ -1622,7 +1667,7 @@ export function AdminEliseo({
                     className={`el-wa-pill ${waFilterTab === 'pinned' ? 'is-active' : ''}`}
                     onClick={() => setWaFilterTab('pinned')}
                   >
-                    <Pin size={11} /> Fissate {waCounts.pinned > 0 && <span className="el-wa-pill__count">{waCounts.pinned}</span>}
+                    Preferiti {waCounts.pinned > 0 && <span className="el-wa-pill__count">{waCounts.pinned}</span>}
                   </button>
                   <button
                     type="button"
@@ -1631,32 +1676,71 @@ export function AdminEliseo({
                     className={`el-wa-pill ${waFilterTab === 'muted' ? 'is-active' : ''}`}
                     onClick={() => setWaFilterTab('muted')}
                   >
-                    <VolumeX size={11} /> Silenziate {waCounts.muted > 0 && <span className="el-wa-pill__count">{waCounts.muted}</span>}
+                    Silenziate {waCounts.muted > 0 && <span className="el-wa-pill__count">{waCounts.muted}</span>}
                   </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={waFilterTab === 'archived'}
-                    className={`el-wa-pill ${waFilterTab === 'archived' ? 'is-active' : ''}`}
-                    onClick={() => setWaFilterTab('archived')}
-                  >
-                    <Archive size={11} /> Archiviate {waCounts.archived > 0 && <span className="el-wa-pill__count">{waCounts.archived}</span>}
-                  </button>
+                  <span className="text-white/40 text-xs px-1">▾</span>
                 </div>
 
+                {/* Banner Notifiche Disattivate stile WhatsApp Web */}
+                {showNotifyBanner && (
+                  <div className="el-wa-notify-banner">
+                    <div className="el-wa-notify-banner__left">
+                      <span className="el-wa-notify-banner__ic">
+                        <VolumeX size={16} />
+                      </span>
+                      <span>
+                        Le notifiche di messaggi e chiamate sono disattivate.{' '}
+                        <span
+                          className="el-wa-notify-banner__link"
+                          onClick={() => {
+                            if ('Notification' in window) {
+                              Notification.requestPermission().then(() => {
+                                setShowNotifyBanner(false);
+                                say('Notifiche WhatsApp abilitate');
+                              });
+                            }
+                          }}
+                        >
+                          Attiva
+                        </span>
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="el-wa-notify-banner__close"
+                      title="Chiudi avviso"
+                      onClick={() => setShowNotifyBanner(false)}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+
                 <div className="el-conv__rows">
-                  {waFilterTab === 'all' && waCounts.archived > 0 && (
+                  {/* Riga Archiviate stile WhatsApp Web */}
+                  {waFilterTab === 'archived' ? (
+                    <div
+                      className="el-archived-banner"
+                      onClick={() => setWaFilterTab('all')}
+                      style={{ color: '#00a884' }}
+                    >
+                      <span className="flex items-center gap-3">
+                        <ArrowLeft size={16} />
+                        <strong>Torna a tutte le chat</strong>
+                      </span>
+                    </div>
+                  ) : waCounts.archived > 0 ? (
                     <div
                       className="el-archived-banner"
                       onClick={() => setWaFilterTab('archived')}
                     >
-                      <span className="flex items-center gap-2">
-                        <Archive size={14} className="text-gold" />
+                      <span className="flex items-center gap-3">
+                        <Archive size={17} className="text-[#00a884]" />
                         <span>Archiviate</span>
                       </span>
-                      <span className="el-wa-pill__count">{waCounts.archived}</span>
+                      <span className="el-wa-unread-badge">{waCounts.archived}</span>
                     </div>
-                  )}
+                  ) : null}
 
                   {filteredCasella.length === 0 ? (
                     <p className="pempty">Nessuna conversazione con questi filtri.</p>
@@ -1681,32 +1765,24 @@ export function AdminEliseo({
                             <span className="el-row__top">
                               <span className="flex items-center gap-1 min-w-0">
                                 <strong>{item.nome || 'Senza nome'}</strong>
-                                {isPinned && <span title="Fissata in alto" className="inline-flex"><Pin size={11} className="el-badge-pinned flex-shrink-0" /></span>}
-                                {isMuted && <span title="Silenziata" className="inline-flex"><VolumeX size={11} className="el-badge-muted flex-shrink-0" /></span>}
-                                {isArchived && <span title="Archiviata" className="inline-flex"><Archive size={11} className="text-gold/70 flex-shrink-0" /></span>}
                               </span>
                               <span className="el-row__meta">
-                                {item.nuovo && <span className="el-row__dot" title="Non letto" />}
-                                <small>{item.quando ? new Date(item.quando).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : ''}</small>
+                                <small style={{ color: item.nuovo ? '#25d366' : 'rgba(233, 237, 239, 0.55)', fontWeight: item.nuovo ? 600 : 400 }}>
+                                  {item.quando ? new Date(item.quando).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                </small>
                               </span>
                             </span>
-                            <span className="el-row__prev">
-                              {isWa ? (
-                                <span className="el-row__chan el-row__chan--wa" title="WhatsApp">
-                                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M17.6 6.4A8 8 0 0 0 4.2 16.9L3 21l4.2-1.1a8 8 0 0 0 10.4-13.5z" />
-                                    <path d="M15.5 14.2c-.3-.1-1.6-.8-1.8-.9-.3-.1-.5-.1-.7.2-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.7.1-.2.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5-.1-.1-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4s-1.2 1.2-1.2 2.8 1.2 3.2 1.4 3.4c.2.3 2.4 3.7 5.8 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 2.1-.9 2.4-1.7.3-.8.3-1.6.2-1.7-.1-.2-.3-.3-.6-.5z" />
-                                  </svg>
+                            <span className="el-row__prev" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                              <span className="truncate flex items-center gap-1">
+                                {isWa && <CheckCheck size={14} className="text-[#53bdeb] flex-shrink-0" />}
+                                <span className="el-row__snippet">
+                                  {item.messaggio || (item.tipo === 'chat' ? 'Chat del sito' : 'Modulo di richiesta')}
                                 </span>
-                              ) : (
-                                <span className="el-row__chan el-row__chan--chat" title="Chat">
-                                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M5 6.5h14a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4 3v-3H5a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1z" />
-                                  </svg>
-                                </span>
-                              )}
-                              <span className="el-row__snippet">
-                                {item.messaggio || (item.tipo === 'chat' ? 'Chat del sito' : 'Modulo di richiesta')}
+                              </span>
+                              <span className="flex items-center gap-1.5 flex-shrink-0">
+                                {isMuted && <span title="Silenziata" className="inline-flex"><VolumeX size={13} className="el-badge-muted" /></span>}
+                                {isPinned && <span title="Fissata in alto" className="inline-flex"><Pin size={13} className="el-badge-pinned" /></span>}
+                                {item.nuovo && <span className="el-wa-unread-badge">1</span>}
                               </span>
                             </span>
                           </span>
@@ -1720,7 +1796,7 @@ export function AdminEliseo({
               <div className="el-conv__detail">
                 {activeCasellaItem ? (
                   <>
-                    {/* Header Chat stile WhatsApp Web */}
+                    {/* Header Chat WhatsApp Web Copia Spudorata */}
                     <div className="el-chat-header">
                       <div className="el-chat-header__info">
                         <span className="el-av" data-tone="4">
@@ -1729,26 +1805,17 @@ export function AdminEliseo({
                         <div className="el-chat-header__titles">
                           <h2 className="el-chat-header__name">{activeCasellaItem.nome || 'Cliente'}</h2>
                           <div className="el-chat-header__sub">
+                            <span style={{ color: '#00a884', fontWeight: 500 }}>online</span>
                             {activeCasellaItem.contatto && (
                               <span>
-                                {activeCasellaItem.contatto.startsWith('+')
+                                · {activeCasellaItem.contatto.startsWith('+')
                                   ? activeCasellaItem.contatto
                                   : `+${activeCasellaItem.contatto}`}
                               </span>
                             )}
                             {waChatMeta[activeCasellaItem.rif]?.muted && (
-                              <span className="inline-flex items-center gap-1 text-amber-300/80">
+                              <span className="inline-flex items-center gap-1 text-white/50 text-xs">
                                 <VolumeX size={12} /> Silenziata
-                              </span>
-                            )}
-                            {waChatMeta[activeCasellaItem.rif]?.pinned && (
-                              <span className="inline-flex items-center gap-1 text-gold">
-                                <Pin size={12} /> Fissata
-                              </span>
-                            )}
-                            {(activeCasellaItem.cartella === 'Archiviate' || waChatMeta[activeCasellaItem.rif]?.archived) && (
-                              <span className="inline-flex items-center gap-1 text-gold/80">
-                                <Archive size={12} /> Archiviata
                               </span>
                             )}
                           </div>
@@ -1756,32 +1823,45 @@ export function AdminEliseo({
                       </div>
 
                       <div className="el-chat-header__actions">
+                        {/* Cerca */}
+                        <button
+                          type="button"
+                          className="el-chat-action-btn"
+                          title="Cerca nella conversazione"
+                          onClick={() => {
+                            const q = prompt('Cerca nella conversazione:');
+                            if (q) setCasellaQ(q);
+                          }}
+                        >
+                          <Search size={16} />
+                        </button>
+
                         {/* Fissa in alto */}
                         <button
                           type="button"
                           className={`el-chat-action-btn ${waChatMeta[activeCasellaItem.rif]?.pinned ? 'is-active' : ''}`}
-                          title={waChatMeta[activeCasellaItem.rif]?.pinned ? 'Rimuovi dai fissati' : 'Fissa chat in alto'}
+                          title={waChatMeta[activeCasellaItem.rif]?.pinned ? 'Rimuovi dai preferiti' : 'Fissa chat in alto'}
                           onClick={() => {
                             const current = !!waChatMeta[activeCasellaItem.rif]?.pinned;
                             updateChatMeta(activeCasellaItem.rif, { pinned: !current });
                             say(!current ? 'Chat fissata in alto 📌' : 'Chat rimossa dai fissati.');
                           }}
                         >
-                          <Pin size={15} />
+                          <Pin size={16} />
                         </button>
 
                         {/* Silenzia / Riattiva */}
                         <button
                           type="button"
                           className={`el-chat-action-btn ${waChatMeta[activeCasellaItem.rif]?.muted ? 'is-active' : ''}`}
-                          title={waChatMeta[activeCasellaItem.rif]?.muted ? 'Riattiva notifiche' : 'Silenzia notifiche chat'}
+                          title={waChatMeta[activeCasellaItem.rif]?.muted ? 'Riattiva notifiche' : 'Silenzia notifiche'}
                           onClick={() => {
                             const current = !!waChatMeta[activeCasellaItem.rif]?.muted;
                             updateChatMeta(activeCasellaItem.rif, { muted: !current });
                             say(!current ? 'Notifiche chat silenziate 🔇' : 'Notifiche chat riattivate 🔊');
                           }}
                         >
-                          {waChatMeta[activeCasellaItem.rif]?.muted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                          {waChatMeta[activeCasellaItem.rif]?.muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
                         </button>
 
                         {/* Archivia / Disarchivia */}
@@ -1808,9 +1888,9 @@ export function AdminEliseo({
                           }}
                         >
                           {(activeCasellaItem.cartella === 'Archiviate' || waChatMeta[activeCasellaItem.rif]?.archived) ? (
-                            <ArchiveRestore size={15} />
+                            <ArchiveRestore size={16} />
                           ) : (
-                            <Archive size={15} />
+                            <Archive size={16} />
                           )}
                         </button>
 
@@ -1819,7 +1899,7 @@ export function AdminEliseo({
                           <button
                             type="button"
                             className="el-chat-action-btn"
-                            title="Aggiungi ai contatti CRM"
+                            title="Aggiungi ai contatti"
                             onClick={() => {
                               setEditingContact({
                                 nome: activeCasellaItem.nome || '',
@@ -1835,11 +1915,11 @@ export function AdminEliseo({
                               setIsContactModalOpen(true);
                             }}
                           >
-                            <UserPlus size={15} />
+                            <UserPlus size={16} />
                           </button>
                         )}
 
-                        {/* Apri su WhatsApp */}
+                        {/* Apri su WhatsApp Web / App */}
                         {activeCasellaItem.contatto && (
                           <a
                             href={(() => {
@@ -1850,15 +1930,15 @@ export function AdminEliseo({
                             target="_blank"
                             rel="noopener noreferrer"
                             className="el-chat-action-btn"
-                            title="Apri chat in WhatsApp Web / App"
+                            title="Apri in WhatsApp Web"
                           >
-                            <ExternalLink size={15} />
+                            <ExternalLink size={16} />
                           </a>
                         )}
                       </div>
                     </div>
 
-                    {/* Timeline Messaggi WhatsApp a tutta larghezza */}
+                    {/* Timeline Messaggi WhatsApp con Autentico Doodle Wallpaper */}
                     <div className="el-chat-messages">
                       <div className="el-chat-date-pill">
                         {activeCasellaItem.quando
@@ -1887,19 +1967,19 @@ export function AdminEliseo({
                         </div>
                       ))}
 
-                      {/* Messaggi inviati localmente via Eliseo */}
+                      {/* Messaggi inviati via Eliseo */}
                       {(localSentMessages[activeCasellaItem.contatto || activeCasellaItem.rif] || []).map((sent) => (
                         <div key={`local-${sent.id}`} className="el-chat-bubble el-chat-bubble--out">
                           <span className="el-chat-bubble__text">{sent.text}</span>
                           <span className="el-chat-bubble__meta">
                             {new Date(sent.time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-                            <CheckCheck size={14} className="text-emerald-400" />
+                            <CheckCheck size={14} className="text-[#53bdeb]" />
                           </span>
                         </div>
                       ))}
                     </div>
 
-                    {/* Barra di Digitazione ed Invio WhatsApp in basso */}
+                    {/* Barra di Digitazione ed Invio WhatsApp Web Copia Spudorata */}
                     <form
                       className="el-chat-input-bar"
                       onSubmit={(e) => {
@@ -1907,25 +1987,55 @@ export function AdminEliseo({
                         handleSendChatReply();
                       }}
                     >
+                      <button
+                        type="button"
+                        className="el-chat-tool-btn"
+                        title="Emoji"
+                        onClick={() => setChatReplyText((prev) => prev + ' 👍')}
+                      >
+                        <Smile size={20} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="el-chat-tool-btn"
+                        title="Allega file o foto"
+                        onClick={() => say('Allega file: seleziona un file o incolla un link')}
+                      >
+                        <Paperclip size={20} />
+                      </button>
+
                       <input
                         type="text"
-                        placeholder={`Scrivi un messaggio a ${activeCasellaItem.nome || 'questo cliente'}...`}
+                        placeholder="Scrivi un messaggio"
                         value={chatReplyText}
                         onChange={(e) => setChatReplyText(e.target.value)}
                         disabled={chatSending}
                       />
-                      <button
-                        type="submit"
-                        className="el-chat-send-btn"
-                        disabled={chatSending || !chatReplyText.trim()}
-                        title="Invia messaggio su WhatsApp"
-                      >
-                        {chatSending ? (
-                          <RefreshCw size={16} className="animate-spin" />
-                        ) : (
-                          <Send size={16} style={{ transform: 'translateX(1px)' }} />
-                        )}
-                      </button>
+
+                      {chatReplyText.trim() ? (
+                        <button
+                          type="submit"
+                          className="el-chat-send-btn"
+                          disabled={chatSending}
+                          title="Invia messaggio"
+                        >
+                          {chatSending ? (
+                            <RefreshCw size={17} className="animate-spin text-white" />
+                          ) : (
+                            <Send size={17} className="text-white" style={{ transform: 'translateX(1px)' }} />
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="el-chat-tool-btn"
+                          title="Messaggio vocale"
+                          onClick={() => say('Tieni premuto per registrare una nota vocale')}
+                        >
+                          <Mic size={20} />
+                        </button>
+                      )}
                     </form>
                   </>
                 ) : (
