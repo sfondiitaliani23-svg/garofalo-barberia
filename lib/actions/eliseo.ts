@@ -14,6 +14,11 @@ import {
   type Fase,
   type Fonte,
   type Modello,
+  type FaqItem,
+  type DocumentoItem,
+  type AssistenteConfig,
+  type AssistenteVersione,
+  type AutomazioneItem,
 } from '@/lib/utils/eliseo';
 
 export type EliseoPayload = {
@@ -24,6 +29,11 @@ export type EliseoPayload = {
   campagne: Campagna[];
   casella: CasellaItem[];
   team: Array<{ id: string; nome: string }>;
+  faq: FaqItem[];
+  documenti: DocumentoItem[];
+  assistente: AssistenteConfig;
+  versioniPrompt: AssistenteVersione[];
+  automazioni: AutomazioneItem[];
 };
 
 export type EliseoError = { ok: false; error: string };
@@ -232,6 +242,84 @@ export async function getEliseoAction(): Promise<EliseoPayload | EliseoError> {
       }));
     }
 
+        // 6. FAQ
+    let faq: FaqItem[] = [];
+    try {
+      const { data: faqData } = await supabase
+        .from('eliseo_faq')
+        .select('*')
+        .order('cartella', { ascending: true })
+        .order('domanda', { ascending: true });
+      if (faqData) faq = faqData;
+    } catch { faq = []; }
+
+    // 7. Documenti
+    let documenti: DocumentoItem[] = [];
+    try {
+      const { data: docData } = await supabase
+        .from('eliseo_documenti')
+        .select('*')
+        .order('titolo', { ascending: true });
+      if (docData) documenti = docData;
+    } catch { documenti = []; }
+
+    // 8. Assistente
+    let assistente: AssistenteConfig = {
+      id: 1,
+      istruzioni: "Sei Eliseo, l'assistente virtuale di Barberia Garofalo a Foggia. Rispondi con tono professionale, cordiale ed elegante. Aiuta i clienti a conoscere i servizi di taglio e barba, gli orari e a prenotare sul sito.",
+      escalation_attiva: true,
+      testo_libero: true,
+      regole: [],
+      orari: {
+        mar: [['08:30', '13:00'], ['15:30', '20:30']],
+        mer: [['08:30', '13:00'], ['15:30', '20:30']],
+        gio: [['08:30', '13:00'], ['15:30', '20:30']],
+        ven: [['08:30', '13:00'], ['15:30', '20:30']],
+        sab: [['08:30', '14:00'], ['14:30', '20:00']],
+        dom: [],
+        lun: [],
+      },
+    };
+    try {
+      const { data: assData } = await supabase
+        .from('eliseo_assistente')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+      if (assData) {
+        assistente = {
+          id: 1,
+          istruzioni: assData.istruzioni || assistente.istruzioni,
+          escalation_attiva: assData.escalation_attiva ?? true,
+          testo_libero: assData.testo_libero ?? true,
+          regole: Array.isArray(assData.regole) ? assData.regole : [],
+          orari: (assData.orari && typeof assData.orari === 'object') ? assData.orari : assistente.orari,
+          aggiornato_il: assData.aggiornato_il,
+        };
+      }
+    } catch {}
+
+    // 9. Versioni del prompt
+    let versioniPrompt: AssistenteVersione[] = [];
+    try {
+      const { data: verData } = await supabase
+        .from('eliseo_assistente_versioni')
+        .select('*')
+        .order('creato_il', { ascending: false })
+        .limit(30);
+      if (verData) versioniPrompt = verData;
+    } catch { versioniPrompt = []; }
+
+    // 10. Automazioni
+    let automazioni: AutomazioneItem[] = [];
+    try {
+      const { data: autoData } = await supabase
+        .from('eliseo_automazioni')
+        .select('*')
+        .order('creato_il', { ascending: false });
+      if (autoData) automazioni = autoData;
+    } catch { automazioni = []; }
+
     return {
       ok: true,
       tester,
@@ -240,6 +328,11 @@ export async function getEliseoAction(): Promise<EliseoPayload | EliseoError> {
       campagne,
       casella,
       team,
+      faq,
+      documenti,
+      assistente,
+      versioniPrompt,
+      automazioni,
     };
   } catch (err) {
     return {
@@ -563,4 +656,314 @@ export async function sendCampagnaAction(input: {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Invio campagna fallito.' };
   }
+}
+
+
+// ───────────────────────────────────────────────
+// FAQ Actions
+// ───────────────────────────────────────────────
+
+export async function saveFaqAction(faq: Partial<FaqItem>): Promise<{ ok: true; item: FaqItem } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  const cartella = (faq.cartella || 'Generale').trim().slice(0, 40);
+  const domanda = (faq.domanda || '').trim().slice(0, 200);
+  const parole = (faq.parole || '').trim().slice(0, 300);
+  const risposta = (faq.risposta || '').trim().slice(0, 1000);
+  const attiva = faq.attiva ?? true;
+
+  if (domanda.length < 3 || !risposta) {
+    return { ok: false, error: 'Compila domanda e risposta.' };
+  }
+
+  try {
+    if (faq.id) {
+      const { data, error } = await supabase
+        .from('eliseo_faq')
+        .update({ cartella, domanda, parole, risposta, attiva, aggiornato_il: new Date().toISOString() })
+        .eq('id', faq.id)
+        .select('*')
+        .single();
+      if (error) throw error;
+      return { ok: true, item: data };
+    } else {
+      const { data, error } = await supabase
+        .from('eliseo_faq')
+        .insert([{ cartella, domanda, parole, risposta, attiva }])
+        .select('*')
+        .single();
+      if (error) throw error;
+      return { ok: true, item: data };
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Salvataggio FAQ fallito.' };
+  }
+}
+
+export async function deleteFaqAction(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  try {
+    const { error } = await supabase.from('eliseo_faq').delete().eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Eliminazione FAQ fallita.' };
+  }
+}
+
+// ───────────────────────────────────────────────
+// Documenti Actions
+// ───────────────────────────────────────────────
+
+export async function saveDocumentoAction(doc: Partial<DocumentoItem>): Promise<{ ok: true; item: DocumentoItem } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  const titolo = (doc.titolo || 'Documento').trim().slice(0, 120);
+  const testo = (doc.testo || '').trim().slice(0, 20000);
+  const attivo = doc.attivo ?? true;
+
+  if (!titolo || !testo) {
+    return { ok: false, error: 'Compila titolo e testo del file.' };
+  }
+
+  try {
+    if (doc.id) {
+      const { data, error } = await supabase
+        .from('eliseo_documenti')
+        .update({ titolo, testo, attivo, aggiornato_il: new Date().toISOString() })
+        .eq('id', doc.id)
+        .select('*')
+        .single();
+      if (error) throw error;
+      return { ok: true, item: data };
+    } else {
+      const { data, error } = await supabase
+        .from('eliseo_documenti')
+        .insert([{ titolo, testo, attivo }])
+        .select('*')
+        .single();
+      if (error) throw error;
+      return { ok: true, item: data };
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Salvataggio documento fallito.' };
+  }
+}
+
+export async function deleteDocumentoAction(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  try {
+    const { error } = await supabase.from('eliseo_documenti').delete().eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Eliminazione documento fallita.' };
+  }
+}
+
+// ───────────────────────────────────────────────
+// Prompt & Assistente Actions
+// ───────────────────────────────────────────────
+
+export async function savePromptAction(istruzioni: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  const clean = (istruzioni || '').slice(0, 10000);
+  try {
+    const { error } = await supabase
+      .from('eliseo_assistente')
+      .upsert({ id: 1, istruzioni: clean, aggiornato_il: new Date().toISOString() });
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Salvataggio prompt fallito.' };
+  }
+}
+
+export async function saveEscalationAction(conf: {
+  escalation_attiva: boolean;
+  testo_libero: boolean;
+  regole: Array<{ titolo: string; azione: string; attiva: boolean }>;
+  orari: Record<string, Array<[string, string]>>;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  try {
+    const { error } = await supabase
+      .from('eliseo_assistente')
+      .upsert({
+        id: 1,
+        escalation_attiva: conf.escalation_attiva,
+        testo_libero: conf.testo_libero,
+        regole: conf.regole,
+        orari: conf.orari,
+        aggiornato_il: new Date().toISOString(),
+      });
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Salvataggio regole fallito.' };
+  }
+}
+
+// ───────────────────────────────────────────────
+// Automazioni Actions
+// ───────────────────────────────────────────────
+
+export async function saveAutomazioneAction(auto: Partial<AutomazioneItem>): Promise<{ ok: true; item: AutomazioneItem } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  const nome = (auto.nome || '').trim().slice(0, 80);
+  const quando = auto.quando;
+  const condizione = auto.condizione?.trim() || null;
+  const azione = auto.azione;
+  const valore = auto.valore?.trim() || null;
+  const attiva = auto.attiva ?? true;
+
+  if (!nome || !quando || !azione) {
+    return { ok: false, error: "Compila tutti i campi obbligatori dell'automazione." };
+  }
+
+  try {
+    if (auto.id) {
+      const { data, error } = await supabase
+        .from('eliseo_automazioni')
+        .update({ nome, quando, condizione, azione, valore, attiva })
+        .eq('id', auto.id)
+        .select('*')
+        .single();
+      if (error) throw error;
+      return { ok: true, item: data };
+    } else {
+      const { data, error } = await supabase
+        .from('eliseo_automazioni')
+        .insert([{ nome, quando, condizione, azione, valore, attiva }])
+        .select('*')
+        .single();
+      if (error) throw error;
+      return { ok: true, item: data };
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Salvataggio automazione fallito.' };
+  }
+}
+
+export async function toggleAutomazioneAction(id: string, attiva: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  try {
+    const { error } = await supabase
+      .from('eliseo_automazioni')
+      .update({ attiva })
+      .eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Modifica stato automazione fallita.' };
+  }
+}
+
+export async function deleteAutomazioneAction(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin();
+  const supabase = await createServiceClient();
+  if (!supabase) return { ok: false, error: 'Database non configurato.' };
+
+  try {
+    const { error } = await supabase.from('eliseo_automazioni').delete().eq('id', id);
+    if (error) throw error;
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Eliminazione automazione fallita.' };
+  }
+}
+
+// ───────────────────────────────────────────────
+// Test Chatbot Simulation Action
+// ───────────────────────────────────────────────
+
+export async function testChatbotAction(domanda: string): Promise<{ risposta: string; motivo: string }> {
+  const d = (domanda || '').trim().toLowerCase();
+  if (!d) return { risposta: 'Come posso aiutarti oggi?', motivo: 'Perché: saluto iniziale' };
+
+  const supabase = await createServiceClient();
+  if (!supabase) {
+    return { risposta: 'Ti diamo il benvenuto in Barberia Garofalo! Puoi prenotare dal sito in ogni momento.', motivo: 'Perché: fallback offline' };
+  }
+
+  // 1. Escalation check
+  if (/(parlare|persona|umano|operatore|luigi|francesco|vittorio|contatto)/i.test(d)) {
+    return {
+      risposta: 'Certamente! Puoi metterti in contatto con il team al numero WhatsApp 388 423 3929 o passare direttamente in salone a Foggia.',
+      motivo: 'Perché: passaggio a una persona (regola escalation)',
+    };
+  }
+
+  // 2. FAQ match
+  try {
+    const { data: faqs } = await supabase.from('eliseo_faq').select('*').eq('attiva', true);
+    if (faqs && faqs.length > 0) {
+      for (const f of faqs) {
+        const words = (f.domanda + ' ' + (f.parole || '')).toLowerCase().split(/[,\s]+/);
+        const match = words.filter((w: string) => w.length > 3 && d.includes(w));
+        if (match.length >= 1) {
+          return {
+            risposta: f.risposta,
+            motivo: `Perché: FAQ «${f.domanda}»`,
+          };
+        }
+      }
+    }
+  } catch {}
+
+  // 3. Documenti match
+  try {
+    const { data: docs } = await supabase.from('eliseo_documenti').select('*').eq('attivo', true);
+    if (docs && docs.length > 0) {
+      for (const doc of docs) {
+        if (doc.testo && d.split(' ').some((w: string) => w.length > 4 && doc.testo.toLowerCase().includes(w))) {
+          return {
+            risposta: doc.testo.slice(0, 300) + '...',
+            motivo: `Perché: documento «${doc.titolo}»`,
+          };
+        }
+      }
+    }
+  } catch {}
+
+  // 4. Default barberia knowledge
+  if (/(orari|quando|aperto|chiuso|domenica|lunedi|sabato)/i.test(d)) {
+    return {
+      risposta: 'Siamo aperti dal Martedì al Venerdì dalle 08:30 alle 13:00 e dalle 15:30 alle 20:30. Il Sabato orario speciale 08:30–14:00 e 14:30–20:00. Domenica e Lunedì siamo chiusi.',
+      motivo: 'Perché: dati del sito (orari di apertura)',
+    };
+  }
+  if (/(prezzo|costo|servizi|taglio|barba|shampoo)/i.test(d)) {
+    return {
+      risposta: 'I nostri servizi includono Taglio Uomo, Modellatura Barba con panno caldo, Trattamenti cute e Barba Express. Puoi consultare il listino completo e prenotare alla pagina /prenota del nostro sito.',
+      motivo: 'Perché: dati del sito (listino servizi)',
+    };
+  }
+
+  return {
+    risposta: 'Grazie per il tuo messaggio! Da Barberia Garofalo ci prendiamo cura del tuo stile con taglio e trattamenti barba su misura. Puoi prenotare il tuo appuntamento online direttamente dal nostro sito.',
+    motivo: 'Perché: risposta generale assistente',
+  };
 }

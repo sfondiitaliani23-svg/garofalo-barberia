@@ -2,7 +2,7 @@ import { AdminEliseo } from '@/components/admin/AdminEliseo';
 import { getEliseoAction } from '@/lib/actions/eliseo';
 import { SITE_URL } from '@/lib/seo';
 
-export const metadata = { title: 'Eliseo · Contatti e campagne' };
+export const metadata = { title: 'Eliseo · Contatti, Addestramento e Automazioni' };
 export const dynamic = 'force-dynamic';
 
 export default async function AdminEliseoPage() {
@@ -23,6 +23,11 @@ export default async function AdminEliseoPage() {
             initialModelli={res.modelli}
             initialCampagne={res.campagne}
             initialCasella={res.casella}
+            initialFaq={res.faq}
+            initialDocumenti={res.documenti}
+            initialAssistente={res.assistente}
+            initialVersioniPrompt={res.versioniPrompt}
+            initialAutomazioni={res.automazioni}
             team={res.team}
             tester={res.tester}
             prenotaUrl={`${SITE_URL}/prenota`}

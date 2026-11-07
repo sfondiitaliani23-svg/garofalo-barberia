@@ -594,3 +594,93 @@ export function whatsappUrl(phone: string | null | undefined, text: string): str
   const tel = phone ? normalizeItalianPhone(phone) : null;
   return tel ? `https://wa.me/${tel}?text=${encodeURIComponent(text)}` : null;
 }
+
+
+// ───────────────────────────────────────────────
+// Tipi e Regole Addestramento, Automazioni e Chatbot
+// ───────────────────────────────────────────────
+
+export type FaqItem = {
+  id: string;
+  cartella: string;
+  domanda: string;
+  parole: string;
+  risposta: string;
+  attiva: boolean;
+  creato_il?: string;
+  aggiornato_il?: string;
+};
+
+export type DocumentoItem = {
+  id: string;
+  titolo: string;
+  testo: string;
+  attivo: boolean;
+  creato_il?: string;
+  aggiornato_il?: string;
+};
+
+export type AssistenteConfig = {
+  id: number;
+  istruzioni: string;
+  escalation_attiva: boolean;
+  testo_libero: boolean;
+  regole: Array<{ titolo: string; azione: string; attiva: boolean }>;
+  orari: Record<string, Array<[string, string]>>;
+  aggiornato_il?: string;
+};
+
+export type AssistenteVersione = {
+  id: string;
+  istruzioni: string;
+  creato_il: string;
+  creato_da?: string | null;
+};
+
+export type AutomazioneItem = {
+  id: string;
+  nome: string;
+  attiva: boolean;
+  quando: 'nuova_richiesta' | 'nuova_chat' | 'nuovo_contatto' | 'cambio_fase';
+  condizione?: string | null;
+  azione: 'assegna' | 'crea_contatto' | 'etichetta' | 'fase' | 'barbiere';
+  valore?: string | null;
+  eseguite: number;
+  ultima?: string | null;
+  creato_il: string;
+};
+
+export const QUANDO_AUTO = [
+  ['nuova_richiesta', 'Arriva una richiesta dal modulo'],
+  ['nuova_chat', 'Un cliente apre la chat del sito'],
+  ['nuovo_contatto', 'Si aggiunge un contatto'],
+  ['cambio_fase', 'Un contatto cambia fase'],
+] as const;
+
+export const AZIONI_AUTO: Record<string, Array<[string, string]>> = {
+  nuova_richiesta: [['assegna', 'Assegnala a'], ['crea_contatto', 'Crea il contatto (con etichetta)']],
+  nuova_chat: [['assegna', 'Assegnala a']],
+  nuovo_contatto: [['etichetta', 'Aggiungi l’etichetta'], ['fase', 'Mettilo nella fase'], ['barbiere', 'Barbiere preferito']],
+  cambio_fase: [['etichetta', 'Aggiungi l’etichetta'], ['barbiere', 'Barbiere preferito']],
+};
+
+export const CONDIZIONI_AUTO: Record<string, [string, ReadonlyArray<readonly [string, string]>] | null> = {
+  nuova_richiesta: ['Motivo', [['informazioni', 'Informazioni'], ['formazione', 'Formazione'], ['lavoro', 'Lavoro'], ['regalo', 'Regalo']]],
+  nuova_chat: null,
+  nuovo_contatto: ['Fonte', FONTI],
+  cambio_fase: ['Nuova fase', FASI],
+};
+
+export function describeAutomazione(a: AutomazioneItem): string {
+  const q = (QUANDO_AUTO.find(([k]) => k === a.quando) || [null, a.quando])[1];
+  const condEntry = CONDIZIONI_AUTO[a.quando];
+  const c = condEntry && a.condizione
+    ? ` (${(condEntry[1].find(([k]) => k === a.condizione) || [null, a.condizione])[1]})`
+    : '';
+  const azList = AZIONI_AUTO[a.quando] || [];
+  const az = (azList.find(([k]) => k === a.azione) || [null, a.azione])[1];
+  const v = a.azione === 'fase'
+    ? (FASI.find(([k]) => k === a.valore) || [null, a.valore])[1]
+    : a.valore;
+  return `${q}${c} → ${az}${v ? ` ${v}` : ''}`;
+}

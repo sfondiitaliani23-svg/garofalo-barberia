@@ -1034,3 +1034,243 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ───────────────────────────────────────────────
+   Addestramento · FAQ
+   ─────────────────────────────────────────────── */
+.el-faq__head { display: grid; gap: 6px; margin: 4px 0 18px; }
+.el-faq__head h2 { font-size: 24px; font-weight: 750; color: #f7ecd0; }
+.el-faq__head p { margin: 0; max-width: 44rem; color: rgba(244, 239, 231, 0.65); font-size: 13.5px; line-height: 1.5; }
+.el-faq__tools { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.el-faq__find { position: relative; display: block; flex: 1 1 auto; min-width: 220px; }
+.el-faq__lens { position: absolute; left: 14px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: rgba(205, 154, 79, 0.6); pointer-events: none; }
+.el-faq__find .el-search { width: 100%; box-sizing: border-box; min-height: 42px; padding: 0 14px 0 42px; border-radius: 12px; }
+.el-faq__editor { margin-bottom: 16px; }
+.el-faq__all { margin: 16px 0 10px; color: #e5b565; font-size: 12px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.08em; }
+.el-faq__list { display: grid; gap: 10px; }
+.el-faq__row {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 14px;
+  padding: 14px 18px; background: #17110b; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); transition: all 0.15s ease;
+}
+.el-faq__row:hover { border-color: rgba(205, 154, 79, 0.35); background: #1c150e; }
+.el-faq__mark {
+  display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%;
+  background: #4ade80; color: #140d06; font-size: 12px; line-height: 1; font-weight: 800;
+}
+.el-faq__mark[data-off] { background: rgba(244, 239, 231, 0.2); color: rgba(244, 239, 231, 0.4); }
+.el-faq__open {
+  display: grid; gap: 4px; width: 100%; min-width: 0; min-height: 0; margin: 0; padding: 0;
+  border: 0; border-radius: 0; background: transparent; color: inherit;
+  box-shadow: none; text-align: left; cursor: pointer;
+}
+.el-faq__top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.el-faq__top strong { min-width: 0; font-size: 14.5px; font-weight: 700; color: #f7ecd0; }
+.el-faq__top time { flex: none; color: #e5b565; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.el-faq__prev { display: block; min-width: 0; overflow: hidden; color: rgba(244, 239, 231, 0.6); font-size: 13px; line-height: 1.4; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ───────────────────────────────────────────────
+   Addestramento · Sito web
+   ─────────────────────────────────────────────── */
+.el-web__find { margin: 0 0 16px; }
+.el-web__intro { margin: 0 0 14px; color: rgba(244, 239, 231, 0.75); font-size: 13.5px; line-height: 1.5; }
+.el-web__text {
+  margin: 0; padding: 0; border: 0; background: none; color: #e5b565;
+  font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer;
+}
+.el-web__text:hover { color: #f0c378; }
+.el-web__add { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.el-web__add .el-faq__find { flex: 1 1 auto; }
+.el-web__err { margin: 0 0 12px; color: #f87171; font-size: 13px; }
+.el-web__err:empty { display: none; }
+.el-web__count { display: flex; align-items: center; gap: 8px; margin: 16px 0 10px; color: #e5b565; font-size: 13px; font-weight: 700; }
+.el-web__row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; background: #17110b; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+.el-web__row.is-on { background: #1c150e; border-color: #cd9a4f; }
+.el-web__host { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 700; color: #f7ecd0; }
+.el-web__meta { display: flex; align-items: center; gap: 16px; flex: none; color: rgba(244, 239, 231, 0.6); font-size: 12.5px; white-space: nowrap; }
+.el-web__icons { display: flex; align-items: center; gap: 4px; flex: none; }
+.el-web__icon {
+  display: grid; place-items: center; width: 34px; height: 34px; margin: 0; padding: 0;
+  border: 0; border-radius: 8px; background: transparent; color: rgba(244, 239, 231, 0.6);
+  cursor: pointer; transition: all 0.15s ease;
+}
+.el-web__icon:hover { background: rgba(205, 154, 79, 0.15); color: #f7ecd0; }
+.el-web__icon svg { width: 17px; height: 17px; }
+.el-web__pages {
+  display: grid; max-height: 280px; overflow: auto;
+  background: #100b07; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 14px; margin-top: 10px;
+}
+.el-web__pages a { padding: 9px 16px; color: #f7ecd0; font-size: 13px; text-decoration: none; border-bottom: 1px solid rgba(205, 154, 79, 0.08); }
+.el-web__pages a:hover, .el-web__pages a.is-hit { background: rgba(205, 154, 79, 0.15); color: #f0c378; }
+
+/* ───────────────────────────────────────────────
+   Addestramento · File
+   ─────────────────────────────────────────────── */
+.el-file__drop {
+  position: relative; display: grid; justify-items: center; gap: 8px;
+  margin: 0; padding: 32px 16px; border: 2px dashed rgba(205, 154, 79, 0.3); border-radius: 18px;
+  background: #17110b; color: #f7ecd0; text-align: center; cursor: pointer; transition: all 0.2s ease;
+}
+.el-file__drop:hover, .el-file__drop.is-over { background: #1c150e; border-color: #cd9a4f; }
+.el-file__drop strong { font-size: 15px; font-weight: 750; color: #f7ecd0; }
+.el-file__drop span { color: rgba(244, 239, 231, 0.6); font-size: 13px; }
+.el-file__ico { width: 32px; height: 32px; color: #e5b565; }
+.el-file__pick { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+.el-file__or {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 14px;
+  margin: 18px 0; color: rgba(244, 239, 231, 0.4); font-size: 12px;
+}
+.el-file__or::before, .el-file__or::after { content: ""; height: 1px; background: rgba(205, 154, 79, 0.16); }
+.el-file__or span {
+  display: grid; place-items: center; width: 28px; height: 28px;
+  border: 1px solid rgba(205, 154, 79, 0.2); border-radius: 50%; background: #17110b; color: rgba(244, 239, 231, 0.6); font-size: 12px;
+}
+.el-file__sheetwrap { display: flex; justify-content: center; }
+.el-app button.el-file__sheet {
+  display: inline-flex; align-items: center; gap: 9px; margin: 0; min-height: 40px; padding: 8px 18px;
+  border: 1px solid rgba(205, 154, 79, 0.25); border-radius: 999px; background: #17110b; color: #f7ecd0;
+  font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+}
+.el-app button.el-file__sheet:hover { background: rgba(205, 154, 79, 0.14); border-color: #cd9a4f; }
+.el-file__note { margin: 10px 0 0; color: #e5b565; font-size: 13px; line-height: 1.45; }
+.el-file__note:empty { display: none; }
+.el-file__list { display: grid; gap: 10px; margin-top: 10px; }
+.el-file__row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 18px; background: #17110b; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+.el-file__glyph { flex: none; width: 20px; height: 20px; color: #e5b565; }
+.el-file__open {
+  display: grid; gap: 3px; flex: 1 1 auto; min-width: 0; margin: 0; padding: 0;
+  border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer;
+}
+.el-file__open strong { min-width: 0; overflow: hidden; font-size: 14.5px; font-weight: 700; color: #f7ecd0; text-overflow: ellipsis; white-space: nowrap; }
+.el-file__open time { color: rgba(244, 239, 231, 0.55); font-size: 12px; }
+.el-file__size { flex: none; color: #e5b565; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.el-file__del.is-armed { color: #f87171; }
+
+/* ───────────────────────────────────────────────
+   Addestramento · Prompt
+   ─────────────────────────────────────────────── */
+.el-prompt__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.el-prompt__top .el-faq__head { flex: 1 1 auto; min-width: 220px; }
+.el-app button.el-prompt__hist {
+  display: inline-flex; align-items: center; gap: 8px; flex: none; min-height: 38px; padding: 6px 16px;
+  border: 1px solid rgba(205, 154, 79, 0.25); border-radius: 999px; background: #17110b; color: #f7ecd0;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+}
+.el-app button.el-prompt__hist:hover { background: rgba(205, 154, 79, 0.14); border-color: #cd9a4f; }
+.el-prompt__clock { width: 16px; height: 16px; color: #e5b565; }
+.el-prompt__hist b {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: 999px; background: rgba(205, 154, 79, 0.18); color: #e5b565; font-size: 11.5px; font-weight: 750;
+}
+.el-prompt__log {
+  display: grid; gap: 10px; margin: 0 0 16px; padding: 14px;
+  background: #120d08; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 16px;
+}
+.el-prompt__log[hidden] { display: none; }
+.el-prompt__log p { margin: 0; color: rgba(244, 239, 231, 0.6); font-size: 13px; }
+.el-prompt__ver { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 10px; border-radius: 10px; }
+.el-prompt__ver:hover { background: rgba(205, 154, 79, 0.08); }
+.el-prompt__ver strong { display: block; font-size: 13px; color: #f7ecd0; }
+.el-prompt__ver span { display: block; color: rgba(244, 239, 231, 0.6); font-size: 12.5px; }
+.el-app button.el-prompt__use {
+  flex: none; min-height: 32px; padding: 4px 12px; border: 1px solid rgba(205, 154, 79, 0.25); border-radius: 999px;
+  background: #17110b; color: #f7ecd0; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.el-app button.el-prompt__use:hover { background: rgba(205, 154, 79, 0.18); }
+.el-prompt__card {
+  display: grid; gap: 14px; margin: 0 0 18px; padding: 20px; min-width: 0;
+  background: #17110b; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.el-prompt__aihead { display: flex; align-items: flex-start; gap: 14px; }
+.el-prompt__spark {
+  display: grid; place-items: center; width: 38px; height: 38px; flex: none;
+  border-radius: 12px; background: rgba(205, 154, 79, 0.18); color: #f0c378; border: 1px solid rgba(205, 154, 79, 0.3);
+}
+.el-prompt__spark svg { width: 20px; height: 20px; }
+.el-prompt__aihead > div { min-width: 0; }
+.el-prompt__aihead h3 { margin: 0; font-size: 16px; font-weight: 750; color: #f7ecd0; }
+.el-prompt__aihead p { margin: 2px 0 0; max-width: 40rem; color: rgba(244, 239, 231, 0.6); font-size: 13px; line-height: 1.45; }
+.el-prompt__keys { display: flex; gap: 4px; margin-left: auto; }
+.el-prompt__card kbd {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px;
+  border: 1px solid rgba(205, 154, 79, 0.25); border-radius: 6px; background: #100b07;
+  color: #e5b565; font-family: inherit; font-size: 11px; font-weight: 700;
+}
+.el-app textarea.el-prompt__ask { width: 100%; box-sizing: border-box; min-height: 74px; padding: 12px 14px; resize: vertical; }
+.el-prompt__apply { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.el-prompt__hint { display: flex; align-items: center; gap: 6px; flex: none; margin: 0; color: rgba(244, 239, 231, 0.55); font-size: 12.5px; }
+.el-app button.el-prompt__go {
+  display: inline-flex; align-items: center; gap: 7px; flex: none; min-height: 38px; padding: 6px 16px;
+  border: 0; border-radius: 999px; background: linear-gradient(140deg, #f0c378, #c48f45); color: #140d06;
+  font-size: 13.5px; font-weight: 750; cursor: pointer; box-shadow: 0 4px 14px rgba(205, 154, 79, 0.25);
+}
+.el-app button.el-prompt__go:hover { filter: brightness(1.08); }
+.el-prompt__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.el-app button.el-prompt__chip {
+  min-height: 32px; padding: 4px 14px; border: 1px solid rgba(205, 154, 79, 0.22); border-radius: 999px;
+  background: #120d08; color: #f7ecd0; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.15s ease;
+}
+.el-app button.el-prompt__chip:hover { background: rgba(205, 154, 79, 0.16); border-color: rgba(205, 154, 79, 0.4); }
+.el-prompt__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.el-prompt__name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.el-prompt__name strong { font-size: 15px; color: #f7ecd0; }
+.el-prompt__state { display: inline-flex; align-items: center; gap: 6px; color: #4ade80; font-size: 12.5px; font-weight: 650; }
+.el-prompt__state[data-dirty], .el-prompt__state[data-wait] { color: #e5b565; }
+.el-prompt__dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
+.el-prompt__state[data-dirty] .el-prompt__dot, .el-prompt__state[data-wait] .el-prompt__dot { background: #e5b565; }
+.el-prompt__meta { display: flex; align-items: center; gap: 14px; flex: none; }
+.el-prompt__count { color: rgba(244, 239, 231, 0.55); font-size: 12.5px; white-space: nowrap; }
+.el-app textarea.el-prompt__text { width: 100%; box-sizing: border-box; min-height: 240px; padding: 14px 16px; resize: vertical; line-height: 1.5; }
+
+/* ───────────────────────────────────────────────
+   Chatbot · Simulatore Prova
+   ─────────────────────────────────────────────── */
+.el-chat {
+  display: grid; gap: 12px; max-height: 28rem; min-height: 200px; overflow-y: auto;
+  margin: 16px 0; padding: 16px; border: 1px solid rgba(205, 154, 79, 0.18); border-radius: 18px;
+  background: #100b07;
+}
+.el-chat__msg { max-width: 82%; padding: 12px 16px; border-radius: 16px; background: #17110b; border: 1px solid rgba(205, 154, 79, 0.14); color: #f7ecd0; font-size: 13.5px; line-height: 1.5; }
+.el-chat__msg p { margin: 0; }
+.el-chat__msg small { display: block; margin-top: 6px; color: #e5b565; font-size: 11.5px; font-weight: 650; }
+.el-chat__msg--user { justify-self: end; background: rgba(205, 154, 79, 0.18); border-color: rgba(205, 154, 79, 0.35); color: #f7ecd0; }
+.el-chat__form { display: flex; gap: 10px; }
+.el-chat__form input { flex: 1; min-width: 0; }
+
+/* ───────────────────────────────────────────────
+   Automazioni · Regole
+   ─────────────────────────────────────────────── */
+.el-auto__list { display: grid; gap: 12px; margin-bottom: 20px; }
+.el-auto__row {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 16px 20px; background: #17110b; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+.el-auto__desc { display: grid; gap: 4px; min-width: 220px; }
+.el-auto__desc strong { font-size: 15px; font-weight: 750; color: #f7ecd0; }
+.el-auto__desc p { margin: 0; font-size: 13.5px; color: #e5b565; }
+.el-auto__desc small { color: rgba(244, 239, 231, 0.5); font-size: 12px; }
+.el-auto__acts { display: flex; align-items: center; gap: 12px; }
+
+/* ───────────────────────────────────────────────
+   Integrazioni & Impostazioni
+   ─────────────────────────────────────────────── */
+.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.plist li {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+  padding: 14px 18px; background: #17110b; border: 1px solid rgba(205, 154, 79, 0.16); border-radius: 16px;
+  color: #f7ecd0; font-size: 13.5px;
+}
+.plist li strong { min-width: 140px; font-size: 14.5px; color: #f7ecd0; }
+.plist li span:first-of-type { color: #e5b565; font-weight: 700; }
+.plist li span:last-of-type { color: rgba(244, 239, 231, 0.6); font-size: 12.5px; }
