@@ -79,6 +79,11 @@ import {
   deleteAutomazioneAction,
   testChatbotAction,
 } from '@/lib/actions/eliseo';
+import {
+  getWhatsAppStatusAction,
+  getWhatsAppQrAction,
+  type WhatsAppState,
+} from '@/lib/actions/whatsapp-admin';
 import './eliseo.css';
 
 interface AdminEliseoProps {
