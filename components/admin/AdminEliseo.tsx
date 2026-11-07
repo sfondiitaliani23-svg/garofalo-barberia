@@ -82,7 +82,9 @@ import {
 import {
   getWhatsAppStatusAction,
   getWhatsAppQrAction,
+  getWhatsAppNumberAction,
   logoutWhatsAppInstanceAction,
+  syncWhatsAppRecentChatsAction,
   type WhatsAppState,
 } from '@/lib/actions/whatsapp-admin';
 import './eliseo.css';
@@ -185,6 +187,7 @@ export function AdminEliseo({
   const [waState, setWaState] = useState<WhatsAppState>('starting');
   const [waQrBase64, setWaQrBase64] = useState<string | null>(null);
   const [waQrLoading, setWaQrLoading] = useState(false);
+  const [waConnectedPhone, setWaConnectedPhone] = useState<string | null>(null);
   const faqCsvInputRef = useRef<HTMLInputElement>(null);
 
   // ───────────────────────────────────────────────
@@ -261,6 +264,28 @@ export function AdminEliseo({
         if (statusRes.state === 'authorized') {
           setWaQrBase64(null);
           setWaConnected(true);
+          // Recupera il numero reale collegato
+          getWhatsAppNumberAction().then((numRes) => {
+            if (numRes.ok && numRes.phone) {
+              const digits = numRes.phone.replace(/\D/g, '');
+              // Formatta: 393297992673 → +39 329 799 2673
+              const formatted = digits.startsWith('39') && digits.length >= 11
+                ? `+39 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`
+                : `+${digits}`;
+              setWaConnectedPhone(formatted);
+            }
+          });
+          // Sincronizza messaggi recenti nella casella
+          syncWhatsAppRecentChatsAction().then((syncRes) => {
+            if (syncRes.ok && syncRes.inserted > 0) {
+              setCasella((prev) => {
+                const existingRifs = new Set(prev.map((x) => x.rif));
+                const newItems = syncRes.items.filter((x) => !existingRifs.has(x.rif));
+                if (newItems.length === 0) return prev;
+                return [...newItems, ...prev];
+              });
+            }
+          });
           return;
         }
       }
@@ -274,6 +299,7 @@ export function AdminEliseo({
           setWaQrBase64(qrRes.qrBase64);
           setWaState('notAuthorized');
           setWaConnected(false);
+          setWaConnectedPhone(null);
         }
       }
     } catch (err) {
@@ -1386,6 +1412,37 @@ export function AdminEliseo({
                   </div>
                   <div className="el-conv__topacts">
                     <span className="el-count">{filteredCasella.length}</span>
+                    {(waConnected || waState === 'authorized') && (
+                      <button
+                        type="button"
+                        title="Sincronizza messaggi WhatsApp recenti"
+                        className="btn btn--secondary btn--sm"
+                        style={{ padding: '2px 7px', fontSize: '11px', marginLeft: '6px' }}
+                        onClick={async () => {
+                          say('Sincronizzazione messaggi WhatsApp...');
+                          const syncRes = await syncWhatsAppRecentChatsAction();
+                          if (syncRes.ok) {
+                            if (syncRes.inserted > 0) {
+                              setCasella((prev) => {
+                                const existingRifs = new Set(prev.map((x) => x.rif));
+                                const newItems = syncRes.items.filter((x) => !existingRifs.has(x.rif));
+                                return newItems.length > 0 ? [...newItems, ...prev] : prev;
+                              });
+                              say(`✅ ${syncRes.inserted} nuovi messaggi WhatsApp importati.`);
+                            } else {
+                              say('Nessun nuovo messaggio WhatsApp da importare.');
+                            }
+                          } else {
+                            say(syncRes.error || 'Errore sincronizzazione WhatsApp.', true);
+                          }
+                        }}
+                      >
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '3px', display: 'inline' }}>
+                          <path d="M17.6 6.4A8 8 0 0 0 4.2 16.9L3 21l4.2-1.1a8 8 0 0 0 10.4-13.5z" />
+                        </svg>
+                        Sync WA
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1627,12 +1684,12 @@ export function AdminEliseo({
                       </div>
                       <div className={`el-wa-status ${(waConnected || waState === 'authorized') ? 'el-wa-status--connected' : 'el-wa-status--waiting'}`}>
                         <span className={(waConnected || waState === 'authorized') ? 'el-wa-status__dot' : 'el-wa-status__pulse'} />
-                        <span>{(waConnected || waState === 'authorized') ? 'Connesso: +39 347 884 8922' : 'In attesa di scansione...'}</span>
+                        <span>{(waConnected || waState === 'authorized') ? `Connesso: ${waConnectedPhone || '...'}` : 'In attesa di scansione...'}</span>
                       </div>
                     </div>
 
                     <div className="el-wa-pair__titles">
-                      <h3>Collega il WhatsApp di Luigi Garofalo ad Eliseo</h3>
+                      <h3>Collega WhatsApp ad Eliseo</h3>
                       <p>
                         Inquadra il codice QR con lo smartphone del salone per ricevere e inviare tutti i messaggi WhatsApp direttamente dentro Eliseo, in modo 100% automatizzato.
                       </p>
@@ -1720,7 +1777,7 @@ export function AdminEliseo({
                           <span className="el-wa-step__num">1</span>
                           <div>
                             <strong>Apri WhatsApp</strong>
-                            <p>Sul telefono del salone (+39 347 884 8922).</p>
+                            <p>Sul telefono del salone{waConnectedPhone ? ` (${waConnectedPhone})` : ''}.</p>
                           </div>
                         </div>
                         <div className="el-wa-step">

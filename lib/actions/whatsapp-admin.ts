@@ -304,3 +304,133 @@ export async function logoutWhatsAppInstanceAction(): Promise<{ ok: boolean; err
     return { ok: false, error: err?.message || 'Errore di rete durante la disconnessione' };
   }
 }
+
+/**
+ * Sincronizza i messaggi WhatsApp recenti da Green API verso eliseo_richieste.
+ * Importa solo chat dirette (non gruppi) con testo, evitando duplicati.
+ */
+export async function syncWhatsAppRecentChatsAction(): Promise<{
+  ok: boolean;
+  inserted: number;
+  items: Array<{
+    tipo: 'richiesta';
+    rif: string;
+    nome: string;
+    quando: string;
+    nuovo: boolean;
+    messaggio: string;
+    contatto: string;
+    motivo: string;
+    stato: 'aperta' | 'in_corso' | 'chiusa';
+    assegnato: null;
+    contatto_id: null;
+    cartella: null;
+  }>;
+  error?: string;
+}> {
+  await requireAdminView();
+  const creds = getGreenApiCredentials();
+  if (!creds) return { ok: false, inserted: 0, items: [], error: 'Green API non configurato' };
+
+  try {
+    // Recupera gli ultimi 24h di messaggi in ingresso
+    const res = await fetch(
+      `${creds.host}/waInstance${creds.instanceId}/lastIncomingMessages/${creds.token}?minutes=1440`,
+      { cache: 'no-store' }
+    );
+    if (!res.ok) return { ok: false, inserted: 0, items: [], error: `Errore Green API: HTTP ${res.status}` };
+
+    const data = await res.json();
+    const messages: any[] = Array.isArray(data) ? data : (data?.value ?? []);
+
+    // Filtra solo messaggi diretti (non gruppi) con testo
+    const direct = messages.filter((m: any) => {
+      const chatId: string = m.chatId || m.sender || '';
+      if (chatId.includes('@g.us')) return false; // ignora gruppi
+      const text = m.textMessage || m.extendedTextMessage?.text || '';
+      return text.trim().length > 0;
+    });
+
+    if (direct.length === 0) return { ok: true, inserted: 0, items: [] };
+
+    const { createServiceClient } = await import('@/lib/supabase/server');
+    const supabase = await createServiceClient();
+    if (!supabase) return { ok: false, inserted: 0, items: [], error: 'Database non configurato' };
+
+    // Leggi i contatti già presenti per evitare duplicati per idMessage
+    // Usiamo il campo `contatto` per cercare per numero
+    const phones = direct.map((m: any) => {
+      const chatId: string = m.chatId || m.sender || '';
+      return chatId.replace('@c.us', '').replace('@s.whatsapp.net', '');
+    });
+
+    const { data: existing } = await supabase
+      .from('eliseo_richieste')
+      .select('contatto, creato_il')
+      .in('contatto', phones);
+
+    // Costruisci un set di (contatto, giorno) già presenti per deduplica giornaliera
+    const existingSet = new Set<string>(
+      (existing ?? []).map((r: any) => {
+        const day = r.creato_il ? r.creato_il.slice(0, 10) : '';
+        return `${r.contatto}::${day}`;
+      })
+    );
+
+    const toInsert: Array<{ nome: string; contatto: string; motivo: string; messaggio: string; creato_il: string }> = [];
+
+    for (const m of direct) {
+      const chatId: string = m.chatId || m.sender || '';
+      const phone = chatId.replace('@c.us', '').replace('@s.whatsapp.net', '');
+      const senderName: string = m.senderName || m.senderContactName || `+${phone}`;
+      const text: string = (m.textMessage || m.extendedTextMessage?.text || '').trim();
+      const ts: number = m.timestamp || Math.floor(Date.now() / 1000);
+      const isoDate = new Date(ts * 1000).toISOString();
+      const day = isoDate.slice(0, 10);
+      const key = `${phone}::${day}`;
+
+      if (existingSet.has(key)) continue;
+      existingSet.add(key); // evita inserimenti doppi nel batch corrente
+
+      toInsert.push({
+        nome: senderName.slice(0, 80),
+        contatto: phone.slice(0, 120),
+        motivo: 'whatsapp',
+        messaggio: text.slice(0, 1500),
+        creato_il: isoDate,
+      });
+    }
+
+    if (toInsert.length === 0) return { ok: true, inserted: 0, items: [] };
+
+    const { data: inserted, error: insertErr } = await supabase
+      .from('eliseo_richieste')
+      .insert(toInsert)
+      .select('id, nome, contatto, messaggio, creato_il');
+
+    if (insertErr) {
+      console.error('[syncWhatsApp] insert error:', insertErr);
+      return { ok: false, inserted: 0, items: [], error: insertErr.message };
+    }
+
+    const items = (inserted ?? []).map((r: any) => ({
+      tipo: 'richiesta' as const,
+      rif: r.id,
+      nome: r.nome,
+      quando: r.creato_il,
+      nuovo: true,
+      messaggio: r.messaggio,
+      contatto: r.contatto,
+      motivo: 'whatsapp',
+      stato: 'aperta' as const,
+      assegnato: null,
+      contatto_id: null,
+      cartella: null,
+    }));
+
+    return { ok: true, inserted: items.length, items };
+  } catch (err: any) {
+    console.error('[syncWhatsApp] error:', err);
+    return { ok: false, inserted: 0, items: [], error: err?.message || 'Errore sincronizzazione WhatsApp' };
+  }
+}
