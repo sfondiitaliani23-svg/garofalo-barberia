@@ -179,42 +179,6 @@ export function AdminEliseo({
   const [waState, setWaState] = useState<WhatsAppState>('starting');
   const [waQrBase64, setWaQrBase64] = useState<string | null>(null);
   const [waQrLoading, setWaQrLoading] = useState(false);
-
-  const refreshWaLive = useCallback(async () => {
-    setWaQrLoading(true);
-    try {
-      const statusRes = await getWhatsAppStatusAction();
-      if (statusRes.ok) {
-        setWaState(statusRes.state);
-        if (statusRes.state === 'authorized') {
-          setWaQrBase64(null);
-          setWaConnected(true);
-          return;
-        }
-      }
-      const qrRes = await getWhatsAppQrAction();
-      if (qrRes.ok) {
-        if (qrRes.type === 'alreadyAuthorized') {
-          setWaState('authorized');
-          setWaQrBase64(null);
-          setWaConnected(true);
-        } else if (qrRes.type === 'qrCode' && qrRes.qrBase64) {
-          setWaQrBase64(qrRes.qrBase64);
-          setWaState('notAuthorized');
-        }
-      }
-    } catch (err) {
-      console.error('Errore recupero QR WhatsApp:', err);
-    } finally {
-      setWaQrLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'casella' && !activeCasellaItem) {
-      refreshWaLive();
-    }
-  }, [activeTab, activeCasellaItem, refreshWaLive]);
   const faqCsvInputRef = useRef<HTMLInputElement>(null);
 
   // ───────────────────────────────────────────────
@@ -281,6 +245,42 @@ export function AdminEliseo({
   const activeCasellaItem = useMemo(() => {
     return casella.find((c) => c.rif === casellaPick) || filteredCasella[0] || null;
   }, [casella, filteredCasella, casellaPick]);
+
+  const refreshWaLive = useCallback(async () => {
+    setWaQrLoading(true);
+    try {
+      const statusRes = await getWhatsAppStatusAction();
+      if (statusRes.ok) {
+        setWaState(statusRes.state);
+        if (statusRes.state === 'authorized') {
+          setWaQrBase64(null);
+          setWaConnected(true);
+          return;
+        }
+      }
+      const qrRes = await getWhatsAppQrAction();
+      if (qrRes.ok) {
+        if (qrRes.type === 'alreadyAuthorized') {
+          setWaState('authorized');
+          setWaQrBase64(null);
+          setWaConnected(true);
+        } else if (qrRes.type === 'qrCode' && qrRes.qrBase64) {
+          setWaQrBase64(qrRes.qrBase64);
+          setWaState('notAuthorized');
+        }
+      }
+    } catch (err) {
+      console.error('Errore recupero QR WhatsApp:', err);
+    } finally {
+      setWaQrLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (railTab === 'casella' && !activeCasellaItem) {
+      refreshWaLive();
+    }
+  }, [railTab, activeCasellaItem, refreshWaLive]);
 
   const handleUpdateCasellaStato = (
     tipo: 'chat' | 'richiesta',
