@@ -295,3 +295,27 @@
 .el-app .es-prompt__bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .el-app .es-prompt__bar .es-input { flex: 1; }
 .el-app .es-prompt__count { font-size: 12px; color: rgba(244, 239, 231, 0.55); white-space: nowrap; }
+
+/* Calendario */
+.el-app .es-cal { padding: 4px 0 24px; }
+.el-app .es-cal__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.el-app .es-days--wide { flex-wrap: wrap; margin: 10px 0 16px; }
+.el-app .es-days--wide button { display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; text-transform: capitalize; }
+.el-app .es-days--wide b { font-size: 11px; color: #050403; background: #cd9a4f; border-radius: 999px !important; padding: 0 6px; }
+.el-app .es-cal__cols { display: grid; gap: 12px; overflow-x: auto; margin-bottom: 16px; }
+.el-app .es-cal__col { border: 1px solid rgba(205, 154, 79, 0.24); padding: 12px; min-height: 160px; }
+.el-app .es-cal__col h3 { display: flex; flex-direction: column; gap: 2px; margin: 0 0 10px; font-size: 14px; font-weight: 600; color: #cd9a4f; }
+.el-app .es-cal__col h3 span { font-size: 11px; font-weight: 400; color: rgba(244, 239, 231, 0.55); }
+.el-app .es-cal__app { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; margin-bottom: 8px; border-left: 2px solid #cd9a4f; background: rgba(205, 154, 79, 0.06); }
+.el-app .es-cal__app time { font-size: 12px; color: #f0c378; }
+.el-app .es-cal__app strong { font-size: 13px; color: #f4efe7; }
+.el-app .es-cal__app span { font-size: 12px; color: rgba(244, 239, 231, 0.6); }
+.el-app .es-cal__app.is-completed { opacity: 0.6; }
+.el-app .es-cal__set { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+@media (max-width: 860px) { .el-app .es-cal__set { grid-template-columns: 1fr; } }
+
+/* Analisi: mappa giorno × fascia oraria */
+.el-app .es-heat { display: inline-flex; flex-direction: column; gap: 4px; margin-bottom: 8px; max-width: 100%; overflow-x: auto; }
+.el-app .es-heat__row { display: grid; grid-template-columns: 40px repeat(8, 44px); gap: 4px; }
+.el-app .es-heat__lbl { font-size: 11px; color: rgba(244, 239, 231, 0.55); text-align: center; align-self: center; }
+.el-app .es-heat__cell { display: grid; place-items: center; height: 30px; background: #cd9a4f; color: #050403; font-size: 11px; font-weight: 700; }

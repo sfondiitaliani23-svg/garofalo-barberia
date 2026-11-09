@@ -178,6 +178,8 @@ export function EliseoChat() {
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true);
+    // Link da condividere (Eliseo → Prova chatbot): un indirizzo che finisce con #chat apre subito la chat.
+    if (window.location.hash === '#chat') setIsOpen(true);
     window.addEventListener('eliseo-chat-open', handleOpen);
     return () => window.removeEventListener('eliseo-chat-open', handleOpen);
   }, []);

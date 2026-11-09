@@ -4,6 +4,8 @@ import React, { useState, useTransition, useMemo, useRef, useCallback, useEffect
 import Link from 'next/link';
 import {
   UserCircle,
+  Megaphone,
+  Link2,
   MessageSquare,
   BookOpen,
   GitFork,
@@ -107,7 +109,9 @@ import { groupByChat, isGroupChat } from '@/lib/utils/wa-conversations';
 import { EliseoImpostazioni } from '@/components/admin/eliseo/EliseoImpostazioni';
 import { EliseoEscalation } from '@/components/admin/eliseo/EliseoEscalation';
 import { EliseoPromptExtra } from '@/components/admin/eliseo/EliseoPromptExtra';
-import { getImpostazioniAction, saveImpostazioniAction, savePromptsAction, type EliseoAccount } from '@/lib/actions/eliseo-impostazioni';
+import { EliseoCalendario } from '@/components/admin/eliseo/EliseoCalendario';
+import { EliseoAnalisi } from '@/components/admin/eliseo/EliseoAnalisi';
+import { getImpostazioniAction, getSheetsAction, importGoogleSheetAction, saveImpostazioniAction, savePromptsAction, type EliseoAccount, type SheetLink } from '@/lib/actions/eliseo-impostazioni';
 import { defaultImpostazioni, type EliseoImpostazioni as ImpostazioniData } from '@/lib/utils/eliseo-impostazioni';
 import type { TrainingPrompt } from '@/lib/utils/eliseo-training';
 import './eliseo.css';
@@ -1053,26 +1057,66 @@ export function AdminEliseo({
     });
   };
 
+  // Google Sheet collegati (09/11/2026)
+  const [sheets, setSheets] = useState<SheetLink[]>([]);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetUrl, setSheetUrl] = useState('');
+  const [sheetTitle, setSheetTitle] = useState('');
+  const [sheetBusy, setSheetBusy] = useState(false);
+  useEffect(() => {
+    getSheetsAction().then(setSheets).catch(() => {});
+  }, []);
+  const collegaSheet = async (url: string, titolo: string) => {
+    if (tester) return;
+    setSheetBusy(true);
+    try {
+      const res = await importGoogleSheetAction({ url, titolo });
+      if (!res.ok) { say(res.error, true); return; }
+      setSheets((prev) => [res.sheet, ...prev.filter((x) => x.url !== res.sheet.url)]);
+      setDocList((prev) => [res.item as DocumentoItem, ...prev.filter((d) => d.id !== res.item.id)]);
+      setSheetOpen(false);
+      setSheetUrl('');
+      setSheetTitle('');
+      say(`Foglio «${res.sheet.titolo}» collegato. Eliseo lo usa entro un minuto.`);
+    } catch {
+      say('Collegamento non riuscito.', true);
+    } finally {
+      setSheetBusy(false);
+    }
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || !files.length || tester) return;
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const text = await file.text();
-      startTransition(async () => {
+    const input = e.target;
+    const files = input.files ? Array.from(input.files) : [];
+    if (!files.length || tester) return;
+    const { extractTextFromFile, splitText } = await import('@/lib/client/file-text');
+    for (const file of files) {
+      say(`Leggo «${file.name}»…`);
+      let text = '';
+      try {
+        text = await extractTextFromFile(file);
+      } catch (err) {
+        say(err instanceof Error ? err.message : `Non riesco a leggere «${file.name}».`, true);
+        continue;
+      }
+      if (text.length < 20) {
+        say(`«${file.name}» non contiene testo leggibile (forse è una scansione o un'immagine).`, true);
+        continue;
+      }
+      const parts = splitText(text);
+      const base = file.name.replace(/\.[a-z0-9]+$/i, '').slice(0, 100);
+      for (let i = 0; i < parts.length; i++) {
         const res = await saveDocumentoAction({
-          titolo: file.name.slice(0, 120),
-          testo: text.slice(0, 20000),
+          titolo: parts.length > 1 ? `${base} (parte ${i + 1} di ${parts.length})` : base,
+          testo: parts[i],
           attivo: true,
         });
-        if (res.ok) {
-          setDocList((prev) => [...prev, res.item]);
-          say('File caricato e memorizzato.');
-        } else {
-          say(res.error, true);
-        }
-      });
+        if (res.ok) setDocList((prev) => [...prev, res.item]);
+        else { say(res.error, true); break; }
+      }
+      say(parts.length > 1 ? `«${file.name}» caricato in ${parts.length} parti.` : `«${file.name}» caricato.`);
     }
+    input.value = '';
   };
 
   // ───────────────────────────────────────────────
@@ -1210,11 +1254,27 @@ export function AdminEliseo({
     setChatInput('');
     setChatMessages((prev) => [...prev, { sender: 'user', text }]);
 
-    const res = await testChatbotAction(text);
-    setChatMessages((prev) => [
-      ...prev,
-      { sender: 'bot', text: res.risposta, motivo: res.motivo },
-    ]);
+    // Stessa chat dei clienti (/api/chat): risponde con prompt, FAQ e file dell'addestramento (09/11/2026).
+    const history = chatMessages
+      .filter((m) => m.text)
+      .slice(-10)
+      .map((m) => ({ role: m.sender === 'user' ? 'user' : 'assistant', content: m.text }));
+    try {
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history, lang: 'it' }),
+      });
+      const data = (await r.json()) as { replies?: string[]; source?: string };
+      const reply = (data.replies || []).join('\n\n') || 'Nessuna risposta.';
+      setChatMessages((prev) => [
+        ...prev,
+        { sender: 'bot', text: reply, motivo: data.source === 'ai' ? 'Risposta dell’IA con il tuo addestramento' : 'Risposta a regole (IA non disponibile)' },
+      ]);
+    } catch {
+      const res = await testChatbotAction(text);
+      setChatMessages((prev) => [...prev, { sender: 'bot', text: res.risposta, motivo: `${res.motivo} · prova senza rete` }]);
+    }
   };
 
   // Submenu items according to rail selection
@@ -1267,8 +1327,8 @@ export function AdminEliseo({
             className="el-rail__btn"
             title="Contatti, Campagne e Modelli"
             aria-label="Contatti"
-            aria-pressed={railTab === 'contatti'}
-            onClick={() => setRailTab('contatti')}
+            aria-pressed={railTab === 'contatti' && contattiTab !== 'campagne'}
+            onClick={() => { setRailTab('contatti'); if (contattiTab === 'campagne') setContattiTab('elenco'); }}
           >
             <Users />
           </button>
@@ -1276,8 +1336,19 @@ export function AdminEliseo({
           <button
             type="button"
             className="el-rail__btn"
-            title="Prenotazioni"
-            aria-label="Prenotazioni"
+            title="Campagne in uscita"
+            aria-label="Campagne"
+            aria-pressed={railTab === 'contatti' && contattiTab === 'campagne'}
+            onClick={() => { setRailTab('contatti'); setContattiTab('campagne'); }}
+          >
+            <Megaphone />
+          </button>
+
+          <button
+            type="button"
+            className="el-rail__btn"
+            title="Calendario (prenotazioni del sito)"
+            aria-label="Calendario"
             aria-pressed={railTab === 'prenota'}
             onClick={() => setRailTab('prenota')}
           >
@@ -2667,7 +2738,54 @@ export function AdminEliseo({
                     >
                       <Plus size={15} /> Incolla testo manualmente
                     </button>
+                    <button type="button" className="btn btn--secondary" disabled={tester} onClick={() => setSheetOpen((v) => !v)}>
+                      <Link2 size={15} /> Collega Google Sheet
+                    </button>
                   </div>
+
+                  {sheetOpen && (
+                    <section className="pcard mt-4">
+                      <h3 className="pcard__title">Collega un foglio Google</h3>
+                      <p className="pcard__note">
+                        In Google Sheets: Condividi → «Chiunque abbia il link» → Visualizzatore. Poi incolla qui il link.
+                      </p>
+                      <div className="el-form">
+                        <label className="field">
+                          <span>Link del foglio</span>
+                          <input type="url" placeholder="https://docs.google.com/spreadsheets/d/…" value={sheetUrl} onChange={(e) => setSheetUrl(e.target.value)} />
+                        </label>
+                        <label className="field">
+                          <span>Nome (es. «Listino prodotti»)</span>
+                          <input type="text" maxLength={100} value={sheetTitle} onChange={(e) => setSheetTitle(e.target.value)} />
+                        </label>
+                        <div className="actions">
+                          <button type="button" className="btn btn--primary" disabled={sheetBusy || !sheetUrl.trim()} onClick={() => collegaSheet(sheetUrl, sheetTitle)}>
+                            {sheetBusy ? 'Collego…' : 'Collega'}
+                          </button>
+                        </div>
+                      </div>
+                    </section>
+                  )}
+
+                  {sheets.length > 0 && (
+                    <>
+                      <p className="el-faq__all mt-4">Fogli Google collegati ({sheets.length})</p>
+                      <div className="el-file__list">
+                        {sheets.map((sh) => (
+                          <article key={sh.url} className="el-file__row">
+                            <Link2 className="el-file__glyph" />
+                            <a className="el-file__open" href={sh.url} target="_blank" rel="noopener noreferrer">
+                              <strong>{sh.titolo}</strong>
+                              <time>Aggiornato il {new Date(sh.aggiornato).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</time>
+                            </a>
+                            <button type="button" className="btn btn--secondary" disabled={sheetBusy || tester} onClick={() => collegaSheet(sh.url, sh.titolo)}>
+                              <RefreshCw size={14} /> Aggiorna
+                            </button>
+                          </article>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
                   {editingDoc && (
                     <section className="pcard mt-4">
@@ -2900,9 +3018,14 @@ export function AdminEliseo({
                       <span>Base di conoscenza attiva</span>
                     </li>
                     <li>
-                      <strong>WhatsApp Business</strong>
-                      <span>Numero salone</span>
-                      <span>+39 388 423 3929</span>
+                      <strong>WhatsApp</strong>
+                      <span className={(waConnected || waState === 'authorized') ? 'text-green-400' : ''}>{(waConnected || waState === 'authorized') ? 'Connesso' : 'Non collegato'}</span>
+                      <span>{waConnectedPhone || 'Collega dal menu ⋮ delle Conversazioni'}</span>
+                    </li>
+                    <li>
+                      <strong>Google Sheets</strong>
+                      <span className={sheets.length ? 'text-green-400' : ''}>{sheets.length ? `${sheets.length} collegati` : 'Nessuno'}</span>
+                      <span>Da File → «Collega Google Sheet»</span>
                     </li>
                     <li>
                       <strong>Prenotazioni online</strong>
@@ -3512,27 +3635,7 @@ export function AdminEliseo({
           )}
 
           {/* TAB: PRENOTAZIONI */}
-          {railTab === 'prenota' && (
-            <div>
-              <header className="el-pagehead">
-                <h2>Prenotazioni Salone</h2>
-              </header>
-              <section className="pcard">
-                <h3 className="pcard__title">Gestione Appuntamenti Barberia Garofalo</h3>
-                <p className="pcard__note">
-                  Il salone utilizza il sistema di prenotazioni integrato nel sito con gestione disponibilità, orari dei barbieri e notifiche automatiche.
-                </p>
-                <div className="actions mt-4 flex gap-3">
-                  <Link href="/admin/prenotazioni" className="btn btn--primary">
-                    Apri Gestionale Prenotazioni
-                  </Link>
-                  <a href={prenotaUrl} target="_blank" rel="noopener noreferrer" className="btn btn--secondary flex items-center gap-2">
-                    <ExternalLink size={15} /> Pagina Prenota Cliente
-                  </a>
-                </div>
-              </section>
-            </div>
-          )}
+          {railTab === 'prenota' && <EliseoCalendario prenotaUrl={prenotaUrl} />}
 
           {/* TAB: PROVA CHATBOT */}
           {railTab === 'prova' && (
@@ -3543,6 +3646,28 @@ export function AdminEliseo({
                   Fai domande come farebbe un cliente per verificare in tempo reale le risposte dell’assistente Eliseo.
                 </p>
               </header>
+
+              <section className="pcard">
+                <h3 className="pcard__title">Il tuo chatbot è pronto</h3>
+                <p className="pcard__note">
+                  Qui rispondono gli stessi prompt, FAQ e file che usano i clienti sul sito. Se una risposta non va, correggi l’Addestramento e riprova.
+                </p>
+                <div className="actions flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    onClick={() => {
+                      const link = `${new URL(prenotaUrl).origin}/#chat`;
+                      navigator.clipboard?.writeText(link).then(() => say('Link della chat copiato.'), () => say(link));
+                    }}
+                  >
+                    <Link2 size={15} /> Copia il link della chat
+                  </button>
+                  <a href={`${new URL(prenotaUrl).origin}/#chat`} target="_blank" rel="noopener noreferrer" className="btn btn--secondary">
+                    <ExternalLink size={15} /> Apri la chat sul sito
+                  </a>
+                </div>
+              </section>
 
               <section className="pcard">
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -3599,37 +3724,7 @@ export function AdminEliseo({
           )}
 
           {/* TAB: ANALISI */}
-          {railTab === 'analisi' && (
-            <div>
-              <header className="el-pagehead">
-                <h2>Analisi & Statistiche CRM</h2>
-                <p>Panoramica completa sui clienti, frequenza di visita e fidelizzazione.</p>
-              </header>
-
-              <div className="el-kpis">
-                <article className="el-kpi">
-                  <span>Clienti Totali</span>
-                  <b>{statsSummary.totale}</b>
-                  <small>in rubrica</small>
-                </article>
-                <article className="el-kpi">
-                  <span>Con Consenso</span>
-                  <b>{statsSummary.consenso}</b>
-                  <small>ricevono promozioni</small>
-                </article>
-                <article className="el-kpi">
-                  <span>Nuovi (7 giorni)</span>
-                  <b>{statsSummary.nuovi}</b>
-                  <small>prime visite</small>
-                </article>
-                <article className="el-kpi">
-                  <span>Da Richiamare</span>
-                  <b>{statsSummary.richiamare}</b>
-                  <small>tempo giusto trascorso</small>
-                </article>
-              </div>
-            </div>
-          )}
+          {railTab === 'analisi' && <EliseoAnalisi casella={casella} crm={statsSummary} />}
 
           {/* TAB: IMPOSTAZIONI e PROFILO (come Keplero, 09/11/2026) */}
           {(railTab === 'integrazioni' || railTab === 'profilo') && (

@@ -57,3 +57,24 @@ test('addestramento: prompt, FAQ vicine e file pertinenti nel limite', () => {
   assert.ok(punteggio('massaggio relax', 'Fate massaggi? Sì') > 0);
   assert.ok(estratto('a. '.repeat(500) + 'Taglio uomo costa poco.', 'taglio', 100).includes('Taglio'));
 });
+
+import { analisiConversazioni, variazione } from '@/lib/utils/eliseo-analisi';
+
+test('analisi: conversazioni, messaggi e mappa degli ultimi 7 giorni', () => {
+  const now = new Date('2026-11-09T18:00:00Z');
+  const r = analisiConversazioni([
+    { rif: 'a', contatto: '3931', quando: '2026-11-09T09:30:00Z' },
+    { rif: 'b', contatto: '3931', quando: '2026-11-09T10:00:00Z', assegnato: 'luigi' },
+    { rif: 'c', contatto: '3932', quando: '2026-11-03T08:00:00Z' },
+    { rif: 'd', contatto: '3933', quando: '2026-10-30T08:00:00Z' },
+    { rif: 'g', contatto: '1-2@g.us', quando: '2026-11-09T10:00:00Z' },
+  ], now);
+  assert.equal(r.conversazioni, 2);
+  assert.equal(r.messaggi, 3);
+  assert.equal(r.conOperatore, 1);
+  assert.equal(r.conversazioniPrima, 1);
+  assert.equal(r.mappa[0][3], 1); // lunedì 10:30 ora italiana → fascia 09-12
+  assert.equal(r.max, 1);
+  assert.equal(variazione(2, 1), 100);
+  assert.equal(variazione(2, 0), null);
+});
