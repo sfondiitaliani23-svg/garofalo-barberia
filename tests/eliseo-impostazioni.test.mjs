@@ -78,3 +78,25 @@ test('analisi: conversazioni, messaggi e mappa degli ultimi 7 giorni', () => {
   assert.equal(variazione(2, 1), 100);
   assert.equal(variazione(2, 0), null);
 });
+
+import { contattiDaAggiungere } from '@/lib/utils/eliseo-autosync';
+
+test('contatti automatici: iscritti e WhatsApp senza doppioni', () => {
+  const nuovi = contattiDaAggiungere(
+    [{ email: 'gia@x.it', telefono: '+39 329 111 2222', user_id: 'u0' }],
+    [
+      { id: 'u0', full_name: 'Già', email: 'gia@x.it' },
+      { id: 'u1', full_name: 'Marco Rossi', email: 'MARCO@x.it', phone: '333 444 5555' },
+      { id: 'u2', full_name: 'Senza dati' },
+    ],
+    [
+      { nome: 'Luca', contatto: '393291112222@c.us' },
+      { nome: 'Anna', contatto: '393334445555' },
+      { nome: 'Nuovo', contatto: '393401234567@c.us' },
+      { nome: 'Gruppo', contatto: '3933-1@g.us' },
+    ],
+  );
+  assert.equal(nuovi.length, 2);
+  assert.deepEqual(nuovi.map((n) => [n.fonte, n.nome, n.telefono]), [['sito', 'Marco Rossi', '393334445555'], ['whatsapp', 'Nuovo', '393401234567']]);
+  assert.equal(nuovi[0].email, 'marco@x.it');
+});

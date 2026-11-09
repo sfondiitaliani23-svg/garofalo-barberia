@@ -4,6 +4,7 @@ import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendPushToUser } from '@/lib/utils/push';
 import { clearTrainingCache } from '@/lib/chat/eliseo-training-server';
+import { contattiDaAggiungere } from '@/lib/utils/eliseo-autosync';
 import {
   cleanContact,
   cleanTemplate,
@@ -39,6 +40,27 @@ export type EliseoPayload = {
 
 export type EliseoError = { ok: false; error: string };
 
+type ServiceClient = NonNullable<Awaited<ReturnType<typeof createServiceClient>>>;
+
+/** Iscritti al sito e contatti WhatsApp in rubrica da soli. Al massimo una volta ogni 5 minuti, mai bloccante. */
+async function autoSyncContatti(supabase: ServiceClient) {
+  const KEY = 'eliseo:autosync';
+  const { data: last } = await supabase.from('site_content').select('id, updated_at').eq('key', KEY).maybeSingle();
+  if (last?.updated_at && Date.now() - new Date(last.updated_at).getTime() < 5 * 60_000) return;
+  const now = new Date().toISOString();
+  if (last) await supabase.from('site_content').update({ updated_at: now }).eq('id', last.id);
+  else await supabase.from('site_content').insert({ key: KEY, title: 'sincronizzazione contatti Eliseo', body: '', is_active: false, updated_at: now });
+
+  const [esistenti, profili, richieste] = await Promise.all([
+    supabase.from('eliseo_contatti').select('email, telefono, user_id').limit(5000),
+    supabase.from('profiles').select('id, full_name, email, phone').eq('role', 'customer').limit(5000),
+    supabase.from('eliseo_richieste').select('nome, contatto').order('creato_il', { ascending: false }).limit(1000),
+  ]);
+  const nuovi = contattiDaAggiungere(esistenti.data ?? [], profili.data ?? [], richieste.data ?? []);
+  // Uno alla volta: un eventuale doppione (indice unico sull'email) non ferma gli altri.
+  for (const c of nuovi.slice(0, 200)) await supabase.from('eliseo_contatti').insert(c);
+}
+
 /**
  * Caricamento globale dei dati per la console Eliseo.
  * Accessibile a admin, dipendente e tester.
@@ -57,7 +79,8 @@ export async function getEliseoAction(): Promise<EliseoPayload | EliseoError> {
 
     const team = (barbersData ?? []).map((b) => ({ id: b.id, nome: b.name }));
 
-    // 2. Contatti da eliseo_contatti
+    // 2. Contatti da eliseo_contatti (prima: iscritti al sito e chat WhatsApp nuove entrano da soli, 10/11/2026)
+    if (!tester) await autoSyncContatti(supabase).catch(() => {});
     let contatti: Contatto[] = [];
     const { data: contattiData, error: contattiErr } = await supabase
       .from('eliseo_contatti')
