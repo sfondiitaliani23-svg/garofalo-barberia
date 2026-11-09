@@ -40,6 +40,8 @@ export interface ChatKnowledge {
   barbers: ChatBarber[];
   promotions: ChatPromotion[];
   now?: Date;
+  /** Addestramento dell'area Eliseo (prompt, FAQ, file) già pronto per il prompt. */
+  training?: string;
 }
 
 export interface ChatAction {

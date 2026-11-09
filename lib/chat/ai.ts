@@ -147,7 +147,7 @@ const EN_INSTRUCTION = `
 
 LANGUAGE (overrides any earlier instruction about language): the visitor is using the English version of the website. Reply in clear, warm, simple English, in at most 4-5 short sentences. The SCHEDA and the reference answer may be in Italian: translate what you need, but keep prices, opening hours, names and phone numbers exactly as they are. Never invent anything. When you mention a website page, write its English address: /en/prenota (booking), /en/servizi (services), /en/contatti (contact), /en/galleria (gallery), /en/recensioni (reviews), /en/faq, /en/offerte (offers). The customer area stays at /area-cliente.`;
 
-function systemPrompt(facts: string, reference: string, lang: Lang = 'it') {
+function systemPrompt(facts: string, reference: string, lang: Lang = 'it', training = '') {
   return `Sei "Eliseo", l'assistente virtuale di ${SITE_CONFIG.name}, barberia a Foggia.
 Rispondi in italiano, con tono cordiale e diretto, frasi corte, al massimo 4-5 frasi. Puoi usare **grassetto**. Non usare emoji.
 
@@ -163,7 +163,7 @@ RISPOSTA DI RIFERIMENTO del sistema del salone (affidabile; usala se è pertinen
 """${reference}"""
 
 SCHEDA DEL SALONE:
-${facts}${lang === 'en' ? EN_INSTRUCTION : ''}`;
+${facts}${training ? `\n\n${training}` : ''}${lang === 'en' ? EN_INSTRUCTION : ''}`;
 }
 
 type Msg = { role: 'system' | 'user' | 'assistant'; content: string };
@@ -199,7 +199,7 @@ export async function askAi(message: string, history: ChatHistoryItem[], k: Chat
   // Telefono ed email scritti dal cliente non escono dal sito (l'assistente non deve usarli).
   const r = (t: string) => redactContacts(t, lang === 'en' ? 'en' : 'it');
   const messages: Msg[] = [
-    { role: 'system', content: systemPrompt(buildFacts(k), r(reference), lang) },
+    { role: 'system', content: systemPrompt(buildFacts(k), r(reference), lang, k.training || '') },
     ...history.slice(-8).map((h) => ({ role: h.role, content: r(h.content) })),
     { role: 'user', content: r(message) },
   ];

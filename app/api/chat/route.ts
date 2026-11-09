@@ -7,6 +7,8 @@ import { askAi } from '@/lib/chat/ai';
 import { stripEmoji } from '@/lib/chat/strip-emoji';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isLang, type Lang } from '@/lib/i18n';
+import { loadEliseoTraining } from '@/lib/chat/eliseo-training-server';
+import { buildTrainingBlock } from '@/lib/utils/eliseo-training';
 
 /** Conteggio giornaliero delle risposte per fonte (per la scheda in admin). Mai bloccante. */
 async function countAnswer(source: 'gemini' | 'groq' | 'regole') {
@@ -84,8 +86,10 @@ export async function POST(request: NextRequest) {
     const history = sanitizeHistory(body?.history);
     lang = isLang(body?.lang) ? body.lang : 'it';
 
-    const knowledge = await loadKnowledge();
+    const [knowledge, training] = await Promise.all([loadKnowledge(), loadEliseoTraining()]);
     const result = respond(message, history, knowledge, lang);
+    // Addestramento scritto in /admin/eliseo (prompt, FAQ, file): arriva all'IA insieme alla scheda del salone.
+    if (training) knowledge.training = buildTrainingBlock(training, message);
 
     // AI gratuita (Gemini → Groq); se non disponibile resta la risposta a regole.
     if (message.trim().length >= 2) {

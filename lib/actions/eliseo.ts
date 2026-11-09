@@ -3,6 +3,7 @@
 import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendPushToUser } from '@/lib/utils/push';
+import { clearTrainingCache } from '@/lib/chat/eliseo-training-server';
 import {
   cleanContact,
   cleanTemplate,
@@ -789,6 +790,7 @@ export async function savePromptAction(istruzioni: string): Promise<{ ok: true }
       .from('eliseo_assistente')
       .upsert({ id: 1, istruzioni: clean, aggiornato_il: new Date().toISOString() });
     if (error) throw error;
+    clearTrainingCache();
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Salvataggio prompt fallito.' };

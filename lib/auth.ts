@@ -40,12 +40,31 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   return null;
 });
 
+/**
+ * Verifica in due passaggi (09/11/2026): chi ha attivato codice o passkey in Eliseo → Profilo → Sicurezza
+ * deve completarla prima di usare l'area riservata. Senza fattori attivi non cambia nulla.
+ */
+export const enforceStaffMfa = cache(async () => {
+  let needsMfa = false;
+  try {
+    const supabase = await createClient();
+    const res = await supabase?.auth.mfa.getAuthenticatorAssuranceLevel();
+    needsMfa = !!res?.data && res.data.nextLevel === 'aal2' && res.data.currentLevel !== 'aal2';
+  } catch {
+    needsMfa = false;
+  }
+  if (needsMfa) redirect('/admin/login?mfa=1');
+});
+
 export const TESTER_BLOCK_MESSAGE = 'Modalità tester: puoi guardare tutto e proporre una novità, ma non modificare.';
 
 export const requireRole = cache(async (role: UserRole) => {
   const profile = await getProfile();
   if (role === 'admin' && profile?.role === 'tester') throw new Error(TESTER_BLOCK_MESSAGE);
-  if (role === 'admin' && profile && canMutate(profile.role)) return profile;
+  if (role === 'admin' && profile && canMutate(profile.role)) {
+    await enforceStaffMfa();
+    return profile;
+  }
   if (!profile || profile.role !== role) {
     if (role === 'admin') {
       redirect('/admin/login');
@@ -67,6 +86,7 @@ export const requireFullAdmin = cache(async () => {
     if (profile?.role === 'dipendente') throw new Error('Solo un admin può farlo.');
     redirect('/admin/login');
   }
+  await enforceStaffMfa();
   return profile;
 });
 
@@ -79,6 +99,7 @@ export const requireCustomer = cache(async () => requireRole('customer'));
 export const requireAdminView = cache(async (): Promise<{ profile: Profile; tester: boolean; hideFinance: boolean }> => {
   const profile = await getProfile();
   if (!profile || !isStaffRole(profile.role)) redirect('/admin/login');
+  await enforceStaffMfa();
   return {
     profile,
     tester: profile.role === 'tester',

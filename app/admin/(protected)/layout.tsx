@@ -1,9 +1,10 @@
 import { AdminProtectedShell } from '@/components/layout/AdminProtectedShell';
-import { getProfile } from '@/lib/auth';
+import { enforceStaffMfa, getProfile } from '@/lib/auth';
 import { roleLabel } from '@/lib/auth/staff';
 
 export default async function AdminProtectedLayout({ children }: { children: React.ReactNode }) {
   const profile = await getProfile();
+  await enforceStaffMfa();
   const tester = profile?.role === 'tester';
   const dipendente = profile?.role === 'dipendente';
   return (

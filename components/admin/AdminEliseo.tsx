@@ -3,6 +3,7 @@
 import React, { useState, useTransition, useMemo, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import {
+  UserCircle,
   MessageSquare,
   BookOpen,
   GitFork,
@@ -103,6 +104,12 @@ import {
   type WhatsAppState,
 } from '@/lib/actions/whatsapp-admin';
 import { groupByChat, isGroupChat } from '@/lib/utils/wa-conversations';
+import { EliseoImpostazioni } from '@/components/admin/eliseo/EliseoImpostazioni';
+import { EliseoEscalation } from '@/components/admin/eliseo/EliseoEscalation';
+import { EliseoPromptExtra } from '@/components/admin/eliseo/EliseoPromptExtra';
+import { getImpostazioniAction, saveImpostazioniAction, savePromptsAction, type EliseoAccount } from '@/lib/actions/eliseo-impostazioni';
+import { defaultImpostazioni, type EliseoImpostazioni as ImpostazioniData } from '@/lib/utils/eliseo-impostazioni';
+import type { TrainingPrompt } from '@/lib/utils/eliseo-training';
 import './eliseo.css';
 import './eliseo-minimal.css';
 
@@ -129,7 +136,8 @@ type RailTab =
   | 'prenota'
   | 'prova'
   | 'analisi'
-  | 'integrazioni';
+  | 'integrazioni'
+  | 'profilo';
 
 type AddestramentoSubTab =
   | 'faq'
@@ -551,6 +559,53 @@ export function AdminEliseo({
     }, 60000);
     return () => clearInterval(t);
   }, [railTab, tester, checkWaState]);
+
+  // Impostazioni, profilo, escalation e prompt aggiuntivi (come Keplero, 09/11/2026)
+  const [impostazioni, setImpostazioni] = useState<ImpostazioniData>(() => defaultImpostazioni());
+  const [promptsExtra, setPromptsExtra] = useState<TrainingPrompt[]>([]);
+  const [eliseoAccount, setEliseoAccount] = useState<EliseoAccount>({ email: null, fullName: null, role: tester ? 'tester' : 'admin' });
+  useEffect(() => {
+    let vivo = true;
+    getImpostazioniAction()
+      .then((res) => {
+        if (!vivo || !res.ok) return;
+        setImpostazioni(res.impostazioni);
+        setPromptsExtra(res.prompts);
+        setEliseoAccount(res.account);
+      })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, []);
+
+  const saveImpostazioni = async (next: ImpostazioniData): Promise<boolean> => {
+    try {
+      const res = await saveImpostazioniAction(next);
+      if (!res.ok) return false;
+      setImpostazioni(res.impostazioni);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const savePromptsExtra = async (next: TrainingPrompt[]): Promise<boolean> => {
+    try {
+      const res = await savePromptsAction(next);
+      if (!res.ok) { say(res.error, true); return false; }
+      setPromptsExtra(res.prompts);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const goToFromSettings = (dest: 'whatsapp' | 'modelli' | 'cartelle' | 'contatti' | 'file') => {
+    if (dest === 'whatsapp') { setRailTab('casella'); setWaMenuOpen(true); return; }
+    if (dest === 'modelli') { setRailTab('contatti'); setContattiTab('modelli'); return; }
+    if (dest === 'contatti') { setRailTab('contatti'); setContattiTab('elenco'); return; }
+    if (dest === 'file') { setRailTab('addestramento'); setAddestramentoTab('documenti'); return; }
+    setRailTab('casella');
+  };
 
   // Aprire una chat la segna come letta (come in WhatsApp Web): tutti i suoi messaggi nuovi
   const openChat = (rif: string) => {
@@ -1252,7 +1307,18 @@ export function AdminEliseo({
           </button>
         </div>
 
-        {/* Bottom Gear Setting Icon */}
+        {/* Profilo e Impostazioni in basso, come in Keplero */}
+        <div className="el-rail__nav">
+        <button
+          type="button"
+          className="el-rail__btn"
+          title="Profilo (account, sicurezza, note legali)"
+          aria-label="Profilo"
+          aria-pressed={railTab === 'profilo'}
+          onClick={() => setRailTab('profilo')}
+        >
+          <UserCircle />
+        </button>
         <button
           type="button"
           className="el-rail__btn"
@@ -1263,6 +1329,7 @@ export function AdminEliseo({
         >
           <Settings />
         </button>
+        </div>
       </nav>
 
       {/* 2. Sub-side Menu (quando selezionato Addestramento o Contatti) */}
@@ -2798,62 +2865,20 @@ export function AdminEliseo({
                       onChange={(e) => setPromptText(e.target.value)}
                     />
                   </section>
+
+                  <EliseoPromptExtra value={promptsExtra} onSave={savePromptsExtra} tester={tester} />
                 </>
               )}
 
               {addestramentoTab === 'passaggio' && (
-                <>
-                  <header className="el-faq__head">
-                    <h2>Escalation & Passaggio al team</h2>
-                    <p>Regole su quando l’assistente passa la parola a Luigi o ai barbieri del salone.</p>
-                  </header>
-
-                  <section className="pcard">
-                    <div className="el-form">
-                      <label className="el-consent">
-                        <input
-                          type="checkbox"
-                          checked={assistente.escalation_attiva}
-                          onChange={(e) => handleToggleEscalation(e.target.checked)}
-                        />
-                        <span>Attiva il passaggio automatico al team quando il cliente lo richiede</span>
-                      </label>
-
-                      <label className="el-consent">
-                        <input
-                          type="checkbox"
-                          checked={assistente.testo_libero}
-                          onChange={(e) => handleToggleTestoLibero(e.target.checked)}
-                        />
-                        <span>Consenti ai clienti di scrivere domande a testo libero nella chat del sito</span>
-                      </label>
-                    </div>
-                  </section>
-
-                  <section className="pcard">
-                    <h3 className="pcard__title">Orari di disponibilità del salone</h3>
-                    <p className="pcard__note">
-                      Negli orari di chiusura o fuori turno, l’assistente informa il cliente e invita a prenotare online.
-                    </p>
-                    <ul className="plist">
-                      <li>
-                        <strong>Martedì – Venerdì</strong>
-                        <span>08:30 – 13:00 / 15:30 – 20:30</span>
-                        <span>Aperto</span>
-                      </li>
-                      <li>
-                        <strong>Sabato</strong>
-                        <span>08:30 – 14:00 / 14:30 – 20:00</span>
-                        <span>Orario continuato</span>
-                      </li>
-                      <li>
-                        <strong>Domenica & Lunedì</strong>
-                        <span className="text-red-400">Chiuso</span>
-                        <span>Riposo settimanale</span>
-                      </li>
-                    </ul>
-                  </section>
-                </>
+                <EliseoEscalation
+                  attiva={assistente.escalation_attiva}
+                  onToggle={handleToggleEscalation}
+                  value={impostazioni}
+                  onSave={saveImpostazioni}
+                  team={team}
+                  tester={tester}
+                />
               )}
 
               {addestramentoTab === 'integrazioni' && (
@@ -3606,46 +3631,19 @@ export function AdminEliseo({
             </div>
           )}
 
-          {/* TAB: INTEGRAZIONI (IMPOSTAZIONI) */}
-          {railTab === 'integrazioni' && (
-            <div>
-              <header className="el-pagehead">
-                <h2>Impostazioni Canali & Integrazioni</h2>
-              </header>
-
-              <ul className="plist">
-                <li>
-                  <strong>Sito del salone</strong>
-                  <span>In uso</span>
-                  <span>barberiagarofalo.it (Lettura automatica contenuti)</span>
-                </li>
-                <li>
-                  <strong>FAQ & File Conoscenza</strong>
-                  <span>In uso</span>
-                  <span>{faqList.length} FAQ e {docList.length} documenti attivi</span>
-                </li>
-                <li>
-                  <strong>WhatsApp</strong>
-                  <span>+39 388 423 3929</span>
-                  <span>Canale prioritario di risposta al cliente</span>
-                </li>
-                <li>
-                  <strong>Gestionale Prenotazioni</strong>
-                  <span>In uso</span>
-                  <span>Orari barbieri, sovrapposizioni e combo gestite nativamente</span>
-                </li>
-                <li>
-                  <strong>Email</strong>
-                  <span>Notifiche attive</span>
-                  <span>Avvisi di sistema ed email di riepilogo</span>
-                </li>
-                <li>
-                  <strong>Instagram</strong>
-                  <span>Collegato</span>
-                  <span>@barberiagarofalo</span>
-                </li>
-              </ul>
-            </div>
+          {/* TAB: IMPOSTAZIONI e PROFILO (come Keplero, 09/11/2026) */}
+          {(railTab === 'integrazioni' || railTab === 'profilo') && (
+            <EliseoImpostazioni
+              area={railTab === 'profilo' ? 'profilo' : 'impostazioni'}
+              value={impostazioni}
+              onSave={saveImpostazioni}
+              team={team}
+              tester={tester}
+              waConnected={waConnected || waState === 'authorized'}
+              waPhone={waConnectedPhone}
+              account={eliseoAccount}
+              onGoTo={goToFromSettings}
+            />
           )}
         </div>
 

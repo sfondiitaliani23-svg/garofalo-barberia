@@ -12,11 +12,64 @@ function AdminLoginFormInner() {
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Secondo passaggio (09/11/2026): codice dell'app di autenticazione o passkey, se attivati in Eliseo → Profilo → Sicurezza.
+  const [mfa, setMfa] = useState<{ totp?: string; passkey?: string } | null>(null);
+  const [code, setCode] = useState('');
 
   useEffect(() => {
     const urlError = searchParams.get('error');
     if (urlError) setError(safeDecodeURIComponent(urlError));
+    if (searchParams.get('mfa') === '1') void checkMfa();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  /** true se serve il secondo passaggio (e prepara il modulo), false se si può entrare. */
+  async function checkMfa(): Promise<boolean> {
+    const supabase = createClient();
+    if (!supabase) return false;
+    try {
+      const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (!data || data.nextLevel !== 'aal2' || data.currentLevel === 'aal2') return false;
+      const { data: f } = await supabase.auth.mfa.listFactors();
+      const verified = (f?.all ?? []).filter((x) => x.status === 'verified');
+      const totp = verified.find((x) => x.factor_type === 'totp')?.id;
+      const passkey = verified.find((x) => x.factor_type === 'webauthn')?.id;
+      if (!totp && !passkey) return false;
+      setMfa({ totp, passkey });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function verifyCode(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const supabase = createClient();
+    if (!supabase || !mfa?.totp) return;
+    setLoading(true);
+    setError(null);
+    const { error: e } = await supabase.auth.mfa.challengeAndVerify({ factorId: mfa.totp, code: code.replace(/\s/g, '') });
+    if (e) {
+      setError('Codice non valido. Riprova con il codice nuovo dell\'app.');
+      setLoading(false);
+      return;
+    }
+    window.location.assign('/admin/dashboard');
+  }
+
+  async function withPasskey() {
+    const supabase = createClient();
+    if (!supabase || !mfa?.passkey) return;
+    setLoading(true);
+    setError(null);
+    const { error: e } = await supabase.auth.mfa.webauthn.authenticate({ factorId: mfa.passkey, webauthn: {} });
+    if (e) {
+      setError('Passkey non riconosciuta. Riprova o usa il codice.');
+      setLoading(false);
+      return;
+    }
+    window.location.assign('/admin/dashboard');
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,8 +109,49 @@ function AdminLoginFormInner() {
       return;
     }
 
+    if (await checkMfa()) {
+      setLoading(false);
+      return;
+    }
+
     // Navigazione completa: evita che la cache del router riporti alla pagina di accesso (serviva un secondo accesso).
     window.location.assign('/admin/dashboard');
+  }
+
+  if (mfa) {
+    return (
+      <form onSubmit={verifyCode} className="space-y-4">
+        <p className="text-sm text-white/80">Verifica in due passaggi: conferma che sei tu.</p>
+        {error && (
+          <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>
+        )}
+        {mfa.passkey && (
+          <Button type="button" className="w-full" disabled={loading} onClick={withPasskey}>
+            Usa la passkey (impronta, volto o blocco schermo)
+          </Button>
+        )}
+        {mfa.totp && (
+          <>
+            <div>
+              <Label htmlFor="mfa-code">Codice dell&apos;app di autenticazione</Label>
+              <Input
+                id="mfa-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9 ]{6,7}"
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Verifica...' : 'Conferma codice'}
+            </Button>
+          </>
+        )}
+      </form>
+    );
   }
 
   return (
