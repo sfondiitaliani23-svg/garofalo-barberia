@@ -102,6 +102,7 @@ import {
   sendWhatsAppChatMessageAction,
   type WhatsAppState,
 } from '@/lib/actions/whatsapp-admin';
+import { groupByChat, isGroupChat } from '@/lib/utils/wa-conversations';
 import './eliseo.css';
 import './eliseo-minimal.css';
 
@@ -204,6 +205,9 @@ export function AdminEliseo({
   const [waQrBase64, setWaQrBase64] = useState<string | null>(null);
   const [waQrLoading, setWaQrLoading] = useState(false);
   const [waConnectedPhone, setWaConnectedPhone] = useState<string | null>(null);
+  // Menu «⋮» delle conversazioni, come WhatsApp Web, con «Disconnetti» (09/11/2026)
+  const [waMenuOpen, setWaMenuOpen] = useState(false);
+  const [waLogoutConfirm, setWaLogoutConfirm] = useState(false);
   const faqCsvInputRef = useRef<HTMLInputElement>(null);
 
   // ───────────────────────────────────────────────
@@ -276,24 +280,33 @@ export function AdminEliseo({
     return Array.from(new Set([...fromItems, ...customCartelle])).sort();
   }, [casella, customCartelle]);
 
+  // Come WhatsApp Web: una riga per chat, con i non letti della chat (09/11/2026)
+  const chatRows = useMemo(() => groupByChat(casella), [casella]);
+  const chatInfo = useMemo(() => {
+    const m = new Map<string, { unread: number; rifs: string[] }>();
+    for (const r of chatRows) m.set(r.item.rif, { unread: r.unread, rifs: r.rifs });
+    return m;
+  }, [chatRows]);
+
   const waCounts = useMemo(() => {
     let unread = 0;
     let pinned = 0;
     let muted = 0;
     let archived = 0;
-    for (const item of casella) {
+    for (const { item, unread: u } of chatRows) {
       const meta = waChatMeta[item.rif] || {};
       const isArch = item.cartella === 'Archiviate' || !!meta.archived;
-      if (item.nuovo) unread++;
+      if (u > 0) unread++;
       if (meta.pinned) pinned++;
       if (meta.muted) muted++;
       if (isArch) archived++;
     }
     return { unread, pinned, muted, archived };
-  }, [casella, waChatMeta]);
+  }, [chatRows, waChatMeta]);
 
   const filteredCasella = useMemo(() => {
-    const list = casella.filter((item) => {
+    const list = chatRows.map((r) => r.item).filter((item) => {
+      const unreadChat = (chatInfo.get(item.rif)?.unread ?? 0) > 0;
       const meta = waChatMeta[item.rif] || {};
       const isArchived = item.cartella === 'Archiviate' || !!meta.archived;
       const isPinned = !!meta.pinned;
@@ -305,14 +318,14 @@ export function AdminEliseo({
       } else {
         // Se non siamo nel tab 'archived', le archiviate sono ESCLUSE (proprio come WhatsApp!)
         if (isArchived) return false;
-        if (waFilterTab === 'unread' && !item.nuovo) return false;
+        if (waFilterTab === 'unread' && !unreadChat) return false;
         if (waFilterTab === 'pinned' && !isPinned) return false;
         if (waFilterTab === 'muted' && !isMuted) return false;
       }
 
       if (casellaChi === '__none' && item.assegnato) return false;
       if (casellaChi && casellaChi !== '__none' && item.assegnato !== casellaChi) return false;
-      if (casellaVista === 'nuove' && !item.nuovo) return false;
+      if (casellaVista === 'nuove' && !unreadChat) return false;
       if (casellaVista === 'aperte' && item.stato === 'chiusa') return false;
       if (casellaVista === 'richieste' && item.tipo !== 'richiesta') return false;
       if (casellaVista === 'chiuse' && item.stato !== 'chiusa') return false;
@@ -339,7 +352,7 @@ export function AdminEliseo({
     });
 
     return list;
-  }, [casella, casellaChi, casellaVista, casellaCartella, casellaQ, casellaOrd, waFilterTab, waChatMeta]);
+  }, [chatRows, chatInfo, casellaChi, casellaVista, casellaCartella, casellaQ, casellaOrd, waFilterTab, waChatMeta]);
 
   const activeCasellaItem = useMemo(() => {
     return casella.find((c) => c.rif === casellaPick) || filteredCasella[0] || null;
@@ -350,6 +363,7 @@ export function AdminEliseo({
     if (!activeCasellaItem) return [];
     const contactKey = (activeCasellaItem.contatto || activeCasellaItem.nome || '').trim().toLowerCase();
     const related = casella
+      .filter((c) => !isGroupChat(c.contatto))
       .filter((c) => {
         const k = (c.contatto || c.nome || '').trim().toLowerCase();
         return (k && k === contactKey) || c.rif === activeCasellaItem.rif;
@@ -451,7 +465,7 @@ export function AdminEliseo({
     let inFlight = false;
 
     const pollSync = async () => {
-      if (inFlight) return;
+      if (inFlight || (typeof document !== 'undefined' && document.hidden)) return;
       inFlight = true;
       try {
         const res = await fetch('/api/whatsapp-sync', { cache: 'no-store' });
@@ -475,7 +489,8 @@ export function AdminEliseo({
     };
 
     pollSync();
-    const interval = setInterval(pollSync, 1000);
+    // Ogni 10 secondi (prima ogni secondo: troppo calcolo su Vercel) e solo con la scheda in vista.
+    const interval = setInterval(pollSync, 10000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -499,6 +514,28 @@ export function AdminEliseo({
       return () => clearInterval(timer);
     }
   }, [railTab, activeCasellaItem, refreshWaLive]);
+
+  // Aprire una chat la segna come letta (come in WhatsApp Web): tutti i suoi messaggi nuovi
+  const openChat = (rif: string) => {
+    setCasellaPick(rif);
+    if (tester) return;
+    const rifs = new Set(chatInfo.get(rif)?.rifs ?? [rif]);
+    const daLeggere = casella.filter((c) => rifs.has(c.rif) && c.nuovo);
+    if (daLeggere.length === 0) return;
+    setCasella((prev) => prev.map((c) => (rifs.has(c.rif) ? { ...c, nuovo: false } : c)));
+    startTransition(async () => {
+      for (const c of daLeggere) {
+        await saveCasellaStatoAction({
+          tipo: c.tipo,
+          rif: c.rif,
+          stato: c.stato || 'aperta',
+          assegnato: c.assegnato || null,
+          contatto_id: c.contatto_id || null,
+          cartella: c.cartella || null,
+        });
+      }
+    });
+  };
 
   const handleUpdateCasellaStato = (
     tipo: 'chat' | 'richiesta',
@@ -1616,6 +1653,65 @@ export function AdminEliseo({
                         Sync WA
                       </button>
                     )}
+                    {!tester && (
+                      <span className="el-wa-menu">
+                        <button
+                          type="button"
+                          className="el-wa-menu__btn"
+                          aria-label="Altre opzioni"
+                          aria-haspopup="menu"
+                          aria-expanded={waMenuOpen}
+                          onClick={() => { setWaMenuOpen((v) => !v); setWaLogoutConfirm(false); }}
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+                        {waMenuOpen && (
+                          <span className="el-wa-menu__list" role="menu">
+                            <span className="el-wa-menu__info">
+                              {(waConnected || waState === 'authorized')
+                                ? `Dispositivo collegato${waConnectedPhone ? `: ${waConnectedPhone}` : ''}`
+                                : 'Nessun dispositivo collegato'}
+                            </span>
+                            <button type="button" role="menuitem" className="el-wa-menu__item" onClick={() => { setWaMenuOpen(false); refreshWaLive(); say('Aggiornamento stato WhatsApp...'); }}>
+                              Aggiorna stato
+                            </button>
+                            <button type="button" role="menuitem" className="el-wa-menu__item" onClick={() => { setWaMenuOpen(false); setWaFilterTab('archived'); }}>
+                              Chat archiviate
+                            </button>
+                            {(waConnected || waState === 'authorized') && (
+                              waLogoutConfirm ? (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className="el-wa-menu__item el-wa-menu__item--danger"
+                                  onClick={async () => {
+                                    setWaMenuOpen(false);
+                                    setWaLogoutConfirm(false);
+                                    say('Disconnessione WhatsApp in corso...');
+                                    const res = await logoutWhatsAppInstanceAction();
+                                    if (res.ok) {
+                                      setWaConnected(false);
+                                      setWaState('notAuthorized');
+                                      setWaConnectedPhone(null);
+                                      say('WhatsApp disconnesso da questo dispositivo. Per ricollegarlo inquadra di nuovo il QR.');
+                                      await refreshWaLive();
+                                    } else {
+                                      say(res.error || 'Errore durante la disconnessione.', true);
+                                    }
+                                  }}
+                                >
+                                  Confermi? Tocca di nuovo per disconnettere
+                                </button>
+                              ) : (
+                                <button type="button" role="menuitem" className="el-wa-menu__item el-wa-menu__item--danger" onClick={() => setWaLogoutConfirm(true)}>
+                                  Disconnetti
+                                </button>
+                              )
+                            )}
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -1757,7 +1853,7 @@ export function AdminEliseo({
                           key={`${item.tipo}:${item.rif}`}
                           type="button"
                           className={`el-row ${item.rif === activeCasellaItem?.rif ? 'is-on' : ''}`}
-                          onClick={() => setCasellaPick(item.rif)}
+                          onClick={() => openChat(item.rif)}
                         >
                           <span className="el-av" data-tone={item.tipo === 'chat' ? '1' : '3'}>
                             {(item.nome || '?').charAt(0).toUpperCase()}
@@ -1768,7 +1864,7 @@ export function AdminEliseo({
                                 <strong>{item.nome || 'Senza nome'}</strong>
                               </span>
                               <span className="el-row__meta">
-                                <small style={{ color: item.nuovo ? '#25d366' : 'rgba(233, 237, 239, 0.55)', fontWeight: item.nuovo ? 600 : 400 }}>
+                                <small style={{ color: (chatInfo.get(item.rif)?.unread ?? 0) > 0 ? '#25d366' : 'rgba(233, 237, 239, 0.55)', fontWeight: (chatInfo.get(item.rif)?.unread ?? 0) > 0 ? 600 : 400 }}>
                                   {item.quando ? new Date(item.quando).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : ''}
                                 </small>
                               </span>
@@ -1783,7 +1879,7 @@ export function AdminEliseo({
                               <span className="flex items-center gap-1.5 flex-shrink-0">
                                 {isMuted && <span title="Silenziata" className="inline-flex"><VolumeX size={13} className="el-badge-muted" /></span>}
                                 {isPinned && <span title="Fissata in alto" className="inline-flex"><Pin size={13} className="el-badge-pinned" /></span>}
-                                {item.nuovo && <span className="el-wa-unread-badge">1</span>}
+                                {(chatInfo.get(item.rif)?.unread ?? 0) > 0 && <span className="el-wa-unread-badge">{chatInfo.get(item.rif)?.unread}</span>}
                               </span>
                             </span>
                           </span>

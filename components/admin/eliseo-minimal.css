@@ -80,3 +80,23 @@
 
 /* Pulsante principale: oro pieno, angoli dritti */
 .el-app .el-chat-send-btn { background: #cd9a4f; background-image: none; color: #050403; box-shadow: none; }
+
+/* Menu «⋮» delle conversazioni (come WhatsApp Web): stato del dispositivo, archiviate, Disconnetti */
+.el-app .el-wa-menu { position: relative; display: inline-flex; margin-left: 6px; }
+.el-app .el-wa-menu__btn {
+  display: grid; place-items: center; width: 32px; height: 32px;
+  border: 1px solid rgba(205, 154, 79, 0.35); background: transparent; color: #cd9a4f; cursor: pointer;
+}
+.el-app .el-wa-menu__btn:hover { border-color: #cd9a4f; }
+.el-app .el-wa-menu__list {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; min-width: 240px;
+  display: flex; flex-direction: column; padding: 6px 0;
+  background: #050403; border: 1px solid #cd9a4f; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+.el-app .el-wa-menu__info { padding: 8px 14px 10px; font-size: 11px; color: rgba(244, 239, 231, 0.6); border-bottom: 1px solid rgba(205, 154, 79, 0.24); }
+.el-app .el-wa-menu__item {
+  min-height: 40px; padding: 0 14px; text-align: left; border: 0; background: transparent;
+  color: #f4efe7; font-size: 13px; cursor: pointer;
+}
+.el-app .el-wa-menu__item:hover { background: rgba(205, 154, 79, 0.08); }
+.el-app .el-wa-menu__item--danger { color: #f87171; }

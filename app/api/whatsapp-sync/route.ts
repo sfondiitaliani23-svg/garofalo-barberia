@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { getProfile } from '@/lib/auth';
+import { isStaffRole } from '@/lib/auth/staff';
+import { maskForTester } from '@/lib/utils/tester-mask';
+import { isGroupChat } from '@/lib/utils/wa-conversations';
 
 function getGreenApiCredentials() {
   const instanceId = process.env.GREEN_API_INSTANCE_ID;
@@ -12,6 +16,12 @@ function getGreenApiCredentials() {
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  // Solo lo staff: la risposta contiene nomi, numeri e messaggi dei clienti (09/11/2026).
+  const profile = await getProfile();
+  if (!profile || !isStaffRole(profile.role)) {
+    return NextResponse.json({ ok: false, error: 'non_autorizzato' }, { status: 401 });
+  }
+  const tester = profile.role === 'tester';
   try {
     const creds = getGreenApiCredentials();
     const supabase = await createServiceClient();
@@ -99,7 +109,7 @@ export async function GET() {
 
     const statiMap = new Map((statiData ?? []).map((s: any) => [`${s.tipo}:${s.rif}`, s]));
 
-    const casella = (reqsData ?? []).map((r: any) => {
+    const casella = (reqsData ?? []).filter((r: any) => !isGroupChat(r.contatto)).map((r: any) => {
       const s = statiMap.get(`richiesta:${r.id}`);
       return {
         tipo: 'richiesta' as const,
@@ -117,7 +127,7 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json({ ok: true, inserted: insertedCount, casella });
+    return NextResponse.json({ ok: true, inserted: insertedCount, casella: tester ? maskForTester(casella) : casella });
   } catch (err: any) {
     return NextResponse.json({ ok: false, error: err?.message }, { status: 500 });
   }

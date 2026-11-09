@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
+import { isGroupChat } from '@/lib/utils/wa-conversations';
 
 export async function POST(req: Request) {
+  // Se è impostato GREEN_API_WEBHOOK_TOKEN (lo stesso «webhookUrlToken» della console Green API),
+  // si accettano solo le chiamate con «Authorization: Bearer <token>». Senza variabile resta aperto come prima.
+  const expected = process.env.GREEN_API_WEBHOOK_TOKEN;
+  if (expected && req.headers.get('authorization') !== `Bearer ${expected}`) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
   try {
     const body = await req.json();
 
@@ -12,6 +19,8 @@ export async function POST(req: Request) {
 
       // Estrai il mittente e il testo
       const rawChatId = senderData.chatId || senderData.sender || '';
+      // I gruppi non sono conversazioni con i clienti (come in WhatsApp Web restano separati): non si salvano.
+      if (isGroupChat(rawChatId)) return NextResponse.json({ ok: true });
       const phoneDigits = rawChatId.replace('@c.us', '').replace('@s.whatsapp.net', '');
       const senderName = senderData.senderName || senderData.chatName || `Cliente WhatsApp (${phoneDigits})`;
 
