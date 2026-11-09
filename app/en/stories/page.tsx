@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { alternatesFor, OG_EN } from '@/lib/i18n/seo';
 import StoriesView from '@/app/(public)/stories/view';
 
-export const revalidate = 60;
+export const revalidate = 600; // 10 minuti: meno calcolo su Vercel (09/11/2026)
 
 export const metadata: Metadata = {
   title: 'Stories: today\'s stories',

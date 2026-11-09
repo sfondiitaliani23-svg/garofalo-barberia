@@ -6,7 +6,7 @@ export const metadata = {
   description: "Chi siamo: la Barberia Garofalo a Foggia, un salone per uomo, ragazzo e bimbo. Il team, i valori e il modo di lavorare.",
   alternates: alternatesFor('/chi-siamo', 'it'),
 };
-export const revalidate = 300;
+export const revalidate = 600; // 10 minuti: meno calcolo su Vercel (09/11/2026)
 
 export default function Page() {
   return <ChiSiamoView lang="it" />;

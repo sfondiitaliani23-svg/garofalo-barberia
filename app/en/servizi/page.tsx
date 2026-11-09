@@ -1,7 +1,7 @@
 import { alternatesFor, OG_EN } from '@/lib/i18n/seo';
 import ServiziView from '@/app/(public)/servizi/view';
 
-export const revalidate = 120;
+export const revalidate = 600; // 10 minuti: meno calcolo su Vercel (09/11/2026)
 export const metadata = {
   title: 'Services and prices',
   description: 'Price list of Barberia Garofalo in Foggia: haircut and shampoo, kids’ haircut, straight-razor shave, beard trim with scissors or hot-towel beard. Clear prices, online booking.',

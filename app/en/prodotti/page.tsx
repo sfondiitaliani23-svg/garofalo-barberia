@@ -1,7 +1,7 @@
 import { alternatesFor, OG_EN } from '@/lib/i18n/seo';
 import ProdottiView from '@/app/(public)/prodotti/view';
 
-export const revalidate = 300;
+export const revalidate = 600; // 10 minuti: meno calcolo su Vercel (09/11/2026)
 export const metadata = {
   title: 'Products at the salon',
   description: 'Perfumes and hair and beard products available at Barberia Garofalo in Foggia. Ask at the salon or on WhatsApp.',

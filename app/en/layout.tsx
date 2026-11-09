@@ -3,7 +3,7 @@ import { PublicShell } from '@/components/layout/PublicShell';
 import { OG_EN } from '@/lib/i18n/seo';
 import '../(public)/public-pages.css';
 
-export const revalidate = 60;
+export const revalidate = 600; // 10 minuti: meno calcolo su Vercel (09/11/2026)
 
 export const metadata: Metadata = {
   openGraph: OG_EN,

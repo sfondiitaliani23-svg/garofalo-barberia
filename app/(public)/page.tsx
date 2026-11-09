@@ -1,7 +1,7 @@
 import HomeView from './view';
 import { alternatesFor } from '@/lib/i18n/seo';
 
-export const revalidate = 120;
+export const revalidate = 600; // 10 minuti: meno calcolo su Vercel (09/11/2026)
 
 export const metadata = {
   title: { absolute: 'Barberia Garofalo | Barbiere a Foggia – Taglio uomo, barba e bimbo' },

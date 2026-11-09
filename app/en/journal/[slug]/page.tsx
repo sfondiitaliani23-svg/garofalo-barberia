@@ -2,7 +2,7 @@ import { JOURNAL } from '@/lib/data/journal';
 import ArticleView, { articleMetadata } from '@/app/(public)/journal/[slug]/view';
 
 export const dynamicParams = true;
-export const revalidate = 300;
+export const revalidate = 600; // 10 minuti: meno calcolo su Vercel (09/11/2026)
 
 export function generateStaticParams() {
   return JOURNAL.map((a) => ({ slug: a.slug }));
