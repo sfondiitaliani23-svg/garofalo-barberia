@@ -515,6 +515,43 @@ export function AdminEliseo({
     }
   }, [railTab, activeCasellaItem, refreshWaLive]);
 
+  // Stato del telefono collegato (09/11/2026). Prima veniva letto solo senza chat aperta,
+  // ma una chat è sempre aperta (la prima della lista): il menu ⋮ diceva «Nessun dispositivo collegato»
+  // anche con WhatsApp funzionante. Ora si controlla all'apertura della sezione, ogni minuto e all'apertura del menu.
+  const checkWaState = useCallback(async () => {
+    try {
+      const st = await getWhatsAppStatusAction();
+      setWaState(st.state);
+      const linked = st.ok && st.state === 'authorized';
+      if (st.ok) {
+        setWaConnected(linked);
+        try { localStorage.setItem('eliseo_wa_connected', linked ? '1' : '0'); } catch (_) {}
+      }
+      if (linked) {
+        const numRes = await getWhatsAppNumberAction();
+        if (numRes.ok && numRes.phone) {
+          const digits = numRes.phone.replace(/\D/g, '');
+          setWaConnectedPhone(digits.startsWith('39') && digits.length >= 11
+            ? `+39 ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`
+            : (digits ? `+${digits}` : numRes.phone));
+        }
+      } else if (st.ok) {
+        setWaConnectedPhone(null);
+      }
+    } catch (_) {
+      setWaState('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (railTab !== 'casella' || tester) return;
+    checkWaState();
+    const t = setInterval(() => {
+      if (typeof document === 'undefined' || !document.hidden) checkWaState();
+    }, 60000);
+    return () => clearInterval(t);
+  }, [railTab, tester, checkWaState]);
+
   // Aprire una chat la segna come letta (come in WhatsApp Web): tutti i suoi messaggi nuovi
   const openChat = (rif: string) => {
     setCasellaPick(rif);
@@ -1661,24 +1698,34 @@ export function AdminEliseo({
                           aria-label="Altre opzioni"
                           aria-haspopup="menu"
                           aria-expanded={waMenuOpen}
-                          onClick={() => { setWaMenuOpen((v) => !v); setWaLogoutConfirm(false); }}
+                          onClick={() => { setWaMenuOpen((v) => { if (!v) checkWaState(); return !v; }); setWaLogoutConfirm(false); }}
                         >
                           <MoreVertical size={16} />
                         </button>
                         {waMenuOpen && (
                           <span className="el-wa-menu__list" role="menu">
                             <span className="el-wa-menu__info">
-                              {(waConnected || waState === 'authorized')
+                              {waState === 'authorized'
                                 ? `Dispositivo collegato${waConnectedPhone ? `: ${waConnectedPhone}` : ''}`
-                                : 'Nessun dispositivo collegato'}
+                                : waState === 'notAuthorized'
+                                  ? 'Nessun dispositivo collegato'
+                                  : waState === 'not_configured'
+                                    ? 'WhatsApp non configurato'
+                                    : waState === 'sleepMode'
+                                      ? 'Telefono collegato ma non raggiungibile (spento o senza rete)'
+                                      : waState === 'blocked'
+                                        ? 'Numero bloccato da WhatsApp'
+                                        : waState === 'error'
+                                          ? 'Stato non verificato: riprova con «Aggiorna stato»'
+                                          : 'Controllo in corso…'}
                             </span>
-                            <button type="button" role="menuitem" className="el-wa-menu__item" onClick={() => { setWaMenuOpen(false); refreshWaLive(); say('Aggiornamento stato WhatsApp...'); }}>
+                            <button type="button" role="menuitem" className="el-wa-menu__item" onClick={async () => { setWaState('starting'); say('Controllo stato WhatsApp...'); await checkWaState(); }}>
                               Aggiorna stato
                             </button>
                             <button type="button" role="menuitem" className="el-wa-menu__item" onClick={() => { setWaMenuOpen(false); setWaFilterTab('archived'); }}>
                               Chat archiviate
                             </button>
-                            {(waConnected || waState === 'authorized') && (
+                            {waState !== 'notAuthorized' && waState !== 'not_configured' && (
                               waLogoutConfirm ? (
                                 <button
                                   type="button"
