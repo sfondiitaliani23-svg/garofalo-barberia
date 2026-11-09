@@ -2,7 +2,7 @@ name: Promemoria appuntamenti
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '7 * * * *'  # ogni ora (prima ogni 15 min), per il limite CPU di Vercel (09/11/2026)
   workflow_dispatch:
 
 jobs:
