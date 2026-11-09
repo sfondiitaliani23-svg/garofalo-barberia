@@ -1,0 +1,82 @@
+/* Area Eliseo — stile «Minimal nero e oro» (scelto da Eliseo il 09/11/2026).
+   Solo grafica: si carica dopo eliseo.css e ne cambia colori, angoli e titoli. Le funzioni non cambiano. */
+
+.el-app {
+  --console-bg: #050403;
+  --console-panel: #050403;
+  --console-ink: #f4efe7;
+  --console-line: rgba(205, 154, 79, 0.24);
+  --console-line-2: rgba(205, 154, 79, 0.16);
+  --console-line-strong: rgba(205, 154, 79, 0.45);
+  --console-chip-line: rgba(205, 154, 79, 0.35);
+  --console-muted: rgba(244, 239, 231, 0.6);
+  --console-quiet: rgba(244, 239, 231, 0.7);
+  --console-hover: rgba(205, 154, 79, 0.06);
+  --console-select: transparent;
+  --console-soft-amber: transparent;
+  --paper: #050403;
+  background: #050403;
+  border-color: rgba(205, 154, 79, 0.24);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Angoli dritti ovunque, tranne cerchi (avatar, stati) e interruttori */
+.el-app :is(button, input, select, textarea, details, summary, form, section, article, aside, label, a, div, span, p):not(.el-av):not(.el-side-av):not(.el-status-ic):not(.el-wa-unread-badge):not(.el-wa-badge):not([role="switch"]):not([role="switch"] *) {
+  border-radius: 0;
+}
+
+/* Pannelli: tutti neri, divisi da un filo d'oro */
+.el-app :is(.el-rail, .el-side, .el-conv__side, .el-conv__list, .el-conv__detail, .el-book__side, .el-book__main, .el-chat-header, .el-chat-input-bar) {
+  background: #050403;
+  border-color: rgba(205, 154, 79, 0.24);
+  box-shadow: none;
+}
+
+/* Barra delle icone: la sezione attiva ha solo il bordo oro */
+.el-app .el-rail__btn { border: 1px solid transparent; }
+.el-app .el-rail__btn:hover { background: transparent; color: #cd9a4f; }
+.el-app .el-rail__btn[aria-pressed="true"] {
+  background: transparent;
+  background-image: none;
+  color: #cd9a4f;
+  border-color: #cd9a4f;
+  box-shadow: none;
+}
+
+/* Titoli: sottili, maiuscoli, spaziati, in oro */
+.el-app :is(.el-pagehead h2, .el-faq__head h2, .el-side__title, .el-conv__top strong) {
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #cd9a4f;
+}
+.el-app :is(.el-pagehead h2, .el-faq__head h2) { font-size: 26px; }
+.el-app .el-group { color: #cd9a4f; letter-spacing: 0.18em; }
+
+/* Voci di menu, cartelle e righe delle chat: selezione = bordo oro, niente riempimento */
+.el-app :is(.el-nav, .el-folder, .el-row) { border: 1px solid transparent; }
+.el-app :is(.el-nav, .el-folder, .el-row):hover { background: rgba(205, 154, 79, 0.06); }
+.el-app :is(.el-nav[aria-selected="true"], .el-folder[aria-pressed="true"], .el-row.is-on) {
+  background: transparent;
+  border: 1px solid #cd9a4f;
+}
+
+/* Schede, colonne, numeri, modelli, FAQ: solo contorno */
+.el-app :is(.el-card, .el-col, .el-kpi, .el-model, .el-faq__row, .el-tag, .el-search, .el-wa-setup-box) {
+  background: transparent;
+  border-color: rgba(205, 154, 79, 0.24);
+  box-shadow: none;
+}
+.el-app :is(.el-card, .el-faq__row, .el-model):hover { background: rgba(205, 154, 79, 0.05); border-color: rgba(205, 154, 79, 0.45); }
+.el-app .el-kpi b { font-weight: 300; color: #f0c378; }
+
+/* Chat: messaggi senza sfondo, solo bordo; i nostri in oro */
+.el-app .el-chat-bubble { box-shadow: none; }
+.el-app .el-chat-bubble--in { background: transparent; border: 1px solid rgba(244, 239, 231, 0.25); }
+.el-app .el-chat-bubble--out { background: transparent; border: 1px solid #cd9a4f; color: #f0c378; }
+.el-app .el-chat-header__name { font-weight: 300; letter-spacing: 0.14em; color: #cd9a4f; }
+.el-app .el-chat-input-bar input { background: transparent; border: 1px solid rgba(205, 154, 79, 0.4); }
+
+/* Pulsante principale: oro pieno, angoli dritti */
+.el-app .el-chat-send-btn { background: #cd9a4f; background-image: none; color: #050403; box-shadow: none; }

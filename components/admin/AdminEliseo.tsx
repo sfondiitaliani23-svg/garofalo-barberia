@@ -103,6 +103,7 @@ import {
   type WhatsAppState,
 } from '@/lib/actions/whatsapp-admin';
 import './eliseo.css';
+import './eliseo-minimal.css';
 
 interface AdminEliseoProps {
   initialContatti: Contatto[];
