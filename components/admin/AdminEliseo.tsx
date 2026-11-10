@@ -44,7 +44,6 @@ import {
   MoreVertical,
   ChevronDown,
   ArrowLeft,
-  AlertTriangle,
 } from 'lucide-react';
 import {
   FASI,
@@ -299,13 +298,19 @@ export function AdminEliseo({
   const [newMailSubject, setNewMailSubject] = useState<string>('');
   const [newMailBody, setNewMailBody] = useState<string>('');
 
+  // Quando WhatsApp non è collegato, nessuna chat o messaggio WhatsApp deve essere visibile
+  const visibleCasella = useMemo(() => {
+    if (!isWaLinked) return [];
+    return casella;
+  }, [casella, isWaLinked]);
+
   const allCartelle = useMemo(() => {
-    const fromItems = casella.map((x) => x.cartella).filter(Boolean) as string[];
+    const fromItems = visibleCasella.map((x) => x.cartella).filter(Boolean) as string[];
     return Array.from(new Set([...fromItems, ...customCartelle])).sort();
-  }, [casella, customCartelle]);
+  }, [visibleCasella, customCartelle]);
 
   // Come WhatsApp Web: una riga per chat, con i non letti della chat (09/11/2026)
-  const chatRows = useMemo(() => groupByChat(casella), [casella]);
+  const chatRows = useMemo(() => groupByChat(visibleCasella), [visibleCasella]);
   const chatInfo = useMemo(() => {
     const m = new Map<string, { unread: number; rifs: string[] }>();
     for (const r of chatRows) m.set(r.item.rif, { unread: r.unread, rifs: r.rifs });
@@ -379,8 +384,9 @@ export function AdminEliseo({
   }, [chatRows, chatInfo, casellaChi, casellaVista, casellaCartella, casellaQ, casellaOrd, waFilterTab, waChatMeta]);
 
   const activeCasellaItem = useMemo(() => {
-    return casella.find((c) => c.rif === casellaPick) || filteredCasella[0] || null;
-  }, [casella, filteredCasella, casellaPick]);
+    if (!isWaLinked) return null;
+    return visibleCasella.find((c) => c.rif === casellaPick) || filteredCasella[0] || null;
+  }, [visibleCasella, filteredCasella, casellaPick, isWaLinked]);
 
   // Raccoglie tutti i messaggi associati a questa conversazione/contatto
   const currentChatMessages = useMemo(() => {
@@ -1631,7 +1637,7 @@ export function AdminEliseo({
                   >
                     <span className="el-side-av el-side-av--muted" />
                     <span className="el-folder__txt">Tutti</span>
-                    <b>{casella.length}</b>
+                    <b>{visibleCasella.length}</b>
                   </button>
                   <button
                     type="button"
@@ -1641,7 +1647,7 @@ export function AdminEliseo({
                   >
                     <span className="el-side-av el-side-av--muted" />
                     <span className="el-folder__txt">Non assegnato</span>
-                    <b>{casella.filter((x) => !x.assegnato).length}</b>
+                    <b>{visibleCasella.filter((x) => !x.assegnato).length}</b>
                   </button>
                   {team.map((p, idx) => (
                     <button
@@ -1655,7 +1661,7 @@ export function AdminEliseo({
                         {(p.nome || '?').charAt(0).toUpperCase()}
                       </span>
                       <span className="el-folder__txt">{p.nome}</span>
-                      <b>{casella.filter((x) => x.assegnato === p.nome).length}</b>
+                      <b>{visibleCasella.filter((x) => x.assegnato === p.nome).length}</b>
                     </button>
                   ))}
                 </div>
@@ -1679,7 +1685,7 @@ export function AdminEliseo({
                       </svg>
                     </span>
                     <span className="el-folder__txt">Aperti</span>
-                    <b>{casella.filter((x) => x.stato !== 'chiusa').length}</b>
+                    <b>{visibleCasella.filter((x) => x.stato !== 'chiusa').length}</b>
                   </button>
                   <button
                     type="button"
@@ -1695,7 +1701,7 @@ export function AdminEliseo({
                       </svg>
                     </span>
                     <span className="el-folder__txt">Da Leggere</span>
-                    <b>{casella.filter((x) => x.nuovo).length}</b>
+                    <b>{visibleCasella.filter((x) => x.nuovo).length}</b>
                   </button>
                   <button
                     type="button"
@@ -1710,7 +1716,7 @@ export function AdminEliseo({
                       </svg>
                     </span>
                     <span className="el-folder__txt">Richieste di supporto</span>
-                    <b>{casella.filter((x) => x.tipo === 'richiesta').length}</b>
+                    <b>{visibleCasella.filter((x) => x.tipo === 'richiesta').length}</b>
                   </button>
                   <button
                     type="button"
@@ -1725,7 +1731,7 @@ export function AdminEliseo({
                       </svg>
                     </span>
                     <span className="el-folder__txt">Chiuso</span>
-                    <b>{casella.filter((x) => x.stato === 'chiusa').length}</b>
+                    <b>{visibleCasella.filter((x) => x.stato === 'chiusa').length}</b>
                   </button>
                 </div>
 
@@ -1791,7 +1797,7 @@ export function AdminEliseo({
                       </svg>
                     </span>
                     <span className="el-folder__txt">Tutte le cartelle</span>
-                    <b>{casella.length}</b>
+                    <b>{visibleCasella.length}</b>
                   </button>
 
                   {allCartelle
@@ -1810,7 +1816,7 @@ export function AdminEliseo({
                           </svg>
                         </span>
                         <span className="el-folder__txt">{c}</span>
-                        <b>{casella.filter((x) => (x.cartella || '') === c).length}</b>
+                        <b>{visibleCasella.filter((x) => (x.cartella || '') === c).length}</b>
                       </button>
                     ))}
                 </div>
@@ -1825,7 +1831,7 @@ export function AdminEliseo({
                     <strong>Conversazioni</strong>
                   </div>
                   <div className="el-conv__topacts">
-                    <span className="el-count">{filteredCasella.length}</span>
+                    <span className="el-count">{isWaLinked ? filteredCasella.length : 0}</span>
                     {(waConnected || waState === 'authorized') && (
                       <button
                         type="button"
@@ -1995,7 +2001,7 @@ export function AdminEliseo({
                 </div>
 
                 {/* Banner Notifiche Disattivate stile WhatsApp Web */}
-                {showNotifyBanner && (
+                {isWaLinked && showNotifyBanner && (
                   <div className="el-wa-notify-banner">
                     <div className="el-wa-notify-banner__left">
                       <span className="el-wa-notify-banner__ic">
@@ -2030,84 +2036,82 @@ export function AdminEliseo({
                 )}
 
                 <div className="el-conv__rows">
-                  {!isWaLinked && (
-                    <div className="mx-2 mb-2 p-2.5 rounded bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-center gap-2">
-                      <AlertTriangle size={15} className="flex-shrink-0 text-amber-400" />
-                      <span>WhatsApp scollegato. Inquadra il codice QR a destra per visualizzare le chat.</span>
-                    </div>
-                  )}
-                  {/* Riga Archiviate stile WhatsApp Web */}
-                  {waFilterTab === 'archived' ? (
-                    <div
-                      className="el-archived-banner"
-                      onClick={() => setWaFilterTab('all')}
-                      style={{ color: '#00a884' }}
-                    >
-                      <span className="flex items-center gap-3">
-                        <ArrowLeft size={16} />
-                        <strong>Torna a tutte le chat</strong>
-                      </span>
-                    </div>
-                  ) : waCounts.archived > 0 ? (
-                    <div
-                      className="el-archived-banner"
-                      onClick={() => setWaFilterTab('archived')}
-                    >
-                      <span className="flex items-center gap-3">
-                        <Archive size={17} className="text-[#00a884]" />
-                        <span>Archiviate</span>
-                      </span>
-                      <span className="el-wa-unread-badge">{waCounts.archived}</span>
-                    </div>
-                  ) : null}
-
-                  {filteredCasella.length === 0 ? (
-                    <p className="pempty">Nessuna conversazione con questi filtri.</p>
-                  ) : (
-                    filteredCasella.map((item) => {
-                      const isWa = item.tipo === 'richiesta' && !item.contatto?.includes('@');
-                      const meta = waChatMeta[item.rif] || {};
-                      const isPinned = !!meta.pinned;
-                      const isMuted = !!meta.muted;
-                      const isArchived = item.cartella === 'Archiviate' || !!meta.archived;
-                      return (
-                        <button
-                          key={`${item.tipo}:${item.rif}`}
-                          type="button"
-                          className={`el-row ${item.rif === activeCasellaItem?.rif ? 'is-on' : ''}`}
-                          onClick={() => openChat(item.rif)}
+                  {isWaLinked && (
+                    <>
+                      {/* Riga Archiviate stile WhatsApp Web */}
+                      {waFilterTab === 'archived' ? (
+                        <div
+                          className="el-archived-banner"
+                          onClick={() => setWaFilterTab('all')}
+                          style={{ color: '#00a884' }}
                         >
-                          <span className="el-av" data-tone={item.tipo === 'chat' ? '1' : '3'}>
-                            {(item.nome || '?').charAt(0).toUpperCase()}
+                          <span className="flex items-center gap-3">
+                            <ArrowLeft size={16} />
+                            <strong>Torna a tutte le chat</strong>
                           </span>
-                          <span className="el-row__body">
-                            <span className="el-row__top">
-                              <span className="flex items-center gap-1 min-w-0">
-                                <strong>{item.nome || 'Senza nome'}</strong>
+                        </div>
+                      ) : waCounts.archived > 0 ? (
+                        <div
+                          className="el-archived-banner"
+                          onClick={() => setWaFilterTab('archived')}
+                        >
+                          <span className="flex items-center gap-3">
+                            <Archive size={17} className="text-[#00a884]" />
+                            <span>Archiviate</span>
+                          </span>
+                          <span className="el-wa-unread-badge">{waCounts.archived}</span>
+                        </div>
+                      ) : null}
+
+                      {filteredCasella.length === 0 ? (
+                        <p className="pempty">Nessuna conversazione con questi filtri.</p>
+                      ) : (
+                        filteredCasella.map((item) => {
+                          const isWa = item.tipo === 'richiesta' && !item.contatto?.includes('@');
+                          const meta = waChatMeta[item.rif] || {};
+                          const isPinned = !!meta.pinned;
+                          const isMuted = !!meta.muted;
+                          const isArchived = item.cartella === 'Archiviate' || !!meta.archived;
+                          return (
+                            <button
+                              key={`${item.tipo}:${item.rif}`}
+                              type="button"
+                              className={`el-row ${item.rif === activeCasellaItem?.rif ? 'is-on' : ''}`}
+                              onClick={() => openChat(item.rif)}
+                            >
+                              <span className="el-av" data-tone={item.tipo === 'chat' ? '1' : '3'}>
+                                {(item.nome || '?').charAt(0).toUpperCase()}
                               </span>
-                              <span className="el-row__meta">
-                                <small style={{ color: (chatInfo.get(item.rif)?.unread ?? 0) > 0 ? '#25d366' : 'rgba(233, 237, 239, 0.55)', fontWeight: (chatInfo.get(item.rif)?.unread ?? 0) > 0 ? 600 : 400 }}>
-                                  {item.quando ? new Date(item.quando).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : ''}
-                                </small>
-                              </span>
-                            </span>
-                            <span className="el-row__prev" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
-                              <span className="truncate flex items-center gap-1">
-                                {isWa && <CheckCheck size={14} className="text-[#53bdeb] flex-shrink-0" />}
-                                <span className="el-row__snippet">
-                                  {item.messaggio || (item.tipo === 'chat' ? 'Chat del sito' : 'Modulo di richiesta')}
+                              <span className="el-row__body">
+                                <span className="el-row__top">
+                                  <span className="flex items-center gap-1 min-w-0">
+                                    <strong>{item.nome || 'Senza nome'}</strong>
+                                  </span>
+                                  <span className="el-row__meta">
+                                    <small style={{ color: (chatInfo.get(item.rif)?.unread ?? 0) > 0 ? '#25d366' : 'rgba(233, 237, 239, 0.55)', fontWeight: (chatInfo.get(item.rif)?.unread ?? 0) > 0 ? 600 : 400 }}>
+                                      {item.quando ? new Date(item.quando).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                    </small>
+                                  </span>
+                                </span>
+                                <span className="el-row__prev" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                                  <span className="truncate flex items-center gap-1">
+                                    {isWa && <CheckCheck size={14} className="text-[#53bdeb] flex-shrink-0" />}
+                                    <span className="el-row__snippet">
+                                      {item.messaggio || (item.tipo === 'chat' ? 'Chat del sito' : 'Modulo di richiesta')}
+                                    </span>
+                                  </span>
+                                  <span className="flex items-center gap-1.5 flex-shrink-0">
+                                    {isMuted && <span title="Silenziata" className="inline-flex"><VolumeX size={13} className="el-badge-muted" /></span>}
+                                    {isPinned && <span title="Fissata in alto" className="inline-flex"><Pin size={13} className="el-badge-pinned" /></span>}
+                                    {(chatInfo.get(item.rif)?.unread ?? 0) > 0 && <span className="el-wa-unread-badge">{chatInfo.get(item.rif)?.unread}</span>}
+                                  </span>
                                 </span>
                               </span>
-                              <span className="flex items-center gap-1.5 flex-shrink-0">
-                                {isMuted && <span title="Silenziata" className="inline-flex"><VolumeX size={13} className="el-badge-muted" /></span>}
-                                {isPinned && <span title="Fissata in alto" className="inline-flex"><Pin size={13} className="el-badge-pinned" /></span>}
-                                {(chatInfo.get(item.rif)?.unread ?? 0) > 0 && <span className="el-wa-unread-badge">{chatInfo.get(item.rif)?.unread}</span>}
-                              </span>
-                            </span>
-                          </span>
-                        </button>
-                      );
-                    })
+                            </button>
+                          );
+                        })
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -2492,9 +2496,11 @@ export function AdminEliseo({
                       </div>
                     </div>
 
-                    <div className="el-wa-pair__footer">
-                      <span>💬 In alternativa, seleziona una conversazione dall'elenco a sinistra per visualizzarla.</span>
-                    </div>
+                    {isWaLinked && (
+                      <div className="el-wa-pair__footer">
+                        <span>💬 In alternativa, seleziona una conversazione dall'elenco a sinistra per visualizzarla.</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
