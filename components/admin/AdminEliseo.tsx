@@ -44,6 +44,7 @@ import {
   MoreVertical,
   ChevronDown,
   ArrowLeft,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   FASI,
@@ -233,7 +234,16 @@ export function AdminEliseo({
   const [casellaOrd, setCasellaOrd] = useState<'recenti' | 'meno_recenti'>('recenti');
   const [customCartelle, setCustomCartelle] = useState<string[]>([]);
   const [casellaQ, setCasellaQ] = useState<string>('');
-  const [casellaPick, setCasellaPick] = useState<string>(initialCasella[0]?.rif || '');
+  const [casellaPick, setCasellaPick] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        if (localStorage.getItem('eliseo_wa_connected') === '1') {
+          return initialCasella[0]?.rif || '';
+        }
+      } catch (_) {}
+    }
+    return '';
+  });
   const [selectedModelloForCasella, setSelectedModelloForCasella] = useState<string>('');
   // WhatsApp Web & Metadati Chat (Fissate, Silenziate, Archiviate)
   const [waFilterTab, setWaFilterTab] = useState<'all' | 'unread' | 'pinned' | 'muted' | 'archived'>('all');
@@ -278,6 +288,8 @@ export function AdminEliseo({
     }
     return false;
   });
+  // Dispositivo WhatsApp collegato ed autorizzato
+  const isWaLinked = waConnected && waState === 'authorized';
   const [waPairToken, setWaPairToken] = useState<string>(() => Date.now().toString(36));
   const [newWaPhone, setNewWaPhone] = useState<string>('+39 ');
   const [newWaName, setNewWaName] = useState<string>('');
@@ -470,9 +482,9 @@ export function AdminEliseo({
     }
   }, []);
 
-  // Polling automatico ogni secondo (1000ms) per sincronizzare WhatsApp in tempo reale
+  // Polling automatico ogni 10 secondi per sincronizzare WhatsApp in tempo reale (solo se collegato)
   useEffect(() => {
-    if (railTab !== 'casella') return;
+    if (railTab !== 'casella' || !isWaLinked) return;
     let isMounted = true;
     let inFlight = false;
 
@@ -507,12 +519,12 @@ export function AdminEliseo({
       isMounted = false;
       clearInterval(interval);
     };
-  }, [railTab]);
+  }, [railTab, isWaLinked]);
 
   useEffect(() => {
-    if (railTab === 'casella' && !activeCasellaItem) {
+    if (railTab === 'casella' && (!isWaLinked || !activeCasellaItem)) {
       refreshWaLive();
-      // Polling ogni 5s per rilevare istantaneamente quando Luigi inquadra il QR con il telefono
+      // Polling ogni 5s per rilevare istantaneamente quando si inquadra il QR con il telefono
       const timer = setInterval(async () => {
         try {
           const statusRes = await getWhatsAppStatusAction();
@@ -520,12 +532,15 @@ export function AdminEliseo({
             setWaState('authorized');
             setWaConnected(true);
             setWaQrBase64(null);
+            try { localStorage.setItem('eliseo_wa_connected', '1'); } catch (_) {}
+            setCasellaPick((curr) => curr || (casella[0]?.rif ?? initialCasella[0]?.rif ?? ''));
+            say('✅ WhatsApp collegato con successo!');
           }
         } catch (_) {}
       }, 5000);
       return () => clearInterval(timer);
     }
-  }, [railTab, activeCasellaItem, refreshWaLive]);
+  }, [railTab, isWaLinked, activeCasellaItem, refreshWaLive, casella, initialCasella]);
 
   // Stato del telefono collegato (09/11/2026). Prima veniva letto solo senza chat aperta,
   // ma una chat è sempre aperta (la prima della lista): il menu ⋮ diceva «Nessun dispositivo collegato»
@@ -538,6 +553,15 @@ export function AdminEliseo({
       if (st.ok) {
         setWaConnected(linked);
         try { localStorage.setItem('eliseo_wa_connected', linked ? '1' : '0'); } catch (_) {}
+        if (!linked) {
+          // Se scollegato o dopo logout, chiudi la schermata della chat
+          setCasellaPick('');
+          setWaConnectedPhone(null);
+          refreshWaLive();
+        } else {
+          // Se collegato e nessuna chat selezionata, apri la prima
+          setCasellaPick((curr) => curr || (initialCasella[0]?.rif ?? ''));
+        }
       }
       if (linked) {
         const numRes = await getWhatsAppNumberAction();
@@ -553,7 +577,7 @@ export function AdminEliseo({
     } catch (_) {
       setWaState('error');
     }
-  }, []);
+  }, [initialCasella, refreshWaLive]);
 
   useEffect(() => {
     if (railTab !== 'casella' || tester) return;
@@ -613,6 +637,11 @@ export function AdminEliseo({
 
   // Aprire una chat la segna come letta (come in WhatsApp Web): tutti i suoi messaggi nuovi
   const openChat = (rif: string) => {
+    if (!isWaLinked) {
+      say('WhatsApp non è collegato. Inquadra il codice QR a destra per visualizzare le conversazioni.', true);
+      refreshWaLive();
+      return;
+    }
     setCasellaPick(rif);
     if (tester) return;
     const rifs = new Set(chatInfo.get(rif)?.rifs ?? [rif]);
@@ -1878,7 +1907,9 @@ export function AdminEliseo({
                                       setWaConnected(false);
                                       setWaState('notAuthorized');
                                       setWaConnectedPhone(null);
-                                      say('WhatsApp disconnesso da questo dispositivo. Per ricollegarlo inquadra di nuovo il QR.');
+                                      setCasellaPick('');
+                                      try { localStorage.setItem('eliseo_wa_connected', '0'); } catch (_) {}
+                                      say('WhatsApp disconnesso con successo. Inquadra il nuovo codice QR per collegarlo.');
                                       await refreshWaLive();
                                     } else {
                                       say(res.error || 'Errore durante la disconnessione.', true);
@@ -1999,6 +2030,12 @@ export function AdminEliseo({
                 )}
 
                 <div className="el-conv__rows">
+                  {!isWaLinked && (
+                    <div className="mx-2 mb-2 p-2.5 rounded bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 flex items-center gap-2">
+                      <AlertTriangle size={15} className="flex-shrink-0 text-amber-400" />
+                      <span>WhatsApp scollegato. Inquadra il codice QR a destra per visualizzare le chat.</span>
+                    </div>
+                  )}
                   {/* Riga Archiviate stile WhatsApp Web */}
                   {waFilterTab === 'archived' ? (
                     <div
@@ -2076,7 +2113,7 @@ export function AdminEliseo({
               </div>
 
               <div className="el-conv__detail">
-                {activeCasellaItem ? (
+                {isWaLinked && activeCasellaItem ? (
                   <>
                     {/* Header Chat WhatsApp Web Copia Spudorata */}
                     <div className="el-chat-header">
@@ -2087,7 +2124,7 @@ export function AdminEliseo({
                         <div className="el-chat-header__titles">
                           <h2 className="el-chat-header__name">{activeCasellaItem.nome || 'Cliente'}</h2>
                           <div className="el-chat-header__sub">
-                            <span style={{ color: '#00a884', fontWeight: 500 }}>online</span>
+                            <span style={{ color: '#00a884', fontWeight: 500 }}>WhatsApp</span>
                             {activeCasellaItem.contatto && (
                               <span>
                                 · {activeCasellaItem.contatto.startsWith('+')
@@ -2404,6 +2441,9 @@ export function AdminEliseo({
                                 if (res.ok) {
                                   setWaConnected(false);
                                   setWaState('notAuthorized');
+                                  setWaConnectedPhone(null);
+                                  setCasellaPick('');
+                                  try { localStorage.setItem('eliseo_wa_connected', '0'); } catch (_) {}
                                   say('WhatsApp scollegato. Generazione nuovo QR...');
                                   await refreshWaLive();
                                 } else {

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { AdminSidebar } from '@/components/layout/AdminSidebar';
 import { AdminFloatingSaveButton } from '@/components/admin/AdminFloatingSaveButton';
@@ -31,6 +32,16 @@ export function AdminProtectedShell({ children, readOnly = false, areaLabel = 'A
   const isEliseo = pathname === '/admin/eliseo' || pathname.startsWith('/admin/eliseo');
   const wide = pathname === '/admin/dashboard';
   const section = wide || isEliseo ? null : SECTIONS.find(([p]) => pathname === p || pathname.startsWith(`${p}/`))?.[1] ?? null;
+
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
   return (
     <AdminSaveProvider>
       <AutoRefreshOnUpdate />
