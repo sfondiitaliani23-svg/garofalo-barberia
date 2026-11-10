@@ -4,8 +4,9 @@ import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendPushToUser } from '@/lib/utils/push';
 import { clearTrainingCache } from '@/lib/chat/eliseo-training-server';
-import { contattiDaAggiungere } from '@/lib/utils/eliseo-autosync';
+import { contattiDaAggiungere, fasiDaAggiornare } from '@/lib/utils/eliseo-autosync';
 import {
+  buildContatti,
   cleanContact,
   cleanTemplate,
   cleanTags,
@@ -59,6 +60,24 @@ async function autoSyncContatti(supabase: ServiceClient) {
   const nuovi = contattiDaAggiungere(esistenti.data ?? [], profili.data ?? [], richieste.data ?? []);
   // Uno alla volta: un eventuale doppione (indice unico sull'email) non ferma gli altri.
   for (const c of nuovi.slice(0, 200)) await supabase.from('eliseo_contatti').insert(c);
+
+  // Fase dalle prenotazioni degli ultimi 2 anni (Cliente, Da richiamare, Perso). «Contattato» resta.
+  const dueAnni = new Date(Date.now() - 730 * 86_400_000).toISOString();
+  const [rubrica, app] = await Promise.all([
+    supabase.from('eliseo_contatti').select('id, email, telefono, user_id, fase, barbiere').limit(5000),
+    supabase
+      .from('appointments')
+      .select('customer_id, customer_name, customer_phone, customer_email, starts_at, status, barber:barbers(name), service:services(name, category)')
+      .gte('starts_at', dueAnni)
+      .order('starts_at', { ascending: true })
+      .limit(10000),
+  ]);
+  if (rubrica.error || app.error) return;
+  const cambi = fasiDaAggiornare(rubrica.data ?? [], buildContatti((app.data ?? []) as Parameters<typeof buildContatti>[0]));
+  const ora = new Date().toISOString();
+  for (const c of cambi.slice(0, 500)) {
+    await supabase.from('eliseo_contatti').update({ fase: c.fase, ...(c.barbiere ? { barbiere: c.barbiere } : {}), aggiornato_il: ora }).eq('id', c.id);
+  }
 }
 
 /**

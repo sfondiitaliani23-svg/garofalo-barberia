@@ -46,3 +46,41 @@ export function contattiDaAggiungere(esistenti: EsistenteContatto[], profili: Pr
   }
   return out;
 }
+
+// Fase dalle prenotazioni vere (10/11/2026): prima tutti i contatti restavano «Nuovo».
+// Chi è passato in negozio diventa Cliente, poi Da richiamare e Perso con i giorni di buildContatti.
+// «Contattato» è una scelta a mano e non si tocca; senza prenotazioni la fase resta com'è.
+export type RigaRubrica = { id: string; email?: string | null; telefono?: string | null; user_id?: string | null; fase?: string | null; barbiere?: string | null };
+export type DaAppuntamenti = { key?: string | null; telefono?: string | null; email?: string | null; fase: string; barbiere?: string | null; giorniDa?: number | null; prossimo?: string | null };
+export type CambioFase = { id: string; fase: 'cliente' | 'da_richiamare' | 'perso'; barbiere?: string };
+
+export function faseRubrica(a: Pick<DaAppuntamenti, 'fase' | 'giorniDa' | 'prossimo'>): CambioFase['fase'] | null {
+  if (a.prossimo) return 'cliente';
+  if (a.giorniDa === null || a.giorniDa === undefined) return null;
+  if (a.fase === 'perso') return 'perso';
+  if (a.fase === 'da_richiamare') return 'da_richiamare';
+  return 'cliente';
+}
+
+export function fasiDaAggiornare(rubrica: RigaRubrica[], appuntamenti: DaAppuntamenti[]): CambioFase[] {
+  const perTel = new Map<string, DaAppuntamenti>();
+  const perMail = new Map<string, DaAppuntamenti>();
+  const perId = new Map<string, DaAppuntamenti>();
+  for (const a of appuntamenti) {
+    const t = tel(a.telefono); if (t) perTel.set(t, a);
+    const e = mail(a.email); if (e) perMail.set(e, a);
+    if (a.key?.startsWith('id:')) perId.set(a.key.slice(3), a);
+  }
+  const out: CambioFase[] = [];
+  for (const r of rubrica) {
+    if (r.fase === 'contattato') continue;
+    const t = tel(r.telefono); const e = mail(r.email);
+    const a = (t && perTel.get(t)) || (e && perMail.get(e)) || (r.user_id && perId.get(r.user_id)) || null;
+    if (!a) continue;
+    const fase = faseRubrica(a);
+    if (!fase) continue;
+    const barbiere = !r.barbiere && a.barbiere ? a.barbiere : undefined;
+    if (fase !== r.fase || barbiere) out.push(barbiere ? { id: r.id, fase, barbiere } : { id: r.id, fase });
+  }
+  return out;
+}
