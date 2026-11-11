@@ -75,7 +75,7 @@ export function WeeklyBookingCalendar({
     }
   }, [initialBarberId, searchParams]);
 
-  const days = useMemo(() => getWorkingDays(weekStart), [weekStart]);
+  const days = useMemo(() => getWorkingDays(weekStart, initialAppointments), [weekStart, initialAppointments]);
   const timeSlots = useMemo(() => generateCalendarTimeSlots(), []);
   const grid = useMemo(
     () => buildWeekGrid(days, timeSlots, initialAppointments, barberId, timeOff, barbers),

@@ -3,6 +3,7 @@ import { SITE_CONFIG } from '@/lib/site-config';
 import { filterTimeOffForBarber, isShopDateFullyBlocked, type TimeOffRow } from '@/lib/utils/barber-absence';
 import { getDayClosingTime as getClosingForDay, isSlotWithinShopHours } from '@/lib/utils/shop-hours';
 import { getShopDateString, getShopTimeString, parseBookingDateTime } from '@/lib/utils/booking-datetime';
+import { isSpecialOpeningDate } from '@/lib/utils/special-openings';
 
 export const WORKING_DAY_OFFSETS = [1, 2, 3, 4, 5]; // Mar–Sab dalla settimana che inizia lunedì
 
@@ -33,8 +34,27 @@ export function getWeekStart(date = new Date()): Date {
   return startOfWeek(date, { weekStartsOn: 1 });
 }
 
-export function getWorkingDays(weekStart: Date): Date[] {
-  return WORKING_DAY_OFFSETS.map((offset) => addDays(weekStart, offset));
+export function getWorkingDays(weekStart: Date, appointments?: CalendarAppointment[]): Date[] {
+  const allOffsets = [0, 1, 2, 3, 4, 5, 6];
+  return allOffsets
+    .map((offset) => addDays(weekStart, offset))
+    .filter((day) => {
+      const dow = day.getDay();
+      // Martedì (2) - Sabato (6) sono giorni lavorativi ordinari
+      if (dow >= 2 && dow <= 6) return true;
+      // Lunedì e Domenica compaiono se sono aperture straordinarie o se hanno appuntamenti
+      const key = dateKey(day);
+      if (isSpecialOpeningDate(key)) return true;
+      if (
+        appointments &&
+        appointments.some(
+          (apt) => apt.starts_at && getShopDateString(new Date(apt.starts_at)) === key
+        )
+      ) {
+        return true;
+      }
+      return false;
+    });
 }
 
 export function generateCalendarTimeSlots(): string[] {
@@ -45,7 +65,7 @@ export function generateCalendarTimeSlots(): string[] {
 }
 
 export function getDayClosingTime(day: Date): string {
-  return getClosingForDay(day.getDay());
+  return getClosingForDay(day.getDay(), dateKey(day));
 }
 
 export function isSlotWithinHours(day: Date, time: string): boolean {
