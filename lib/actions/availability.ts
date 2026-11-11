@@ -15,6 +15,7 @@ import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
 import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
 import { getBarberRank, isBarberAdminOnly, isBarberPubliclyBookable, isBarberAllowedForCut } from '@/lib/utils/barber-schedule';
+import { isSpecialOpeningDate } from '@/lib/utils/special-openings';
 
 export type BarberBookingStatus = {
   barberId: string;
@@ -70,8 +71,8 @@ function isLegacyContinuousSchedule(dayAvailability: AvailabilityRow[]): boolean
 }
 
 /** Gli orari del barbiere non escono mai dagli orari del salone (es. sabato fino alle 14:00). */
-function clampToShopHours(dayOfWeek: number, periods: { start: string; end: string }[]) {
-  const shop = getShopPeriodsForDay(dayOfWeek);
+function clampToShopHours(dayOfWeek: number, periods: { start: string; end: string }[], dateStr?: string) {
+  const shop = getShopPeriodsForDay(dayOfWeek, dateStr);
   if (shop.length === 0) return [];
   const out: { start: string; end: string }[] = [];
   for (const p of periods) {
@@ -86,18 +87,20 @@ function clampToShopHours(dayOfWeek: number, periods: { start: string; end: stri
 
 function resolveAvailabilityPeriods(
   dayOfWeek: number,
-  dayAvailability: AvailabilityRow[]
+  dayAvailability: AvailabilityRow[],
+  dateStr?: string
 ): { start: string; end: string }[] {
-  return clampToShopHours(dayOfWeek, resolveRawAvailabilityPeriods(dayOfWeek, dayAvailability));
+  return clampToShopHours(dayOfWeek, resolveRawAvailabilityPeriods(dayOfWeek, dayAvailability, dateStr), dateStr);
 }
 
 function resolveRawAvailabilityPeriods(
   dayOfWeek: number,
-  dayAvailability: AvailabilityRow[]
+  dayAvailability: AvailabilityRow[],
+  dateStr?: string
 ): { start: string; end: string }[] {
   if (dayAvailability.length === 0) {
-    if (dayOfWeek === 0 || dayOfWeek === 1) return [];
-    return getShopPeriodsForDay(dayOfWeek).map((p) => ({
+    if ((dayOfWeek === 0 || dayOfWeek === 1) && !isSpecialOpeningDate(dateStr)) return [];
+    return getShopPeriodsForDay(dayOfWeek, dateStr).map((p) => ({
       start: p.startTime,
       end: p.endTime,
     }));
@@ -106,7 +109,7 @@ function resolveRawAvailabilityPeriods(
   if (!dayAvailability.some((row) => row.is_available)) return [];
 
   if (isLegacyContinuousSchedule(dayAvailability)) {
-    return getShopPeriodsForDay(dayOfWeek).map((period) => ({
+    return getShopPeriodsForDay(dayOfWeek, dateStr).map((period) => ({
       start: period.startTime,
       end: period.endTime,
     }));
@@ -133,7 +136,7 @@ function resolveRawAvailabilityPeriods(
     return periods;
   }
 
-  return getShopPeriodsForDay(dayOfWeek).map((period) => ({
+  return getShopPeriodsForDay(dayOfWeek, dateStr).map((period) => ({
     start: period.startTime,
     end: period.endTime,
   }));
@@ -163,6 +166,8 @@ function getBookingCandidateDates(): string[] {
     const dateStr = format(cursor, 'yyyy-MM-dd');
     const day = getShopDayOfWeek(dateStr);
     if (day !== 0 && day !== 1) {
+      candidates.push(dateStr);
+    } else if (isSpecialOpeningDate(dateStr)) {
       candidates.push(dateStr);
     }
     cursor = addDays(cursor, 1);
@@ -301,7 +306,7 @@ function computeSlotsForBarber(
   }
 
   const dayOfWeek = getShopDayOfWeek(dateStr);
-  if (dayOfWeek === 0 || dayOfWeek === 1) return [];
+  if ((dayOfWeek === 0 || dayOfWeek === 1) && !isSpecialOpeningDate(dateStr)) return [];
 
   const { dayStart, dayEnd } = getShopDayBounds(dateStr);
   const slotsSet = new Set<string>();
@@ -316,7 +321,7 @@ function computeSlotsForBarber(
     return [];
   }
 
-  const periods = resolveAvailabilityPeriods(dayOfWeek, dayAvailability);
+  const periods = resolveAvailabilityPeriods(dayOfWeek, dayAvailability, dateStr);
   if (periods.length === 0) return [];
 
   const appointments = getAppointmentsForDay(
