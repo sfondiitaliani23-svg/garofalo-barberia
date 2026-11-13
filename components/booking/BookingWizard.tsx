@@ -751,7 +751,9 @@ export function BookingWizard({
                     )}
                   >
                     <p className="font-semibold text-white">{L(lang, 'Nessuna preferenza (Primo disponibile)', 'No preference (first available)')}</p>
-                    <p className="text-sm text-white/60">{L(lang, 'Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco', 'Automatically assigned from the free times of Luigi, Vittorio and Francesco')}</p>
+                    <p className="text-sm text-white/60">{hasCutService
+                        ? L(lang, 'Per i tagli online prenoti con Luigi: ti diamo il suo primo orario libero', 'Haircuts online are booked with Luigi: you get his first free time')
+                        : L(lang, 'Assegnazione automatica tra gli orari liberi di Luigi, Vittorio e Francesco', 'Automatically assigned from the free times of Luigi, Vittorio and Francesco')}</p>
                   </button>
                 </div>
               </div>
