@@ -37,6 +37,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Online i tagli ("Taglio e shampoo", "Taglio baby") solo con Luigi (richiesta di Francesco, 16/10/2026). Francesco e Vittorio: barba e styling. Dall'admin si prenota con tutti. Codice: `isBarberAllowedForCut` (`lib/utils/barber-schedule.ts`), filtro in `BookingWizard.tsx`, controlli server in `lib/actions/bookings.ts` e `availability.ts`.
 - Prenotazione istantanea (admin): `AdminInstantBookingModal.tsx`, 3 passi (Dati, Servizi, Riepilogo, che compare solo al passo 3).
 - Voce: `lib/utils/voice-booking.ts` (`parseBookingSpeech`, test `voice-booking.test.mjs`), usato anche da `AdminAppointmentForm.tsx`. Solo Chrome. `recognition.phrases` rifiutato. L'errore `aborted` è normale. `Permissions-Policy` in `next.config.ts` deve restare `microphone=(self)`.
+- Giorni sbloccati (13/11/2026, richiesta di Luigi): restano prenotabili anche dentro ferie e chiusure. Elenco in `site_content` (chiave `prenotazioni:giorni-sbloccati`, nessuna migrazione); senza salvataggio valgono 22 e 23 dicembre 2026. Calcolo puro `applyUnlockedDays` (`lib/utils/unlocked-days.ts`, test `unlocked-days.test.mjs`), lettura `lib/unlocked-days-server.ts`, applicato in `fetchBookingContext`. L'admin li gestisce in Team (`/admin/staff`, `UnlockedDaysCard.tsx`, azione `saveUnlockedDaysAction`).
 - Dopo disdetta o "completato" compare "Annulla" per 8 secondi (`undoStatusToast`). Eliminare un cliente richiede di scrivere ELIMINA (`AdminCustomerDialogs.tsx`).
 
 ## Lista d'attesa

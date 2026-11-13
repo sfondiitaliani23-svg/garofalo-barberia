@@ -11,6 +11,8 @@ import {
   isDayFullyBlockedByTimeOff,
   type TimeOffRow,
 } from '@/lib/utils/barber-absence';
+import { applyUnlockedDays } from '@/lib/utils/unlocked-days';
+import { readUnlockedDays } from '@/lib/unlocked-days-server';
 import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
 import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
@@ -238,7 +240,7 @@ async function fetchBookingContext(
   // Recupera la disponibilità dei barbieri attivi per il contesto
   const allActiveBarberIds = barbers.map((b) => b.id);
 
-  const [availabilityRes, appointmentsRes, timeOffRes] = await Promise.all([
+  const [availabilityRes, appointmentsRes, timeOffRes, unlockedDays] = await Promise.all([
     supabase
       .from('barber_availability')
       .select('*')
@@ -256,6 +258,7 @@ async function fetchBookingContext(
       .select('barber_id, start_at, end_at, reason')
       .lte('start_at', rangeEnd)
       .gte('end_at', rangeStart),
+    readUnlockedDays(),
   ]);
 
   const availabilityByBarber = new Map<string, AvailabilityRow[]>();
@@ -278,7 +281,8 @@ async function fetchBookingContext(
     barberDetails,
     availabilityByBarber,
     appointmentsByBarber,
-    timeOff: (timeOffRes.data ?? []) as TimeOffRow[],
+    // Giorni sbloccati dall'admin: restano prenotabili anche dentro ferie e chiusure.
+    timeOff: applyUnlockedDays((timeOffRes.data ?? []) as TimeOffRow[], unlockedDays),
   };
 }
 
