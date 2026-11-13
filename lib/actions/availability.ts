@@ -17,7 +17,8 @@ import { filterAvailableSlots, generateSlots } from '@/lib/utils/slots';
 import { getFallbackSlots } from '@/lib/utils/fallback-slots';
 import { getShopPeriodsForDay } from '@/lib/utils/shop-hours';
 import { getBarberRank, isBarberAdminOnly, isBarberPubliclyBookable, isBarberAllowedForCut } from '@/lib/utils/barber-schedule';
-import { isSpecialOpeningDate } from '@/lib/utils/special-openings';
+import { SPECIAL_OPENINGS, isSpecialOpeningBookable, isSpecialOpeningDate, specialClosureBlocks } from '@/lib/utils/special-openings';
+import { getShopDateString } from '@/lib/utils/booking-datetime';
 
 export type BarberBookingStatus = {
   barberId: string;
@@ -100,6 +101,10 @@ function resolveRawAvailabilityPeriods(
   dayAvailability: AvailabilityRow[],
   dateStr?: string
 ): { start: string; end: string }[] {
+  // Giorni con orari speciali (Natale): valgono gli orari del salone, non i turni settimanali.
+  if (isSpecialOpeningDate(dateStr)) {
+    return getShopPeriodsForDay(dayOfWeek, dateStr).map((p) => ({ start: p.startTime, end: p.endTime }));
+  }
   if (dayAvailability.length === 0) {
     if ((dayOfWeek === 0 || dayOfWeek === 1) && !isSpecialOpeningDate(dateStr)) return [];
     return getShopPeriodsForDay(dayOfWeek, dateStr).map((p) => ({
@@ -281,8 +286,12 @@ async function fetchBookingContext(
     barberDetails,
     availabilityByBarber,
     appointmentsByBarber,
-    // Giorni sbloccati dall'admin: restano prenotabili anche dentro ferie e chiusure.
-    timeOff: applyUnlockedDays((timeOffRes.data ?? []) as TimeOffRow[], unlockedDays),
+    // Giorni sbloccati dall'admin e giorni con orari speciali (Natale) restano prenotabili anche dentro
+    // ferie e chiusure; i giorni di chiusura delle feste valgono più di tutto.
+    timeOff: [
+      ...applyUnlockedDays((timeOffRes.data ?? []) as TimeOffRow[], [...unlockedDays, ...SPECIAL_OPENINGS.map((s) => s.date)]),
+      ...specialClosureBlocks(),
+    ],
   };
 }
 
@@ -320,8 +329,12 @@ function computeSlotsForBarber(
   const availabilityRows = context.availabilityByBarber.get(barberId) ?? [];
   const dayAvailability = availabilityRows.filter((row) => row.day_of_week === dayOfWeek);
 
-  // Se ci sono righe per il giorno e tutte dicono non disponibile -> giorno chiuso
-  if (availabilityRows.length > 0 && dayAvailability.length > 0 && !dayAvailability.some((r) => r.is_available)) {
+  const special = isSpecialOpeningDate(dateStr);
+  // Giorno speciale non ancora aperto alle prenotazioni online (es. Natale dal 1° dicembre)
+  if (special && !forAdmin && !isSpecialOpeningBookable(dateStr, getShopDateString(new Date()))) return [];
+
+  // Se ci sono righe per il giorno e tutte dicono non disponibile -> giorno chiuso (non nei giorni speciali)
+  if (!special && availabilityRows.length > 0 && dayAvailability.length > 0 && !dayAvailability.some((r) => r.is_available)) {
     return [];
   }
 

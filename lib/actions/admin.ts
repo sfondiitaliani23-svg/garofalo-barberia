@@ -5,6 +5,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { requireAdmin, requireAdminView } from '@/lib/auth';
 import { applyUnlockedDays } from '@/lib/utils/unlocked-days';
 import { readUnlockedDays } from '@/lib/unlocked-days-server';
+import { SPECIAL_OPENINGS, specialClosureBlocks } from '@/lib/utils/special-openings';
 import { maskForTester } from '@/lib/utils/tester-mask';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { notifyAdminNewBooking } from '@/lib/utils/notifications';
@@ -912,7 +913,10 @@ export async function getAdminTimeOffForWeek(weekStartDate: string) {
     .order('start_at', { ascending: false });
 
   // Giorni sbloccati (13/11/2026): nel calendario admin restano liberi anche dentro ferie e chiusure.
-  return applyUnlockedDays(data ?? [], await readUnlockedDays());
+  return [
+    ...applyUnlockedDays(data ?? [], [...(await readUnlockedDays()), ...SPECIAL_OPENINGS.map((s) => s.date)]),
+    ...specialClosureBlocks().map((b, i) => ({ ...b, id: `chiusura-feste-${i}`, barber: null })),
+  ];
 }
 
 export async function getAdminTeamData() {

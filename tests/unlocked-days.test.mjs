@@ -45,3 +45,32 @@ test('un blocco di un solo giorno sbloccato sparisce', () => {
   const one = [{ barber_id: null, start_at: '2026-12-21T23:00:00.000Z', end_at: '2026-12-22T22:59:59.000Z' }];
   assert.deepEqual(applyUnlockedDays(one, ['2026-12-22']), []);
 });
+
+import { SPECIAL_OPENINGS, specialClosureBlocks, isSpecialOpeningBookable, getSpecialOpening } from '../lib/utils/special-openings.ts';
+import { getShopPeriodsForDay } from '../lib/utils/shop-hours.ts';
+
+test('orari natalizi della locandina', () => {
+  const h = (d) => getShopPeriodsForDay(new Date(`${d}T12:00:00Z`).getUTCDay(), d).map((p) => `${p.startTime}-${p.endTime}`).join(' / ');
+  assert.equal(h('2026-12-20'), '08:30-13:30');
+  assert.equal(h('2026-12-21'), '08:30-13:00 / 15:30-20:30');
+  assert.equal(h('2026-12-22'), '08:30-20:30');
+  assert.equal(h('2026-12-23'), '08:30-20:30');
+  assert.equal(h('2026-12-28'), '08:30-13:00 / 15:30-20:30');
+  assert.equal(h('2026-12-31'), '09:00-14:30');
+  assert.equal(SPECIAL_OPENINGS.length, 6);
+});
+
+test('chiusure delle feste: 24-27 dicembre e 1-6 gennaio bloccati anche se sbloccati', () => {
+  const blocks = specialClosureBlocks();
+  const rows = [...applyUnlockedDays([], ['2026-12-24']), ...blocks];
+  for (const d of ['2026-12-24', '2026-12-25', '2026-12-26', '2026-12-27', '2027-01-01', '2027-01-06']) assert.equal(isShopDateFullyBlocked(d, 'b1', rows), true, d);
+  for (const d of ['2026-12-23', '2026-12-28', '2026-12-31']) assert.equal(isShopDateFullyBlocked(d, 'b1', rows), false, d);
+});
+
+test('Natale prenotabile online dal 1° dicembre, 22 e 23 subito', () => {
+  assert.equal(isSpecialOpeningBookable('2026-12-20', '2026-11-13'), false);
+  assert.equal(isSpecialOpeningBookable('2026-12-20', '2026-12-01'), true);
+  assert.equal(isSpecialOpeningBookable('2026-12-22', '2026-11-13'), true);
+  assert.equal(isSpecialOpeningBookable('2026-12-23', '2026-11-13'), true);
+  assert.equal(getSpecialOpening('2026-12-31')?.bookableFrom, '2026-12-01');
+});
