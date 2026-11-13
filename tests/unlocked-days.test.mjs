@@ -70,7 +70,10 @@ test('chiusure delle feste: 24-27 dicembre e 1-6 gennaio bloccati anche se sbloc
 test('Natale prenotabile online dal 1° dicembre, 22 e 23 subito', () => {
   assert.equal(isSpecialOpeningBookable('2026-12-20', '2026-11-13'), false);
   assert.equal(isSpecialOpeningBookable('2026-12-20', '2026-12-01'), true);
-  assert.equal(isSpecialOpeningBookable('2026-12-22', '2026-11-13'), true);
-  assert.equal(isSpecialOpeningBookable('2026-12-23', '2026-11-13'), true);
+  // Dal 13/11/2026 (Luigi): anche 22 e 23 online solo dal 1° dicembre.
+  assert.equal(isSpecialOpeningBookable('2026-12-22', '2026-11-13'), false);
+  assert.equal(isSpecialOpeningBookable('2026-12-23', '2026-11-30'), false);
+  assert.equal(isSpecialOpeningBookable('2026-12-22', '2026-12-01'), true);
+  assert.equal(isSpecialOpeningBookable('2026-12-23', '2026-12-01'), true);
   assert.equal(getSpecialOpening('2026-12-31')?.bookableFrom, '2026-12-01');
 });

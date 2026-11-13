@@ -3,6 +3,8 @@ const EMAIL = process.env.ADMIN_EMAIL ?? 'luigigarofalo1996@gmail.com';
 export const SITE_CONFIG = {
   name: 'Barberia Garofalo',
   tagline: 'Tagli precisi per uomo, ragazzo e bimbo a Foggia',
+  // Partita IVA comunicata da Luigi il 13/11/2026.
+  vatNumber: '04564070714',
   phone: '+393201886277',
   phoneDisplay: '320 188 6277',
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '393201886277',

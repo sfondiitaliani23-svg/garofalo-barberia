@@ -30,7 +30,7 @@ export default function PrivacyView({ lang }: { lang: Lang }) {
           <section>
             <h2 className="font-display text-lg uppercase text-gold">{L(lang, 'Titolare del trattamento', 'Data controller')}</h2>
             <p className="mt-2">
-              {SITE_CONFIG.name} — {SITE_CONFIG.address}. {L(lang, 'Contatti:', 'Contact:')} {email}
+              {SITE_CONFIG.name} — {SITE_CONFIG.address}. {L(lang, 'P.IVA', 'VAT no.')} {SITE_CONFIG.vatNumber}. {L(lang, 'Contatti:', 'Contact:')} {email}
               , {L(lang, 'tel.', 'phone')} {SITE_CONFIG.phoneDisplay}.
             </p>
           </section>

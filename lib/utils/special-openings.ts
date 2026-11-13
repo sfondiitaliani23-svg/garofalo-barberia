@@ -16,7 +16,8 @@ export interface SpecialOpening {
 
 // Orari natalizi 2026 (locandina «Orari natalizi», 13/11/2026). Nei giorni speciali questi orari
 // valgono per tutto il salone e sostituiscono i turni settimanali; ferie e chiusure non li bloccano.
-// «Da martedì 1 dicembre è possibile prenotare per la settimana natalizia»: 22 e 23 già aperti (richiesta di Luigi).
+// «Da martedì 1 dicembre è possibile prenotare per la settimana natalizia»: online tutti i giorni speciali,
+// compresi 22 e 23, si prenotano dal 1° dicembre (richiesta di Luigi, 13/11/2026). Dall'admin sempre.
 export const SPECIAL_OPENINGS: SpecialOpening[] = [
   {
     date: '2026-12-20',
@@ -40,12 +41,14 @@ export const SPECIAL_OPENINGS: SpecialOpening[] = [
     label: 'Orario continuato di Natale (Martedì 22 Dicembre)',
     periods: [{ startTime: '08:30', endTime: '20:30' }],
     closingTime: '20:30',
+    bookableFrom: '2026-12-01',
   },
   {
     date: '2026-12-23',
     label: 'Orario continuato di Natale (Mercoledì 23 Dicembre)',
     periods: [{ startTime: '08:30', endTime: '20:30' }],
     closingTime: '20:30',
+    bookableFrom: '2026-12-01',
   },
   {
     date: '2026-12-28',

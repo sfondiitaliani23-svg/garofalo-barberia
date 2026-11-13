@@ -17,7 +17,7 @@ export const BABY_NOTE =
 
 /**
  * Restituisce true se il servizio è un taglio (Taglio e shampoo, Taglio baby).
- * (Un tempo i tagli online erano riservati a Luigi: dal 13/10/2026 tutti i barbieri li ricevono.)
+ * Online i tagli si prenotano solo con Luigi (isBarberAllowedForCut); barba e styling con tutto il team. Dall'admin con tutti.
  */
 export function isCutService(serviceNameOrCategory?: string | null): boolean {
   if (!serviceNameOrCategory) return false;

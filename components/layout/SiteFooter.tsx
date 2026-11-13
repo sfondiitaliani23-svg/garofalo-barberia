@@ -143,6 +143,7 @@ export function SiteFooter({ lang = 'it' }: { lang?: Lang }) {
       </nav>
       <div className="footer-copy container-lux flex flex-col items-center gap-2 border-t border-white/10 text-center text-xs leading-relaxed text-white/60">
         <p>{L(lang, '© 2026 Garofalo Barberia by Elisee Graphic. Tutti i diritti riservati.', '© 2026 Garofalo Barberia by Elisee Graphic. All rights reserved.')}</p>
+        <p>{L(lang, 'P.IVA', 'VAT no.')} {SITE_CONFIG.vatNumber}</p>
         <p className="mt-1 flex flex-wrap justify-center gap-x-4 gap-y-1">
           <Link href="/privacy" className="hover:text-gold-light underline">
             Privacy Policy

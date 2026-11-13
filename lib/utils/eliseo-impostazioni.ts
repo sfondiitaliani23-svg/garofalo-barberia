@@ -135,7 +135,7 @@ export function defaultImpostazioni(base: { azienda?: string; privacyUrl?: strin
     profilo: { nome: '', cognome: '', telefono: '', azienda: base.azienda || '', settore: 'Barberia', ruolo: '' },
     legale: {
       ragioneSociale: 'M×E Barber Lab',
-      partitaIva: '',
+      partitaIva: '04564070714',
       sedeLegale: '',
       terminiUrl: base.terminiUrl || '',
       privacyUrl: base.privacyUrl || '',

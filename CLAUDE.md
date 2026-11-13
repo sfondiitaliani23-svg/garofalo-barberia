@@ -4,6 +4,7 @@ Sito e prenotazioni (barberiagarofalo.it). Parte di M×E Barber Lab. Next.js 15.
 Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (titolare) ed Eliseo (co-founder, dal 17/10/2026, ruolo `admin`).
 
 ## Regole fisse
+- Partita IVA della barberia: 04564070714 (Luigi, 13/11/2026), in `SITE_CONFIG.vatNumber`: piè di pagina, privacy, dati Google (`vatID`).
 - Risposte a Eliseo in italiano, frasi corte e semplici. Il suo nome è Eliseo.
 - Testi del sito sempre in italiano e inglese: `L(lang, it, en)` e `useLang`.
 - Mai chiavi segrete in `NEXT_PUBLIC_*`. La chiave di servizio Supabase sta solo lato server.
@@ -38,7 +39,7 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Prenotazione istantanea (admin): `AdminInstantBookingModal.tsx`, 3 passi (Dati, Servizi, Riepilogo, che compare solo al passo 3).
 - Voce: `lib/utils/voice-booking.ts` (`parseBookingSpeech`, test `voice-booking.test.mjs`), usato anche da `AdminAppointmentForm.tsx`. Solo Chrome. `recognition.phrases` rifiutato. L'errore `aborted` è normale. `Permissions-Policy` in `next.config.ts` deve restare `microphone=(self)`.
 - Giorni sbloccati (13/11/2026, richiesta di Luigi): restano prenotabili anche dentro ferie e chiusure. Elenco in `site_content` (chiave `prenotazioni:giorni-sbloccati`, nessuna migrazione); senza salvataggio valgono 22 e 23 dicembre 2026. Calcolo puro `applyUnlockedDays` (`lib/utils/unlocked-days.ts`, test `unlocked-days.test.mjs`), lettura `lib/unlocked-days-server.ts`, applicato in `fetchBookingContext`. L'admin li gestisce in Team (`/admin/staff`, `UnlockedDaysCard.tsx`, azione `saveUnlockedDaysAction`).
-- Orari natalizi 2026 (locandina del 13/11/2026) in `lib/utils/special-openings.ts`: 20 (08:30-13:30), 21 e 28 (spezzato), 22 e 23 (08:30-20:30 continuato), 31 (09:00-14:30); chiusi 24-27 dicembre e 1-6 gennaio (`SPECIAL_CLOSURES`, valgono più dei giorni sbloccati). Nei giorni speciali valgono gli orari del salone, non i turni settimanali, e le ferie non li bloccano. Online prenotabili dal 1° dicembre (`bookableFrom`), 22 e 23 subito; dall'admin sempre.
+- Orari natalizi 2026 (locandina del 13/11/2026) in `lib/utils/special-openings.ts`: 20 (08:30-13:30), 21 e 28 (spezzato), 22 e 23 (08:30-20:30 continuato), 31 (09:00-14:30); chiusi 24-27 dicembre e 1-6 gennaio (`SPECIAL_CLOSURES`, valgono più dei giorni sbloccati). Nei giorni speciali valgono gli orari del salone, non i turni settimanali, e le ferie non li bloccano. Online prenotabili tutti dal 1° dicembre (`bookableFrom`), anche 22 e 23 (richiesta di Luigi, 13/11/2026); dall'admin sempre.
 - Dopo disdetta o "completato" compare "Annulla" per 8 secondi (`undoStatusToast`). Eliminare un cliente richiede di scrivere ELIMINA (`AdminCustomerDialogs.tsx`).
 
 ## Lista d'attesa

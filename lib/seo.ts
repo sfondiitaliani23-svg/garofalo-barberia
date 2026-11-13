@@ -35,6 +35,7 @@ export function localBusinessJsonLd(services: SeoService[] = [], lang: Lang = 'i
       : 'Barberia a Foggia: taglio uomo, taglio ragazzo e bimbo, barba con rasoio, forbici o panno caldo. Prenotazione online.',
     url: base,
     telephone: SITE_CONFIG.phone,
+    vatID: `IT${SITE_CONFIG.vatNumber}`,
     image: `${SITE_URL}/icon.png`,
     logo: `${SITE_URL}/icon.png`,
     priceRange: '€',
