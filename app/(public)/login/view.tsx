@@ -16,7 +16,7 @@ export default function LoginView({ lang }: { lang: Lang }) {
         aria-hidden
         style={{ backgroundImage: `url(${HERO_IMAGE})` }}
       />
-      <LiquidGlassBackdrop foto={HERO_IMAGE} />
+      <LiquidGlassBackdrop />
 
       <div className="login-vetro__dentro">
         <div className="login-vetro__testa">
