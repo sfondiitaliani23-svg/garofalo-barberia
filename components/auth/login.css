@@ -224,3 +224,37 @@
     width: 100%;
   }
 }
+
+/* ── Vetro liquido (14/11/2026) ─────────────────────────────────────────────
+   Impianto: foto del salone a tutta pagina, titolo e scheda al centro. Con WebGL (classe is-vetro)
+   la scheda e i pulsanti sono trasparenti: il vetro lo disegna il canvas sotto (lib/utils/liquid-glass.ts). */
+.login-vetro { min-height: calc(100dvh - 4.5rem); overflow: hidden; isolation: isolate; -webkit-user-select: none; user-select: none; }
+.login-vetro input, .login-vetro textarea { -webkit-user-select: text; user-select: text; }
+.login-vetro__foto {
+  position: absolute; inset: 0; z-index: -2; background-size: cover; background-position: center 40%;
+  filter: grayscale(1) brightness(0.42) contrast(1.15);
+}
+.vetro-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; opacity: 0; transition: opacity 0.8s ease; }
+.login-vetro.is-vetro .vetro-canvas { opacity: 1; }
+.login-vetro__dentro { position: relative; display: grid; justify-items: center; gap: 1.6rem; padding: 2.5rem 1rem 3rem; }
+.login-vetro__testa { text-align: center; max-width: 28rem; }
+.login-vetro__scheda { width: min(100%, 27rem); }
+.login-vetro .login-row { grid-template-columns: 1fr; gap: 0.85rem; }
+.login-vetro .login-submit { width: 100%; margin-top: 0.2rem; }
+.login-vetro .login-alt-row { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+.login-vetro .login-alt-btn { justify-content: center; width: 100%; border-color: rgba(255, 255, 255, 0.12); }
+.login-vetro .login-google { width: 100%; }
+.login-vetro .login-google .login-alt-btn { width: 100%; }
+.login-vetro .login-bar { border-radius: 26px; padding: 1.6rem 1.5rem 1.3rem; }
+
+/* Con il vetro acceso: niente sfondi pieni, lo fa il canvas */
+.login-vetro.is-vetro .login-bar { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: transparent; box-shadow: none; }
+.login-vetro.is-vetro .login-input { background: rgba(10, 10, 10, 0.45) !important; border-color: rgba(255, 255, 255, 0.16) !important; border-radius: 999px !important; padding-inline: 1rem; }
+.login-vetro.is-vetro .login-submit { background: transparent; color: #f6d79a; border-radius: 999px; height: 2.9rem; letter-spacing: 0.04em; text-shadow: 0 0 12px rgba(205, 154, 79, 0.55); }
+.login-vetro.is-vetro .login-alt-btn { background: transparent; border-color: transparent; color: #fff; min-height: 2.75rem; }
+.login-vetro.is-vetro .login-alt-sep { color: rgba(255, 255, 255, 0.75); }
+@media (hover: hover) {
+  .login-vetro.is-vetro .login-submit:hover { background: rgba(205, 154, 79, 0.12); color: #ffe2a8; transform: none; }
+  .login-vetro.is-vetro .login-alt-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); border-color: transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .vetro-canvas { transition: none; } }

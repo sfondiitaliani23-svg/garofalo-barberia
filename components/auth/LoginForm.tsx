@@ -173,7 +173,7 @@ function LoginFormInner({
 
   if (!mounted) {
     return (
-      <div className="login-bar login-bar--center" aria-busy="true">
+      <div data-vetro="smerigliato" className="login-bar login-bar--center" aria-busy="true">
         <Loader2 className="h-7 w-7 animate-spin text-gold" />
         <span className="sr-only">{L(lang, 'Caricamento in corso...', 'Loading...')}</span>
       </div>
@@ -274,7 +274,7 @@ function LoginFormInner({
       : '';
 
     return (
-      <div className="login-bar login-bar--center">
+      <div data-vetro="smerigliato" className="login-bar login-bar--center">
         <div className="flex flex-col items-center justify-center py-2 space-y-6">
           <div className="text-center space-y-1">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider">{L(lang, 'Accedi rapidamente', 'Quick sign-in')}</h3>
@@ -335,7 +335,7 @@ function LoginFormInner({
 
   // Se siamo su cellulare, o se l'utente ha scelto di mostrare il form classico su Desktop
   return (
-    <div className="login-bar">
+    <div data-vetro="smerigliato" className="login-bar">
       <h2 className="sr-only">{L(lang, 'Accedi all\'area cliente', 'Sign in to your account')}</h2>
       <div className="space-y-4">
         {isCredentialError ? (
@@ -417,7 +417,7 @@ function LoginFormInner({
                   </button>
                 </div>
               </div>
-              <button type="submit" className="login-submit">
+              <button type="submit" data-vetro="" className="login-submit">
                 {L(lang, 'Accedi', 'Sign in')}
               </button>
             </form>

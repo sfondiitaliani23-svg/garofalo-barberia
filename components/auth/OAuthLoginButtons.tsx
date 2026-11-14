@@ -75,7 +75,7 @@ function OAuthSubmitButton({
 
   if (row) {
     return (
-      <button type="submit" className={ROW_BTN} disabled={pending} data-provider={provider}>
+      <button type="submit" data-vetro="" className={ROW_BTN} disabled={pending} data-provider={provider}>
         {icon}
         {pending ? pendingLabel : label}
       </button>
@@ -140,13 +140,13 @@ export function OAuthLoginButtons({
             </form>
           )}
           {onPasskeyClick && (
-            <button type="button" onClick={onPasskeyClick} className={ROW_BTN}>
+            <button type="button" onClick={onPasskeyClick} data-vetro="" className={ROW_BTN}>
               <PasskeyIcon />
               Passkey
             </button>
           )}
           {onWhatsAppClick && (
-            <button type="button" onClick={onWhatsAppClick} className={ROW_BTN}>
+            <button type="button" onClick={onWhatsAppClick} data-vetro="" className={ROW_BTN}>
               <WhatsAppIcon />
               {L(lang, 'Accedi tramite WhatsApp (OTP)', 'Sign in with WhatsApp (OTP)')}
             </button>

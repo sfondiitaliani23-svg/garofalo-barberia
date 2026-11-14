@@ -213,7 +213,7 @@ export function GoogleContinueButton({
       {row ? (
         <button
           type={mode === 'redirect' ? 'submit' : 'button'}
-          className={buttonClass}
+          data-vetro="" className={buttonClass}
           disabled={mode === 'pending'}
           tabIndex={mode === 'site' ? -1 : 0}
           aria-hidden={mode === 'site' ? true : undefined}
