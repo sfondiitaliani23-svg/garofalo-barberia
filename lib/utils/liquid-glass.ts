@@ -1,8 +1,9 @@
 // Vetro liquido (14/11/2026, richiesta di Eliseo). Spunto: «Agentic Liquid Glass» (Vision Pictures, a pagamento):
 // rifatto da zero, gratis. Un solo canvas WebGL disegna lo sfondo (nero caldo con poche barre di luce larghe in diagonale)
-// e, dove ci sono gli elementi segnati con data-vetro, il vetro: piega lo sfondo vicino al bordo (rifrazione),
+// e lo sfondo dell'accesso (il vetro della scheda e dei pulsanti è in CSS, components/auth/login.css).
 // separa i colori sul bordo (dispersione), smeriglia l'interno, accende il bordo con la luce e fa una piccola ombra.
-// La luce sul bordo del vetro segue il cursore. (Sera del 14/11: tolte foto, righe sottili e goccia, su richiesta di Eliseo.)
+// Sera del 14/11 (richiesta di Eliseo): il vetro della scheda e dei pulsanti è passato al CSS, come su Maximize,
+// per togliere gli zig-zag della rifrazione sui bordi. Qui resta lo sfondo: nero caldo con barre di luce in diagonale.
 // Leggero: risoluzione ridotta, pausa quando la pagina non si vede, fermo con il movimento ridotto.
 
 const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
@@ -97,19 +98,8 @@ export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement): (() =>
     gl.uniform2f(uR, w, h);
     const sec = (ms - t0) / 1000, dt = Math.min(0.1, Math.max(0, sec - prima)); prima = sec;
     gl.uniform1f(uT, sec);
-    // elementi di vetro: posizione e forma lette dalla pagina a ogni giro
-    let k = 0;
-    area.querySelectorAll<HTMLElement>('[data-vetro]').forEach((el) => {
-      if (k >= 8) return;
-      const e = el.getBoundingClientRect();
-      if (!e.width || !e.height || e.bottom < b.top || e.top > b.bottom) return;
-      const cx = (e.left + e.width / 2 - b.left) * SCALA, cy = (b.bottom - (e.top + e.height / 2)) * SCALA;
-      boxes.set([cx, cy, (e.width / 2) * SCALA, (e.height / 2) * SCALA], k * 4);
-      const raggio = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
-      rads[k] = Math.min(raggio, e.height / 2, e.width / 2) * SCALA;
-      smers[k] = el.dataset.vetro === 'smerigliato' ? 0.85 : 0.18;
-      k++;
-    });
+    // 14/11/2026 sera: il vetro ora è CSS (come Maximize): qui solo lo sfondo, nessun elemento da deformare.
+    const k = 0;
     gl.uniform4fv(uBox, boxes); gl.uniform1fv(uRad, rads); gl.uniform1fv(uSm, smers); gl.uniform1i(uN, k);
     // la luce sul bordo segue il cursore (senza cursore: dall'alto a sinistra)
     mOn += (mT - mOn) * Math.min(1, dt * 4);

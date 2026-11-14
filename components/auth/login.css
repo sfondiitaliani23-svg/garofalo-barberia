@@ -258,3 +258,42 @@
   .login-vetro.is-vetro .login-alt-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); border-color: transparent; }
 }
 @media (prefers-reduced-motion: reduce) { .vetro-canvas { transition: none; } }
+
+/* Sera del 14/11/2026 (richiesta di Eliseo): vetro in CSS come su Maximize Academy, niente deformazioni.
+   Scheda: vetro smerigliato chiaro con filo di luce in alto; pulsanti: pillole di vetro grigio con bordo chiaro. */
+.login-vetro.is-vetro .login-bar {
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 30px 60px rgba(0, 0, 0, 0.55), 0 0 80px rgba(205, 154, 79, 0.08);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+.login-vetro.is-vetro .login-input,
+.login-vetro.is-vetro .login-input:-webkit-autofill,
+.login-vetro.is-vetro .login-input:-webkit-autofill:hover,
+.login-vetro.is-vetro .login-input:-webkit-autofill:focus {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px rgba(12, 11, 10, 0.92) inset !important;
+  caret-color: #fff;
+}
+.login-vetro.is-vetro .login-submit,
+.login-vetro.is-vetro .login-alt-btn {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 6px 18px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  text-shadow: none;
+}
+.login-vetro.is-vetro .login-submit { color: #f6d79a; font-weight: 700; }
+@media (hover: hover) {
+  .login-vetro.is-vetro .login-submit:hover,
+  .login-vetro.is-vetro .login-alt-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0.12));
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+.login-vetro.is-vetro .login-input::placeholder { -webkit-text-fill-color: rgba(255, 255, 255, 0.55); color: rgba(255, 255, 255, 0.55); }
