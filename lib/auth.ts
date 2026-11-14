@@ -53,7 +53,14 @@ export const enforceStaffMfa = cache(async () => {
   } catch {
     needsMfa = false;
   }
-  if (needsMfa) redirect('/admin/login?mfa=1');
+  // 14/11/2026: su un dispositivo ricordato (codice inserito lì negli ultimi 30 giorni) non si chiede.
+  if (needsMfa) {
+    const { isTrustedDevice } = await import('@/lib/trusted-device-server');
+    const supabase = await createClient();
+    const { data } = (await supabase?.auth.getUser()) ?? { data: null };
+    if (await isTrustedDevice(data?.user?.id)) return;
+    redirect('/admin/login?mfa=1');
+  }
 });
 
 export const TESTER_BLOCK_MESSAGE = 'Modalità tester: puoi guardare tutto e proporre una novità, ma non modificare.';

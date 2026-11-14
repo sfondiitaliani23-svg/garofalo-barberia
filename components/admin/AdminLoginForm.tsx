@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { safeDecodeURIComponent } from '@/lib/utils/site-origin';
+import { dispositivoFidatoAction, ricordaDispositivoAction } from '@/lib/actions/trusted-device';
 
 function AdminLoginFormInner() {
   const searchParams = useSearchParams();
@@ -15,6 +16,8 @@ function AdminLoginFormInner() {
   // Secondo passaggio (09/11/2026): codice dell'app di autenticazione o passkey, se attivati in Eliseo → Profilo → Sicurezza.
   const [mfa, setMfa] = useState<{ totp?: string; passkey?: string } | null>(null);
   const [code, setCode] = useState('');
+  // 14/11/2026: «Ricorda questo dispositivo per 30 giorni», già spuntato.
+  const [ricorda, setRicorda] = useState(true);
 
   useEffect(() => {
     const urlError = searchParams.get('error');
@@ -35,6 +38,7 @@ function AdminLoginFormInner() {
       const totp = verified.find((x) => x.factor_type === 'totp')?.id;
       const passkey = verified.find((x) => x.factor_type === 'webauthn')?.id;
       if (!totp && !passkey) return false;
+      if ((await dispositivoFidatoAction()).fidato) return false;
       setMfa({ totp, passkey });
       return true;
     } catch {
@@ -54,6 +58,7 @@ function AdminLoginFormInner() {
       setLoading(false);
       return;
     }
+    if (ricorda) await ricordaDispositivoAction();
     window.location.assign('/admin/dashboard');
   }
 
@@ -68,6 +73,7 @@ function AdminLoginFormInner() {
       setLoading(false);
       return;
     }
+    if (ricorda) await ricordaDispositivoAction();
     window.location.assign('/admin/dashboard');
   }
 
@@ -125,6 +131,10 @@ function AdminLoginFormInner() {
         {error && (
           <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>
         )}
+        <label className="flex items-center gap-2 text-sm text-white/80">
+          <input type="checkbox" checked={ricorda} onChange={(e) => setRicorda(e.target.checked)} className="h-4 w-4 accent-[var(--color-gold)]" />
+          Ricorda questo dispositivo per 30 giorni
+        </label>
         {mfa.passkey && (
           <Button type="button" className="w-full" disabled={loading} onClick={withPasskey}>
             Usa la passkey (impronta, volto o blocco schermo)
@@ -146,7 +156,7 @@ function AdminLoginFormInner() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Verifica...' : 'Conferma codice'}
+              {loading ? <span className="attesa"><span className="attesa__anello" aria-hidden />Entro…</span> : 'Conferma codice'}
             </Button>
           </>
         )}
@@ -184,7 +194,7 @@ function AdminLoginFormInner() {
         />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Accesso in corso...' : 'Accedi'}
+        {loading ? <span className="attesa"><span className="attesa__anello" aria-hidden />Entro…</span> : 'Accedi'}
       </Button>
     </form>
   );
