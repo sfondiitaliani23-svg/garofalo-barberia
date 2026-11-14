@@ -31,6 +31,33 @@ export function AppSettings() {
     supabase.auth.getSession().then(({ data: { session } }) => setLoggedIn(Boolean(session?.user)));
   }, []);
 
+  // 14/11/2026: tornando dalle impostazioni del telefono si rilegge lo stato; se il permesso ora c'è, si accendono da sole.
+  useEffect(() => {
+    const ricontrolla = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const prima = await readPushState();
+      if (prima === 'off' && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const r = await enablePushFromClick();
+        setPush(r === 'saved' ? 'on' : await readPushState());
+        return;
+      }
+      setPush(prima);
+    };
+    document.addEventListener('visibilitychange', ricontrolla);
+    return () => document.removeEventListener('visibilitychange', ricontrolla);
+  }, []);
+
+  /** Come riaccenderle dalle impostazioni del telefono: il sito non può aprirle da solo. */
+  function passiTelefono() {
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    toast.message(L(lang, 'Accendile dalle impostazioni del telefono', 'Turn them on in the phone settings'), {
+      duration: 12000,
+      description: ios
+        ? L(lang, 'Impostazioni → Notifiche → Garofalo → Consenti notifiche. Poi torna qui: si accendono da sole.', 'Settings → Notifications → Garofalo → Allow Notifications. Then come back: they turn on by themselves.')
+        : L(lang, 'Tieni premuta l’icona dell’app → Info app → Notifiche → Attiva. Oppure nel browser: lucchetto accanto all’indirizzo → Notifiche → Consenti. Poi torna qui: si accendono da sole.', 'Long-press the app icon → App info → Notifications → On. Or in the browser: padlock next to the address → Notifications → Allow. Then come back: they turn on by themselves.'),
+    });
+  }
+
   function choose(next: Look) {
     setLook(next);
     applyLook(next);
@@ -54,8 +81,8 @@ export function AppSettings() {
       }
       return;
     }
-    if (!loggedIn) {
-      toast.error(L(lang, 'Entra nell’account per accendere le notifiche.', 'Sign in to turn notifications on.'));
+    if (push === 'denied') {
+      passiTelefono();
       return;
     }
     setBusy(true);
@@ -63,13 +90,17 @@ export function AppSettings() {
     setBusy(false);
     if (result === 'saved') {
       setPush('on');
-      await fetch('/api/push/test', { method: 'POST' });
+      let endpoint = '';
+      try {
+        endpoint = localStorage.getItem('push-endpoint') || '';
+      } catch {
+        endpoint = '';
+      }
+      await fetch('/api/push/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ endpoint }) });
       toast.success(L(lang, 'Notifiche accese. Ti ho mandato una prova.', 'Notifications are on. I sent you a test.'));
     } else if (result === 'denied') {
-      setPush('denied');
-    } else if (result === 'logged-out') {
-      setLoggedIn(false);
-      toast.error(L(lang, 'Entra nell’account per accendere le notifiche.', 'Sign in to turn notifications on.'));
+      setPush(await readPushState());
+      if (Notification.permission === 'denied') passiTelefono();
     } else {
       toast.error(L(lang, 'Questo telefono non ha accettato le notifiche.', 'This phone did not accept notifications.'));
     }
@@ -78,13 +109,13 @@ export function AppSettings() {
   const pushOn = push === 'on';
   const note =
     push === 'denied'
-      ? L(lang, 'Le notifiche sono bloccate dal telefono. Riattivale dalle impostazioni di iPhone o Android, poi torna qui.', 'Notifications are blocked by the phone. Turn them back on in the iPhone or Android settings, then come back here.')
+      ? L(lang, 'Le notifiche sono bloccate dal telefono. Tocca l’interruttore: ti dico dove riattivarle. Quando torni qui si accendono da sole.', 'Notifications are blocked by the phone. Tap the switch: I’ll tell you where to turn them back on. When you come back they turn on by themselves.')
       : push === 'ios-install'
         ? L(lang, 'Su iPhone le notifiche funzionano dall’app: aggiungi il sito alla schermata Home e aprilo dall’icona.', 'On iPhone, notifications work from the app: add the site to your Home Screen and open it from the icon.')
         : push === 'unsupported'
           ? L(lang, 'Questo telefono non può ricevere le notifiche del sito.', 'This phone cannot receive notifications from the site.')
           : loggedIn === false
-            ? L(lang, 'Entra nell’account per accenderle su questo telefono.', 'Sign in to turn them on for this phone.')
+            ? L(lang, 'Novità e avvisi del salone. Con l’account ricevi anche i promemoria del taglio.', 'Shop news and alerts. With an account you also get appointment reminders.')
             : L(lang, 'Promemoria del taglio e storie del salone. Le spegni quando vuoi.', 'Appointment reminders and shop stories. Turn them off whenever you like.');
 
   return (
@@ -118,7 +149,7 @@ export function AppSettings() {
             role="switch"
             aria-checked={pushOn}
             aria-label={L(lang, 'Notifiche sul telefono', 'Phone notifications')}
-            disabled={busy || push === 'loading' || push === 'denied' || push === 'unsupported' || push === 'ios-install'}
+            disabled={busy || push === 'loading' || push === 'unsupported' || push === 'ios-install'}
             onClick={togglePush}
           >
             <i />

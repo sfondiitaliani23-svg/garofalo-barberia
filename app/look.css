@@ -804,21 +804,21 @@ html:not([data-look='gold']) .hero-section::before {
 .app-toggle3d {
   display: block;
   margin: 0.2rem auto 0;
-  padding: 1.6rem 1rem 2.2rem;
+  padding: 0.6rem 1rem 1.2rem;
   border: 0;
   background: none;
   cursor: pointer;
-  perspective: 620px;
+  perspective: 520px;
   -webkit-tap-highlight-color: transparent;
 }
 .app-toggle3d:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .app-toggle3d__track {
   position: relative;
   display: block;
-  width: 14rem;
-  height: 4.6rem;
+  width: 9.5rem;
+  height: 3.2rem;
   border-radius: 999px;
-  transform: rotateX(46deg) rotateZ(-16deg);
+  transform: rotateX(38deg);
   transform-style: preserve-3d;
   background: radial-gradient(120% 140% at 60% 30%, #2a1a08 0%, #0c0805 55%, #050403 100%);
   box-shadow:
@@ -834,41 +834,41 @@ html:not([data-look='gold']) .hero-section::before {
   position: absolute;
   top: 50%;
   translate: 0 -50%;
-  font: 800 1.55rem/1 var(--font-display), 'Rye', Georgia, serif;
+  font: 800 1.05rem/1 var(--font-display), 'Rye', Georgia, serif;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   transition: opacity 0.18s ease;
 }
 .app-toggle3d__label--nero {
-  right: 1.5rem;
+  right: 1rem;
   color: #fff1d2;
   text-shadow: 0 0 3px #f0c27a, 0 0 10px #cd9a4f, 0 0 22px #cd9a4f, 0 0 40px rgba(205, 154, 79, 0.8);
   transition-delay: 0.38s;
 }
 .app-toggle3d__label--oro {
-  left: 1.6rem;
+  left: 1.1rem;
   opacity: 0;
   color: #ffffff;
   text-shadow: 0 1px 1px rgba(110, 72, 18, 0.75), 0 0 3px #fff6e0, 0 0 10px #ffe7b0, 0 0 22px rgba(255, 226, 160, 0.95), 0 0 40px rgba(255, 210, 130, 0.7);
 }
 .app-toggle3d__knob {
   position: absolute;
-  top: 0.35rem;
-  left: 0.35rem;
-  width: 3.9rem;
-  height: 3.9rem;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 2.7rem;
+  height: 2.7rem;
   border-radius: 50%;
-  transform: translateZ(14px);
+  transform: translateZ(10px);
   background: radial-gradient(circle at 35% 30%, #4a443b 0%, #24201b 50%, #121010 100%);
   /* lo spessore del cilindro: strati pieni sotto la faccia, poi l'ombra */
   box-shadow:
     inset 0 2px 2px rgba(255, 255, 255, 0.16),
     inset 0 0 0 1px rgba(205, 154, 79, 0.4),
-    0 3px 0 #0d0b09,
-    0 6px 0 #0a0907,
-    0 9px 0 #070605,
-    0 12px 0 #050404,
-    0 22px 22px rgba(0, 0, 0, 0.75);
+    0 2px 0 #0d0b09,
+    0 4px 0 #0a0907,
+    0 6px 0 #070605,
+    0 8px 0 #050404,
+    0 16px 16px rgba(0, 0, 0, 0.75);
   transition: translate 0.7s cubic-bezier(0.65, 0, 0.25, 1), background 0.6s ease, box-shadow 0.6s ease;
 }
 /* Oro */
@@ -883,15 +883,15 @@ html:not([data-look='gold']) .hero-section::before {
     0 0 34px rgba(255, 236, 180, 0.6);
 }
 .app-toggle3d.is-gold .app-toggle3d__knob {
-  translate: 9.4rem 0;
+  translate: 6.3rem 0;
   background: radial-gradient(circle at 35% 30%, #ffffff 0%, #f6edd9 50%, #ddc9a0 100%);
   box-shadow:
     inset 0 2px 2px #ffffff,
-    0 3px 0 #d8c39a,
-    0 6px 0 #c7ad7c,
-    0 9px 0 #b4975f,
-    0 12px 0 #a2844e,
-    0 22px 22px rgba(95, 65, 20, 0.45);
+    0 2px 0 #d8c39a,
+    0 4px 0 #c7ad7c,
+    0 6px 0 #b4975f,
+    0 8px 0 #a2844e,
+    0 16px 16px rgba(95, 65, 20, 0.45);
 }
 .app-toggle3d.is-gold .app-toggle3d__label--nero { opacity: 0; transition-delay: 0s; }
 .app-toggle3d.is-gold .app-toggle3d__label--oro { opacity: 1; transition-delay: 0.38s; }

@@ -6,6 +6,7 @@ import { createServiceClient } from '@/lib/supabase/server';
  * Notifiche sul telefono (Web Push): gratis, senza servizi esterni a pagamento.
  * Le chiavi VAPID si creano da sole al primo uso e restano nel database (riga privata "cfg:vapid").
  * Le iscrizioni dei telefoni sono righe private "push:<hash>" legate all'utente.
+ * Dal 14/11/2026 ci si iscrive anche senza account (userId vuoto): quei telefoni ricevono solo gli avvisi del salone.
  */
 
 type Vapid = { publicKey: string; privateKey: string };
@@ -91,8 +92,17 @@ export async function saveSubscription(userId: string, sub: webpush.PushSubscrip
   const supabase = await createServiceClient();
   if (!supabase || !sub?.endpoint || !sub.keys?.p256dh || !sub.keys?.auth) return false;
   const key = subKey(sub.endpoint);
-  const body = JSON.stringify({ userId, sub, at: new Date().toISOString(), ua: ua?.slice(0, 120) } satisfies StoredSub);
-  const { data } = await supabase.from('site_content').select('id').eq('key', key).maybeSingle();
+  const { data } = await supabase.from('site_content').select('id, body').eq('key', key).maybeSingle();
+  // Senza account non si toglie il nome a un telefono già legato a un cliente (stesso telefono, stesso indirizzo).
+  let owner = userId;
+  if (!owner && data?.body) {
+    try {
+      owner = (JSON.parse(data.body) as StoredSub).userId || '';
+    } catch {
+      owner = '';
+    }
+  }
+  const body = JSON.stringify({ userId: owner, sub, at: new Date().toISOString(), ua: ua?.slice(0, 120) } satisfies StoredSub);
   const { error } = data
     ? await supabase.from('site_content').update({ body, updated_at: new Date().toISOString() }).eq('id', data.id)
     : await supabase.from('site_content').insert({ key, title: 'notifiche', body, is_active: false, updated_at: new Date().toISOString() });
@@ -141,6 +151,21 @@ export async function sendPushToUser(userId: string, payload: PushPayload): Prom
   return ok;
 }
 
+/** Invia a un solo telefono già iscritto (prova dopo l'accensione, anche senza account). */
+export async function sendPushToEndpoint(endpoint: string, payload: PushPayload): Promise<number> {
+  const supabase = await createServiceClient();
+  if (!supabase || !endpoint || !(await configure())) return 0;
+  const { data } = await supabase.from('site_content').select('body').eq('key', subKey(endpoint)).maybeSingle();
+  if (!data?.body) return 0;
+  try {
+    const s = JSON.parse(data.body) as StoredSub;
+    await webpush.sendNotification(s.sub, pushWireBody(payload, s.sub.endpoint), PUSH_OPTS);
+    return 1;
+  } catch {
+    return 0;
+  }
+}
+
 /** Invia una sola volta per chiave (es. un promemoria per appuntamento), anche se il job gira più volte. */
 export async function sendPushOnce(onceKey: string, userId: string, payload: PushPayload) {
   const supabase = await createServiceClient();
@@ -176,7 +201,7 @@ export async function sendPushToAll(payload: PushPayload): Promise<{ sent: numbe
         try {
           await webpush.sendNotification(s.sub, pushWireBody(payload, s.sub.endpoint), PUSH_OPTS);
           sent++;
-          users.add(s.userId);
+          if (s.userId) users.add(s.userId);
         } catch (e) {
           const code = (e as { statusCode?: number }).statusCode;
           if (code === 404 || code === 410) await supabase.from('site_content').delete().eq('key', row.key);
@@ -194,7 +219,8 @@ export async function pushAudience(): Promise<{ devices: number; users: number }
   const users = new Set<string>();
   for (const r of data ?? []) {
     try {
-      users.add(JSON.parse(r.body ?? '{}').userId);
+      const u = JSON.parse(r.body ?? '{}').userId;
+      if (u) users.add(u);
     } catch {
       /* riga non valida */
     }

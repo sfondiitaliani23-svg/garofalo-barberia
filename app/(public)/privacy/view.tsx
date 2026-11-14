@@ -73,8 +73,8 @@ export default function PrivacyView({ lang }: { lang: Lang }) {
             <p className="mt-2">
               {L(
                 lang,
-                "Solo se le attivi tu, salviamo l'indirizzo tecnico che il browser fornisce per inviarti notifiche (promemoria degli appuntamenti e novità del salone). Le disattivi in qualsiasi momento dal tuo profilo o dalle impostazioni del telefono.",
-                'Only if you switch them on, we store the technical address that your browser provides so we can send you notifications (appointment reminders and news from the barbershop). You can switch them off at any time from your profile or from your phone settings.',
+                "Solo se le attivi tu, salviamo l'indirizzo tecnico che il browser fornisce per inviarti notifiche (promemoria degli appuntamenti e novità del salone; senza account solo le novità). Le disattivi in qualsiasi momento da Impostazioni dell'app, dal tuo profilo o dalle impostazioni del telefono.",
+                'Only if you switch them on, we store the technical address that your browser provides so we can send you notifications (appointment reminders and news from the barbershop; without an account, news only). You can switch them off at any time from the app Settings, from your profile or from your phone settings.',
               )}
             </p>
           </section>
