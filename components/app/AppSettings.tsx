@@ -134,16 +134,21 @@ export function AppSettings() {
 
       <div className="app-settings-block">
         <p className="app-settings-label">{L(lang, 'Aspetto', 'Appearance')}</p>
-        <div className="app-looks" role="radiogroup" aria-label={L(lang, 'Colore dell’app', 'App colour')}>
-          <button type="button" role="radio" aria-checked={look === 'black'} className={`app-look${look === 'black' ? ' is-on' : ''}`} onClick={() => choose('black')}>
-            <span className="app-look-face app-look-face--black">Garofalo</span>
-            <span>{L(lang, 'Nero', 'Black')}</span>
-          </button>
-          <button type="button" role="radio" aria-checked={look === 'gold'} className={`app-look${look === 'gold' ? ' is-on' : ''}`} onClick={() => choose('gold')}>
-            <span className="app-look-face app-look-face--gold">Garofalo</span>
-            <span>{L(lang, 'Oro', 'Gold')}</span>
-          </button>
-        </div>
+        {/* 14/11/2026: interruttore 3D (spunto: @code_x_sg, «Premium 3D Light/Dark Toggle»), rifatto in nero e oro Garofalo. */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={look === 'gold'}
+          aria-label={L(lang, 'Colore dell’app: oro', 'App colour: gold')}
+          className={`app-toggle3d${look === 'gold' ? ' is-gold' : ''}`}
+          onClick={() => choose(look === 'gold' ? 'black' : 'gold')}
+        >
+          <span className="app-toggle3d__track">
+            <span className="app-toggle3d__label app-toggle3d__label--nero" aria-hidden>{L(lang, 'Nero', 'Black')}</span>
+            <span className="app-toggle3d__label app-toggle3d__label--oro" aria-hidden>{L(lang, 'Oro', 'Gold')}</span>
+            <span className="app-toggle3d__knob" aria-hidden />
+          </span>
+        </button>
         <p className="app-settings-note">
           {L(lang, 'Il sito usa solo questi due colori. La scelta resta su questo telefono.', 'The site uses only these two colours. The choice stays on this phone.')}
         </p>
