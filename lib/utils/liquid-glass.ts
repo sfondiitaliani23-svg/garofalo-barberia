@@ -28,17 +28,17 @@ void main(){
  vec2 q=vec2(fbm(p+vec2(0.,tt)),fbm(p+vec2(5.2,1.3)-tt));
  vec2 w=vec2(fbm(p+3.*q+vec2(1.7,9.2)+tt*1.3),fbm(p+3.*q+vec2(8.3,2.8)-tt));
  float v=fbm(p+3.4*w);
- // filamenti: linee sottili dove il valore attraversa alcune soglie
- float f1=exp(-abs(v-.55)*38.);
- float f2=exp(-abs(v-.42)*60.)*.35;
- float fil=f1+f2;
- float corpo=smoothstep(.5,.8,v)*.22;
- vec3 oro=vec3(.85,.6,.28),chiaro=vec3(1.,.86,.58);
- vec3 c=vec3(.012,.01,.008)+oro*corpo*length(w)*.8;
- c+=oro*fil*.62+chiaro*pow(f1,3.)*.45;
+ // filamenti: linee lucide a intervalli regolari del valore, così ce ne sono sempre (non solo a volte)
+ float b=abs(fract(v*5.5+tt*.4)-.5);
+ float fil=exp(-b*b*260.);
+ float lucido=exp(-b*b*1400.);
+ float peso=.45+.55*smoothstep(.25,.7,v);
+ vec3 oro=vec3(.85,.6,.28),chiaro=vec3(1.,.88,.6);
+ vec3 c=vec3(.014,.011,.008)+oro*.06*length(w);
+ c+=oro*fil*.55*peso+chiaro*lucido*.55*peso;
  // vicino al cursore il liquido si accende
  float dm=length(uv-m);c*=1.+1.1*exp(-dm*dm*12.)*mi;
- float vi=smoothstep(1.2,.25,length(gl_FragCoord.xy/r-.5)*1.45);
+ float vi=smoothstep(1.3,.35,length(gl_FragCoord.xy/r-.5)*1.3);
  gl_FragColor=vec4(c*vi,1.);
 }`;
 
