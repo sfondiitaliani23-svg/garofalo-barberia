@@ -380,3 +380,41 @@
   .as-pane:not(.is-on) { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .as-pane.is-on, .as-saluto { animation: none; } }
+
+/* ── Scheda doppia più compatta (14/11/2026, sera: «è fin troppo grande») ───
+   Tutto deve stare nello schermo senza scorrere, anche su un portatile. */
+.login-vetro:has(.as-carta) .login-vetro__dentro { gap: 1rem; padding: 1.4rem 1rem 1.6rem; }
+.login-vetro:has(.as-carta) .login-vetro__testa h1 { font-size: clamp(1.7rem, 2.6vw, 2.3rem); }
+.login-vetro:has(.as-carta) .login-vetro__testa p { margin-top: 0.4rem; font-size: 0.8rem; }
+.login-vetro .as-carta { width: min(100%, 48rem); min-height: 0; border-radius: 16px; }
+.login-vetro .as-pane { padding: 1.3rem 2rem 1.1rem; }
+.login-vetro .as-titolo { margin-bottom: 0.5rem; font-size: 1.45rem; }
+.login-vetro .as-sotto { margin: -0.3rem 0 0.5rem; font-size: 0.72rem; }
+.login-vetro .as-saluto { font-size: clamp(1.4rem, 2.3vw, 1.95rem); }
+.login-vetro .as-carta .login-row { gap: 0.45rem; }
+.login-vetro .as-reg form { gap: 0.45rem; }
+.login-vetro .as-carta .login-field label, .login-vetro .as-reg label { margin-bottom: 0; font-size: 0.68rem; }
+.login-vetro .as-carta .login-submit, .login-vetro .as-reg button[type='submit'] { height: 2.45rem; margin-top: 0.15rem; }
+.login-vetro .as-carta .login-alt { margin-top: 0.6rem; }
+.login-vetro .as-carta .login-alt-row { gap: 0.4rem; margin-top: 0.45rem; }
+.login-vetro .as-carta .login-alt-btn { min-height: 2rem; padding: 0.3rem 0.8rem; }
+.login-vetro .as-carta p.border-t, .login-vetro .as-reg p.border-t { margin-top: 0.6rem; padding-top: 0.6rem; }
+/* Campi solo sottolineati anche quando il browser li riempie da solo (vince sulle regole del vetro) */
+.login-vetro.is-vetro .as-carta .login-input,
+.login-vetro.is-vetro .as-carta .login-input:-webkit-autofill,
+.login-vetro.is-vetro .as-carta .login-input:-webkit-autofill:hover,
+.login-vetro.is-vetro .as-carta .login-input:-webkit-autofill:focus,
+.login-vetro .as-carta .login-input,
+.login-vetro .as-reg input:not([type='hidden']):not([type='checkbox']),
+.login-vetro .as-reg input:-webkit-autofill {
+  height: 2.2rem !important; padding: 0 1.8rem 0 0.1rem !important;
+  border: 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important; border-radius: 0 !important;
+  background-color: transparent !important; -webkit-box-shadow: 0 0 0 1000px transparent inset !important; box-shadow: none !important;
+  -webkit-text-fill-color: #fff; transition: border-color 0.25s ease, background-color 9999s 9999s;
+}
+.login-vetro.is-vetro .as-carta .login-input:focus, .login-vetro .as-reg input:focus { border-bottom-color: #cd9a4f !important; }
+/* Schermi bassi: via la frase sotto il titolo e i sottotitoli */
+@media (min-width: 821px) and (max-height: 760px) {
+  .login-vetro:has(.as-carta) .login-vetro__testa p, .login-vetro .as-sotto { display: none; }
+  .login-vetro:has(.as-carta) .login-vetro__dentro { gap: 0.8rem; padding-top: 1rem; }
+}
