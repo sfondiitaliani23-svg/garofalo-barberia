@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { safeDecodeURIComponent } from '@/lib/utils/site-origin';
 
-function RegisterFormInner() {
+function RegisterFormInner({ nudo = false }: { nudo?: boolean }) {
   const lang = useLang();
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
@@ -25,16 +25,9 @@ function RegisterFormInner() {
     }
   }, [error, lang]);
 
-  return (
-    <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
-      {/* Indicatore dorato in cima */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
-
-      <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">{L(lang, 'Crea account', 'Create account')}</CardTitle>
-        <p className="text-xs text-white/60">{L(lang, 'Prenota più velocemente e vedi il tuo storico', 'Book faster and see your history')}</p>
-      </CardHeader>
-      <CardContent>
+  // 14/11/2026: «nudo» = solo il contenuto, dentro la scheda doppia dell'accesso (components/auth/AuthStage.tsx).
+  const corpo = (
+    <>
         {error && (
           <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300">
             {translateMessage(lang, safeDecodeURIComponent(error))}
@@ -91,15 +84,35 @@ function RegisterFormInner() {
             {L(lang, 'Accedi', 'Sign in')}
           </Link>
         </p>
-      </CardContent>
+    </>
+  );
+  if (nudo) {
+    return (
+      <div className="as-reg">
+        <h2 className="as-titolo">{L(lang, 'Registrati', 'Sign up')}</h2>
+        <p className="as-sotto">{L(lang, 'Prenota più velocemente e vedi il tuo storico', 'Book faster and see your history')}</p>
+        {corpo}
+      </div>
+    );
+  }
+  return (
+    <Card className="w-full max-w-md border border-white/10 bg-[#111] shadow-2xl relative overflow-hidden transition-all duration-300">
+      {/* Indicatore dorato in cima */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent" />
+
+      <CardHeader className="space-y-1">
+        <CardTitle className="font-display text-2xl uppercase tracking-wide text-gold">{L(lang, 'Crea account', 'Create account')}</CardTitle>
+        <p className="text-xs text-white/60">{L(lang, 'Prenota più velocemente e vedi il tuo storico', 'Book faster and see your history')}</p>
+      </CardHeader>
+      <CardContent>{corpo}</CardContent>
     </Card>
   );
 }
 
-export function RegisterForm() {
+export function RegisterForm({ nudo = false }: { nudo?: boolean } = {}) {
   return (
     <Suspense fallback={<div className="h-96 w-full max-w-md animate-pulse rounded-lg bg-white/5" />}>
-      <RegisterFormInner />
+      <RegisterFormInner nudo={nudo} />
     </Suspense>
   );
 }

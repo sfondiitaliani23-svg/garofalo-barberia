@@ -300,3 +300,83 @@
 /* Con il fumo d'oro dietro serve un vetro più scuro, perché le scritte si leggano sempre (14/11/2026). */
 .login-vetro.is-vetro .login-bar { background: rgba(10, 8, 6, 0.58); }
 .login-vetro.is-vetro .login-submit, .login-vetro.is-vetro .login-alt-btn { background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(10, 8, 6, 0.35); }
+
+/* ── Scheda doppia Accedi / Registrati (14/11/2026) ─────────────────────────
+   Spunto: «Modern Login & Sign-Up UI» (@CodeZenithAI): forma d'oro in diagonale che attraversa la scheda. */
+.as-carta {
+  position: relative; display: grid; width: min(100%, 58rem); min-height: 34rem; overflow: hidden;
+  border-radius: 18px; border: 1px solid rgba(205, 154, 79, 0.75);
+  background: rgba(8, 7, 6, 0.78);
+  box-shadow: 0 0 0 1px rgba(205, 154, 79, 0.15), 0 0 24px rgba(205, 154, 79, 0.45), 0 0 70px rgba(205, 154, 79, 0.15), inset 0 0 40px rgba(205, 154, 79, 0.06);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.as-forma {
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(200deg, #f0c77a 0%, #cd9a4f 22%, #8a6229 55%, #2a1e0c 100%);
+}
+.as-forma::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.18) 50%, rgba(255, 255, 255, 0) 60%); mix-blend-mode: overlay; }
+.as-saluto {
+  position: absolute; top: 28%; right: 5%; translate: 0 -50%; margin: 0; max-width: 11ch; text-align: right;
+  font: 800 clamp(1.6rem, 2.6vw, 2.25rem)/1.05 'Montserrat', system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.02em;
+  color: #fff8ea; text-shadow: 0 2px 18px rgba(60, 35, 5, 0.55);
+  animation: as-saluto 0.6s 0.55s both cubic-bezier(.2, .7, .2, 1);
+}
+.as-carta.is-reg .as-saluto { top: 46%; right: auto; left: 6%; text-align: left; }
+@keyframes as-saluto { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.as-pane { box-sizing: border-box; grid-area: 1 / 1; position: relative; z-index: 1; width: 48%; padding: 2.2rem 2.4rem 1.8rem; align-self: center; }
+.as-pane--reg { justify-self: end; width: 50%; }
+.as-pane:not(.is-on) { visibility: hidden; opacity: 0; }
+.as-pane.is-on { animation: as-pane-l 0.6s 0.45s both cubic-bezier(.2, .7, .2, 1); }
+.as-pane--reg.is-on { animation-name: as-pane-r; }
+@keyframes as-pane-l { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes as-pane-r { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+.as-titolo { margin: 0 0 0.9rem; text-align: center; font: 700 1.9rem/1.1 'Montserrat', system-ui, sans-serif; color: #fff; }
+.as-sotto { margin: -0.5rem 0 1rem; text-align: center; font-size: 0.78rem; color: rgba(255, 255, 255, 0.6); }
+
+/* Moduli dentro la scheda: niente cornici proprie */
+.login-vetro .as-carta .login-bar { padding: 0 !important; border: 0 !important; background: none !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-radius: 0; }
+.login-vetro .as-carta .login-row { grid-template-columns: 1fr; gap: 0.7rem; }
+/* Campi solo sottolineati, con l'icona d'oro a destra */
+.login-vetro .as-carta .login-input, .login-vetro .as-reg input:not([type='hidden']):not([type='checkbox']) {
+  height: 2.6rem !important; padding: 0 2rem 0 0.1rem !important; border: 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important;
+  border-radius: 0 !important; background: transparent no-repeat right 0.2rem center / 1.05rem !important; color: #fff !important;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important; box-shadow: none !important; transition: border-color 0.25s ease;
+}
+.login-vetro .as-carta input:-webkit-autofill { -webkit-text-fill-color: #fff; transition: background-color 9999s; }
+.login-vetro .as-carta .login-input:focus, .login-vetro .as-reg input:focus { border-bottom-color: #cd9a4f !important; outline: none; }
+.login-vetro .as-carta input[type='email'] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cd9a4f' stroke-width='1.8'%3E%3Cpath d='M3 6h18v12H3z'/%3E%3Cpath d='M3 7l9 6 9-6'/%3E%3C/svg%3E") !important; }
+.login-vetro .as-carta input[type='password'] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cd9a4f'%3E%3Cpath d='M6 11h12v10H6z'/%3E%3Cpath d='M8.5 11V8a3.5 3.5 0 0 1 7 0v3' fill='none' stroke='%23cd9a4f' stroke-width='1.8'/%3E%3C/svg%3E") !important; }
+.login-vetro .as-carta input[type='tel'] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cd9a4f' stroke-width='1.8'%3E%3Cpath d='M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2'/%3E%3C/svg%3E") !important; }
+.login-vetro .as-carta #full_name { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23cd9a4f'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0z'/%3E%3C/svg%3E") !important; }
+.login-vetro .as-carta .login-input::placeholder, .login-vetro .as-reg input::placeholder { color: rgba(255, 255, 255, 0.5); -webkit-text-fill-color: rgba(255, 255, 255, 0.5); }
+.login-vetro .as-reg label, .login-vetro .as-carta .login-field label { font-size: 0.72rem; color: rgba(255, 255, 255, 0.7); }
+.login-vetro .as-reg form { display: grid; gap: 0.75rem; }
+.login-vetro .as-reg form > div { margin: 0; }
+/* Pulsante principale: pillola d'oro che brilla */
+.login-vetro .as-carta .login-submit, .login-vetro .as-reg button[type='submit'] {
+  width: 100%; height: 2.8rem; margin-top: 0.3rem; border: 0 !important; border-radius: 999px !important;
+  background: linear-gradient(90deg, #9c7130, #e4bb6c 50%, #9c7130) !important; background-size: 200% 100% !important;
+  color: #140e05 !important; font-weight: 700; letter-spacing: 0.04em; text-shadow: none !important;
+  box-shadow: 0 0 18px rgba(205, 154, 79, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+  transition: background-position 0.5s ease, box-shadow 0.3s ease !important;
+}
+@media (hover: hover) {
+  .login-vetro .as-carta .login-submit:hover, .login-vetro .as-reg button[type='submit']:hover { background-position: 100% 0 !important; box-shadow: 0 0 28px rgba(205, 154, 79, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important; transform: none; }
+}
+.login-vetro .as-carta .login-alt-row { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+.login-vetro .as-carta .login-alt-btn { width: auto; min-height: 2.3rem; padding: 0.4rem 0.9rem; border: 1px solid rgba(205, 154, 79, 0.45) !important; background: rgba(205, 154, 79, 0.06) !important; color: #fff; font-size: 0.78rem; border-radius: 999px; }
+.login-vetro .as-carta .login-google { width: auto; }
+.login-vetro .as-carta .login-google .login-alt-btn { width: auto; }
+@media (hover: hover) { .login-vetro .as-carta .login-alt-btn:hover:not(:disabled) { background: rgba(205, 154, 79, 0.16) !important; border-color: #cd9a4f !important; } }
+.login-vetro .as-carta a.text-gold, .login-vetro .as-carta .text-gold { color: #e4bb6c; }
+.login-vetro .as-carta p.border-t, .login-vetro .as-reg p.border-t { border-color: rgba(205, 154, 79, 0.18); }
+
+/* Telefono: la forma d'oro diventa una fascia in alto con il saluto, i moduli sotto (niente diagonale) */
+@media (max-width: 820px) {
+  .as-carta { min-height: 0; }
+  .as-forma { position: relative; inset: auto; grid-area: 1 / 1; height: 6.5rem; clip-path: none !important; }
+  .as-saluto, .as-carta.is-reg .as-saluto { left: 50%; right: auto; translate: -50% -50%; text-align: center; max-width: none; font-size: 1.7rem; white-space: nowrap; }
+  .as-pane, .as-pane--reg { grid-area: 2 / 1; width: 100%; padding: 1.5rem 1.2rem 1.4rem; }
+  .as-pane:not(.is-on) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .as-pane.is-on, .as-saluto { animation: none; } }

@@ -1,9 +1,7 @@
-import { RegisterForm } from '@/components/auth/RegisterForm';
+import LoginView from '@/app/(public)/login/view';
+import type { Lang } from '@/lib/i18n';
 
-export default function RegisterView() {
-  return (
-    <section className="flex min-h-[70vh] items-center justify-center px-4 py-16">
-      <RegisterForm />
-    </section>
-  );
+// 14/11/2026: Registrati usa la stessa scheda doppia di Accedi (components/auth/AuthStage.tsx), già girata.
+export default function RegisterView({ lang = 'it' }: { lang?: Lang } = {}) {
+  return <LoginView lang={lang} modo="register" />;
 }
