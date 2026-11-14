@@ -1,70 +1,48 @@
-// Vetro liquido (14/11/2026, richiesta di Eliseo). Spunto: «Agentic Liquid Glass» (Vision Pictures, a pagamento):
-// rifatto da zero, gratis. Un solo canvas WebGL disegna lo sfondo (nero caldo con poche barre di luce larghe in diagonale)
-// e lo sfondo dell'accesso (il vetro della scheda e dei pulsanti è in CSS, components/auth/login.css).
-// separa i colori sul bordo (dispersione), smeriglia l'interno, accende il bordo con la luce e fa una piccola ombra.
-// Sera del 14/11 (richiesta di Eliseo): il vetro della scheda e dei pulsanti è passato al CSS, come su Maximize,
-// per togliere gli zig-zag della rifrazione sui bordi. Qui resta lo sfondo: nero caldo con barre di luce in diagonale.
+// Sfondo dell'accesso (14/11/2026 sera, richiesta di Eliseo): fumo liquido d'oro su nero, che scorre piano.
+// Spunto: sfondo animato «liquido» su Pinterest (filamenti luminosi che si arrotolano), rifatto da zero:
+// shader nostro (rumore piegato più volte su se stesso → filamenti), colori di Garofalo (oro su nero).
+// Il cursore mescola il liquido: i filamenti girano in un vortice attorno al mouse e si accendono;
+// dietro resta una scia di vortici che si richiudono piano.
+// Il vetro della scheda e dei pulsanti è in CSS (components/auth/login.css), come su Maximize Academy.
 // Leggero: risoluzione ridotta, pausa quando la pagina non si vede, fermo con il movimento ridotto.
 
 const VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
 const FS = `precision mediump float;
-uniform vec2 r;uniform float t;
-uniform vec4 box[8];uniform float rad[8];uniform float smer[8];uniform int n;
-uniform vec2 luce;
-float sdBox(vec2 p,vec2 c,vec2 h,float rr){vec2 q=abs(p-c)-(h-rr);return length(max(q,0.))+min(max(q.x,q.y),0.)-rr;}
-float h1(float x){return fract(sin(x*91.17)*43758.5453);}
-vec3 sfondo(vec2 p){
- vec2 uv=p/r;
- // fondo nero caldo con un alone morbido al centro
- vec3 c=mix(vec3(.018,.016,.014),vec3(.05,.04,.03),uv.y);
- c+=vec3(.10,.07,.035)*exp(-dot(uv-vec2(.5,.45),uv-vec2(.5,.45))*5.);
- // poche barre di luce larghe e ordinate in diagonale (come neon), che scorrono piano
- float per=r.y*.34;
- float s=(p.x+p.y*.85)/per+t*.035;
- float i=floor(s);float d=abs(fract(s)-.5)*per;
- float tipo=h1(i);
- float w=mix(2.5,5.5,h1(i+3.1));
- float corpo=1.-smoothstep(w,w+1.5,d);
- float alone=exp(-d*d/(2.*30.*30.));
- vec3 oro=vec3(.86,.62,.30),caldo=vec3(1.,.88,.66);
- vec3 tinta=tipo<.5?oro:caldo;
- float forza=h1(i+7.7)<.45?0.:(.22+.3*h1(i+9.3));
- c+=tinta*(corpo*.85+alone*.22)*forza;
- return c;}
+uniform vec2 r;uniform float t;uniform float ts;uniform vec2 m;uniform float mi;uniform vec3 g[10];
+float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float nz(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+vec2(1.,1.)),f.x),f.y);}
+float fbm(vec2 p){float a=.5,s=0.;mat2 R=mat2(.8,-.6,.6,.8);for(int i=0;i<4;i++){s+=a*nz(p);p=R*p*2.03;a*=.5;}return s;}
+// vortice: ruota i punti attorno a c, tanto più quanto sono vicini
+vec2 gira(vec2 p,vec2 c,float forza,float raggio){vec2 d=p-c;float a=forza*exp(-dot(d,d)/(raggio*raggio));
+ float cs=cos(a),sn=sin(a);return c+vec2(cs*d.x-sn*d.y,sn*d.x+cs*d.y);}
 void main(){
- vec2 p=gl_FragCoord.xy;
- vec3 col=sfondo(p);
- for(int i=0;i<8;i++){if(i>=n)break;float d=sdBox(p+vec2(0.,14.),box[i].xy,box[i].zw,rad[i]);col*=1.-.55*(1.-smoothstep(0.,34.,d))*step(0.,d);}
- for(int i=0;i<8;i++){if(i>=n)break;
-  float d=sdBox(p,box[i].xy,box[i].zw,rad[i]);
-  if(d<0.){
-   vec2 e=vec2(1.,0.);
-   vec2 nr=normalize(vec2(sdBox(p+e.xy,box[i].xy,box[i].zw,rad[i])-d,sdBox(p+e.yx,box[i].xy,box[i].zw,rad[i])-d)+1e-5);
-   float fr=smer[i];
-   float zona=min(fr>.5?34.:16.,min(box[i].z,box[i].w)*.95);
-   float k=1.-smoothstep(0.,zona,-d);k=k*k*(3.-2.*k);
-   vec2 off=-nr*k*zona*1.35;
-   float raggio=fr*7.;
-   vec3 v=vec3(0.);
-   for(int j=0;j<6;j++){float a=float(j)*1.0472;vec2 o=vec2(cos(a),sin(a))*raggio;
-    v+=vec3(sfondo(p+off+o).r,sfondo(p+off*1.06+o).g,sfondo(p+off*1.13+o).b);}
-   v/=6.;
-   // interno: vetro un po' scuro e caldo, per leggere bene
-   v=mix(v,v*.5+vec3(.025,.02,.015),fr*(1.-k));
-   v+=vec3(1.)*.025;
-   // bordo: filo chiaro sottile + luce che segue il cursore
-   float filo=1.-smoothstep(.0,1.6,-d);
-   float riflesso=pow(max(dot(nr,luce),0.),3.);
-   float controluce=pow(max(dot(nr,-luce),0.),6.)*.35;
-   v+=vec3(1.,.95,.86)*filo*(.18+.82*riflesso+controluce);
-   v+=vec3(1.,.92,.78)*k*(riflesso*.10);
-   col=v;
-  }}
- float vi=smoothstep(1.25,.25,length(p/r-.5)*1.4);
- gl_FragColor=vec4(col*vi,1.);
+ vec2 uv=(gl_FragCoord.xy-.5*r)/r.y;
+ vec2 p=uv;
+ // il cursore mescola: vortice vivo + scia
+ p=gira(p,m,2.*mi,.24);
+ for(int k=0;k<10;k++){float age=ts-g[k].z;if(age<0.||age>4.)continue;
+  p=gira(p,g[k].xy,1.6*exp(-age*1.1)*smoothstep(0.,.2,age),.16);}
+ p*=.85;
+ float tt=t*.045;
+ vec2 q=vec2(fbm(p+vec2(0.,tt)),fbm(p+vec2(5.2,1.3)-tt));
+ vec2 w=vec2(fbm(p+3.*q+vec2(1.7,9.2)+tt*1.3),fbm(p+3.*q+vec2(8.3,2.8)-tt));
+ float v=fbm(p+3.4*w);
+ // filamenti: linee sottili dove il valore attraversa alcune soglie
+ float f1=exp(-abs(v-.55)*38.);
+ float f2=exp(-abs(v-.42)*60.)*.35;
+ float fil=f1+f2;
+ float corpo=smoothstep(.5,.8,v)*.22;
+ vec3 oro=vec3(.85,.6,.28),chiaro=vec3(1.,.86,.58);
+ vec3 c=vec3(.012,.01,.008)+oro*corpo*length(w)*.8;
+ c+=oro*fil*.62+chiaro*pow(f1,3.)*.45;
+ // vicino al cursore il liquido si accende
+ float dm=length(uv-m);c*=1.+1.1*exp(-dm*dm*12.)*mi;
+ float vi=smoothstep(1.2,.25,length(gl_FragCoord.xy/r-.5)*1.45);
+ gl_FragColor=vec4(c*vi,1.);
 }`;
 
-/** Avvia il vetro. null = WebGL non disponibile: la pagina resta com'era. */
+/** Avvia lo sfondo. null = WebGL non disponibile: la pagina resta com'era. */
 export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement): (() => void) | null {
   const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
   if (!gl) return null;
@@ -81,40 +59,43 @@ export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement): (() =>
   gl.enableVertexAttribArray(loc);
   gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const u = (nome: string) => gl.getUniformLocation(pr, nome);
-  const uR = u('r'), uT = u('t'), uBox = u('box'), uRad = u('rad'), uSm = u('smer'), uN = u('n'), uLuce = u('luce');
-
+  const uR = u('r'), uT = u('t'), uTs = u('ts'), uM = u('m'), uMi = u('mi'), uG = u('g');
 
   const fermo = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SCALA = Math.min(1, (window.devicePixelRatio || 1) * 0.75);
+  const SCALA = Math.min(1, (window.devicePixelRatio || 1) * 0.6);
   const t0 = performance.now();
   let id = 0, prima = 0;
-  let mx = 0, my = 0, lx = 0, ly = 0, mT = 0, mOn = 0;
-  const boxes = new Float32Array(32), rads = new Float32Array(8), smers = new Float32Array(8);
+  let mx = 0, my = 0, sx = 0, sy = 0, mT = 0, mOn = 0;
+  const scia = new Float32Array(30).fill(-99);
+  let nS = 0, ult = { x: 99, y: 99, t: -9 };
+
+  // da coordinate dello schermo a quelle dello shader
+  const inUv = (cx: number, cy: number, b: DOMRect) => [(cx - b.left - b.width / 2) / b.height, (b.top + b.height / 2 - cy) / b.height];
 
   const disegna = (ms: number) => {
     const b = canvas.getBoundingClientRect();
-    const w = Math.max(1, Math.round(b.width * SCALA)), h = Math.max(1, Math.round(b.height * SCALA));
-    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
-    gl.uniform2f(uR, w, h);
+    const w = Math.max(1, Math.round(b.width * SCALA)), hh = Math.max(1, Math.round(b.height * SCALA));
+    if (canvas.width !== w || canvas.height !== hh) { canvas.width = w; canvas.height = hh; gl.viewport(0, 0, w, hh); }
+    gl.uniform2f(uR, w, hh);
     const sec = (ms - t0) / 1000, dt = Math.min(0.1, Math.max(0, sec - prima)); prima = sec;
-    gl.uniform1f(uT, sec);
-    // 14/11/2026 sera: il vetro ora è CSS (come Maximize): qui solo lo sfondo, nessun elemento da deformare.
-    const k = 0;
-    gl.uniform4fv(uBox, boxes); gl.uniform1fv(uRad, rads); gl.uniform1fv(uSm, smers); gl.uniform1i(uN, k);
-    // la luce sul bordo segue il cursore (senza cursore: dall'alto a sinistra)
-    mOn += (mT - mOn) * Math.min(1, dt * 4);
-    const f = Math.min(1, dt * 6); lx += (mx - lx) * f; ly += (my - ly) * f;
-    const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
-    let dx = (lx - cx) * mOn + -0.6 * (1 - mOn) * 400, dy = -(ly - cy) * mOn + 0.8 * (1 - mOn) * 400;
-    const lun = Math.hypot(dx, dy) || 1; dx /= lun; dy /= lun;
-    gl.uniform2f(uLuce, dx, dy);
+    gl.uniform1f(uT, sec + 30);
+    gl.uniform1f(uTs, sec);
+    mOn += (mT - mOn) * Math.min(1, dt * 3);
+    const [ux, uy] = inUv(mx, my, b);
+    const f = Math.min(1, dt * 7); sx += (ux - sx) * f; sy += (uy - sy) * f;
+    if (mT && (Math.hypot(sx - ult.x, sy - ult.y) > 0.07 || sec - ult.t > 0.4)) {
+      scia.set([sx, sy, sec], nS * 3); nS = (nS + 1) % 10; ult = { x: sx, y: sy, t: sec };
+    }
+    gl.uniform2f(uM, sx, sy);
+    gl.uniform1f(uMi, mOn);
+    gl.uniform3fv(uG, scia);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
   const giro = (ms: number) => { disegna(ms); id = requestAnimationFrame(giro); };
   const riparti = () => { cancelAnimationFrame(id); if (fermo || document.hidden) { disegna(performance.now()); return; } id = requestAnimationFrame(giro); };
 
   const muovi = (e: PointerEvent) => {
-    if (mT === 0) { lx = e.clientX; ly = e.clientY; }
+    if (mT === 0) { const b = canvas.getBoundingClientRect(); [sx, sy] = inUv(e.clientX, e.clientY, b); }
     mx = e.clientX; my = e.clientY; mT = 1;
     if (fermo) requestAnimationFrame(disegna);
   };
@@ -122,12 +103,11 @@ export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement): (() =>
   area.addEventListener('pointermove', muovi, { passive: true });
   area.addEventListener('pointerleave', esce);
   addEventListener('resize', riparti);
-  addEventListener('scroll', riparti, { passive: true });
   document.addEventListener('visibilitychange', riparti);
   riparti();
   return () => {
     cancelAnimationFrame(id);
     area.removeEventListener('pointermove', muovi); area.removeEventListener('pointerleave', esce);
-    removeEventListener('resize', riparti); removeEventListener('scroll', riparti); document.removeEventListener('visibilitychange', riparti);
+    removeEventListener('resize', riparti); document.removeEventListener('visibilitychange', riparti);
   };
 }

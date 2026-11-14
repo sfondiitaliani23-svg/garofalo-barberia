@@ -297,3 +297,6 @@
   }
 }
 .login-vetro.is-vetro .login-input::placeholder { -webkit-text-fill-color: rgba(255, 255, 255, 0.55); color: rgba(255, 255, 255, 0.55); }
+/* Con il fumo d'oro dietro serve un vetro più scuro, perché le scritte si leggano sempre (14/11/2026). */
+.login-vetro.is-vetro .login-bar { background: rgba(10, 8, 6, 0.58); }
+.login-vetro.is-vetro .login-submit, .login-vetro.is-vetro .login-alt-btn { background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)), rgba(10, 8, 6, 0.35); }
