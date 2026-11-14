@@ -1,5 +1,6 @@
 'use client';
 
+import { Attesa } from '@/components/ui/attesa';
 import { parseBookingSpeech } from '@/lib/utils/voice-booking';
 import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
@@ -684,7 +685,7 @@ export function AdminAppointmentForm({
               </div>
             </div>
             {loadingSlots ? (
-              <p className="mt-2 text-sm text-white/50">Caricamento orari...</p>
+              <Attesa className="mt-2">Cerco gli orari liberi…</Attesa>
             ) : slotsUnavailable ? (
               <div className="mt-2">
                 <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} className="grid-cols-4" />

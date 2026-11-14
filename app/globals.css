@@ -998,3 +998,13 @@ html.is-app body:has(.app-tabbar) .qs-menu { bottom: calc(196px + env(safe-area-
 .ai-fab-core[data-flip] { animation: fab-flip .32s cubic-bezier(.22,1,.36,1); }
 @keyframes fab-flip { from { transform: rotateY(90deg) scale(.9); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ai-fab-core[data-flip] { animation: none; } }
+
+/* Anello di attesa (14/11/2026): components/ui/attesa.tsx */
+.attesa { display: inline-flex; align-items: center; gap: 0.6rem; }
+.attesa__anello {
+  width: 1.05rem; height: 1.05rem; flex: none; border-radius: 9999px;
+  border: 2px solid rgb(205 154 79 / 0.25); border-top-color: var(--color-gold, currentColor);
+  animation: attesaGira 0.8s linear infinite;
+}
+@keyframes attesaGira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .attesa__anello { animation-duration: 2.4s; } }

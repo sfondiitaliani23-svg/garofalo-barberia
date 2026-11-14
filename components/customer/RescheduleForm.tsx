@@ -1,5 +1,6 @@
 'use client';
 
+import { Attesa } from '@/components/ui/attesa';
 import { useState, useTransition, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -136,7 +137,7 @@ export function RescheduleForm({
         <div>
           <h3 className="mb-3 text-sm font-semibold text-gold">{L(lang, 'Nuovo orario', 'New time')}</h3>
           {loadingSlots ? (
-            <p className="text-sm text-white/50">{L(lang, 'Caricamento orari...', 'Loading times...')}</p>
+            <Attesa>{L(lang, 'Cerco gli orari liberi…', 'Finding free times…')}</Attesa>
           ) : slots.length === 0 ? (
             <p className="text-sm text-white/50">{L(lang, 'Nessun orario disponibile per questo giorno.', 'No times available for this day.')}</p>
           ) : (

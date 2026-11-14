@@ -1,5 +1,6 @@
 'use client';
 
+import { Attesa } from '@/components/ui/attesa';
 import { useState, useTransition, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -794,7 +795,7 @@ export function BookingWizard({
                 )}
 
                 {loadingSlots ? (
-                  <p className="text-sm text-white/50">{L(lang, 'Caricamento orari...', 'Loading times...')}</p>
+                  <Attesa>{L(lang, 'Cerco gli orari liberi…', 'Finding free times…')}</Attesa>
                 ) : slotsUnavailable && date ? (
                   <InactiveTimeSlotGrid slots={getDisplaySlotsForDate(date)} />
                 ) : slots.length === 0 ? (

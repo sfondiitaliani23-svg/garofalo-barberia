@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { signInWithGoogleCredential, signInWithOAuth } from '@/lib/actions/auth';
 import { GOOGLE_CLIENT_ID } from '@/lib/auth/google-client';
+import { startGoogleRedirect } from '@/lib/auth/google-redirect';
 import { Button } from '@/components/ui/button';
 
 const GSI_SRC = 'https://accounts.google.com/gsi/client';
@@ -196,7 +197,17 @@ export function GoogleContinueButton({
   const buttonClass = row ? ROW_BTN : undefined;
 
   return (
-    <form action={signInWithOAuth} ref={formRef} className={row ? 'login-google' : 'login-google login-google--stack'}>
+    <form
+      action={signInWithOAuth}
+      ref={formRef}
+      className={row ? 'login-google' : 'login-google login-google--stack'}
+      onSubmit={(e) => {
+        // Strada di riserva sul dominio del sito (14/11/2026): mai più la pagina di Supabase.
+        e.preventDefault();
+        setMessage(openingRef.current);
+        startGoogleRedirect(safeNext(redirectRef.current), document.documentElement.lang === 'en' ? 'en' : 'it');
+      }}
+    >
       <input type="hidden" name="provider" value="google" />
       <input type="hidden" name="redirect" value={redirectTo} />
       {row ? (
