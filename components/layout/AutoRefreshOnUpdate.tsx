@@ -5,7 +5,7 @@ import { useAdminSaveState } from '@/components/admin/AdminSaveContext';
 
 const MINE = process.env.NEXT_PUBLIC_BUILD_ID || 'dev';
 const KEY = 'garofalo-build-reloaded';
-const EVERY_MS = 45_000;
+const EVERY_MS = 30_000;
 
 function busy(dirty: boolean) {
   if (dirty) return true;
@@ -18,8 +18,10 @@ function busy(dirty: boolean) {
 /**
  * Quando esce una versione nuova del sito, la scheda aperta si ricarica da sola.
  * Non lo fa mentre scrivi, mentre c'è una finestra aperta o ci sono modifiche da salvare.
+ * 14/11/2026: vale per tutto il sito (sito pubblico, area cliente, app). Nella parte admin c'è già
+ * l'istanza dentro AdminProtectedShell, che conosce le modifiche da salvare: quella del layout principale la salta.
  */
-export function AutoRefreshOnUpdate() {
+export function AutoRefreshOnUpdate({ fuoriAdmin = false }: { fuoriAdmin?: boolean } = {}) {
   const { isDirty } = useAdminSaveState();
 
   useEffect(() => {
@@ -28,6 +30,7 @@ export function AutoRefreshOnUpdate() {
 
     const check = async () => {
       if (stopped || document.visibilityState !== 'visible') return;
+      if (fuoriAdmin && window.location.pathname.startsWith('/admin')) return;
       try {
         const res = await fetch('/api/build-id', { cache: 'no-store' });
         if (!res.ok) return;
@@ -53,7 +56,7 @@ export function AutoRefreshOnUpdate() {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', onVisible);
     };
-  }, [isDirty]);
+  }, [isDirty, fuoriAdmin]);
 
   return null;
 }

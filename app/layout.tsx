@@ -1,3 +1,4 @@
+import { AutoRefreshOnUpdate } from '@/components/layout/AutoRefreshOnUpdate';
 import type { Metadata } from 'next';
 import { Montserrat, Rye } from 'next/font/google';
 import { Toaster } from 'sonner';
@@ -99,6 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ServiceWorkerRegister />
         <PushSync />
         <PresencePing />
+        <AutoRefreshOnUpdate fuoriAdmin />
         {children}
         <Toaster
           theme="dark"
