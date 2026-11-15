@@ -418,3 +418,28 @@
   .login-vetro:has(.as-carta) .login-vetro__testa p, .login-vetro .as-sotto { display: none; }
   .login-vetro:has(.as-carta) .login-vetro__dentro { gap: 0.8rem; padding-top: 1rem; }
 }
+
+/* ── App installata: Accedi e Registrati nello stile dell'ingresso dell'app (15/11/2026) ─────────
+   Video della barberia dietro (AppLoginBackdrop), niente fumo né titolo, modulo in un foglio scuro dal basso,
+   come la schermata con «Accedi / Crea un nuovo account». Sul sito non cambia nulla. */
+.login-app-fondo { position: absolute; inset: 0; z-index: -1; overflow: hidden; }
+.login-app-fondo video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.login-app-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.15) 30%, rgba(0, 0, 0, 0.3) 55%, rgba(0, 0, 0, 0.85) 100%); }
+html.is-app .login-vetro { min-height: calc(100dvh - 4rem); display: flex; flex-direction: column; justify-content: flex-end; }
+html.is-app .login-vetro .vetro-canvas,
+html.is-app .login-vetro .login-vetro__foto,
+html.is-app .login-vetro .login-vetro__testa { display: none; }
+html.is-app .login-vetro:has(.as-carta) .login-vetro__dentro { padding: 0; gap: 0; justify-items: stretch; }
+html.is-app .login-vetro .as-carta {
+  width: 100%; max-width: 520px; margin: 0 auto; min-height: 0; overflow: visible;
+  border: 0; border-radius: 22px 22px 0 0; background: #0c0c0c;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5); backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+html.is-app .login-vetro .as-carta::before { content: ''; position: absolute; top: 10px; left: 50%; width: 42px; height: 5px; margin-left: -21px; border-radius: 9px; background: rgba(255, 255, 255, 0.12); }
+html.is-app .login-vetro .as-forma { display: none; }
+html.is-app .login-vetro .as-pane { grid-area: 1 / 1; width: 100%; padding: 2rem 1.4rem calc(env(safe-area-inset-bottom, 0px) + 1.4rem); }
+html.is-app .login-vetro .as-titolo { text-align: left; font-size: 1.05rem; letter-spacing: 0.18em; text-transform: uppercase; color: #f5f1e8; }
+html.is-app .login-vetro .as-sotto { text-align: left; }
+html.is-app .login-vetro .as-carta .login-submit,
+html.is-app .login-vetro .as-reg button[type='submit'] { height: 3.4rem; border-radius: 14px !important; background: #cd9a4f !important; box-shadow: none !important; letter-spacing: 0.18em; text-transform: uppercase; }
+html.is-app .login-vetro .as-carta .login-alt-btn { border-radius: 14px; border-color: rgba(255, 255, 255, 0.3) !important; background: transparent !important; }

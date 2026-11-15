@@ -1,6 +1,7 @@
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { AuthStage } from '@/components/auth/AuthStage';
+import { AppLoginBackdrop } from '@/components/auth/AppLoginBackdrop';
 import { LiquidGlassBackdrop } from '@/components/auth/LiquidGlassBackdrop';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { L, type Lang } from '@/lib/i18n';
@@ -19,6 +20,7 @@ export default function LoginView({ lang, modo = 'login' }: { lang: Lang; modo?:
         style={{ backgroundImage: `url(${HERO_IMAGE})` }}
       />
       <LiquidGlassBackdrop />
+      <AppLoginBackdrop />
 
       <div className="login-vetro__dentro">
         <div className="login-vetro__testa">

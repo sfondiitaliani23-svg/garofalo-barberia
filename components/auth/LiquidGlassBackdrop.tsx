@@ -10,6 +10,8 @@ export function LiquidGlassBackdrop() {
     const canvas = ref.current;
     const area = canvas?.parentElement;
     if (!canvas || !area) return undefined;
+    // Nell'app installata c'è il video dell'ingresso al posto del fumo (AppLoginBackdrop)
+    if (document.documentElement.classList.contains('is-app')) return undefined;
     let stop = () => {};
     let vivo = true;
     import('@/lib/utils/liquid-glass')

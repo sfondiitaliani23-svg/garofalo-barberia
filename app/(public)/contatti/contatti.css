@@ -253,3 +253,6 @@
     padding: 1.5rem 1.25rem;
   }
 }
+
+/* App installata: lì «La nostra sede» è nascosta e resta il riquadro di Google con «Apri in Maps»: la mappa non si alza (15/11/2026) */
+html.is-app .public-page .ct-map-frame { top: 0; height: 100%; }
