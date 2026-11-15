@@ -51,6 +51,26 @@
     box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.14);
   }
 
+  /* Ricerca in alto: stessa pillola di vetro dell'etichetta Admin; il campo dentro è trasparente (15/11/2026) */
+  html .area-vetro .adm-skin .ov-search {
+    border: 0 !important;
+    border-radius: 999px;
+    padding: 0 0.6rem 0 1rem;
+    background: rgba(255, 240, 210, 0.06) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.14) !important;
+    -webkit-backdrop-filter: var(--vt-blur);
+    backdrop-filter: var(--vt-blur);
+  }
+  html .area-vetro .adm-skin .ov-search:focus-within { box-shadow: inset 0 1px 0 rgba(255, 240, 210, 0.14), 0 0 0 2px rgba(205, 154, 79, 0.35) !important; }
+  html .area-vetro .adm-skin .ov-search input,
+  html .area-vetro .adm-skin .ov-search input:focus-visible {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  html .area-vetro .adm-skin .ov-search kbd { border-radius: 999px; padding: 0.3rem 0.55rem; background: rgba(255, 240, 210, 0.08); }
+
   /* ── Schede di vetro ───────────────────────────────────────────────────── */
   html .area-vetro .adm-skin :is(.rounded-xl, .rounded-2xl, .rounded-lg).border,
   html .area-vetro .adm-skin :is(.bg-\[\#111\], .bg-\[\#0e0e0e\], .bg-\[\#0c0c0c\], .bg-\[\#0d0d0d\], .bg-\[\#0a0a0a\], .bg-black\/45).border,
