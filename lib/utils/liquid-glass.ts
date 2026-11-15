@@ -43,7 +43,8 @@ void main(){
 }`;
 
 /** Avvia lo sfondo. null = WebGL non disponibile: la pagina resta com'era. */
-export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement): (() => void) | null {
+// opzioni (15/11/2026, sfondo delle aree riservate): scala = risoluzione (meno = più leggero), fps = fotogrammi al secondo massimi.
+export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement, opzioni: { scala?: number; fps?: number } = {}): (() => void) | null {
   const gl = canvas.getContext('webgl', { antialias: false, alpha: false, powerPreference: 'low-power' });
   if (!gl) return null;
   const sh = (tipo: number, src: string) => { const s = gl.createShader(tipo)!; gl.shaderSource(s, src); gl.compileShader(s); return s; };
@@ -62,7 +63,9 @@ export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement): (() =>
   const uR = u('r'), uT = u('t'), uTs = u('ts'), uM = u('m'), uMi = u('mi'), uG = u('g');
 
   const fermo = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SCALA = Math.min(1, (window.devicePixelRatio || 1) * 0.6);
+  const SCALA = opzioni.scala ?? Math.min(1, (window.devicePixelRatio || 1) * 0.6);
+  const passo = opzioni.fps ? 1000 / opzioni.fps : 0;
+  let ultimo = -1e9;
   const t0 = performance.now();
   let id = 0, prima = 0;
   let mx = 0, my = 0, sx = 0, sy = 0, mT = 0, mOn = 0;
@@ -91,7 +94,7 @@ export function avviaVetro(canvas: HTMLCanvasElement, area: HTMLElement): (() =>
     gl.uniform3fv(uG, scia);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
-  const giro = (ms: number) => { disegna(ms); id = requestAnimationFrame(giro); };
+  const giro = (ms: number) => { if (ms - ultimo >= passo - 2) { ultimo = ms; disegna(ms); } id = requestAnimationFrame(giro); };
   const riparti = () => { cancelAnimationFrame(id); if (fermo || document.hidden) { disegna(performance.now()); return; } id = requestAnimationFrame(giro); };
 
   const muovi = (e: PointerEvent) => {

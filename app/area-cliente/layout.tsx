@@ -5,6 +5,8 @@ import { LangProvider } from '@/components/i18n/LangProvider';
 import { getProfile } from '@/lib/auth';
 import { getCustomerLang } from './_lang';
 import '@/components/layout/cust-skin.css';
+import '@/components/layout/aree-vetro.css';
+import { AreaFumo } from '@/components/layout/AreaFumo';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +16,8 @@ export default async function CustomerLayout({ children }: { children: React.Rea
 
   return (
     <LangProvider lang={lang}>
-      <div className="cust-skin flex min-h-screen">
+      <div className="cust-skin area-vetro flex min-h-screen">
+        <AreaFumo />
         <CustomerSidebar profile={profile} />
         <main className="flex-1 lg:ml-56 p-6 lg:p-8 pb-24 lg:pb-8">
           <div className="mx-auto w-full max-w-4xl">

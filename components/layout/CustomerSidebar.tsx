@@ -39,7 +39,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
   return (
     <>
       {/* ── Sidebar Desktop (lg+) ── */}
-      <aside className="hidden lg:flex w-56 flex-col border-r border-gold/35 bg-[#0c0a08] py-6 fixed left-0 top-0 bottom-0 h-screen z-30">
+      <aside className="cust-side hidden lg:flex w-56 flex-col border-r border-gold/35 bg-[#0c0a08] py-6 fixed left-0 top-0 bottom-0 h-screen z-30">
         <Link href="/area-cliente/dashboard" className="block px-5 pb-4 border-b border-gold/25 hover:opacity-90 transition-opacity">
           <span className="block font-display text-xl tracking-[0.15em] text-gold">GAROFALO</span>
           <span className="block text-[10px] uppercase tracking-[0.3em] text-[#bda980] mt-0.5">{L(lang, 'Area riservata', 'Private area')}</span>
@@ -105,7 +105,7 @@ export function CustomerSidebar({ profile }: CustomerSidebarProps) {
       </aside>
 
       {/* ── Bottom Navigation Bar Mobile (< lg) ── */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[200] lg:hidden bg-[#0c0a08] border-t border-gold/35 flex items-stretch justify-around safe-b h-16">
+      <nav className="cust-tabbar fixed bottom-0 left-0 right-0 z-[200] lg:hidden bg-[#0c0a08] border-t border-gold/35 flex items-stretch justify-around safe-b h-16">
         {/* Solo nell'app installata: torna al sito (non c'è la barra del browser) */}
         <Link
           href={localHref(lang, '/')}
