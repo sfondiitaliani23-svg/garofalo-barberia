@@ -443,3 +443,31 @@ html.is-app .login-vetro .as-sotto { text-align: left; }
 html.is-app .login-vetro .as-carta .login-submit,
 html.is-app .login-vetro .as-reg button[type='submit'] { height: 3.4rem; border-radius: 14px !important; background: #cd9a4f !important; box-shadow: none !important; letter-spacing: 0.18em; text-transform: uppercase; }
 html.is-app .login-vetro .as-carta .login-alt-btn { border-radius: 14px; border-color: rgba(255, 255, 255, 0.3) !important; background: transparent !important; }
+
+/* ── Accesso admin e verifica in due passaggi (15/11/2026) ─────────────────────────────
+   Stesso fumo d'oro e stessa scheda di vetro dell'accesso clienti (app/admin/login/page.tsx). */
+.adm-accesso-pag { min-height: 100dvh; display: grid; place-items: center; }
+.adm-accesso-pag .login-vetro__dentro { width: 100%; }
+.adm-accesso {
+  width: min(100%, 27rem); padding: 2rem 2rem 1.6rem; border-radius: 18px;
+  border: 1px solid rgba(205, 154, 79, 0.75); background: rgba(8, 7, 6, 0.78);
+  box-shadow: 0 0 0 1px rgba(205, 154, 79, 0.15), 0 0 24px rgba(205, 154, 79, 0.45), 0 0 70px rgba(205, 154, 79, 0.15), inset 0 0 40px rgba(205, 154, 79, 0.06);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.adm-accesso__eti { margin: 0; text-align: center; font: 700 0.68rem/1.4 'Montserrat', system-ui, sans-serif; letter-spacing: 0.22em; text-transform: uppercase; color: #cd9a4f; }
+.adm-accesso__titolo { margin: 0.2rem 0 1.2rem; text-align: center; font: 700 1.7rem/1.15 'Montserrat', system-ui, sans-serif; color: #fff; }
+.adm-accesso input:not([type='checkbox']) {
+  height: 2.6rem !important; padding: 0 0.2rem !important; border: 0 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important;
+  border-radius: 0 !important; background: transparent !important; color: #fff !important; box-shadow: none !important;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important; transition: border-color 0.25s ease, background-color 9999s 9999s;
+}
+.adm-accesso input:not([type='checkbox']):focus { border-bottom-color: #cd9a4f !important; outline: none; }
+.adm-accesso label { font-size: 0.75rem; color: rgba(255, 255, 255, 0.75); }
+.adm-accesso button[type='submit'], .adm-accesso form > button {
+  width: 100%; height: 2.8rem; border: 0 !important; border-radius: 999px !important;
+  background: linear-gradient(90deg, #9c7130, #e4bb6c 50%, #9c7130) !important; background-size: 200% 100% !important;
+  color: #140e05 !important; font-weight: 700; letter-spacing: 0.04em;
+  box-shadow: 0 0 18px rgba(205, 154, 79, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+  transition: background-position 0.5s ease, box-shadow 0.3s ease !important;
+}
+@media (hover: hover) { .adm-accesso button[type='submit']:hover, .adm-accesso form > button:hover { background-position: 100% 0 !important; } }
