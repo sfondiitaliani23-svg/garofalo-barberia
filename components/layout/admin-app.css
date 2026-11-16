@@ -247,3 +247,10 @@
 .app-row-bar { width: 4px; height: 36px; flex: none; border-radius: 9px; background: #cd9a4f; }
 .app-row-bar.is-done { background: #5bb57a; }
 .app-hint { margin: 8px 2px 0; font-size: 12px; color: #bda980; }
+
+/* 16/11/2026 (Eliseo): l'admin si comporta come un'app. Un doppio clic su un punto vuoto
+   non evidenzia più titoli, date, pulsanti o voci. Restano copiabili i campi, le celle delle tabelle,
+   telefoni ed email cliccabili, i messaggi e ciò che ha data-copiabile. */
+.adm-skin, .adm-side { -webkit-user-select: none; user-select: none; }
+.adm-skin :is(input, textarea, select, [contenteditable], td, a[href^="tel:"], a[href^="mailto:"], [data-copiabile], pre, code),
+[role="dialog"] :is(input, textarea, select, [contenteditable]) { -webkit-user-select: text; user-select: text; }

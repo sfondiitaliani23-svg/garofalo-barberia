@@ -49,7 +49,7 @@ img, video, picture, canvas, svg, [data-protected-image] {
 
 /* Sito dei clienti: menu, pulsanti, intestazioni ed etichette non si selezionano
    (niente riquadri colorati con doppio clic o Ctrl+A). Testi lunghi, indirizzo e telefono restano copiabili.
-   L'area admin resta com'è: lì serve poter copiare i dati. */
+   L'area admin ha la sua regola in components/layout/admin-app.css (16/11/2026). */
 :where(header, nav, button, footer h2, footer h3, footer h4, .uppercase):not(.adm-skin *, .adm-side *) {
   -webkit-user-select: none;
   user-select: none;
