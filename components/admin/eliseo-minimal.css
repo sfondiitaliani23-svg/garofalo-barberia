@@ -100,3 +100,17 @@
 }
 .el-app .el-wa-menu__item:hover { background: rgba(205, 154, 79, 0.08); }
 .el-app .el-wa-menu__item--danger { color: #f87171; }
+
+/* 16/11/2026 (Eliseo): niente più quadrato attorno alla sezione aperta. La voce attiva ha un fondo oro leggero
+   con angoli arrotondati e una piccola barra d'oro a sinistra, come le altre app dell'admin. */
+.el-app.el-app .el-rail__btn { border-radius: 12px; }
+.el-app.el-app .el-rail__btn[aria-pressed="true"] { border-color: transparent; background: rgba(205, 154, 79, 0.16); color: #e5b565; }
+.el-app.el-app :is(.el-nav, .el-folder, .el-row, .es-nav__btn) { border-radius: 10px; }
+.el-app.el-app :is(.el-nav[aria-selected="true"], .el-folder[aria-pressed="true"], .el-row.is-on, .es-nav__btn[aria-current='page']) {
+  border-color: transparent;
+  background: rgba(205, 154, 79, 0.12);
+  box-shadow: inset 3px 0 0 #cd9a4f;
+  color: #f4efe7;
+}
+.el-app.el-app :is(.el-rail__btn, .el-nav, .el-folder, .el-row, .es-nav__btn):focus { outline: none; }
+.el-app.el-app :is(.el-rail__btn, .el-nav, .el-folder, .el-row, .es-nav__btn):focus-visible { outline: 2px solid #cd9a4f; outline-offset: 2px; }
