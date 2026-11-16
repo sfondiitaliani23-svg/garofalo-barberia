@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import CountUp from './CountUp';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -674,7 +675,7 @@ function KpiCard({
       </span>
       <div className="ov-kpi-body">
         <p className="ov-kpi-label">{label}</p>
-        <p className="ov-kpi-value">{value}</p>
+        <p className="ov-kpi-value" aria-label={value}><CountUp value={value} /></p>
         <Change value={kpi.change} lowerIsBetter={lowerIsBetter} suffix={vs} />
       </div>
       <Spark data={kpi.spark} className="ov-kpi-spark" />
