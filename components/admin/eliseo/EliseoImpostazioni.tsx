@@ -429,7 +429,8 @@ export function EliseoImpostazioni({ area, value, onSave, team, tester, waConnec
           </>
         )}
 
-        {conSalva && (
+        {/* 16/11/2026: la barra compare solo quando c'è qualcosa da salvare (prima restava una fascia scura vuota). */}
+        {conSalva && (dirty || saving || msg) && (
           <div className="es-actions">
             {msg && <span className={`es-msg ${msg.bad ? 'is-bad' : ''}`} role="status">{msg.t}</span>}
             <button type="button" className="btn btn--secondary" disabled={!dirty || saving} onClick={() => setDraft(value)}>Annulla</button>

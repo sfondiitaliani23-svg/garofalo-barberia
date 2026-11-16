@@ -330,3 +330,5 @@
 .el-app .es-actions .btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); box-shadow: none; }
 .el-app .es-input:disabled { opacity: 0.45; cursor: not-allowed; }
 .el-app .es-inline:has(.es-input:disabled) small { opacity: 0.45; }
+/* 16/11/2026: nessuna fascia scura dietro Annulla / Salva. */
+.el-app.el-app .es-actions { position: static; background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
