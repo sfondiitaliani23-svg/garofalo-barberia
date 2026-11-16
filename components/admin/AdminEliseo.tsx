@@ -706,8 +706,17 @@ export function AdminEliseo({
   const [editingContact, setEditingContact] = useState<Partial<Contatto> | null>(null);
   const [contactFormErrors, setContactFormErrors] = useState<Record<string, string>>({});
 
+  // 16/11/2026: senza un WhatsApp collegato i contatti arrivati da WhatsApp non si mostrano
+  // (erano rimasti dalla prova di collegamento e comprendevano numeri privati). Nel database restano.
+  const waAttivo = waState === 'authorized';
+  const contattiVisibili = useMemo(
+    () => (waAttivo ? contatti : contatti.filter((c) => c.fonte !== 'whatsapp')),
+    [contatti, waAttivo],
+  );
+  const waNascosti = contatti.length - contattiVisibili.length;
+
   const filteredContatti = useMemo(() => {
-    return contatti.filter((c) => {
+    return contattiVisibili.filter((c) => {
       if (contactFolder.kind === 'fonte' && c.fonte !== contactFolder.key) return false;
       if (contactFolder.kind === 'etichetta' && !(c.etichette || []).includes(contactFolder.key)) return false;
       if (contactFaseFilter && c.fase !== contactFaseFilter) return false;
@@ -721,7 +730,7 @@ export function AdminEliseo({
       }
       return true;
     });
-  }, [contatti, contactFolder, contactFaseFilter, contactQ]);
+  }, [contattiVisibili, contactFolder, contactFaseFilter, contactQ]);
 
   const statsSummary = useMemo(() => summary(contatti), [contatti]);
   const availableTags = useMemo(() => allTags(contatti), [contatti]);
@@ -863,7 +872,7 @@ export function AdminEliseo({
   const [campFasi, setCampFasi] = useState<string[]>(['cliente']);
 
   const campaignRecipientsCount = useMemo(() => {
-    return contatti.filter((c) => c.consenso_marketing && campFasi.includes(c.fase)).length;
+    return contattiVisibili.filter((c) => c.consenso_marketing && campFasi.includes(c.fase)).length;
   }, [contatti, campFasi]);
 
   const handleSendCampagna = (e: React.FormEvent) => {
@@ -1554,10 +1563,10 @@ export function AdminEliseo({
                       onClick={() => setContactFolder({ kind: 'tutti', key: '' })}
                     >
                       <span>Tutti</span>
-                      <b>{contatti.length}</b>
+                      <b>{contattiVisibili.length}</b>
                     </button>
                     {FONTI.map(([k, t]) => {
-                      const n = contatti.filter((c) => c.fonte === k).length;
+                      const n = contattiVisibili.filter((c) => c.fonte === k).length;
                       return (
                         <button
                           key={k}
@@ -1575,7 +1584,7 @@ export function AdminEliseo({
                       <>
                         <p className="el-group mt-3">Etichette</p>
                         {availableTags.map((tag) => {
-                          const n = contatti.filter((c) => (c.etichette || []).includes(tag)).length;
+                          const n = contattiVisibili.filter((c) => (c.etichette || []).includes(tag)).length;
                           return (
                             <button
                               key={tag}
@@ -3268,6 +3277,12 @@ export function AdminEliseo({
                     </div>
                   </header>
 
+                  {waNascosti > 0 && (
+                    <p className="pcard__note el-wa-nascosti">
+                      WhatsApp non è collegato: {waNascosti} {waNascosti === 1 ? 'contatto arrivato' : 'contatti arrivati'} da WhatsApp {waNascosti === 1 ? 'è nascosto' : 'sono nascosti'}. Ricompaiono quando colleghi il WhatsApp del salone.
+                    </p>
+                  )}
+
                   <div className="el-tools">
                     <input
                       type="search"
@@ -3306,8 +3321,8 @@ export function AdminEliseo({
                   </div>
 
                   {contactView === 'lista' ? (
-                    <div className="table-wrap">
-                      <table className="ptable">
+                    <div className="table-wrap table-wrap--rubrica">
+                      <table className="ptable ptable--rubrica">
                         <thead>
                           <tr>
                             <th>Nome</th>
@@ -3856,7 +3871,7 @@ export function AdminEliseo({
                     }}
                   >
                     <option value="">— Inserisci nuovo numero —</option>
-                    {contatti.filter((c) => c.telefono).map((c) => (
+                    {contattiVisibili.filter((c) => c.telefono).map((c) => (
                       <option key={c.id} value={c.telefono || ''}>{c.nome} ({c.telefono})</option>
                     ))}
                   </select>
@@ -3963,7 +3978,7 @@ export function AdminEliseo({
                     }}
                   >
                     <option value="">— Inserisci nuova email —</option>
-                    {contatti.filter((c) => c.email).map((c) => (
+                    {contattiVisibili.filter((c) => c.email).map((c) => (
                       <option key={c.id} value={c.email || ''}>{c.nome} ({c.email})</option>
                     ))}
                   </select>

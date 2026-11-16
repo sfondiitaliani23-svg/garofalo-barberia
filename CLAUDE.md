@@ -88,6 +88,8 @@ Repo: sfondiitaliani23-svg/garofalo-barberia. Amministratori: Luigi Garofalo (ti
 - Modelli di messaggio ed etichette dei contatti: salvati in `site_content` (chiavi `eliseo:modelli` ed `eliseo:etichette`, `is_active = false`, quindi privati). Nessuna migrazione. Azioni `saveModelliAction` e `setEtichetteAction` con `requireAdmin`; la chiave del contatto è controllata con `isContactKey`.
 - «Da richiamare»: messaggio WhatsApp già scritto, lo manda a mano chi è in negozio. Nessun invio automatico. Il tester vede nomi e numeri nascosti (`maskForTester`).
 
+- 16/11/2026: senza WhatsApp collegato (`waState !== 'authorized'`) i contatti con fonte `whatsapp` non si mostrano nella rubrica, nei conteggi e nelle campagne (`contattiVisibili` in `AdminEliseo.tsx`); restano nel database. Erano arrivati durante una prova di collegamento e comprendevano numeri privati: cancellarli solo con l'ok di Eliseo. Rubrica: colonne meno utili nascoste quando il riquadro è stretto (`.ptable--rubrica`, container query in `eliseo.css`).
+
 ## Regole automatiche (Hookify, dal 01/11/2026)
 In `.claude/hookify.*.local.md`. Bloccano: chiavi segrete in `NEXT_PUBLIC_*`, push forzato, modifiche al repository di Maurizio. Avvisano: migrazione già esistente modificata (farne una nuova), funzioni di invio in file `'use server'`, controlli prima del push.
 

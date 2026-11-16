@@ -319,3 +319,14 @@
 .el-app .es-heat__row { display: grid; grid-template-columns: 40px repeat(8, 44px); gap: 4px; }
 .el-app .es-heat__lbl { font-size: 11px; color: rgba(244, 239, 231, 0.55); text-align: center; align-self: center; }
 .el-app .es-heat__cell { display: grid; place-items: center; height: 30px; background: #cd9a4f; color: #050403; font-size: 11px; font-weight: 700; }
+
+/* 16/11/2026: barra Annulla / Salva più leggera (era una lastra nera) e stati spenti visibili:
+   senza modifiche Annulla e Salva sono grigi; i minuti sono grigi quando la chiusura automatica è spenta. */
+.el-app .es-actions {
+  background: linear-gradient(to top, rgba(10, 8, 7, 0.96) 65%, rgba(10, 8, 7, 0));
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  padding: 18px 0 12px; margin-top: 18px; border-top: 0;
+}
+.el-app .es-actions .btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); box-shadow: none; }
+.el-app .es-input:disabled { opacity: 0.45; cursor: not-allowed; }
+.el-app .es-inline:has(.es-input:disabled) small { opacity: 0.45; }
