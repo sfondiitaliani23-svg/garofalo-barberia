@@ -101,6 +101,7 @@ export function OAuthLoginButtons({
   onWhatsAppClick,
   onPasskeyClick,
   layout = 'stack',
+  parte = 'tutto',
 }: {
   redirectTo?: string;
   disabled?: boolean;
@@ -108,9 +109,65 @@ export function OAuthLoginButtons({
   onPasskeyClick?: () => void;
   /** 'row': tutte le alternative su una riga (pagina Accedi, concept 03). */
   layout?: 'stack' | 'row';
+  /** social: solo Google (e Apple o Facebook se già accesi). extra: Passkey e WhatsApp. */
+  parte?: 'tutto' | 'social' | 'extra';
 }) {
   const lang = useLang();
   const openingLabel = L(lang, 'Apertura...', 'Opening...');
+  if (parte === 'extra') {
+    if (!onPasskeyClick && !onWhatsAppClick) return null;
+    return (
+      <div className="login-extra">
+        {onPasskeyClick && (
+          <button type="button" onClick={onPasskeyClick} data-vetro="" className={ROW_BTN}>
+            <PasskeyIcon />
+            Passkey
+          </button>
+        )}
+        {onWhatsAppClick && (
+          <button type="button" onClick={onWhatsAppClick} data-vetro="" className={ROW_BTN}>
+            <WhatsAppIcon />
+            {L(lang, 'Accedi tramite WhatsApp (OTP)', 'Sign in with WhatsApp (OTP)')}
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (parte === 'social') {
+    if (disabled) {
+      return (
+        <div className="login-social">
+          <button type="button" className={STACK_BTN} disabled>
+            <GoogleIcon /> Google
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="login-social">
+        <GoogleContinueButton
+          redirectTo={redirectTo}
+          label="Google"
+          openingLabel={openingLabel}
+          icon={<GoogleIcon />}
+        />
+        {process.env.NEXT_PUBLIC_ENABLE_APPLE_AUTH === 'true' && (
+          <form action={signInWithOAuth}>
+            <input type="hidden" name="provider" value="apple" />
+            <input type="hidden" name="redirect" value={redirectTo} />
+            <OAuthSubmitButton provider="apple" label="Apple" pendingLabel={openingLabel} icon={<AppleIcon />} />
+          </form>
+        )}
+        {process.env.NEXT_PUBLIC_ENABLE_FACEBOOK_AUTH === 'true' && (
+          <form action={signInWithOAuth}>
+            <input type="hidden" name="provider" value="facebook" />
+            <input type="hidden" name="redirect" value={redirectTo} />
+            <OAuthSubmitButton provider="facebook" label="Facebook" pendingLabel={openingLabel} icon={<FacebookIcon />} />
+          </form>
+        )}
+      </div>
+    );
+  }
   if (layout === 'row' && !disabled) {
     return (
       <div className="login-alt">

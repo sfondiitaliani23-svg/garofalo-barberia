@@ -68,6 +68,12 @@ function LoginFormInner({
       error.toLowerCase().includes('password')
     )
   );
+  const [chiediPassword, setChiediPassword] = useState(isCredentialError);
+
+  useEffect(() => {
+    if (!chiediPassword) return;
+    document.getElementById('password')?.focus();
+  }, [chiediPassword]);
 
   useEffect(() => {
     if (emailParam) {
@@ -368,10 +374,31 @@ function LoginFormInner({
           </p>
         ) : null}
 
-        {/* 1. FLUSSO EMAIL CLASSICO */}
+        {/* 1. FLUSSO EMAIL: prima Google e l'email, la password solo dopo Continua */}
         {authMethod === 'email' && (
           <>
-            <form action={signInWithEmail} className="login-row">
+            <OAuthLoginButtons
+              parte="social"
+              redirectTo={qrSessionId ? `/login/qr?id=${qrSessionId}` : redirect}
+              disabled={!authConfigured}
+            />
+            <div className="login-alt-sep" aria-hidden="true">
+              <span>{L(lang, 'oppure', 'or')}</span>
+            </div>
+            <form
+              action={signInWithEmail}
+              className="login-row"
+              onSubmit={(e) => {
+                if (chiediPassword) return;
+                e.preventDefault();
+                const email = e.currentTarget.elements.namedItem('email');
+                if (email instanceof HTMLInputElement && !email.checkValidity()) {
+                  email.reportValidity();
+                  return;
+                }
+                setChiediPassword(true);
+              }}
+            >
               <input type="hidden" name="redirect" value={redirect} />
               {qrSessionId && <input type="hidden" name="qrSessionId" value={qrSessionId} />}
               <div className="login-field">
@@ -391,44 +418,56 @@ function LoginFormInner({
                   className="login-input" 
                 />
               </div>
-              <div className="login-field">
-                <Label htmlFor="password" className="text-xs text-white/70">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  placeholder={L(lang, 'Inserisci la tua password', 'Enter your password')}
-                  className="login-input"
-                />
-                <div className="login-forgot">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setResetEmail(emailValue || emailParam);
-                      setResetError(null);
-                      setResetSuccess(false);
-                      setAuthMethod('forgot-password');
-                    }}
-                    className="text-xs text-gold/80 hover:text-gold hover:underline transition-colors cursor-pointer"
-                  >
-                    {L(lang, 'Password dimenticata?', 'Forgot your password?')}
-                  </button>
+              {chiediPassword && (
+                <div className="login-field">
+                  <Label htmlFor="password" className="text-xs text-white/70">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    placeholder={L(lang, 'Inserisci la tua password', 'Enter your password')}
+                    className="login-input"
+                  />
+                  <div className="login-forgot">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setResetEmail(emailValue || emailParam);
+                        setResetError(null);
+                        setResetSuccess(false);
+                        setAuthMethod('forgot-password');
+                      }}
+                      className="text-xs text-gold/80 hover:text-gold hover:underline transition-colors cursor-pointer"
+                    >
+                      {L(lang, 'Password dimenticata?', 'Forgot your password?')}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
               <button type="submit" data-vetro="" className="login-submit">
-                {L(lang, 'Accedi', 'Sign in')}
+                {L(lang, chiediPassword ? 'Accedi' : 'Continua', chiediPassword ? 'Sign in' : 'Continue')}
               </button>
             </form>
 
-            <OAuthLoginButtons 
-              redirectTo={qrSessionId ? `/login/qr?id=${qrSessionId}` : redirect} 
-              disabled={!authConfigured} 
-              onWhatsAppClick={() => setAuthMethod('whatsapp')}
-              onPasskeyClick={handlePasskeySignIn}
-              layout="row"
-            />
+            <details className="login-more">
+              <summary>{L(lang, 'Altri modi', 'Other ways')}</summary>
+              <OAuthLoginButtons
+                parte="extra"
+                onWhatsAppClick={() => setAuthMethod('whatsapp')}
+                onPasskeyClick={handlePasskeySignIn}
+              />
+              {isDesktop && showClassicOnDesktop && (
+                <button
+                  type="button"
+                  onClick={() => setShowClassicOnDesktop(false)}
+                  className="login-alt-btn login-more__qr"
+                >
+                  {L(lang, 'Hai il telefono a portata di mano? Accedi con il QR Code', 'Have your phone handy? Sign in with the QR code')}
+                </button>
+              )}
+            </details>
           </>
         )}
 
@@ -616,17 +655,6 @@ function LoginFormInner({
               {L(lang, 'Annulla e usa email', 'Cancel and use email')}
             </button>
           </div>
-        )}
-
-        {/* Pulsante per tornare al QR Code se siamo su Desktop */}
-        {isDesktop && showClassicOnDesktop && authMethod === 'email' && (
-          <button
-            type="button"
-            onClick={() => setShowClassicOnDesktop(false)}
-            className="text-xs text-gold/80 hover:text-gold hover:underline block mx-auto"
-          >
-            {L(lang, 'Hai il telefono a portata di mano? Accedi con il QR Code', 'Have your phone handy? Sign in with the QR code')}
-          </button>
         )}
 
         {/* Footer */}
